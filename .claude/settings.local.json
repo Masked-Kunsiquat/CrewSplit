@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx create-expo-app@latest . --template blank-typescript --yes)",
+      "Bash(tree:*)",
+      "Bash(git add:*)"
+    ]
+  }
+}
