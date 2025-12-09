@@ -11,6 +11,10 @@ import * as schema from './schema';
 // Open SQLite database
 const expoDb = openDatabaseSync('crewsplit.db');
 
+// CRITICAL: Enable foreign keys immediately after opening connection
+// This must happen before any queries to ensure FK constraints are enforced
+expoDb.execSync('PRAGMA foreign_keys = ON');
+
 // Create Drizzle instance with schema
 export const db = drizzle(expoDb, { schema });
 
@@ -21,8 +25,7 @@ export const db = drizzle(expoDb, { schema });
  */
 export const initializeDatabase = async (): Promise<void> => {
   try {
-    // Enable foreign keys (required for SQLite)
-    await db.run(sql`PRAGMA foreign_keys = ON`);
+    // Foreign keys already enabled at module load (see above)
 
     // Create trips table
     await db.run(sql`
