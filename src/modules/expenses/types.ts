@@ -6,8 +6,12 @@ export interface Expense {
   id: string;
   tripId: string;
   description: string;
-  amount: number; // In cents to avoid floating-point errors
-  currency: string;
+  amount: number; // Derived: equals convertedAmountMinor (trip currency)
+  currency: string; // Trip currency code (legacy column)
+  originalCurrency: string;
+  originalAmountMinor: number; // In original currency's minor units
+  fxRateToTrip?: number | null; // Null/undefined when currencies match
+  convertedAmountMinor: number; // Always in trip currency minor units
   paidBy: string; // participantId
   category?: string;
   date: string; // ISO 8601
@@ -21,16 +25,19 @@ export interface ExpenseSplit {
   participantId: string;
   share: number; // Weight or percentage (will be normalized)
   shareType: 'equal' | 'percentage' | 'amount' | 'weight';
-  amount?: number; // For 'amount' type splits (in cents)
+  amount?: number; // For 'amount' type splits (in trip currency minor units)
 }
 
 export interface CreateExpenseInput {
   tripId: string;
   description: string;
-  amount: number;
+  originalAmountMinor: number;
+  originalCurrency: string;
+  fxRateToTrip?: number | null;
   paidBy: string;
   category?: string;
   date?: string;
+  convertedAmountMinor?: number;
   splits: Array<{
     participantId: string;
     share: number;
@@ -41,7 +48,10 @@ export interface CreateExpenseInput {
 
 export interface UpdateExpenseInput {
   description?: string;
-  amount?: number;
+  originalAmountMinor?: number;
+  originalCurrency?: string;
+  fxRateToTrip?: number | null;
+  convertedAmountMinor?: number;
   paidBy?: string;
   category?: string;
   date?: string;

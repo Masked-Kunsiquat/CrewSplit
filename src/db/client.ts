@@ -36,6 +36,7 @@ export const initializeDatabase = async (): Promise<void> => {
         start_date TEXT NOT NULL,
         end_date TEXT,
         currency TEXT NOT NULL DEFAULT 'USD',
+        currency_code TEXT NOT NULL DEFAULT 'USD',
         created_at TEXT NOT NULL DEFAULT (datetime('now')),
         updated_at TEXT NOT NULL DEFAULT (datetime('now'))
       )
@@ -62,6 +63,10 @@ export const initializeDatabase = async (): Promise<void> => {
         description TEXT NOT NULL,
         amount INTEGER NOT NULL,
         currency TEXT NOT NULL,
+        original_currency TEXT NOT NULL,
+        original_amount_minor INTEGER NOT NULL,
+        fx_rate_to_trip REAL,
+        converted_amount_minor INTEGER NOT NULL,
         paid_by TEXT NOT NULL,
         category TEXT,
         date TEXT NOT NULL,

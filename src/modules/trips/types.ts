@@ -9,7 +9,8 @@ export interface Trip {
   description?: string;
   startDate: string; // ISO 8601
   endDate?: string; // ISO 8601
-  currency: string; // ISO 4217 (USD, EUR, etc.)
+  currency: string; // Legacy currency column (trip currency)
+  currencyCode: string; // Canonical trip currency code (ISO 4217)
   createdAt: string;
   updatedAt: string;
 }
@@ -17,12 +18,13 @@ export interface Trip {
 export interface CreateTripInput {
   name: string;
   description?: string;
-  startDate: string;
-  currency?: string;
+  startDate?: string;
+  currencyCode: string;
 }
 
 export interface UpdateTripInput {
   name?: string;
   description?: string;
   endDate?: string;
+  currencyCode?: string;
 }
