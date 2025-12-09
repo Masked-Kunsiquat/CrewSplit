@@ -39,10 +39,11 @@ export const expenseSplits = sqliteTable('expense_splits', {
 
   /**
    * Share type determines how to calculate participant's portion
+   * Database-level CHECK constraint ensures only valid values are stored
    */
-  shareType: text('share_type', {
-    enum: ['equal', 'percentage', 'weight', 'amount'],
-  }).notNull(),
+  shareType: text('share_type')
+    .notNull()
+    .$type<'equal' | 'percentage' | 'weight' | 'amount'>(),
 
   /**
    * For 'amount' type splits: exact amount in CENTS (integer)
@@ -58,7 +59,10 @@ export const expenseSplits = sqliteTable('expense_splits', {
   updatedAt: text('updated_at')
     .notNull()
     .default(sql`(datetime('now'))`),
-});
+}, (table) => ({
+  // Database-level CHECK constraint for share_type enum
+  shareTypeCheck: sql`CHECK (${table.shareType} IN ('equal', 'percentage', 'weight', 'amount'))`,
+}));
 
 // Export type inference for TypeScript
 export type ExpenseSplit = typeof expenseSplits.$inferSelect;
