@@ -1,27 +1,179 @@
 /**
  * SETTLEMENT MODULE - Share Normalization
  * MODELER: Convert different share types to actual amounts
+ * PURE FUNCTION: No side effects, deterministic
  */
 
 import { ExpenseSplit } from '../expenses/types';
 
 /**
  * Normalize different split types to actual amounts in cents
+ * Handles rounding by distributing remainders to ensure sum equals total
+ *
  * @param splits - Array of splits for a single expense
  * @param expenseAmount - Total expense amount in cents
- * @returns Array of normalized amounts (one per split)
+ * @returns Array of normalized amounts (one per split) that sum to expenseAmount
+ *
+ * @throws Error if splits are invalid (e.g., percentages > 100, amounts don't sum)
  */
 export const normalizeShares = (
   splits: ExpenseSplit[],
   expenseAmount: number
 ): number[] => {
-  // TODO: MODELER implements this
-  // Handle 4 split types:
-  // - 'equal': expenseAmount / splits.length
-  // - 'percentage': (split.share / 100) * expenseAmount
-  // - 'amount': split.amount (must sum to expenseAmount)
-  // - 'weight': (split.share / totalWeight) * expenseAmount
-  // Round to cents, handle remainder distribution
+  if (splits.length === 0) {
+    return [];
+  }
 
-  return [];
+  if (expenseAmount === 0) {
+    return splits.map(() => 0);
+  }
+
+  // Determine the share type (all splits should have the same type)
+  const shareType = splits[0].shareType;
+
+  // Validate all splits have the same type
+  if (!splits.every(s => s.shareType === shareType)) {
+    throw new Error('All splits for an expense must have the same shareType');
+  }
+
+  let normalized: number[];
+
+  switch (shareType) {
+    case 'equal':
+      normalized = normalizeEqual(splits.length, expenseAmount);
+      break;
+
+    case 'percentage':
+      normalized = normalizePercentage(splits, expenseAmount);
+      break;
+
+    case 'weight':
+      normalized = normalizeWeight(splits, expenseAmount);
+      break;
+
+    case 'amount':
+      normalized = normalizeAmount(splits, expenseAmount);
+      break;
+
+    default:
+      throw new Error(`Unknown share type: ${shareType}`);
+  }
+
+  return normalized;
 };
+
+/**
+ * Equal split: divide evenly, distribute remainder
+ */
+function normalizeEqual(count: number, total: number): number[] {
+  const baseAmount = Math.floor(total / count);
+  const remainder = total - (baseAmount * count);
+
+  const result = new Array(count).fill(baseAmount);
+
+  // Distribute remainder to first N participants (deterministic)
+  for (let i = 0; i < remainder; i++) {
+    result[i] += 1;
+  }
+
+  return result;
+}
+
+/**
+ * Percentage split: convert percentages to amounts
+ * Percentages must sum to 100
+ */
+function normalizePercentage(splits: ExpenseSplit[], total: number): number[] {
+  const totalPercentage = splits.reduce((sum, s) => sum + s.share, 0);
+
+  // Allow small floating-point tolerance
+  if (Math.abs(totalPercentage - 100) > 0.01) {
+    throw new Error(`Percentages must sum to 100, got ${totalPercentage}`);
+  }
+
+  // Calculate exact amounts (may have fractional cents)
+  const exactAmounts = splits.map(s => (s.share / 100) * total);
+
+  // Round down to get base amounts
+  const baseAmounts = exactAmounts.map(a => Math.floor(a));
+  const baseTotal = baseAmounts.reduce((sum, a) => sum + a, 0);
+  const remainder = total - baseTotal;
+
+  // Calculate fractional parts for deterministic remainder distribution
+  const fractionalParts = exactAmounts.map((exact, i) => ({
+    index: i,
+    fraction: exact - baseAmounts[i],
+  }));
+
+  // Sort by fraction descending, then by index for determinism
+  fractionalParts.sort((a, b) => {
+    if (Math.abs(a.fraction - b.fraction) < 0.0000001) {
+      return a.index - b.index; // Stable sort by index
+    }
+    return b.fraction - a.fraction;
+  });
+
+  // Distribute remainder to splits with largest fractional parts
+  const result = [...baseAmounts];
+  for (let i = 0; i < remainder; i++) {
+    result[fractionalParts[i].index] += 1;
+  }
+
+  return result;
+}
+
+/**
+ * Weight split: convert weights to proportional amounts
+ */
+function normalizeWeight(splits: ExpenseSplit[], total: number): number[] {
+  const totalWeight = splits.reduce((sum, s) => sum + s.share, 0);
+
+  if (totalWeight <= 0) {
+    throw new Error('Total weight must be positive');
+  }
+
+  // Calculate exact amounts
+  const exactAmounts = splits.map(s => (s.share / totalWeight) * total);
+
+  // Round down to get base amounts
+  const baseAmounts = exactAmounts.map(a => Math.floor(a));
+  const baseTotal = baseAmounts.reduce((sum, a) => sum + a, 0);
+  const remainder = total - baseTotal;
+
+  // Calculate fractional parts for remainder distribution
+  const fractionalParts = exactAmounts.map((exact, i) => ({
+    index: i,
+    fraction: exact - baseAmounts[i],
+  }));
+
+  // Sort by fraction descending, then by index
+  fractionalParts.sort((a, b) => {
+    if (Math.abs(a.fraction - b.fraction) < 0.0000001) {
+      return a.index - b.index;
+    }
+    return b.fraction - a.fraction;
+  });
+
+  // Distribute remainder
+  const result = [...baseAmounts];
+  for (let i = 0; i < remainder; i++) {
+    result[fractionalParts[i].index] += 1;
+  }
+
+  return result;
+}
+
+/**
+ * Amount split: use exact amounts
+ * Amounts must sum to total
+ */
+function normalizeAmount(splits: ExpenseSplit[], total: number): number[] {
+  const amounts = splits.map(s => s.amount ?? 0);
+  const sum = amounts.reduce((acc, a) => acc + a, 0);
+
+  if (sum !== total) {
+    throw new Error(`Split amounts must sum to expense total. Expected ${total}, got ${sum}`);
+  }
+
+  return amounts;
+}
