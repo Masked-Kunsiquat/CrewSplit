@@ -1,0 +1,23 @@
+{
+  "expo": {
+    "name": "CrewSplit",
+    "slug": "crewsplit",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.crewsplit.app"
+    },
+    "android": {
+      "package": "com.crewsplit.app"
+    },
+    "plugins": [
+      "expo-router"
+    ],
+    "scheme": "crewsplit"
+  }
+}
