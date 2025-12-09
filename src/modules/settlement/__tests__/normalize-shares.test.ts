@@ -104,11 +104,41 @@ describe('normalizeShares', () => {
       const splits: ExpenseSplit[] = [
         { id: '1', expenseId: 'e1', participantId: 'p1', share: 33.33, shareType: 'percentage' },
         { id: '2', expenseId: 'e1', participantId: 'p2', share: 33.33, shareType: 'percentage' },
+        { id: '3', expenseId: 'e1', participantId: 'p3', share: 33.34, shareType: 'percentage' }, // Sum is 100.00
+      ];
+
+      // Should not throw because sum is exactly 100
+      const result = normalizeShares(splits, 1000);
+
+      // Verify result is valid and sums correctly
+      expect(result).toHaveLength(3);
+      expect(result.reduce((sum, val) => sum + val, 0)).toBe(1000);
+    });
+
+    it('should accept percentages at tolerance boundary', () => {
+      const splits: ExpenseSplit[] = [
+        { id: '1', expenseId: 'e1', participantId: 'p1', share: 33.33, shareType: 'percentage' },
+        { id: '2', expenseId: 'e1', participantId: 'p2', share: 33.33, shareType: 'percentage' },
         { id: '3', expenseId: 'e1', participantId: 'p3', share: 33.33, shareType: 'percentage' }, // Sum is 99.99
       ];
 
-      // Should not throw because 99.99 is within tolerance
-      expect(() => normalizeShares(splits, 1000)).toThrow(); // Will throw because sum is 99.99, not 100
+      // Tolerance is |sum - 100| > 0.01, so 99.99 (difference = 0.01) should NOT throw
+      const result = normalizeShares(splits, 1000);
+
+      // Verify it normalizes correctly despite being slightly under 100%
+      expect(result).toHaveLength(3);
+      expect(result.reduce((sum, val) => sum + val, 0)).toBe(1000);
+    });
+
+    it('should reject percentages clearly outside tolerance', () => {
+      const splits: ExpenseSplit[] = [
+        { id: '1', expenseId: 'e1', participantId: 'p1', share: 33, shareType: 'percentage' },
+        { id: '2', expenseId: 'e1', participantId: 'p2', share: 33, shareType: 'percentage' },
+        { id: '3', expenseId: 'e1', participantId: 'p3', share: 33, shareType: 'percentage' }, // Sum is 99 (1.00 from 100)
+      ];
+
+      // Difference is 1.00, which is > 0.01 tolerance, so should throw
+      expect(() => normalizeShares(splits, 1000)).toThrow('Percentages must sum to 100');
     });
   });
 
