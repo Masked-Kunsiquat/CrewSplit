@@ -95,6 +95,47 @@ export const initializeDatabase = async (): Promise<void> => {
     await db.run(sql`CREATE INDEX IF NOT EXISTS idx_expense_splits_expense_id ON expense_splits(expense_id)`);
     await db.run(sql`CREATE INDEX IF NOT EXISTS idx_expense_splits_participant_id ON expense_splits(participant_id)`);
 
+    // Create triggers to automatically update updated_at on row updates
+    // Trips trigger
+    await db.run(sql`
+      CREATE TRIGGER IF NOT EXISTS update_trips_updated_at
+      AFTER UPDATE ON trips
+      FOR EACH ROW
+      BEGIN
+        UPDATE trips SET updated_at = datetime('now') WHERE id = NEW.id;
+      END
+    `);
+
+    // Participants trigger
+    await db.run(sql`
+      CREATE TRIGGER IF NOT EXISTS update_participants_updated_at
+      AFTER UPDATE ON participants
+      FOR EACH ROW
+      BEGIN
+        UPDATE participants SET updated_at = datetime('now') WHERE id = NEW.id;
+      END
+    `);
+
+    // Expenses trigger
+    await db.run(sql`
+      CREATE TRIGGER IF NOT EXISTS update_expenses_updated_at
+      AFTER UPDATE ON expenses
+      FOR EACH ROW
+      BEGIN
+        UPDATE expenses SET updated_at = datetime('now') WHERE id = NEW.id;
+      END
+    `);
+
+    // Expense splits trigger
+    await db.run(sql`
+      CREATE TRIGGER IF NOT EXISTS update_expense_splits_updated_at
+      AFTER UPDATE ON expense_splits
+      FOR EACH ROW
+      BEGIN
+        UPDATE expense_splits SET updated_at = datetime('now') WHERE id = NEW.id;
+      END
+    `);
+
     console.log('✅ Database initialized successfully');
   } catch (error) {
     console.error('❌ Database initialization failed:', error);
