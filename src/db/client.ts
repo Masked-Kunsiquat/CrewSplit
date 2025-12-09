@@ -4,7 +4,7 @@
  */
 
 import { drizzle } from 'drizzle-orm/expo-sqlite';
-import { openDatabaseSync } from 'expo-sqlite/next';
+import { openDatabaseSync } from 'expo-sqlite';
 import { sql } from 'drizzle-orm';
 import * as schema from './schema';
 
