@@ -35,7 +35,13 @@ export default function AddExpenseScreen() {
     router.replace(`/trips/${tripId}/expenses`);
   };
 
-  const canSubmit = description.trim().length > 0 && amount.trim().length > 0 && selectedParticipants.size > 0;
+  const normalizedAmountInput = amount.replace(',', '.').trim();
+  const parsedAmount = Number(normalizedAmountInput);
+  const canSubmit =
+    description.trim().length > 0 &&
+    !Number.isNaN(parsedAmount) &&
+    parsedAmount > 0 &&
+    selectedParticipants.size > 0;
 
   return (
     <KeyboardAvoidingView
