@@ -1,8 +1,3 @@
-/**
- * EXPENSES MODULE - Expense Details Screen
- * UI/UX ENGINEER: View and edit expense details
- */
-
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
@@ -13,75 +8,55 @@ export default function ExpenseDetailsScreen() {
   const router = useRouter();
   const { id: tripId, expenseId } = useLocalSearchParams<{ id: string; expenseId: string }>();
 
-  // Mock data - will be replaced with real data from repository
   const mockExpense = {
-    id: expenseId,
-    description: 'Dinner at Restaurant',
-    amount: 8500,
-    paidBy: 'Alice',
-    date: '2024-01-15',
-    splits: [
-      { participant: 'Alice', amount: 2833 },
-      { participant: 'Bob', amount: 2833 },
-      { participant: 'Charlie', amount: 2834 },
+    description: 'Placeholder dinner',
+    amount: '$42.00',
+    paidBy: 'Alex',
+    date: '2024-01-01',
+    split: [
+      { name: 'Alex', share: '$14.00' },
+      { name: 'Bailey', share: '$14.00' },
+      { name: 'Cam', share: '$14.00' },
     ],
   };
 
   return (
     <View style={styles.container}>
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
-        <Text style={styles.title}>{mockExpense.description}</Text>
+        <Text style={styles.title}>Expense Details</Text>
+        <Text style={styles.subtitle}>Trip: {tripId}</Text>
+        <Text style={styles.subtitle}>Expense: {expenseId}</Text>
 
-        <Card style={styles.section}>
-          <View style={styles.row}>
-            <Text style={styles.label}>Total Amount</Text>
-            <Text style={styles.amount}>
-              ${(mockExpense.amount / 100).toFixed(2)}
-            </Text>
-          </View>
-
-          <View style={styles.row}>
-            <Text style={styles.label}>Paid By</Text>
-            <Text style={styles.value}>{mockExpense.paidBy}</Text>
-          </View>
-
-          <View style={styles.row}>
-            <Text style={styles.label}>Date</Text>
-            <Text style={styles.value}>{mockExpense.date}</Text>
-          </View>
+        <Card style={styles.placeholderCard}>
+          <Text style={styles.eyebrow}>Coming soon</Text>
+          <Text style={styles.placeholderText}>
+            This screen will show full audit trails, payers, and split math. For now it renders mock
+            data so navigation feels real.
+          </Text>
         </Card>
 
         <Card style={styles.section}>
-          <Text style={styles.sectionTitle}>Split Details</Text>
-          {mockExpense.splits.map((split, index) => (
-            <View key={index} style={styles.splitRow}>
-              <Text style={styles.splitName}>{split.participant}</Text>
-              <Text style={styles.splitAmount}>
-                ${(split.amount / 100).toFixed(2)}
-              </Text>
+          <Text style={styles.sectionTitle}>{mockExpense.description}</Text>
+          <Text style={styles.amount}>{mockExpense.amount}</Text>
+          <Text style={styles.meta}>Paid by {mockExpense.paidBy}</Text>
+          <Text style={styles.meta}>Date {mockExpense.date}</Text>
+        </Card>
+
+        <Card style={styles.section}>
+          <Text style={styles.sectionTitle}>Mock split</Text>
+          {mockExpense.split.map((entry) => (
+            <View key={entry.name} style={styles.splitRow}>
+              <Text style={styles.splitName}>{entry.name}</Text>
+              <Text style={styles.splitAmount}>{entry.share}</Text>
             </View>
           ))}
         </Card>
-
-        <Text style={styles.helper}>
-          This expense was split equally among {mockExpense.splits.length} participants
-        </Text>
       </ScrollView>
 
       <View style={styles.footer}>
-        <Button
-          title="Edit Expense"
-          variant="outline"
-          onPress={() => {/* TODO: Navigate to edit screen */}}
-          fullWidth
-        />
+        <Button title="Back to list" variant="outline" onPress={() => router.push(`/trips/${tripId}/expenses`)} fullWidth />
         <View style={{ height: theme.spacing.md }} />
-        <Button
-          title="Delete Expense"
-          variant="outline"
-          onPress={() => {/* TODO: Show delete confirmation */}}
-          fullWidth
-        />
+        <Button title="Edit (mock)" onPress={() => {}} fullWidth />
       </View>
     </View>
   );
@@ -97,46 +72,58 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: theme.spacing.lg,
+    gap: theme.spacing.md,
   },
   title: {
-    fontSize: theme.typography.xxl,
+    fontSize: theme.typography.xxxl,
     fontWeight: theme.typography.bold,
     color: theme.colors.text,
-    marginBottom: theme.spacing.lg,
+  },
+  subtitle: {
+    fontSize: theme.typography.sm,
+    color: theme.colors.textSecondary,
+  },
+  placeholderCard: {
+    borderStyle: 'dashed',
+    borderColor: theme.colors.border,
+    borderWidth: 1,
+  },
+  eyebrow: {
+    fontSize: theme.typography.sm,
+    fontWeight: theme.typography.semibold,
+    color: theme.colors.textSecondary,
+    marginBottom: theme.spacing.xs,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  placeholderText: {
+    fontSize: theme.typography.base,
+    color: theme.colors.text,
   },
   section: {
-    marginBottom: theme.spacing.lg,
+    backgroundColor: theme.colors.surfaceElevated,
   },
   sectionTitle: {
     fontSize: theme.typography.lg,
     fontWeight: theme.typography.semibold,
     color: theme.colors.text,
-    marginBottom: theme.spacing.md,
-  },
-  row: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: theme.spacing.md,
-  },
-  label: {
-    fontSize: theme.typography.base,
-    color: theme.colors.textSecondary,
-  },
-  value: {
-    fontSize: theme.typography.base,
-    fontWeight: theme.typography.medium,
-    color: theme.colors.text,
+    marginBottom: theme.spacing.xs,
   },
   amount: {
     fontSize: theme.typography.xl,
     fontWeight: theme.typography.bold,
     color: theme.colors.primary,
+    marginBottom: theme.spacing.sm,
+  },
+  meta: {
+    fontSize: theme.typography.sm,
+    color: theme.colors.textSecondary,
+    marginBottom: theme.spacing.xs,
   },
   splitRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: theme.spacing.sm,
+    paddingVertical: theme.spacing.xs,
   },
   splitName: {
     fontSize: theme.typography.base,
@@ -146,11 +133,6 @@ const styles = StyleSheet.create({
     fontSize: theme.typography.base,
     fontWeight: theme.typography.medium,
     color: theme.colors.textSecondary,
-  },
-  helper: {
-    fontSize: theme.typography.sm,
-    color: theme.colors.textMuted,
-    textAlign: 'center',
   },
   footer: {
     padding: theme.spacing.lg,

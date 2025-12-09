@@ -1,97 +1,70 @@
-/**
- * PARTICIPANTS MODULE - Manage Participants Screen
- * UI/UX ENGINEER: Add, edit, and remove participants
- */
-
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { theme } from '@ui/theme';
-import { Button, Input, Card } from '@ui/components';
+import { Button, Card, Input, ParticipantChip } from '@ui/components';
 
 export default function ManageParticipantsScreen() {
   const { id: tripId } = useLocalSearchParams<{ id: string }>();
-
   const [newParticipantName, setNewParticipantName] = useState('');
+  const [selected, setSelected] = useState<Set<string>>(new Set(['1', '2']));
 
-  // Mock data - will be replaced with real data from repository
   const mockParticipants = [
-    { id: '1', name: 'Alice', avatarColor: '#FF6B6B' },
-    { id: '2', name: 'Bob', avatarColor: '#4ECDC4' },
-    { id: '3', name: 'Charlie', avatarColor: '#45B7D1' },
+    { id: '1', name: 'Alex', avatarColor: '#FF6B6B' },
+    { id: '2', name: 'Bailey', avatarColor: '#4ECDC4' },
+    { id: '3', name: 'Cam', avatarColor: '#45B7D1' },
   ];
 
-  const handleAddParticipant = () => {
-    if (newParticipantName.trim()) {
-      // TODO: Call repository to add participant
-      setNewParticipantName('');
-    }
-  };
-
-  const handleRemoveParticipant = (participantId: string) => {
-    // TODO: Call repository to remove participant
-    console.log('Remove participant:', participantId);
-  };
-
-  const getRandomColor = () => {
-    const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8', '#F7DC6F'];
-    return colors[Math.floor(Math.random() * colors.length)];
+  const handleToggle = (participantId: string) => {
+    setSelected(prev => {
+      const next = new Set(prev);
+      if (next.has(participantId)) {
+        next.delete(participantId);
+      } else {
+        next.add(participantId);
+      }
+      return next;
+    });
   };
 
   return (
     <View style={styles.container}>
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
-        <Text style={styles.title}>Manage Participants</Text>
+        <Text style={styles.title}>Participants</Text>
+        <Text style={styles.subtitle}>Trip: {tripId}</Text>
 
-        <View style={styles.addSection}>
-          <Input
-            label="Add New Participant"
-            placeholder="Enter name..."
-            value={newParticipantName}
-            onChangeText={setNewParticipantName}
-            onSubmitEditing={handleAddParticipant}
-            returnKeyType="done"
-          />
-          <Button
-            title="Add"
-            onPress={handleAddParticipant}
-            disabled={!newParticipantName.trim()}
-            fullWidth
-          />
-        </View>
+        <Card style={styles.placeholderCard}>
+          <Text style={styles.eyebrow}>Coming soon</Text>
+          <Text style={styles.placeholderText}>
+            Real add/remove flows will connect to the repository. Chips below show the tap-to-toggle
+            pattern we will use in expense splits.
+          </Text>
+        </Card>
 
-        <View style={styles.listSection}>
-          <Text style={styles.sectionTitle}>Current Participants</Text>
-          {mockParticipants.map((participant) => (
-            <Card key={participant.id} style={styles.participantCard}>
-              <View style={styles.participantRow}>
-                <View style={styles.participantInfo}>
-                  <View
-                    style={[
-                      styles.avatar,
-                      { backgroundColor: participant.avatarColor },
-                    ]}
-                  >
-                    <Text style={styles.avatarText}>
-                      {participant.name.charAt(0).toUpperCase()}
-                    </Text>
-                  </View>
-                  <Text style={styles.participantName}>{participant.name}</Text>
-                </View>
-                <TouchableOpacity
-                  onPress={() => handleRemoveParticipant(participant.id)}
-                  style={styles.removeButton}
-                >
-                  <Text style={styles.removeButtonText}>Remove</Text>
-                </TouchableOpacity>
-              </View>
-            </Card>
-          ))}
-        </View>
+        <Input
+          label="Add a participant"
+          placeholder="Enter a name"
+          value={newParticipantName}
+          onChangeText={setNewParticipantName}
+          returnKeyType="done"
+        />
+        <Button title="Add (mock)" onPress={() => setNewParticipantName('')} fullWidth />
 
-        <Text style={styles.helper}>
-          Note: You cannot remove participants who have expenses associated with them.
-        </Text>
+        <Card style={styles.participantCard}>
+          <Text style={styles.sectionTitle}>Current mock participants</Text>
+          <View style={styles.chips}>
+            {mockParticipants.map((participant) => (
+              <ParticipantChip
+                key={participant.id}
+                id={participant.id}
+                name={participant.name}
+                avatarColor={participant.avatarColor}
+                selected={selected.has(participant.id)}
+                onToggle={handleToggle}
+              />
+            ))}
+          </View>
+        </Card>
       </ScrollView>
     </View>
   );
@@ -107,69 +80,45 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: theme.spacing.lg,
+    gap: theme.spacing.md,
   },
   title: {
     fontSize: theme.typography.xxxl,
     fontWeight: theme.typography.bold,
     color: theme.colors.text,
-    marginBottom: theme.spacing.lg,
   },
-  addSection: {
-    marginBottom: theme.spacing.xl,
+  subtitle: {
+    fontSize: theme.typography.sm,
+    color: theme.colors.textSecondary,
   },
-  listSection: {
-    marginBottom: theme.spacing.lg,
+  placeholderCard: {
+    borderStyle: 'dashed',
+    borderColor: theme.colors.border,
+    borderWidth: 1,
+  },
+  eyebrow: {
+    fontSize: theme.typography.sm,
+    fontWeight: theme.typography.semibold,
+    color: theme.colors.textSecondary,
+    marginBottom: theme.spacing.xs,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  placeholderText: {
+    fontSize: theme.typography.base,
+    color: theme.colors.text,
+  },
+  participantCard: {
+    gap: theme.spacing.sm,
   },
   sectionTitle: {
     fontSize: theme.typography.lg,
     fontWeight: theme.typography.semibold,
     color: theme.colors.text,
-    marginBottom: theme.spacing.md,
   },
-  participantCard: {
-    marginBottom: theme.spacing.md,
-  },
-  participantRow: {
+  chips: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  participantInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  avatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: theme.spacing.md,
-  },
-  avatarText: {
-    color: theme.colors.text,
-    fontSize: theme.typography.base,
-    fontWeight: theme.typography.bold,
-  },
-  participantName: {
-    fontSize: theme.typography.lg,
-    fontWeight: theme.typography.medium,
-    color: theme.colors.text,
-  },
-  removeButton: {
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.sm,
-  },
-  removeButtonText: {
-    fontSize: theme.typography.sm,
-    color: theme.colors.error,
-    fontWeight: theme.typography.medium,
-  },
-  helper: {
-    fontSize: theme.typography.sm,
-    color: theme.colors.textMuted,
-    textAlign: 'center',
-    fontStyle: 'italic',
+    flexWrap: 'wrap',
+    gap: theme.spacing.sm,
   },
 });

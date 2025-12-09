@@ -1,27 +1,18 @@
-/**
- * TRIPS MODULE - Create Trip Screen
- * UI/UX ENGINEER: Form to create a new trip
- */
-
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { theme } from '@ui/theme';
-import { Button, Input } from '@ui/components';
+import { Button, Card, Input } from '@ui/components';
 
 export default function CreateTripScreen() {
   const router = useRouter();
-  const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [name, setName] = useState('Crew Trip');
+  const [notes, setNotes] = useState('');
 
-  const handleCreate = async () => {
-    setLoading(true);
-    // TODO: Call repository to create trip
-    setTimeout(() => {
-      setLoading(false);
-      router.back();
-    }, 1000);
+  const handleCreate = () => {
+    // Placeholder navigation — real creation will be wired to the repository layer
+    const targetId = name.trim() ? name.trim().toLowerCase().replace(/\s+/g, '-') : 'new-trip';
+    router.replace(`/trips/${targetId}`);
   };
 
   return (
@@ -34,10 +25,17 @@ export default function CreateTripScreen() {
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"
       >
-        <Text style={styles.title}>Create New Trip</Text>
+        <Text style={styles.title}>Create Trip</Text>
+
+        <Card style={styles.placeholderCard}>
+          <Text style={styles.eyebrow}>Coming soon</Text>
+          <Text style={styles.placeholderText}>
+            This form will save to SQLite/Drizzle next. For now it just routes to a mock dashboard.
+          </Text>
+        </Card>
 
         <Input
-          label="Trip Name"
+          label="Trip name"
           placeholder="e.g., Summer Vacation"
           value={name}
           onChangeText={setName}
@@ -45,17 +43,17 @@ export default function CreateTripScreen() {
         />
 
         <Input
-          label="Description (Optional)"
-          placeholder="Add a description..."
-          value={description}
-          onChangeText={setDescription}
+          label="Notes (optional)"
+          placeholder="Add a short note or theme"
+          value={notes}
+          onChangeText={setNotes}
           multiline
-          numberOfLines={4}
-          style={{ textAlignVertical: 'top', minHeight: 100 }}
+          numberOfLines={3}
+          style={styles.multiLine}
         />
 
         <Text style={styles.helperText}>
-          You can add participants and expenses after creating the trip.
+          Participants, expenses, and settlement stay empty until the data layer is plugged in.
         </Text>
       </ScrollView>
 
@@ -65,15 +63,13 @@ export default function CreateTripScreen() {
           variant="outline"
           onPress={() => router.back()}
           fullWidth
-          disabled={loading}
         />
         <View style={{ height: theme.spacing.md }} />
         <Button
-          title="Create Trip"
+          title="Create (mock)"
           onPress={handleCreate}
           fullWidth
           disabled={!name.trim()}
-          loading={loading}
         />
       </View>
     </KeyboardAvoidingView>
@@ -90,17 +86,37 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: theme.spacing.lg,
+    gap: theme.spacing.md,
   },
   title: {
-    fontSize: theme.typography.xxl,
+    fontSize: theme.typography.xxxl,
     fontWeight: theme.typography.bold,
     color: theme.colors.text,
-    marginBottom: theme.spacing.lg,
+  },
+  placeholderCard: {
+    borderStyle: 'dashed',
+    borderColor: theme.colors.border,
+    borderWidth: 1,
+  },
+  eyebrow: {
+    fontSize: theme.typography.sm,
+    fontWeight: theme.typography.semibold,
+    color: theme.colors.textSecondary,
+    marginBottom: theme.spacing.xs,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  placeholderText: {
+    fontSize: theme.typography.base,
+    color: theme.colors.text,
+  },
+  multiLine: {
+    textAlignVertical: 'top',
+    minHeight: 96,
   },
   helperText: {
     fontSize: theme.typography.sm,
     color: theme.colors.textMuted,
-    marginTop: theme.spacing.md,
   },
   footer: {
     padding: theme.spacing.lg,

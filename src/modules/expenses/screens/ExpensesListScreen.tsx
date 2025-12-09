@@ -1,8 +1,3 @@
-/**
- * EXPENSES MODULE - Expenses List Screen
- * UI/UX ENGINEER: List all expenses for a trip
- */
-
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
@@ -13,29 +8,9 @@ export default function ExpensesListScreen() {
   const router = useRouter();
   const { id: tripId } = useLocalSearchParams<{ id: string }>();
 
-  // Mock data - will be replaced with real data from repository
   const mockExpenses = [
-    {
-      id: '1',
-      description: 'Dinner at Restaurant',
-      amount: 8500,
-      paidBy: 'Alice',
-      date: '2024-01-15',
-    },
-    {
-      id: '2',
-      description: 'Gas for Road Trip',
-      amount: 6000,
-      paidBy: 'Bob',
-      date: '2024-01-14',
-    },
-    {
-      id: '3',
-      description: 'Hotel Booking',
-      amount: 18000,
-      paidBy: 'Alice',
-      date: '2024-01-13',
-    },
+    { id: 'exp-1', description: 'Placeholder dinner', note: 'Mock only' },
+    { id: 'exp-2', description: 'Placeholder gas', note: 'Mock only' },
   ];
 
   return (
@@ -43,33 +18,24 @@ export default function ExpensesListScreen() {
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
         <Text style={styles.title}>Expenses</Text>
 
+        <Card style={styles.placeholderCard}>
+          <Text style={styles.eyebrow}>Coming soon</Text>
+          <Text style={styles.placeholderText}>
+            This list will hydrate from SQLite once the repository is connected. Tap a mock row to
+            see the detail scaffold.
+          </Text>
+        </Card>
+
         {mockExpenses.map((expense) => (
           <Card
             key={expense.id}
             style={styles.expenseCard}
             onPress={() => router.push(`/trips/${tripId}/expenses/${expense.id}`)}
           >
-            <View style={styles.expenseHeader}>
-              <Text style={styles.expenseDescription}>{expense.description}</Text>
-              <Text style={styles.expenseAmount}>
-                ${(expense.amount / 100).toFixed(2)}
-              </Text>
-            </View>
-            <View style={styles.expenseMeta}>
-              <Text style={styles.metaText}>Paid by {expense.paidBy}</Text>
-              <Text style={styles.metaText}>{expense.date}</Text>
-            </View>
+            <Text style={styles.expenseTitle}>{expense.description}</Text>
+            <Text style={styles.expenseMeta}>{expense.note}</Text>
           </Card>
         ))}
-
-        {mockExpenses.length === 0 && (
-          <View style={styles.emptyState}>
-            <Text style={styles.emptyText}>No expenses yet</Text>
-            <Text style={styles.emptySubtext}>
-              Add an expense to get started
-            </Text>
-          </View>
-        )}
       </ScrollView>
 
       <View style={styles.footer}>
@@ -93,56 +59,42 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: theme.spacing.lg,
+    gap: theme.spacing.md,
   },
   title: {
     fontSize: theme.typography.xxxl,
     fontWeight: theme.typography.bold,
     color: theme.colors.text,
-    marginBottom: theme.spacing.lg,
+  },
+  placeholderCard: {
+    borderStyle: 'dashed',
+    borderColor: theme.colors.border,
+    borderWidth: 1,
+  },
+  eyebrow: {
+    fontSize: theme.typography.sm,
+    fontWeight: theme.typography.semibold,
+    color: theme.colors.textSecondary,
+    marginBottom: theme.spacing.xs,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  placeholderText: {
+    fontSize: theme.typography.base,
+    color: theme.colors.text,
   },
   expenseCard: {
-    marginBottom: theme.spacing.md,
+    backgroundColor: theme.colors.surfaceElevated,
   },
-  expenseHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: theme.spacing.sm,
-  },
-  expenseDescription: {
-    flex: 1,
+  expenseTitle: {
     fontSize: theme.typography.lg,
     fontWeight: theme.typography.semibold,
     color: theme.colors.text,
-    marginRight: theme.spacing.md,
-  },
-  expenseAmount: {
-    fontSize: theme.typography.lg,
-    fontWeight: theme.typography.bold,
-    color: theme.colors.primary,
+    marginBottom: theme.spacing.xs,
   },
   expenseMeta: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  metaText: {
     fontSize: theme.typography.sm,
     color: theme.colors.textSecondary,
-  },
-  emptyState: {
-    alignItems: 'center',
-    marginTop: theme.spacing.xxl,
-  },
-  emptyText: {
-    fontSize: theme.typography.lg,
-    fontWeight: theme.typography.semibold,
-    color: theme.colors.textSecondary,
-    marginBottom: theme.spacing.sm,
-  },
-  emptySubtext: {
-    fontSize: theme.typography.base,
-    color: theme.colors.textMuted,
-    textAlign: 'center',
   },
   footer: {
     padding: theme.spacing.lg,

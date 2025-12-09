@@ -1,52 +1,41 @@
-/**
- * EXPENSES MODULE - Add Expense Screen
- * UI/UX ENGINEER: Form to add a new expense
- */
-
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { theme } from '@ui/theme';
-import { Button, Input, ParticipantChip } from '@ui/components';
+import { Button, Card, Input, ParticipantChip } from '@ui/components';
 
 export default function AddExpenseScreen() {
   const router = useRouter();
   const { id: tripId } = useLocalSearchParams<{ id: string }>();
 
-  const [description, setDescription] = useState('');
-  const [amount, setAmount] = useState('');
-  const [selectedParticipants, setSelectedParticipants] = useState<Set<string>>(new Set());
-  const [loading, setLoading] = useState(false);
+  const [description, setDescription] = useState('Mock expense');
+  const [amount, setAmount] = useState('42.00');
+  const [selectedParticipants, setSelectedParticipants] = useState<Set<string>>(new Set(['1']));
 
-  // Mock participants - will be fetched from repository
   const mockParticipants = [
-    { id: '1', name: 'Alice', avatarColor: '#FF6B6B' },
-    { id: '2', name: 'Bob', avatarColor: '#4ECDC4' },
-    { id: '3', name: 'Charlie', avatarColor: '#45B7D1' },
+    { id: '1', name: 'Alex', avatarColor: '#FF6B6B' },
+    { id: '2', name: 'Bailey', avatarColor: '#4ECDC4' },
+    { id: '3', name: 'Cam', avatarColor: '#45B7D1' },
   ];
 
   const handleToggleParticipant = (participantId: string) => {
     setSelectedParticipants(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(participantId)) {
-        newSet.delete(participantId);
+      const next = new Set(prev);
+      if (next.has(participantId)) {
+        next.delete(participantId);
       } else {
-        newSet.add(participantId);
+        next.add(participantId);
       }
-      return newSet;
+      return next;
     });
   };
 
-  const handleCreate = async () => {
-    setLoading(true);
-    // TODO: Call repository to create expense
-    setTimeout(() => {
-      setLoading(false);
-      router.back();
-    }, 1000);
+  const handleCreate = () => {
+    // Placeholder navigation until repositories are wired
+    router.replace(`/trips/${tripId}/expenses`);
   };
 
-  const canSubmit = description.trim() && amount && selectedParticipants.size > 0;
+  const canSubmit = description.trim().length > 0 && amount.trim().length > 0 && selectedParticipants.size > 0;
 
   return (
     <KeyboardAvoidingView
@@ -60,9 +49,16 @@ export default function AddExpenseScreen() {
       >
         <Text style={styles.title}>Add Expense</Text>
 
+        <Card style={styles.placeholderCard}>
+          <Text style={styles.eyebrow}>Coming soon</Text>
+          <Text style={styles.placeholderText}>
+            This form will post to SQLite/Drizzle. For now it demonstrates the tap-to-toggle flow.
+          </Text>
+        </Card>
+
         <Input
-          label="Description"
-          placeholder="e.g., Dinner at Restaurant"
+          label="What was this?"
+          placeholder="e.g., Dinner at Marina"
           value={description}
           onChangeText={setDescription}
           autoFocus
@@ -77,8 +73,8 @@ export default function AddExpenseScreen() {
         />
 
         <View style={styles.section}>
-          <Text style={styles.sectionLabel}>Split Between</Text>
-          <Text style={styles.sectionHelper}>Tap to select participants</Text>
+          <Text style={styles.sectionLabel}>Split between</Text>
+          <Text style={styles.sectionHelper}>Tap chips to toggle participants (mock data)</Text>
           <View style={styles.participantChips}>
             {mockParticipants.map(participant => (
               <ParticipantChip
@@ -92,10 +88,6 @@ export default function AddExpenseScreen() {
             ))}
           </View>
         </View>
-
-        <Text style={styles.helperText}>
-          Expense will be split equally among selected participants
-        </Text>
       </ScrollView>
 
       <View style={styles.footer}>
@@ -104,15 +96,13 @@ export default function AddExpenseScreen() {
           variant="outline"
           onPress={() => router.back()}
           fullWidth
-          disabled={loading}
         />
         <View style={{ height: theme.spacing.md }} />
         <Button
-          title="Add Expense"
+          title="Save (mock)"
           onPress={handleCreate}
           fullWidth
           disabled={!canSubmit}
-          loading={loading}
         />
       </View>
     </KeyboardAvoidingView>
@@ -129,35 +119,46 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: theme.spacing.lg,
+    gap: theme.spacing.md,
   },
   title: {
-    fontSize: theme.typography.xxl,
+    fontSize: theme.typography.xxxl,
     fontWeight: theme.typography.bold,
     color: theme.colors.text,
-    marginBottom: theme.spacing.lg,
+  },
+  placeholderCard: {
+    borderStyle: 'dashed',
+    borderColor: theme.colors.border,
+    borderWidth: 1,
+  },
+  eyebrow: {
+    fontSize: theme.typography.sm,
+    fontWeight: theme.typography.semibold,
+    color: theme.colors.textSecondary,
+    marginBottom: theme.spacing.xs,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  placeholderText: {
+    fontSize: theme.typography.base,
+    color: theme.colors.text,
   },
   section: {
-    marginBottom: theme.spacing.lg,
+    gap: theme.spacing.xs,
   },
   sectionLabel: {
     fontSize: theme.typography.sm,
     fontWeight: theme.typography.medium,
     color: theme.colors.textSecondary,
-    marginBottom: theme.spacing.xs,
   },
   sectionHelper: {
     fontSize: theme.typography.xs,
     color: theme.colors.textMuted,
-    marginBottom: theme.spacing.md,
   },
   participantChips: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-  },
-  helperText: {
-    fontSize: theme.typography.sm,
-    color: theme.colors.textMuted,
-    marginTop: theme.spacing.md,
+    marginTop: theme.spacing.sm,
   },
   footer: {
     padding: theme.spacing.lg,
