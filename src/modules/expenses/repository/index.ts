@@ -3,6 +3,7 @@
  * LOCAL DATA ENGINEER: Multi-currency aware expense CRUD with ACID-safe writes
  */
 
+import * as Crypto from 'expo-crypto';
 import { db } from '@db/client';
 import { expenseSplits as expenseSplitsTable } from '@db/schema/expense-splits';
 import { expenses as expensesTable, Expense as ExpenseRow } from '@db/schema/expenses';
@@ -36,7 +37,7 @@ const computeConversion = (
   providedConverted?: number,
 ): { convertedAmountMinor: number; fxRateToTrip: number | null } => {
   if (originalCurrency === tripCurrencyCode) {
-    return { convertedAmountMinor: originalAmountMinor, fxRateToTrip: 1 };
+    return { convertedAmountMinor: originalAmountMinor, fxRateToTrip: null };
   }
 
   if (providedRate === undefined || providedRate === null) {
@@ -69,7 +70,7 @@ export const addExpense = async (expenseData: CreateExpenseInput): Promise<Expen
   );
 
   const now = new Date().toISOString();
-  const expenseId = crypto.randomUUID();
+  const expenseId = Crypto.randomUUID();
 
   return db.transaction(async (tx) => {
     const [insertedExpense] = await tx
@@ -94,7 +95,7 @@ export const addExpense = async (expenseData: CreateExpenseInput): Promise<Expen
 
     if (expenseData.splits?.length) {
       const splitRows = expenseData.splits.map((split) => ({
-        id: crypto.randomUUID(),
+        id: Crypto.randomUUID(),
         expenseId,
         participantId: split.participantId,
         share: split.share,
@@ -162,7 +163,7 @@ export const updateExpense = async (id: string, patch: UpdateExpenseInput): Prom
       await tx.delete(expenseSplitsTable).where(eq(expenseSplitsTable.expenseId, id));
       if (patch.splits.length) {
         const splitRows = patch.splits.map((split) => ({
-          id: crypto.randomUUID(),
+          id: Crypto.randomUUID(),
           expenseId: id,
           participantId: split.participantId,
           share: split.share,

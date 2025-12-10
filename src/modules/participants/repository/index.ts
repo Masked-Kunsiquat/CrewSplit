@@ -3,6 +3,7 @@
  * LOCAL DATA ENGINEER: Trip-scoped participant CRUD helpers
  */
 
+import * as Crypto from 'expo-crypto';
 import { db } from '@db/client';
 import { participants as participantsTable, Participant as ParticipantRow } from '@db/schema/participants';
 import { eq } from 'drizzle-orm';
@@ -18,7 +19,7 @@ const mapParticipant = (row: ParticipantRow): Participant => ({
 
 export const createParticipant = async (input: CreateParticipantInput): Promise<Participant> => {
   const now = new Date().toISOString();
-  const participantId = crypto.randomUUID();
+  const participantId = Crypto.randomUUID();
 
   const [created] = await db
     .insert(participantsTable)
@@ -55,7 +56,12 @@ export const updateParticipant = async (id: string, patch: UpdateParticipantInpu
   if (patch.name !== undefined) updatePayload.name = patch.name;
   if (patch.avatarColor !== undefined) updatePayload.avatarColor = patch.avatarColor;
 
-  const [updated] = await db.update(participantsTable).set(updatePayload).where(eq(participantsTable.id, id)).returning();
+  const updatedRows = await db.update(participantsTable).set(updatePayload).where(eq(participantsTable.id, id)).returning();
+  const updated = updatedRows[0];
+  if (!updated) {
+    throw new Error(`Participant not found for id ${id}`);
+  }
+
   return mapParticipant(updated);
 };
 

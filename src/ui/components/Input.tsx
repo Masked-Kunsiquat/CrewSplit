@@ -7,7 +7,7 @@ import React from 'react';
 import { View, TextInput, Text, StyleSheet, TextInputProps } from 'react-native';
 import { theme } from '../theme';
 
-interface InputProps extends Omit<TextInputProps, 'style'> {
+interface InputProps extends TextInputProps {
   label?: string;
   error?: string;
   helperText?: string;
@@ -17,13 +17,14 @@ export const Input: React.FC<InputProps> = ({
   label,
   error,
   helperText,
+  style,
   ...textInputProps
 }) => {
   return (
     <View style={styles.container}>
       {label && <Text style={styles.label}>{label}</Text>}
       <TextInput
-        style={[styles.input, error && styles.inputError]}
+        style={[styles.input, error && styles.inputError, style]}
         placeholderTextColor={theme.colors.textMuted}
         {...textInputProps}
       />

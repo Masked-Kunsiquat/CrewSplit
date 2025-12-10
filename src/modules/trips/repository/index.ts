@@ -3,6 +3,7 @@
  * LOCAL DATA ENGINEER: Trip-scoped CRUD operations with currency metadata
  */
 
+import * as Crypto from 'expo-crypto';
 import { db } from '@db/client';
 import { trips as tripsTable, Trip as TripRow } from '@db/schema/trips';
 import { eq } from 'drizzle-orm';
@@ -22,7 +23,7 @@ const mapTrip = (row: TripRow): Trip => ({
 
 export const createTrip = async ({ name, currencyCode, description, startDate }: CreateTripInput): Promise<Trip> => {
   const now = new Date().toISOString();
-  const tripId = crypto.randomUUID();
+  const tripId = Crypto.randomUUID();
   const effectiveStartDate = startDate ?? now;
 
   const [created] = await db
@@ -69,7 +70,12 @@ export const updateTrip = async (id: string, patch: UpdateTripInput): Promise<Tr
     updatePayload.currency = patch.currencyCode;
   }
 
-  const [updated] = await db.update(tripsTable).set(updatePayload).where(eq(tripsTable.id, id)).returning();
+  const updatedRows = await db.update(tripsTable).set(updatePayload).where(eq(tripsTable.id, id)).returning();
+  const updated = updatedRows[0];
+  if (!updated) {
+    throw new Error(`Trip not found for id ${id}`);
+  }
+
   return mapTrip(updated);
 };
 
