@@ -181,7 +181,13 @@ export const updateExpense = async (id: string, patch: UpdateExpenseInput): Prom
 };
 
 export const deleteExpense = async (id: string): Promise<void> => {
-  await db.delete(expensesTable).where(eq(expensesTable.id, id));
+  await db.transaction(async (tx) => {
+    const existingRows = await tx.select().from(expensesTable).where(eq(expensesTable.id, id)).limit(1);
+    if (!existingRows.length) {
+      throw new Error(`Expense not found for id ${id}`);
+    }
+    await tx.delete(expensesTable).where(eq(expensesTable.id, id));
+  });
 };
 
 export const getExpenseSplits = async (expenseId: string): Promise<ExpenseSplit[]> => {

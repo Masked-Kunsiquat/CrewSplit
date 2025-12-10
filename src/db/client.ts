@@ -42,7 +42,7 @@ export const initializeDatabase = async (): Promise<void> => {
       await db.run(sql`DROP TABLE IF EXISTS expenses`);
       await db.run(sql`DROP TABLE IF EXISTS participants`);
       await db.run(sql`DROP TABLE IF EXISTS trips`);
-      await db.run(sql`PRAGMA user_version = ${SCHEMA_VERSION}`);
+      await db.run(sql.raw(`PRAGMA user_version = ${Number.isInteger(SCHEMA_VERSION) ? SCHEMA_VERSION : 0}`));
     }
 
     // Foreign keys already enabled at module load (see above)
