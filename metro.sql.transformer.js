@@ -1,16 +1,13 @@
 /**
- * Simple transformer to inline .sql files as string modules for Metro.
- * This keeps Drizzle migration imports working in React Native / Expo.
+ * Inline .sql files as ESM string modules for Metro.
+ * Mirrors the SVG transformer pattern from Expo docs.
  */
 const upstreamTransformer = require('metro-react-native-babel-transformer');
 
 module.exports.transform = ({ src, filename, options }) => {
   if (filename.endsWith('.sql')) {
-    return upstreamTransformer.transform({
-      src: `module.exports = ${JSON.stringify(src)};`,
-      filename,
-      options,
-    });
+    const code = `export default ${JSON.stringify(src)};`;
+    return upstreamTransformer.transform({ src: code, filename, options });
   }
 
   return upstreamTransformer.transform({ src, filename, options });

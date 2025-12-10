@@ -2,11 +2,18 @@
 // Ensures .sql migration files are bundled and inlined as strings for Drizzle migrations
 const { getDefaultConfig } = require('expo/metro-config');
 
-const config = getDefaultConfig(__dirname);
+const defaultConfig = getDefaultConfig(__dirname);
+const { assetExts, sourceExts } = defaultConfig.resolver;
 
-// Treat .sql as a source file (not an asset) so we can inline contents
-config.resolver.assetExts = config.resolver.assetExts.filter((ext) => ext !== 'sql');
-config.resolver.sourceExts.push('sql');
-config.transformer.babelTransformerPath = require.resolve('./metro.sql.transformer');
-
-module.exports = config;
+module.exports = {
+  ...defaultConfig,
+  transformer: {
+    ...defaultConfig.transformer,
+    babelTransformerPath: require.resolve('./metro.sql.transformer'),
+  },
+  resolver: {
+    ...defaultConfig.resolver,
+    assetExts: assetExts.filter((ext) => ext !== 'sql'),
+    sourceExts: [...sourceExts, 'sql'],
+  },
+};
