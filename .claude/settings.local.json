@@ -8,7 +8,10 @@
       "Bash(npx expo install:*)",
       "Bash(npm install:*)",
       "Bash(npx expo-doctor:*)",
-      "Bash(npm uninstall:*)"
+      "Bash(npm uninstall:*)",
+      "Bash(if not exist \"c:\\Users\\blain\\Documents\\GitHub\\CrewSplit\\CrewSplit\\src\\modules\\settlement\" mkdir \"c:\\Users\\blain\\Documents\\GitHub\\CrewSplit\\CrewSplit\\src\\modules\\settlement\")",
+      "Bash(npm test:*)",
+      "Bash(npx tsc:*)"
     ]
   }
 }

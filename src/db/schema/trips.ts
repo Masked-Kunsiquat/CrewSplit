@@ -24,6 +24,7 @@ export const trips = sqliteTable('trips', {
 
   // Currency (ISO 4217 code: USD, EUR, GBP, etc.)
   currency: text('currency').notNull().default('USD'),
+  currencyCode: text('currency_code').notNull().default('USD'),
 
   // Timestamps
   createdAt: text('created_at')

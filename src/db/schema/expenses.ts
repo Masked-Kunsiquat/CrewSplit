@@ -4,7 +4,7 @@
  */
 
 import { sql } from 'drizzle-orm';
-import { sqliteTable, text, integer } from 'drizzle-orm/sqlite-core';
+import { sqliteTable, text, integer, real } from 'drizzle-orm/sqlite-core';
 import { trips } from './trips';
 import { participants } from './participants';
 
@@ -31,6 +31,17 @@ export const expenses = sqliteTable('expenses', {
 
   // Currency (ISO 4217 code)
   currency: text('currency').notNull(),
+
+  /**
+   * Multi-currency support
+   * - original fields capture the source entry currency/amount
+   * - convertedAmountMinor is always in the trip currency
+   * - fxRateToTrip is nullable when currencies match
+   */
+  originalCurrency: text('original_currency').notNull(),
+  originalAmountMinor: integer('original_amount_minor').notNull(),
+  fxRateToTrip: real('fx_rate_to_trip'),
+  convertedAmountMinor: integer('converted_amount_minor').notNull(),
 
   // Foreign key to participants table (RESTRICT on delete - can't delete participant with expenses)
   paidBy: text('paid_by')

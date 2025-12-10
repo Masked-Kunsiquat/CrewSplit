@@ -8,6 +8,10 @@ import { openDatabaseSync } from 'expo-sqlite';
 import { sql } from 'drizzle-orm';
 import * as schema from './schema';
 
+// Increment when schema changes. Temporary: we reset the DB if version mismatches
+// until a proper migration system (Phase 2) lands.
+const SCHEMA_VERSION = 2;
+
 // Open SQLite database
 const expoDb = openDatabaseSync('crewsplit.db');
 
@@ -25,6 +29,22 @@ export const db = drizzle(expoDb, { schema });
  */
 export const initializeDatabase = async (): Promise<void> => {
   try {
+    const result = await db.get<{ userVersion: number }>(sql`PRAGMA user_version`);
+    const currentVersion = result?.userVersion ?? 0;
+
+    // TEMP: Destructive reset for schema changes until migrations are implemented.
+    // This avoids "no such column" crashes when multi-currency columns are missing.
+    if (currentVersion !== SCHEMA_VERSION) {
+      console.warn(
+        `[DB] Schema version mismatch (found ${currentVersion}, expected ${SCHEMA_VERSION}); resetting local database.`,
+      );
+      await db.run(sql`DROP TABLE IF EXISTS expense_splits`);
+      await db.run(sql`DROP TABLE IF EXISTS expenses`);
+      await db.run(sql`DROP TABLE IF EXISTS participants`);
+      await db.run(sql`DROP TABLE IF EXISTS trips`);
+      await db.run(sql.raw(`PRAGMA user_version = ${Number.isInteger(SCHEMA_VERSION) ? SCHEMA_VERSION : 0}`));
+    }
+
     // Foreign keys already enabled at module load (see above)
 
     // Create trips table
@@ -35,7 +55,8 @@ export const initializeDatabase = async (): Promise<void> => {
         description TEXT,
         start_date TEXT NOT NULL,
         end_date TEXT,
-        currency TEXT NOT NULL DEFAULT 'USD',
+        currency TEXT NOT NULL DEFAULT 'USD', -- legacy alias
+        currency_code TEXT NOT NULL DEFAULT 'USD', -- canonical ISO code
         created_at TEXT NOT NULL DEFAULT (datetime('now')),
         updated_at TEXT NOT NULL DEFAULT (datetime('now'))
       )
@@ -62,6 +83,10 @@ export const initializeDatabase = async (): Promise<void> => {
         description TEXT NOT NULL,
         amount INTEGER NOT NULL,
         currency TEXT NOT NULL,
+        original_currency TEXT NOT NULL,
+        original_amount_minor INTEGER NOT NULL,
+        fx_rate_to_trip REAL,
+        converted_amount_minor INTEGER NOT NULL,
         paid_by TEXT NOT NULL,
         category TEXT,
         date TEXT NOT NULL,
