@@ -4,44 +4,27 @@
  */
 
 import { Stack } from 'expo-router';
-import { useEffect, useState } from 'react';
 import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
-import { initializeDatabase } from '@db/client';
+import { useDbMigrations } from '@db/client';
 import { colors, spacing, typography } from '@ui/tokens';
 
 export default function RootLayout() {
-  const [isReady, setIsReady] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { success, error } = useDbMigrations();
 
-  useEffect(() => {
-    const initApp = async () => {
-      try {
-        await initializeDatabase();
-        setIsReady(true);
-      } catch (err) {
-        console.error('Failed to initialize database:', err);
-        setError(err instanceof Error ? err.message : 'Failed to initialize database');
-      }
-    };
+  if (error) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.errorTitle}>Database Migration Error</Text>
+        <Text style={styles.errorMessage}>{error.message}</Text>
+      </View>
+    );
+  }
 
-    initApp();
-  }, []);
-
-  // Show loading state while database initializes
-  if (!isReady) {
-    if (error) {
-      return (
-        <View style={styles.container}>
-          <Text style={styles.errorTitle}>Initialization Error</Text>
-          <Text style={styles.errorMessage}>{error}</Text>
-        </View>
-      );
-    }
-
+  if (!success) {
     return (
       <View style={styles.container}>
         <ActivityIndicator size="large" color={colors.primary} />
-        <Text style={styles.loadingText}>Initializing...</Text>
+        <Text style={styles.loadingText}>Applying database migrations...</Text>
       </View>
     );
   }
