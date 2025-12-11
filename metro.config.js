@@ -1,15 +1,7 @@
 // Metro configuration for Expo
-// Ensures .sql migration files are bundled and inlined as strings for Drizzle migrations
 const { getDefaultConfig } = require('expo/metro-config');
 
-const defaultConfig = getDefaultConfig(__dirname);
-const { assetExts, sourceExts } = defaultConfig.resolver;
+const config = getDefaultConfig(__dirname);
+config.resolver.sourceExts.push('sql');
 
-module.exports = {
-  ...defaultConfig,
-  resolver: {
-    ...defaultConfig.resolver,
-    assetExts: assetExts.filter((ext) => ext !== 'sql'),
-    sourceExts: [...sourceExts, 'sql'],
-  },
-};
+module.exports = config;

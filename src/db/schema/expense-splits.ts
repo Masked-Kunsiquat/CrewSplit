@@ -14,17 +14,17 @@ import { participants } from './participants';
  * Represents how a single expense is divided among participants
  * SYSTEM ARCHITECT: This is the authoritative source for all settlement math
  */
-export const expenseSplits = sqliteTable('expense_splits', {
+export const expenseSplits = sqliteTable('expense_splits', (t) => ({
   // UUID primary key
-  id: text('id').primaryKey(),
+  id: t.text('id').primaryKey(),
 
   // Foreign key to expenses table (CASCADE on delete)
-  expenseId: text('expense_id')
+  expenseId: t.text('expense_id')
     .notNull()
     .references(() => expenses.id, { onDelete: 'cascade' }),
 
   // Foreign key to participants table (RESTRICT on delete)
-  participantId: text('participant_id')
+  participantId: t.text('participant_id')
     .notNull()
     .references(() => participants.id, { onDelete: 'restrict' }),
 
@@ -35,13 +35,13 @@ export const expenseSplits = sqliteTable('expense_splits', {
    * - 'weight': positive number for weighted distribution
    * - 'amount': ignored (use amount field instead)
    */
-  share: real('share').notNull(),
+  share: t.real('share').notNull(),
 
   /**
    * Share type determines how to calculate participant's portion
    * Database-level CHECK constraint ensures only valid values are stored
    */
-  shareType: text('share_type')
+  shareType: t.text('share_type')
     .notNull()
     .$type<'equal' | 'percentage' | 'weight' | 'amount'>(),
 
@@ -50,18 +50,15 @@ export const expenseSplits = sqliteTable('expense_splits', {
    * For other types: NULL
    * Must sum to expense.amount across all splits for same expense
    */
-  amount: integer('amount'),
+  amount: t.integer('amount'),
 
   // Timestamps
-  createdAt: text('created_at')
+  createdAt: t.text('created_at')
     .notNull()
     .default(sql`(datetime('now'))`),
-  updatedAt: text('updated_at')
+  updatedAt: t.text('updated_at')
     .notNull()
     .default(sql`(datetime('now'))`),
-}, (table) => ({
-  // Database-level CHECK constraint for share_type enum
-  shareTypeCheck: sql`CHECK (${table.shareType} IN ('equal', 'percentage', 'weight', 'amount'))`,
 }));
 
 // Export type inference for TypeScript

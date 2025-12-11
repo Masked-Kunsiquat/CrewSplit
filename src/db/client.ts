@@ -5,9 +5,18 @@
 
 import { drizzle } from 'drizzle-orm/expo-sqlite';
 import { useMigrations } from 'drizzle-orm/expo-sqlite/migrator';
-import { openDatabaseSync } from 'expo-sqlite';
+import { openDatabaseSync, deleteDatabaseSync } from 'expo-sqlite';
 import migrations from './migrations/migrations';
 import * as schema from './schema';
+
+// TEMPORARY: Delete existing database to start fresh
+// Remove this after the first successful migration
+try {
+  deleteDatabaseSync('crewsplit.db');
+  console.log('🗑️ Deleted old database');
+} catch (error) {
+  console.log('No existing database to delete');
+}
 
 // Open SQLite database
 const expoDb = openDatabaseSync('crewsplit.db');

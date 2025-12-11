@@ -7,4 +7,4 @@
  */
 
 // Re-export all schema definitions from modular schema files
-export * from './schema';
+export * from './schema/index';

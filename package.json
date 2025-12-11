@@ -14,7 +14,7 @@
   "dependencies": {
     "babel-plugin-module-resolver": "^5.0.2",
     "babel-preset-expo": "~54.0.0",
-    "drizzle-orm": "^0.45.0",
+    "drizzle-orm": "^0.45.1",
     "expo": "^54.0.27",
     "expo-constants": "~18.0.11",
     "expo-crypto": "~15.0.8",
@@ -30,6 +30,7 @@
     "react-native-safe-area-context": "~5.6.0",
     "react-native-screens": "~4.16.0",
     "react-native-worklets": "0.5.1",
+    "undefined": "@expo/metro-config/babel-transformer",
     "zustand": "^5.0.9"
   },
   "private": true,
