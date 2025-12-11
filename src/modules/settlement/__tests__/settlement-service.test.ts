@@ -12,6 +12,22 @@ import { expenseSplits as expenseSplitsTable } from '@db/schema/expense-splits';
 import * as Crypto from 'expo-crypto';
 
 describe('SettlementService', () => {
+  /**
+   * Clean up all test data after each test to ensure isolation
+   * Deletes in correct order to respect foreign key constraints:
+   * 1. expense_splits (references expenses and participants)
+   * 2. expenses (references trips and participants)
+   * 3. participants (references trips)
+   * 4. trips (root table)
+   */
+  afterEach(async () => {
+    // Delete in reverse dependency order to avoid foreign key violations
+    await db.delete(expenseSplitsTable);
+    await db.delete(expensesTable);
+    await db.delete(participantsTable);
+    await db.delete(tripsTable);
+  });
+
   describe('computeSettlement', () => {
     it('should compute settlement for a trip with expenses', async () => {
       // Create a test trip
