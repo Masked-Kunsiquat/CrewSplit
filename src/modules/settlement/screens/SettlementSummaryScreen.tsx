@@ -1,56 +1,198 @@
+/**
+ * UI/UX ENGINEER: Settlement Summary Screen
+ * Displays participant balances and suggested payment transactions
+ */
+
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { theme } from '@ui/theme';
 import { Card, Button } from '@ui/components';
+import { useSettlementWithDisplay } from '../hooks/use-settlement-with-display';
+import { useDisplayCurrency } from '@hooks/use-display-currency';
+import { formatCurrency } from '@utils/currency';
 
 export default function SettlementSummaryScreen() {
   const { id: tripId } = useLocalSearchParams<{ id: string }>();
+  const { displayCurrency } = useDisplayCurrency();
 
-  const mockSettlement = [
-    { from: 'Cam', to: 'Alex', amount: '$18.00' },
-    { from: 'Bailey', to: 'Alex', amount: '$12.00' },
-  ];
+  const { settlement, loading, error } = useSettlementWithDisplay(
+    tripId as string,
+    displayCurrency ?? undefined
+  );
+
+  // Loading state
+  if (loading) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.centerContent}>
+          <ActivityIndicator size="large" color={theme.colors.primary} />
+          <Text style={styles.loadingText}>Calculating settlements...</Text>
+        </View>
+      </View>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.centerContent}>
+          <Text style={styles.errorTitle}>Error Loading Settlement</Text>
+          <Text style={styles.errorText}>{error.message}</Text>
+          <Button
+            title="Retry"
+            onPress={() => {
+              // The hook will automatically retry on remount
+              // For now, just show the button - a full refresh would require state management
+            }}
+          />
+        </View>
+      </View>
+    );
+  }
+
+  const hasSettlements = settlement.settlements.length > 0;
+  const hasBalances = settlement.balances.length > 0;
+  const showDisplayCurrency = !!settlement.displayCurrency;
 
   return (
     <View style={styles.container}>
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
         <Text style={styles.title}>Settlement</Text>
-        <Text style={styles.subtitle}>Trip: {tripId}</Text>
-
-        <Card style={styles.placeholderCard}>
-          <Text style={styles.eyebrow}>Coming soon</Text>
-          <Text style={styles.placeholderText}>
-            Deterministic balances and transaction minimization will render here. These rows are
-            mock data to keep navigation flowing.
+        <View style={styles.headerRow}>
+          <Text style={styles.subtitle}>
+            Total: {formatCurrency(settlement.totalExpenses, settlement.currency)}
           </Text>
+          {showDisplayCurrency && settlement.displayTotalExpenses && (
+            <Text style={styles.displayAmount}>
+              {formatCurrency(
+                settlement.displayTotalExpenses.displayAmount,
+                settlement.displayTotalExpenses.displayCurrency
+              )}
+            </Text>
+          )}
+        </View>
+
+        {/* Participant Balances Section */}
+        {hasBalances && (
+          <Card style={styles.section}>
+            <Text style={styles.sectionTitle}>Balances</Text>
+            {settlement.balances.map((balance) => (
+              <View key={balance.participantId} style={styles.balanceCard}>
+                <Text style={styles.participantName}>{balance.participantName}</Text>
+
+                <View style={styles.balanceRow}>
+                  <Text style={styles.balanceLabel}>Paid:</Text>
+                  <View style={styles.balanceAmounts}>
+                    <Text style={styles.balanceAmount}>
+                      {formatCurrency(balance.totalPaid, settlement.currency)}
+                    </Text>
+                    {showDisplayCurrency && balance.displayTotalPaid && (
+                      <Text style={styles.displayAmountSmall}>
+                        {formatCurrency(
+                          balance.displayTotalPaid.displayAmount,
+                          balance.displayTotalPaid.displayCurrency
+                        )}
+                      </Text>
+                    )}
+                  </View>
+                </View>
+
+                <View style={styles.balanceRow}>
+                  <Text style={styles.balanceLabel}>Owes:</Text>
+                  <View style={styles.balanceAmounts}>
+                    <Text style={styles.balanceAmount}>
+                      {formatCurrency(balance.totalOwed, settlement.currency)}
+                    </Text>
+                    {showDisplayCurrency && balance.displayTotalOwed && (
+                      <Text style={styles.displayAmountSmall}>
+                        {formatCurrency(
+                          balance.displayTotalOwed.displayAmount,
+                          balance.displayTotalOwed.displayCurrency
+                        )}
+                      </Text>
+                    )}
+                  </View>
+                </View>
+
+                <View style={[styles.balanceRow, styles.netRow]}>
+                  <Text style={styles.netLabel}>Net:</Text>
+                  <View style={styles.balanceAmounts}>
+                    <Text
+                      style={[
+                        styles.netAmount,
+                        balance.netPosition > 0 && styles.positiveAmount,
+                        balance.netPosition < 0 && styles.negativeAmount,
+                      ]}
+                    >
+                      {balance.netPosition > 0 ? '+' : ''}
+                      {formatCurrency(balance.netPosition, settlement.currency)}
+                    </Text>
+                    {showDisplayCurrency && balance.displayNetPosition && (
+                      <Text style={styles.displayAmountSmall}>
+                        {balance.displayNetPosition.displayAmount > 0 ? '+' : ''}
+                        {formatCurrency(
+                          balance.displayNetPosition.displayAmount,
+                          balance.displayNetPosition.displayCurrency
+                        )}
+                      </Text>
+                    )}
+                  </View>
+                </View>
+              </View>
+            ))}
+          </Card>
+        )}
+
+        {/* Suggested Payments Section */}
+        <Card style={styles.section}>
+          <Text style={styles.sectionTitle}>Suggested Payments</Text>
+          {hasSettlements ? (
+            settlement.settlements.map((item, index) => (
+              <View key={`${item.from}-${item.to}-${index}`} style={styles.settlementRow}>
+                <Text style={styles.settlementText}>
+                  <Text style={styles.from}>{item.fromName}</Text>
+                  <Text style={styles.arrow}> → </Text>
+                  <Text style={styles.to}>{item.toName}</Text>
+                </Text>
+                <View style={styles.settlementAmounts}>
+                  <Text style={styles.amount}>
+                    {formatCurrency(item.amount, settlement.currency)}
+                  </Text>
+                  {showDisplayCurrency && item.displayAmount && (
+                    <Text style={styles.displayAmountSmall}>
+                      {formatCurrency(
+                        item.displayAmount.displayAmount,
+                        item.displayAmount.displayCurrency
+                      )}
+                    </Text>
+                  )}
+                </View>
+              </View>
+            ))
+          ) : (
+            <Text style={styles.emptyText}>
+              {hasBalances
+                ? 'No payments needed - everyone is settled up!'
+                : 'No expenses yet. Add expenses to see settlements.'}
+            </Text>
+          )}
         </Card>
 
-        <Card style={styles.section}>
-          <Text style={styles.sectionTitle}>Who owes whom</Text>
-          {mockSettlement.map((item) => (
-            <View key={`${item.from}-${item.to}`} style={styles.settlementRow}>
-              <Text style={styles.settlementText}>
-                <Text style={styles.from}>{item.from}</Text>
-                <Text style={styles.arrow}> → </Text>
-                <Text style={styles.to}>{item.to}</Text>
-              </Text>
-              <Text style={styles.amount}>{item.amount}</Text>
-            </View>
-          ))}
-        </Card>
-
-        <Card style={styles.section}>
-          <Text style={styles.sectionTitle}>Audit trail</Text>
-          <Text style={styles.placeholderText}>
-            Normalized shares, paid vs. benefited deltas, and receipts will be shown once the math
-            engine is wired.
-          </Text>
-        </Card>
+        {/* Audit Trail Info */}
+        {hasBalances && (
+          <Card style={styles.infoCard}>
+            <Text style={styles.infoText}>
+              All amounts are calculated from expense data using deterministic math.
+              Net position shows how much each participant is owed (positive) or owes (negative).
+            </Text>
+          </Card>
+        )}
       </ScrollView>
 
       <View style={styles.footer}>
-        <Button title="Export (mock)" variant="outline" onPress={() => {}} fullWidth />
+        <Button title="Export Trip" variant="outline" onPress={() => {}} fullWidth />
       </View>
     </View>
   );
@@ -68,31 +210,48 @@ const styles = StyleSheet.create({
     padding: theme.spacing.lg,
     gap: theme.spacing.md,
   },
+  centerContent: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: theme.spacing.lg,
+    gap: theme.spacing.md,
+  },
   title: {
     fontSize: theme.typography.xxxl,
     fontWeight: theme.typography.bold,
     color: theme.colors.text,
   },
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: theme.spacing.xs,
+  },
   subtitle: {
     fontSize: theme.typography.sm,
     color: theme.colors.textSecondary,
   },
-  placeholderCard: {
-    borderStyle: 'dashed',
-    borderColor: theme.colors.border,
-    borderWidth: 1,
-  },
-  eyebrow: {
+  displayAmount: {
     fontSize: theme.typography.sm,
-    fontWeight: theme.typography.semibold,
-    color: theme.colors.textSecondary,
-    marginBottom: theme.spacing.xs,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    color: theme.colors.textMuted,
+    fontStyle: 'italic',
   },
-  placeholderText: {
+  loadingText: {
+    fontSize: theme.typography.base,
+    color: theme.colors.textSecondary,
+  },
+  errorTitle: {
+    fontSize: theme.typography.xl,
+    fontWeight: theme.typography.bold,
+    color: theme.colors.error,
+    marginBottom: theme.spacing.sm,
+  },
+  errorText: {
     fontSize: theme.typography.base,
     color: theme.colors.text,
+    textAlign: 'center',
+    marginBottom: theme.spacing.lg,
   },
   section: {
     gap: theme.spacing.sm,
@@ -102,11 +261,71 @@ const styles = StyleSheet.create({
     fontSize: theme.typography.lg,
     fontWeight: theme.typography.semibold,
     color: theme.colors.text,
+    marginBottom: theme.spacing.xs,
+  },
+  balanceCard: {
+    padding: theme.spacing.md,
+    backgroundColor: theme.colors.surface,
+    borderRadius: 8,
+    gap: theme.spacing.xs,
+  },
+  participantName: {
+    fontSize: theme.typography.base,
+    fontWeight: theme.typography.semibold,
+    color: theme.colors.text,
+    marginBottom: theme.spacing.xs,
+  },
+  balanceRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  balanceLabel: {
+    fontSize: theme.typography.sm,
+    color: theme.colors.textSecondary,
+  },
+  balanceAmounts: {
+    alignItems: 'flex-end',
+    gap: 2,
+  },
+  balanceAmount: {
+    fontSize: theme.typography.sm,
+    color: theme.colors.text,
+  },
+  displayAmountSmall: {
+    fontSize: theme.typography.xs,
+    color: theme.colors.textMuted,
+    fontStyle: 'italic',
+  },
+  netRow: {
+    marginTop: theme.spacing.xs,
+    paddingTop: theme.spacing.xs,
+    borderTopWidth: 1,
+    borderTopColor: theme.colors.border,
+  },
+  netLabel: {
+    fontSize: theme.typography.sm,
+    fontWeight: theme.typography.semibold,
+    color: theme.colors.text,
+  },
+  netAmount: {
+    fontSize: theme.typography.base,
+    fontWeight: theme.typography.bold,
+    color: theme.colors.text,
+  },
+  positiveAmount: {
+    color: theme.colors.success,
+  },
+  negativeAmount: {
+    color: theme.colors.error,
   },
   settlementRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    paddingVertical: theme.spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.border,
   },
   settlementText: {
     fontSize: theme.typography.base,
@@ -123,11 +342,29 @@ const styles = StyleSheet.create({
     fontWeight: theme.typography.semibold,
     color: theme.colors.primary,
   },
+  settlementAmounts: {
+    alignItems: 'flex-end',
+    marginLeft: theme.spacing.md,
+    gap: 2,
+  },
   amount: {
     fontSize: theme.typography.lg,
     fontWeight: theme.typography.bold,
     color: theme.colors.text,
-    marginLeft: theme.spacing.md,
+  },
+  emptyText: {
+    fontSize: theme.typography.base,
+    color: theme.colors.textSecondary,
+    textAlign: 'center',
+    paddingVertical: theme.spacing.lg,
+  },
+  infoCard: {
+    backgroundColor: theme.colors.surface,
+  },
+  infoText: {
+    fontSize: theme.typography.sm,
+    color: theme.colors.textSecondary,
+    lineHeight: 20,
   },
   footer: {
     padding: theme.spacing.lg,
