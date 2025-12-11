@@ -230,7 +230,7 @@ describe('normalizeShares', () => {
         { id: '2', expenseId: 'e1', participantId: 'p2', share: 0, shareType: 'amount' }, // No amount
       ];
 
-      expect(() => normalizeShares(splits, 5000)).toThrow('Split amounts must sum to expense total');
+      expect(() => normalizeShares(splits, 5000)).toThrow('All splits must have explicit amounts; found 1 missing amount(s)');
     });
   });
 

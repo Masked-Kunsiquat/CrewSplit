@@ -20,6 +20,7 @@ import { normalizeShares } from './normalize-shares';
  * @param splits - All expense splits (must include all splits for all expenses)
  * @param participants - All participants
  * @returns Array of participant balances, sorted by participantId for determinism
+ * @throws Error with code 'INVALID_PARTICIPANT_IDS' if splits reference non-existent participants
  */
 export const calculateBalances = (
   expenses: Expense[],
@@ -28,10 +29,46 @@ export const calculateBalances = (
 ): ParticipantBalance[] => {
   // Initialize balance map for all participants
   const balanceMap = new Map<string, { totalPaid: number; totalOwed: number }>();
+  const validParticipantIds = new Set<string>();
 
   participants.forEach(p => {
     balanceMap.set(p.id, { totalPaid: 0, totalOwed: 0 });
+    validParticipantIds.add(p.id);
   });
+
+  // Validate all splits reference valid participants
+  const invalidParticipantIds = new Set<string>();
+  splits.forEach(split => {
+    if (!validParticipantIds.has(split.participantId)) {
+      invalidParticipantIds.add(split.participantId);
+    }
+  });
+
+  if (invalidParticipantIds.size > 0) {
+    const error = new Error(
+      `Invalid participant IDs found in expense splits: ${Array.from(invalidParticipantIds).join(', ')}`
+    ) as Error & { code: string; invalidParticipantIds: string[] };
+    error.code = 'INVALID_PARTICIPANT_IDS';
+    error.invalidParticipantIds = Array.from(invalidParticipantIds);
+    throw error;
+  }
+
+  // Validate all payers exist
+  const invalidPayerIds = new Set<string>();
+  expenses.forEach(expense => {
+    if (!validParticipantIds.has(expense.paidBy)) {
+      invalidPayerIds.add(expense.paidBy);
+    }
+  });
+
+  if (invalidPayerIds.size > 0) {
+    const error = new Error(
+      `Invalid payer IDs found in expenses: ${Array.from(invalidPayerIds).join(', ')}`
+    ) as Error & { code: string; invalidParticipantIds: string[] };
+    error.code = 'INVALID_PARTICIPANT_IDS';
+    error.invalidParticipantIds = Array.from(invalidPayerIds);
+    throw error;
+  }
 
   // Group splits by expense
   const splitsByExpense = new Map<string, ExpenseSplit[]>();
