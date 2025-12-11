@@ -172,7 +172,9 @@ function normalizeAmount(splits: ExpenseSplit[], total: number): number[] {
   // Validate that all splits have explicit amounts
   const missingAmounts = splits.filter(s => s.amount === undefined || s.amount === null);
   if (missingAmounts.length > 0) {
-    throw new Error('Split amounts must sum to expense total');
+    throw new Error(
+      `All splits must have explicit amounts; found ${missingAmounts.length} missing amount(s)`
+    );
   }
 
   const amounts = splits.map(s => s.amount!);
