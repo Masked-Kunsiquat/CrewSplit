@@ -31,6 +31,10 @@ describe('Settlement Integration', () => {
           description: 'Hotel',
           amount: 30000, // $300.00
           currency: 'USD',
+          originalCurrency: 'USD',
+          originalAmountMinor: 30000,
+          convertedAmountMinor: 30000,
+          fxRateToTrip: null,
           paidBy: 'alice',
           date: '2024-01-01',
           createdAt: '2024-01-01',
@@ -42,6 +46,10 @@ describe('Settlement Integration', () => {
           description: 'Gas',
           amount: 6000, // $60.00
           currency: 'USD',
+          originalCurrency: 'USD',
+          originalAmountMinor: 6000,
+          convertedAmountMinor: 6000,
+          fxRateToTrip: null,
           paidBy: 'bob',
           date: '2024-01-01',
           createdAt: '2024-01-01',
@@ -53,6 +61,10 @@ describe('Settlement Integration', () => {
           description: 'Groceries',
           amount: 9000, // $90.00
           currency: 'USD',
+          originalCurrency: 'USD',
+          originalAmountMinor: 9000,
+          convertedAmountMinor: 9000,
+          fxRateToTrip: null,
           paidBy: 'charlie',
           date: '2024-01-01',
           createdAt: '2024-01-01',
@@ -129,6 +141,10 @@ describe('Settlement Integration', () => {
           description: 'Hotel (Alice and Bob only)',
           amount: 20000,
           currency: 'USD',
+          originalCurrency: 'USD',
+          originalAmountMinor: 20000,
+          convertedAmountMinor: 20000,
+          fxRateToTrip: null,
           paidBy: 'alice',
           date: '2024-01-01',
           createdAt: '2024-01-01',
@@ -140,6 +156,10 @@ describe('Settlement Integration', () => {
           description: 'Dinner (weighted by appetite)',
           amount: 12000,
           currency: 'USD',
+          originalCurrency: 'USD',
+          originalAmountMinor: 12000,
+          convertedAmountMinor: 12000,
+          fxRateToTrip: null,
           paidBy: 'bob',
           date: '2024-01-01',
           createdAt: '2024-01-01',
@@ -193,6 +213,10 @@ describe('Settlement Integration', () => {
           description: 'Everything',
           amount: 30000,
           currency: 'USD',
+          originalCurrency: 'USD',
+          originalAmountMinor: 30000,
+          convertedAmountMinor: 30000,
+          fxRateToTrip: null,
           paidBy: 'alice',
           date: '2024-01-01',
           createdAt: '2024-01-01',
@@ -234,6 +258,10 @@ describe('Settlement Integration', () => {
           description: 'Shared expense',
           amount: 10000, // $100.00
           currency: 'USD',
+          originalCurrency: 'USD',
+          originalAmountMinor: 10000,
+          convertedAmountMinor: 10000,
+          fxRateToTrip: null,
           paidBy: 'alice',
           date: '2024-01-01',
           createdAt: '2024-01-01',
@@ -280,9 +308,9 @@ describe('Settlement Integration', () => {
       ];
 
       const expenses: Expense[] = [
-        { id: 'e1', tripId: 't1', description: 'E1', amount: 5000, currency: 'USD', paidBy: 'alice', date: '2024-01-01', createdAt: '2024-01-01', updatedAt: '2024-01-01' },
-        { id: 'e2', tripId: 't1', description: 'E2', amount: 7000, currency: 'USD', paidBy: 'bob', date: '2024-01-01', createdAt: '2024-01-01', updatedAt: '2024-01-01' },
-        { id: 'e3', tripId: 't1', description: 'E3', amount: 3000, currency: 'USD', paidBy: 'charlie', date: '2024-01-01', createdAt: '2024-01-01', updatedAt: '2024-01-01' },
+        { id: 'e1', tripId: 't1', description: 'E1', amount: 5000, currency: 'USD', originalCurrency: 'USD', originalAmountMinor: 5000, convertedAmountMinor: 5000, fxRateToTrip: null, paidBy: 'alice', date: '2024-01-01', createdAt: '2024-01-01', updatedAt: '2024-01-01' },
+        { id: 'e2', tripId: 't1', description: 'E2', amount: 7000, currency: 'USD', originalCurrency: 'USD', originalAmountMinor: 7000, convertedAmountMinor: 7000, fxRateToTrip: null, paidBy: 'bob', date: '2024-01-01', createdAt: '2024-01-01', updatedAt: '2024-01-01' },
+        { id: 'e3', tripId: 't1', description: 'E3', amount: 3000, currency: 'USD', originalCurrency: 'USD', originalAmountMinor: 3000, convertedAmountMinor: 3000, fxRateToTrip: null, paidBy: 'charlie', date: '2024-01-01', createdAt: '2024-01-01', updatedAt: '2024-01-01' },
       ];
 
       const splits: ExpenseSplit[] = [
@@ -327,7 +355,7 @@ describe('Settlement Integration', () => {
       ];
 
       const expenses: Expense[] = [
-        { id: 'e1', tripId: 't1', description: 'Test', amount: 9999, currency: 'USD', paidBy: 'alice', date: '2024-01-01', createdAt: '2024-01-01', updatedAt: '2024-01-01' },
+        { id: 'e1', tripId: 't1', description: 'Test', amount: 9999, currency: 'USD', originalCurrency: 'USD', originalAmountMinor: 9999, convertedAmountMinor: 9999, fxRateToTrip: null, paidBy: 'alice', date: '2024-01-01', createdAt: '2024-01-01', updatedAt: '2024-01-01' },
       ];
 
       const splits: ExpenseSplit[] = [
