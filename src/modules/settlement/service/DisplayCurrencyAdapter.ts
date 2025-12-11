@@ -162,9 +162,14 @@ export class DisplayCurrencyAdapter {
 }
 
 /**
+ * Default FX rate provider instance
+ */
+export const defaultFxRateProvider = new StubFxRateProvider();
+
+/**
  * Default adapter instance with stub FX provider
  * Can be replaced with custom provider in production
  */
 export const defaultDisplayCurrencyAdapter = new DisplayCurrencyAdapter(
-  new StubFxRateProvider()
+  defaultFxRateProvider
 );
