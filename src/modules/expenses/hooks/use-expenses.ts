@@ -3,7 +3,7 @@
  * React hooks for accessing expense data with proper state management
  */
 
-import { useEffect, useState } from 'react';
+import { useQuery } from '../../../hooks';
 import { getExpensesForTrip, getExpenseById, getExpenseSplits } from '../repository';
 import type { Expense, ExpenseSplit } from '../types';
 
@@ -13,88 +13,40 @@ import type { Expense, ExpenseSplit } from '../types';
  * @returns Object with expenses array, loading state, and error
  */
 export function useExpenses(tripId: string) {
-  const [expenses, setExpenses] = useState<Expense[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
-
-  useEffect(() => {
-    let mounted = true;
-
-    async function loadExpenses() {
-      try {
-        setLoading(true);
-        setError(null);
-        const data = await getExpensesForTrip(tripId);
-        if (mounted) {
-          setExpenses(data);
-        }
-      } catch (err) {
-        if (mounted) {
-          setError(err instanceof Error ? err : new Error('Failed to load expenses'));
-        }
-      } finally {
-        if (mounted) {
-          setLoading(false);
-        }
-      }
-    }
-
-    loadExpenses();
-
-    return () => {
-      mounted = false;
-    };
-  }, [tripId]);
+  const { data: expenses, loading, error } = useQuery(
+    () => getExpensesForTrip(tripId),
+    [tripId],
+    [],
+    'Failed to load expenses'
+  );
 
   return { expenses, loading, error };
 }
 
 /**
- * Hook to fetch a single expense by ID with its splits
+ * Hook to fetch a single expense by ID with its splits (parallel fetch)
  * @param expenseId - Expense UUID
  * @returns Object with expense, splits, loading state, and error
  */
 export function useExpenseWithSplits(expenseId: string) {
-  const [expense, setExpense] = useState<Expense | null>(null);
-  const [splits, setSplits] = useState<ExpenseSplit[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
+  const {
+    data,
+    loading,
+    error,
+  } = useQuery(
+    async () => {
+      // Fetch expense and splits in parallel
+      const [expenseData, splitsData] = await Promise.all([
+        getExpenseById(expenseId),
+        getExpenseSplits(expenseId),
+      ]);
 
-  useEffect(() => {
-    let mounted = true;
+      return { expense: expenseData, splits: splitsData };
+    },
+    [expenseId],
+    { expense: null, splits: [] },
+    'Failed to load expense'
+  );
 
-    async function loadExpenseWithSplits() {
-      try {
-        setLoading(true);
-        setError(null);
-
-        // Fetch expense and splits in parallel
-        const [expenseData, splitsData] = await Promise.all([
-          getExpenseById(expenseId),
-          getExpenseSplits(expenseId),
-        ]);
-
-        if (mounted) {
-          setExpense(expenseData);
-          setSplits(splitsData);
-        }
-      } catch (err) {
-        if (mounted) {
-          setError(err instanceof Error ? err : new Error('Failed to load expense'));
-        }
-      } finally {
-        if (mounted) {
-          setLoading(false);
-        }
-      }
-    }
-
-    loadExpenseWithSplits();
-
-    return () => {
-      mounted = false;
-    };
-  }, [expenseId]);
-
-  return { expense, splits, loading, error };
+  return { expense: data.expense, splits: data.splits, loading, error };
 }
