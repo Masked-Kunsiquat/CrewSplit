@@ -1,22 +1,39 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, ActivityIndicator, Alert } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { theme } from '@ui/theme';
-import { Button, Card, Input, ParticipantChip } from '@ui/components';
+import { Button, Input, ParticipantChip } from '@ui/components';
+import { useTripById } from '../../trips/hooks/use-trips';
+import { useParticipants } from '../../participants/hooks/use-participants';
+import { addExpense } from '../repository';
+import { parseCurrency } from '@utils/currency';
 
 export default function AddExpenseScreen() {
   const router = useRouter();
   const { id: tripId } = useLocalSearchParams<{ id: string }>();
 
-  const [description, setDescription] = useState('Mock expense');
-  const [amount, setAmount] = useState('42.00');
-  const [selectedParticipants, setSelectedParticipants] = useState<Set<string>>(new Set(['1']));
+  const { trip, loading: tripLoading } = useTripById(tripId);
+  const { participants, loading: participantsLoading } = useParticipants(tripId);
 
-  const mockParticipants = [
-    { id: '1', name: 'Alex', avatarColor: '#FF6B6B' },
-    { id: '2', name: 'Bailey', avatarColor: '#4ECDC4' },
-    { id: '3', name: 'Cam', avatarColor: '#45B7D1' },
-  ];
+  const [description, setDescription] = useState('');
+  const [amount, setAmount] = useState('');
+  const [paidBy, setPaidBy] = useState<string | null>(null);
+  const [selectedParticipants, setSelectedParticipants] = useState<Set<string>>(new Set());
+  const [isCreating, setIsCreating] = useState(false);
+
+  // Auto-select first participant as payer if not set
+  React.useEffect(() => {
+    if (participants.length > 0 && !paidBy) {
+      setPaidBy(participants[0].id);
+    }
+  }, [participants, paidBy]);
+
+  // Auto-select all participants for split if none selected
+  React.useEffect(() => {
+    if (participants.length > 0 && selectedParticipants.size === 0) {
+      setSelectedParticipants(new Set(participants.map(p => p.id)));
+    }
+  }, [participants]);
 
   const handleToggleParticipant = (participantId: string) => {
     setSelectedParticipants(prev => {
@@ -30,18 +47,69 @@ export default function AddExpenseScreen() {
     });
   };
 
-  const handleCreate = () => {
-    // Placeholder navigation until repositories are wired
-    router.replace(`/trips/${tripId}/expenses`);
+  const handleCreate = async () => {
+    if (!trip || !paidBy || selectedParticipants.size === 0) {
+      return;
+    }
+
+    const amountMinor = parseCurrency(amount);
+    if (amountMinor <= 0) {
+      Alert.alert('Invalid Amount', 'Please enter a valid amount greater than zero.');
+      return;
+    }
+
+    setIsCreating(true);
+    try {
+      await addExpense({
+        tripId,
+        description: description.trim(),
+        originalAmountMinor: amountMinor,
+        originalCurrency: trip.currency,
+        paidBy,
+        splits: Array.from(selectedParticipants).map(participantId => ({
+          participantId,
+          share: 1,
+          shareType: 'equal' as const,
+        })),
+      });
+
+      router.back();
+    } catch (err) {
+      Alert.alert('Error', 'Failed to add expense');
+      setIsCreating(false);
+    }
   };
 
-  const normalizedAmountInput = amount.replace(',', '.').trim();
-  const parsedAmount = Number(normalizedAmountInput);
+  const loading = tripLoading || participantsLoading;
+
   const canSubmit =
+    !isCreating &&
     description.trim().length > 0 &&
-    !Number.isNaN(parsedAmount) &&
-    parsedAmount > 0 &&
+    amount.trim().length > 0 &&
+    paidBy !== null &&
     selectedParticipants.size > 0;
+
+  if (loading) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.centerContent}>
+          <ActivityIndicator size="large" color={theme.colors.primary} />
+        </View>
+      </View>
+    );
+  }
+
+  if (!trip || participants.length === 0) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.centerContent}>
+          <Text style={styles.errorText}>
+            {!trip ? 'Trip not found' : 'Add participants first'}
+          </Text>
+        </View>
+      </View>
+    );
+  }
 
   return (
     <KeyboardAvoidingView
@@ -55,34 +123,45 @@ export default function AddExpenseScreen() {
       >
         <Text style={styles.title}>Add Expense</Text>
 
-        <Card style={styles.placeholderCard}>
-          <Text style={styles.eyebrow}>Coming soon</Text>
-          <Text style={styles.placeholderText}>
-            This form will post to SQLite/Drizzle. For now it demonstrates the tap-to-toggle flow.
-          </Text>
-        </Card>
-
         <Input
           label="What was this?"
           placeholder="e.g., Dinner at Marina"
           value={description}
           onChangeText={setDescription}
           autoFocus
+          editable={!isCreating}
         />
 
         <Input
-          label="Amount"
+          label={`Amount (${trip.currency})`}
           placeholder="0.00"
           value={amount}
           onChangeText={setAmount}
           keyboardType="decimal-pad"
+          editable={!isCreating}
         />
 
         <View style={styles.section}>
-          <Text style={styles.sectionLabel}>Split between</Text>
-          <Text style={styles.sectionHelper}>Tap chips to toggle participants (mock data)</Text>
+          <Text style={styles.sectionLabel}>Paid by</Text>
           <View style={styles.participantChips}>
-            {mockParticipants.map(participant => (
+            {participants.map(participant => (
+              <ParticipantChip
+                key={participant.id}
+                id={participant.id}
+                name={participant.name}
+                avatarColor={participant.avatarColor}
+                selected={paidBy === participant.id}
+                onToggle={() => setPaidBy(participant.id)}
+              />
+            ))}
+          </View>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionLabel}>Split between</Text>
+          <Text style={styles.sectionHelper}>Tap to toggle participants in this expense</Text>
+          <View style={styles.participantChips}>
+            {participants.map(participant => (
               <ParticipantChip
                 key={participant.id}
                 id={participant.id}
@@ -102,10 +181,11 @@ export default function AddExpenseScreen() {
           variant="outline"
           onPress={() => router.back()}
           fullWidth
+          disabled={isCreating}
         />
         <View style={{ height: theme.spacing.md }} />
         <Button
-          title="Save (mock)"
+          title={isCreating ? 'Saving...' : 'Save Expense'}
           onPress={handleCreate}
           fullWidth
           disabled={!canSubmit}
@@ -132,22 +212,15 @@ const styles = StyleSheet.create({
     fontWeight: theme.typography.bold,
     color: theme.colors.text,
   },
-  placeholderCard: {
-    borderStyle: 'dashed',
-    borderColor: theme.colors.border,
-    borderWidth: 1,
+  centerContent: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  eyebrow: {
-    fontSize: theme.typography.sm,
-    fontWeight: theme.typography.semibold,
-    color: theme.colors.textSecondary,
-    marginBottom: theme.spacing.xs,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  placeholderText: {
-    fontSize: theme.typography.base,
-    color: theme.colors.text,
+  errorText: {
+    fontSize: theme.typography.lg,
+    color: theme.colors.error,
+    textAlign: 'center',
   },
   section: {
     gap: theme.spacing.xs,
