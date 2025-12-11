@@ -22,19 +22,11 @@ export async function computeSettlement(tripId: string): Promise<SettlementSumma
     getParticipantsForTrip(tripId),
   ]);
 
-  // Load all splits for all expenses in parallel
-  const allSplits = (
-    await Promise.all(expenses.map((expense) => getExpenseSplits(expense.id)))
-  ).flat();
-
   // Determine trip currency from first expense (all are normalized to trip currency)
   const tripCurrency = expenses.length > 0 ? expenses[0].currency : 'USD';
 
-  // Calculate total expenses (in trip currency)
-  const totalExpenses = expenses.reduce((sum, expense) => sum + expense.amount, 0);
-
-  // Edge case: no expenses or participants
-  if (expenses.length === 0 || participants.length === 0) {
+  // Edge case: no expenses
+  if (expenses.length === 0) {
     return {
       balances: [],
       settlements: [],
@@ -42,6 +34,24 @@ export async function computeSettlement(tripId: string): Promise<SettlementSumma
       currency: tripCurrency,
     };
   }
+
+  // Calculate total expenses (in trip currency)
+  const totalExpenses = expenses.reduce((sum, expense) => sum + expense.amount, 0);
+
+  // Edge case: participants missing — keep totalExpenses for auditing but skip settlements
+  if (participants.length === 0) {
+    return {
+      balances: [],
+      settlements: [],
+      totalExpenses,
+      currency: tripCurrency,
+    };
+  }
+
+  // Load all splits for all expenses in parallel
+  const allSplits = (
+    await Promise.all(expenses.map((expense) => getExpenseSplits(expense.id)))
+  ).flat();
 
   // Step 1: Calculate balances (who paid what, who owes what)
   const balances = calculateBalances(expenses, allSplits, participants);
