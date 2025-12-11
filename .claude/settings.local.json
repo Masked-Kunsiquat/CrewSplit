@@ -11,7 +11,15 @@
       "Bash(npm uninstall:*)",
       "Bash(if not exist \"c:\\Users\\blain\\Documents\\GitHub\\CrewSplit\\CrewSplit\\src\\modules\\settlement\" mkdir \"c:\\Users\\blain\\Documents\\GitHub\\CrewSplit\\CrewSplit\\src\\modules\\settlement\")",
       "Bash(npm test:*)",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Bash(dir:*)",
+      "Bash(powershell -Command \"Get-ChildItem ''CrewSplit'' -Force | ForEach-Object { Move-Item -Path $_FullName -Destination ''..'' -Force }\")",
+      "Bash(rm:*)",
+      "Bash(powershell -Command \"Get-ChildItem ''node_modules'' -Recurse -Filter ''metro-transform-worker.js'' | Select-Object -First 3 FullName\")",
+      "Bash(node -e:*)",
+      "Bash(npx drizzle-kit generate)",
+      "Bash(npx drizzle-kit push:*)",
+      "Bash(npx expo start:*)"
     ]
   }
 }
