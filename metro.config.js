@@ -7,10 +7,6 @@ const { assetExts, sourceExts } = defaultConfig.resolver;
 
 module.exports = {
   ...defaultConfig,
-  transformer: {
-    ...defaultConfig.transformer,
-    babelTransformerPath: require.resolve('./metro.sql.transformer'),
-  },
   resolver: {
     ...defaultConfig.resolver,
     assetExts: assetExts.filter((ext) => ext !== 'sql'),
