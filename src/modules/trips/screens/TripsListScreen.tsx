@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import { theme } from '@ui/theme';
 import { Button, Card } from '@ui/components';
@@ -16,7 +16,16 @@ export default function TripsListScreen() {
   return (
     <View style={styles.container}>
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
-        <Text style={styles.title}>Trips</Text>
+        <View style={styles.header}>
+          <Text style={styles.title}>Trips</Text>
+          <TouchableOpacity
+            style={styles.settingsButton}
+            onPress={() => router.push('/settings')}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.settingsIcon}>⚙</Text>
+          </TouchableOpacity>
+        </View>
 
         <Card style={styles.placeholderCard}>
           <Text style={styles.eyebrow}>Coming soon</Text>
@@ -60,10 +69,22 @@ const styles = StyleSheet.create({
     padding: theme.spacing.lg,
     gap: theme.spacing.md,
   },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
   title: {
     fontSize: theme.typography.xxxl,
     fontWeight: theme.typography.bold,
     color: theme.colors.text,
+  },
+  settingsButton: {
+    padding: theme.spacing.sm,
+  },
+  settingsIcon: {
+    fontSize: 24,
+    color: theme.colors.textSecondary,
   },
   placeholderCard: {
     borderStyle: 'dashed',
