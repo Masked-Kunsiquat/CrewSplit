@@ -12,6 +12,7 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
+    "@react-native-async-storage/async-storage": "2.2.0",
     "babel-plugin-module-resolver": "^5.0.2",
     "babel-preset-expo": "~54.0.0",
     "drizzle-orm": "^0.45.1",
