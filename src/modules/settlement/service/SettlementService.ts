@@ -1,123 +1,63 @@
 /**
- * SETTLEMENT SERVICE
- * Settlement Integration Engineer: Hooks up pure settlement algorithms to data layer
- * Operates exclusively on convertedAmountMinor (trip currency)
+ * SETTLEMENT INTEGRATION ENGINEER: Settlement Service
+ * Connects settlement algorithms to the data layer
+ * Operates exclusively on trip currency (convertedAmountMinor)
  */
 
-import { db } from '@db/client';
-import { expenses as expensesTable } from '@db/schema/expenses';
-import { expenseSplits as expenseSplitsTable } from '@db/schema/expense-splits';
-import { participants as participantsTable } from '@db/schema/participants';
-import { trips as tripsTable } from '@db/schema/trips';
-import { eq } from 'drizzle-orm';
+import { getExpensesForTrip, getExpenseSplits } from '../../expenses/repository';
+import { getParticipantsForTrip } from '../../participants/repository';
 import { calculateBalances } from '../calculate-balances';
 import { optimizeSettlements } from '../optimize-settlements';
-import { SettlementSummary } from '../types';
-import type { Expense, ExpenseSplit } from '@modules/expenses/types';
-import type { Participant } from '@modules/participants/types';
+import type { SettlementSummary } from '../types';
 
 /**
- * Get all expense splits for a trip by joining through expenses
- * Returns splits with the expense's trip association
+ * Compute settlement summary for a trip
+ * @param tripId - Trip UUID
+ * @returns Settlement summary with balances and optimized settlements
  */
-const getExpenseSplitsForTrip = async (tripId: string): Promise<ExpenseSplit[]> => {
-  const rows = await db
-    .select({
-      id: expenseSplitsTable.id,
-      expenseId: expenseSplitsTable.expenseId,
-      participantId: expenseSplitsTable.participantId,
-      share: expenseSplitsTable.share,
-      shareType: expenseSplitsTable.shareType,
-      amount: expenseSplitsTable.amount,
-    })
-    .from(expenseSplitsTable)
-    .innerJoin(expensesTable, eq(expenseSplitsTable.expenseId, expensesTable.id))
-    .where(eq(expensesTable.tripId, tripId));
+export async function computeSettlement(tripId: string): Promise<SettlementSummary> {
+  // Load all data in parallel for performance
+  const [expenses, participants] = await Promise.all([
+    getExpensesForTrip(tripId),
+    getParticipantsForTrip(tripId),
+  ]);
 
-  return rows.map(row => ({
-    id: row.id,
-    expenseId: row.expenseId,
-    participantId: row.participantId,
-    share: row.share,
-    shareType: row.shareType as 'equal' | 'percentage' | 'amount' | 'weight',
-    amount: row.amount ?? undefined,
-  }));
-};
+  // Determine trip currency from first expense (all are normalized to trip currency)
+  const tripCurrency = expenses.length > 0 ? expenses[0].currency : 'USD';
 
-/**
- * Compute settlement for a trip
- *
- * @param tripId - The trip ID to compute settlements for
- * @returns Settlement summary containing balances, settlements, total expenses, and currency
- *
- * @throws Error if trip not found
- *
- * IMPORTANT: This function operates exclusively on convertedAmountMinor (trip currency).
- * All calculations are performed in the trip's currency minor units.
- * No currency conversions or UI formatting are performed here.
- */
-export const computeSettlement = async (tripId: string): Promise<SettlementSummary> => {
-  // Load trip to get currency
-  const tripRows = await db
-    .select({ currencyCode: tripsTable.currencyCode })
-    .from(tripsTable)
-    .where(eq(tripsTable.id, tripId))
-    .limit(1);
-
-  if (!tripRows.length) {
-    throw new Error(`Trip not found for id ${tripId}`);
+  // Edge case: no expenses
+  if (expenses.length === 0) {
+    return {
+      balances: [],
+      settlements: [],
+      totalExpenses: 0,
+      currency: tripCurrency,
+    };
   }
 
-  const tripCurrency = tripRows[0].currencyCode;
-
-  // Load all expenses for the trip (using convertedAmountMinor as amount)
-  const expenseRows = await db
-    .select()
-    .from(expensesTable)
-    .where(eq(expensesTable.tripId, tripId));
-
-  const expenses: Expense[] = expenseRows.map(row => ({
-    id: row.id,
-    tripId: row.tripId,
-    description: row.description,
-    amount: row.convertedAmountMinor, // Use convertedAmountMinor (trip currency)
-    currency: row.currency,
-    originalCurrency: row.originalCurrency,
-    originalAmountMinor: row.originalAmountMinor,
-    fxRateToTrip: row.fxRateToTrip ?? undefined,
-    convertedAmountMinor: row.convertedAmountMinor,
-    paidBy: row.paidBy,
-    category: row.category ?? undefined,
-    date: row.date,
-    createdAt: row.createdAt,
-    updatedAt: row.updatedAt,
-  }));
-
-  // Load all expense splits for the trip
-  const splits = await getExpenseSplitsForTrip(tripId);
-
-  // Load all participants for the trip
-  const participantRows = await db
-    .select()
-    .from(participantsTable)
-    .where(eq(participantsTable.tripId, tripId));
-
-  const participants: Participant[] = participantRows.map(row => ({
-    id: row.id,
-    tripId: row.tripId,
-    name: row.name,
-    avatarColor: row.avatarColor ?? undefined,
-    createdAt: row.createdAt,
-  }));
-
-  // Calculate balances using pure function
-  const balances = calculateBalances(expenses, splits, participants);
-
-  // Optimize settlements using pure function
-  const settlements = optimizeSettlements(balances);
-
-  // Calculate total expenses
+  // Calculate total expenses (in trip currency)
   const totalExpenses = expenses.reduce((sum, expense) => sum + expense.amount, 0);
+
+  // Edge case: participants missing — keep totalExpenses for auditing but skip settlements
+  if (participants.length === 0) {
+    return {
+      balances: [],
+      settlements: [],
+      totalExpenses,
+      currency: tripCurrency,
+    };
+  }
+
+  // Load all splits for all expenses in parallel
+  const allSplits = (
+    await Promise.all(expenses.map((expense) => getExpenseSplits(expense.id)))
+  ).flat();
+
+  // Step 1: Calculate balances (who paid what, who owes what)
+  const balances = calculateBalances(expenses, allSplits, participants);
+
+  // Step 2: Optimize settlements (minimize transactions)
+  const settlements = optimizeSettlements(balances);
 
   return {
     balances,
@@ -125,11 +65,4 @@ export const computeSettlement = async (tripId: string): Promise<SettlementSumma
     totalExpenses,
     currency: tripCurrency,
   };
-};
-
-/**
- * Settlement Service API
- */
-export const SettlementService = {
-  computeSettlement,
-};
+}

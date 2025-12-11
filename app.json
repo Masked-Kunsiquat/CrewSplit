@@ -16,7 +16,8 @@
       "package": "com.crewsplit.app"
     },
     "plugins": [
-      "expo-router"
+      "expo-router",
+      "expo-asset"
     ],
     "scheme": "crewsplit"
   }
