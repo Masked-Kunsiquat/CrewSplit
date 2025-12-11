@@ -832,10 +832,28 @@ describe('SettlementService', () => {
       expect(settlement1).toEqual(settlement2);
       expect(settlement2).toEqual(settlement3);
 
-      // Verify deterministic ordering
+      // Verify deterministic ordering of balances
       expect(settlement1.balances).toEqual(settlement1.balances.slice().sort((a, b) =>
         a.participantId.localeCompare(b.participantId)
       ));
+
+      // Verify deterministic ordering of settlements
+      const expectedSettlementOrder = settlement1.settlements.slice().sort((a, b) => {
+        // Sort by from participant ID first
+        const fromCompare = a.from.localeCompare(b.from);
+        if (fromCompare !== 0) return fromCompare;
+
+        // Then by to participant ID
+        const toCompare = a.to.localeCompare(b.to);
+        if (toCompare !== 0) return toCompare;
+
+        // Finally by amount (numeric sort)
+        return a.amount - b.amount;
+      });
+
+      expect(settlement1.settlements).toEqual(expectedSettlementOrder);
+      expect(settlement2.settlements).toEqual(expectedSettlementOrder);
+      expect(settlement3.settlements).toEqual(expectedSettlementOrder);
     });
   });
 });
