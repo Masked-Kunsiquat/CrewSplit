@@ -62,6 +62,7 @@ export function useTripById(tripId: string | null) {
     if (!tripId) {
       setTrip(null);
       setLoading(false);
+      setError(null);
       return;
     }
 
@@ -71,7 +72,7 @@ export function useTripById(tripId: string | null) {
       try {
         setLoading(true);
         setError(null);
-        const data = await getTripById(tripId);
+        const data = await getTripById(tripId!);
         if (mounted) {
           setTrip(data);
         }

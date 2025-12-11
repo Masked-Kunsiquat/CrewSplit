@@ -2,5 +2,5 @@
  * LOCAL DATA ENGINEER: Trip Hooks - Public API
  */
 
-export * from './useTrips';
-export * from './useTripMutations';
+export * from './use-trips';
+export * from './use-trip-mutations';

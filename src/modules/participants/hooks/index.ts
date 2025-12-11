@@ -2,5 +2,5 @@
  * LOCAL DATA ENGINEER: Participant Hooks - Public API
  */
 
-export * from './useParticipants';
-export * from './useParticipantMutations';
+export * from './use-participants';
+export * from './use-participant-mutations';
