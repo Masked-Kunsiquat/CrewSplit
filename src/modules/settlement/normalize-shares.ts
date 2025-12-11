@@ -86,8 +86,9 @@ function normalizeEqual(count: number, total: number): number[] {
 function normalizePercentage(splits: ExpenseSplit[], total: number): number[] {
   const totalPercentage = splits.reduce((sum, s) => sum + s.share, 0);
 
-  // Allow small floating-point tolerance
-  if (Math.abs(totalPercentage - 100) > 0.01) {
+  // Allow small floating-point tolerance (0.01 with epsilon for floating-point errors)
+  const tolerance = 0.01 + Number.EPSILON * 100;
+  if (Math.abs(totalPercentage - 100) > tolerance) {
     throw new Error(`Percentages must sum to 100, got ${totalPercentage}`);
   }
 
@@ -168,7 +169,13 @@ function normalizeWeight(splits: ExpenseSplit[], total: number): number[] {
  * Amounts must sum to total
  */
 function normalizeAmount(splits: ExpenseSplit[], total: number): number[] {
-  const amounts = splits.map(s => s.amount ?? 0);
+  // Validate that all splits have explicit amounts
+  const missingAmounts = splits.filter(s => s.amount === undefined || s.amount === null);
+  if (missingAmounts.length > 0) {
+    throw new Error('Split amounts must sum to expense total');
+  }
+
+  const amounts = splits.map(s => s.amount!);
   const sum = amounts.reduce((acc, a) => acc + a, 0);
 
   if (sum !== total) {
