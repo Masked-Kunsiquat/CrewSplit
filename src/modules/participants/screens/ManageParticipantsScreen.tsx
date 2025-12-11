@@ -1,45 +1,93 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Alert } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { theme } from '@ui/theme';
 import { Button, Card, Input, ParticipantChip } from '@ui/components';
+import { useParticipants } from '../hooks/use-participants';
+import { createParticipant, deleteParticipant } from '../repository';
+
+// Predefined avatar colors for new participants
+const AVATAR_COLORS = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#F7DC6F', '#BB8FCE', '#85C1E2'];
 
 export default function ManageParticipantsScreen() {
   const { id: tripId } = useLocalSearchParams<{ id: string }>();
   const [newParticipantName, setNewParticipantName] = useState('');
-  const [selected, setSelected] = useState<Set<string>>(new Set(['1', '2']));
+  const [isAdding, setIsAdding] = useState(false);
 
-  const mockParticipants = [
-    { id: '1', name: 'Alex', avatarColor: '#FF6B6B' },
-    { id: '2', name: 'Bailey', avatarColor: '#4ECDC4' },
-    { id: '3', name: 'Cam', avatarColor: '#45B7D1' },
-  ];
+  const { participants, loading, error } = useParticipants(tripId);
 
-  const handleToggle = (participantId: string) => {
-    setSelected(prev => {
-      const next = new Set(prev);
-      if (next.has(participantId)) {
-        next.delete(participantId);
-      } else {
-        next.add(participantId);
-      }
-      return next;
-    });
+  const handleAddParticipant = async () => {
+    if (!newParticipantName.trim()) {
+      return;
+    }
+
+    setIsAdding(true);
+    try {
+      // Pick a random color
+      const avatarColor = AVATAR_COLORS[Math.floor(Math.random() * AVATAR_COLORS.length)];
+
+      await createParticipant({
+        tripId,
+        name: newParticipantName.trim(),
+        avatarColor,
+      });
+
+      setNewParticipantName('');
+      // Participants will auto-refresh via useParticipants hook
+    } catch (err) {
+      Alert.alert('Error', 'Failed to add participant');
+    } finally {
+      setIsAdding(false);
+    }
   };
+
+  const handleDeleteParticipant = async (participantId: string, participantName: string) => {
+    Alert.alert(
+      'Remove Participant',
+      `Remove ${participantName} from this trip?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Remove',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await deleteParticipant(participantId);
+            } catch (err) {
+              Alert.alert('Error', 'Failed to remove participant');
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  if (loading) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.centerContent}>
+          <ActivityIndicator size="large" color={theme.colors.primary} />
+        </View>
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.errorContainer}>
+          <Card style={styles.errorCard}>
+            <Text style={styles.errorText}>{error}</Text>
+          </Card>
+        </View>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
         <Text style={styles.title}>Participants</Text>
-        <Text style={styles.subtitle}>Trip: {tripId}</Text>
-
-        <Card style={styles.placeholderCard}>
-          <Text style={styles.eyebrow}>Coming soon</Text>
-          <Text style={styles.placeholderText}>
-            Real add/remove flows will connect to the repository. Chips below show the tap-to-toggle
-            pattern we will use in expense splits.
-          </Text>
-        </Card>
 
         <Input
           label="Add a participant"
@@ -47,24 +95,42 @@ export default function ManageParticipantsScreen() {
           value={newParticipantName}
           onChangeText={setNewParticipantName}
           returnKeyType="done"
+          onSubmitEditing={handleAddParticipant}
+          editable={!isAdding}
         />
-        <Button title="Add (mock)" onPress={() => setNewParticipantName('')} fullWidth />
+        <Button
+          title={isAdding ? 'Adding...' : 'Add Participant'}
+          onPress={handleAddParticipant}
+          fullWidth
+          disabled={isAdding || !newParticipantName.trim()}
+        />
 
-        <Card style={styles.participantCard}>
-          <Text style={styles.sectionTitle}>Current mock participants</Text>
-          <View style={styles.chips}>
-            {mockParticipants.map((participant) => (
-              <ParticipantChip
-                key={participant.id}
-                id={participant.id}
-                name={participant.name}
-                avatarColor={participant.avatarColor}
-                selected={selected.has(participant.id)}
-                onToggle={handleToggle}
-              />
-            ))}
-          </View>
-        </Card>
+        {participants.length === 0 ? (
+          <Card style={styles.emptyCard}>
+            <Text style={styles.emptyTitle}>No participants yet</Text>
+            <Text style={styles.emptyText}>
+              Add participants to track who shares expenses on this trip.
+            </Text>
+          </Card>
+        ) : (
+          <Card style={styles.participantCard}>
+            <Text style={styles.sectionTitle}>Participants ({participants.length})</Text>
+            <View style={styles.chips}>
+              {participants.map((participant) => (
+                <ParticipantChip
+                  key={participant.id}
+                  id={participant.id}
+                  name={participant.name}
+                  avatarColor={participant.avatarColor}
+                  selected={false}
+                  onToggle={() => {}}
+                  onLongPress={() => handleDeleteParticipant(participant.id, participant.name)}
+                />
+              ))}
+            </View>
+            <Text style={styles.hintText}>Long-press to remove a participant</Text>
+          </Card>
+        )}
       </ScrollView>
     </View>
   );
@@ -87,26 +153,38 @@ const styles = StyleSheet.create({
     fontWeight: theme.typography.bold,
     color: theme.colors.text,
   },
-  subtitle: {
-    fontSize: theme.typography.sm,
-    color: theme.colors.textSecondary,
+  centerContent: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  placeholderCard: {
+  errorContainer: {
+    padding: theme.spacing.lg,
+  },
+  errorCard: {
+    backgroundColor: theme.colors.error,
+  },
+  errorText: {
+    fontSize: theme.typography.base,
+    color: theme.colors.background,
+  },
+  emptyCard: {
     borderStyle: 'dashed',
     borderColor: theme.colors.border,
     borderWidth: 1,
+    alignItems: 'center',
+    padding: theme.spacing.xl,
   },
-  eyebrow: {
-    fontSize: theme.typography.sm,
+  emptyTitle: {
+    fontSize: theme.typography.lg,
     fontWeight: theme.typography.semibold,
-    color: theme.colors.textSecondary,
-    marginBottom: theme.spacing.xs,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  placeholderText: {
-    fontSize: theme.typography.base,
     color: theme.colors.text,
+    marginBottom: theme.spacing.sm,
+  },
+  emptyText: {
+    fontSize: theme.typography.base,
+    color: theme.colors.textSecondary,
+    textAlign: 'center',
   },
   participantCard: {
     gap: theme.spacing.sm,
@@ -120,5 +198,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: theme.spacing.sm,
+  },
+  hintText: {
+    fontSize: theme.typography.sm,
+    color: theme.colors.textSecondary,
+    fontStyle: 'italic',
+    marginTop: theme.spacing.xs,
   },
 });
