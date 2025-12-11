@@ -19,7 +19,8 @@
       "Bash(node -e:*)",
       "Bash(npx drizzle-kit generate)",
       "Bash(npx drizzle-kit push:*)",
-      "Bash(npx expo start:*)"
+      "Bash(npx expo start:*)",
+      "Bash(if not exist \"c:\\Users\\blain\\Documents\\GitHub\\CrewSplit\\CrewSplit\\src\\db\\mappers\" mkdir \"c:\\Users\\blain\\Documents\\GitHub\\CrewSplit\\CrewSplit\\src\\db\\mappers\")"
     ]
   }
 }
