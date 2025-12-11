@@ -11,3 +11,5 @@ export { Input } from './Input';
 export { Card } from './Card';
 
 export { ParticipantChip } from './ParticipantChip';
+
+export { CurrencyPicker } from './CurrencyPicker';
