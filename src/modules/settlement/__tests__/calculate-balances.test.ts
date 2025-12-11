@@ -454,4 +454,112 @@ describe('calculateBalances', () => {
       expect(balances[2].participantId).toBe('charlie');
     });
   });
+
+  describe('referential integrity', () => {
+    it('should throw structured error when split references non-existent participant', () => {
+      const expenses: Expense[] = [
+        {
+          id: 'e1',
+          tripId: 't1',
+          description: 'Dinner',
+          amount: 3000,
+          currency: 'USD',
+          paidBy: 'alice',
+          date: '2024-01-01',
+          createdAt: '2024-01-01',
+          updatedAt: '2024-01-01',
+        },
+      ];
+
+      const splits: ExpenseSplit[] = [
+        { id: 's1', expenseId: 'e1', participantId: 'alice', share: 0, shareType: 'equal' },
+        { id: 's2', expenseId: 'e1', participantId: 'nonexistent', share: 0, shareType: 'equal' },
+      ];
+
+      // Should throw with correct error message
+      expect(() => calculateBalances(expenses, splits, mockParticipants)).toThrow(
+        'Invalid participant IDs found in expense splits: nonexistent'
+      );
+
+      // Should throw structured error with code and array
+      try {
+        calculateBalances(expenses, splits, mockParticipants);
+        fail('Expected calculateBalances to throw');
+      } catch (error: any) {
+        expect(error.code).toBe('INVALID_PARTICIPANT_IDS');
+        expect(error.invalidParticipantIds).toBeDefined();
+        expect(error.invalidParticipantIds).toContain('nonexistent');
+        expect(error.message).toContain('Invalid participant IDs found in expense splits');
+      }
+    });
+
+    it('should throw structured error when expense references non-existent payer', () => {
+      const expenses: Expense[] = [
+        {
+          id: 'e1',
+          tripId: 't1',
+          description: 'Dinner',
+          amount: 3000,
+          currency: 'USD',
+          paidBy: 'nonexistent-payer',
+          date: '2024-01-01',
+          createdAt: '2024-01-01',
+          updatedAt: '2024-01-01',
+        },
+      ];
+
+      const splits: ExpenseSplit[] = [
+        { id: 's1', expenseId: 'e1', participantId: 'alice', share: 0, shareType: 'equal' },
+        { id: 's2', expenseId: 'e1', participantId: 'bob', share: 0, shareType: 'equal' },
+      ];
+
+      // Should throw with correct error message
+      expect(() => calculateBalances(expenses, splits, mockParticipants)).toThrow(
+        'Invalid payer IDs found in expenses: nonexistent-payer'
+      );
+
+      // Should throw structured error with code and array
+      try {
+        calculateBalances(expenses, splits, mockParticipants);
+        fail('Expected calculateBalances to throw');
+      } catch (error: any) {
+        expect(error.code).toBe('INVALID_PARTICIPANT_IDS');
+        expect(error.invalidParticipantIds).toBeDefined();
+        expect(error.invalidParticipantIds).toContain('nonexistent-payer');
+        expect(error.message).toContain('Invalid payer IDs found in expenses');
+      }
+    });
+
+    it('should throw error listing multiple invalid participant IDs', () => {
+      const expenses: Expense[] = [
+        {
+          id: 'e1',
+          tripId: 't1',
+          description: 'Dinner',
+          amount: 3000,
+          currency: 'USD',
+          paidBy: 'alice',
+          date: '2024-01-01',
+          createdAt: '2024-01-01',
+          updatedAt: '2024-01-01',
+        },
+      ];
+
+      const splits: ExpenseSplit[] = [
+        { id: 's1', expenseId: 'e1', participantId: 'alice', share: 0, shareType: 'equal' },
+        { id: 's2', expenseId: 'e1', participantId: 'invalid1', share: 0, shareType: 'equal' },
+        { id: 's3', expenseId: 'e1', participantId: 'invalid2', share: 0, shareType: 'equal' },
+      ];
+
+      try {
+        calculateBalances(expenses, splits, mockParticipants);
+        fail('Expected calculateBalances to throw');
+      } catch (error: any) {
+        expect(error.code).toBe('INVALID_PARTICIPANT_IDS');
+        expect(error.invalidParticipantIds).toHaveLength(2);
+        expect(error.invalidParticipantIds).toContain('invalid1');
+        expect(error.invalidParticipantIds).toContain('invalid2');
+      }
+    });
+  });
 });

@@ -634,30 +634,21 @@ describe('SettlementService', () => {
         },
       ]);
 
-      // Compute settlement - should handle gracefully
-      const settlement = await computeSettlement(tripId);
+      // Compute settlement - should throw structured error for invalid participant ID
+      await expect(computeSettlement(tripId)).rejects.toThrow(
+        `Invalid participant IDs found in expense splits: ${nonExistentId}`
+      );
 
-      // The service should still compute settlement for valid participants
-      // Only Alice exists, so only Alice should be in balances
-      expect(settlement.balances).toHaveLength(1);
-
-      const aliceBalance = settlement.balances[0];
-      expect(aliceBalance.participantId).toBe(aliceId);
-      expect(aliceBalance.participantName).toBe('Alice');
-
-      // Alice paid $50 but the split logic tried to split between Alice and non-existent participant
-      // The normalized amount for Alice would be $25 (half of $50)
-      // So Alice: paid $50, owes $25 → net +$25
-      expect(aliceBalance.totalPaid).toBe(5000);
-      expect(aliceBalance.totalOwed).toBe(2500); // Half the expense
-      expect(aliceBalance.netPosition).toBe(2500);
-
-      // The non-existent participant's $25 owed is essentially lost/untracked
-      // This demonstrates that the service handles missing participants by ignoring them in balances
-      // but still processes their splits (which affects the normalization)
-
-      // No settlements needed since only Alice exists in the system
-      expect(settlement.settlements).toHaveLength(0);
+      // Verify the error has the correct structure
+      try {
+        await computeSettlement(tripId);
+        fail('Expected computeSettlement to throw');
+      } catch (error: any) {
+        expect(error.code).toBe('INVALID_PARTICIPANT_IDS');
+        expect(error.invalidParticipantIds).toBeDefined();
+        expect(error.invalidParticipantIds).toContain(nonExistentId);
+        expect(error.message).toContain('Invalid participant IDs found in expense splits');
+      }
     });
   });
 
