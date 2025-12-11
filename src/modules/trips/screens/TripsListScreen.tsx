@@ -1,17 +1,13 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { theme } from '@ui/theme';
 import { Button, Card } from '@ui/components';
+import { useTrips } from '../hooks/use-trips';
 
 export default function TripsListScreen() {
   const router = useRouter();
-
-  // Mock trips to keep navigation deterministic until repositories land
-  const mockTrips = [
-    { id: 'trip-sample-1', name: 'Sample: Weekend Getaway' },
-    { id: 'trip-sample-2', name: 'Sample: Family Road Trip' },
-  ];
+  const { trips, loading, error } = useTrips();
 
   return (
     <View style={styles.container}>
@@ -27,21 +23,35 @@ export default function TripsListScreen() {
           </TouchableOpacity>
         </View>
 
-        <Card style={styles.placeholderCard}>
-          <Text style={styles.eyebrow}>Coming soon</Text>
-          <Text style={styles.placeholderText}>
-            Trip storage and syncing wire up here. For now, tap a mock trip to preview the flow.
-          </Text>
-        </Card>
+        {loading && (
+          <View style={styles.centerContent}>
+            <ActivityIndicator size="large" color={theme.colors.primary} />
+          </View>
+        )}
 
-        {mockTrips.map((trip) => (
+        {error && (
+          <Card style={styles.errorCard}>
+            <Text style={styles.errorText}>{error}</Text>
+          </Card>
+        )}
+
+        {!loading && !error && trips.length === 0 && (
+          <Card style={styles.emptyCard}>
+            <Text style={styles.emptyTitle}>No trips yet</Text>
+            <Text style={styles.emptyText}>
+              Create your first trip to start tracking shared expenses with your crew.
+            </Text>
+          </Card>
+        )}
+
+        {!loading && trips.map((trip) => (
           <Card
             key={trip.id}
             style={styles.tripCard}
             onPress={() => router.push(`/trips/${trip.id}`)}
           >
             <Text style={styles.tripName}>{trip.name}</Text>
-            <Text style={styles.tripMeta}>Tap to open dashboard</Text>
+            <Text style={styles.tripMeta}>{trip.currency} • {new Date(trip.startDate).toLocaleDateString()}</Text>
           </Card>
         ))}
       </ScrollView>
@@ -86,22 +96,34 @@ const styles = StyleSheet.create({
     fontSize: 24,
     color: theme.colors.textSecondary,
   },
-  placeholderCard: {
+  centerContent: {
+    alignItems: 'center',
+    padding: theme.spacing.xl,
+  },
+  errorCard: {
+    backgroundColor: theme.colors.error,
+  },
+  errorText: {
+    fontSize: theme.typography.base,
+    color: theme.colors.background,
+  },
+  emptyCard: {
     borderStyle: 'dashed',
     borderColor: theme.colors.border,
     borderWidth: 1,
+    alignItems: 'center',
+    padding: theme.spacing.xl,
   },
-  eyebrow: {
-    fontSize: theme.typography.sm,
+  emptyTitle: {
+    fontSize: theme.typography.lg,
     fontWeight: theme.typography.semibold,
-    color: theme.colors.textSecondary,
-    marginBottom: theme.spacing.xs,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  placeholderText: {
-    fontSize: theme.typography.base,
     color: theme.colors.text,
+    marginBottom: theme.spacing.sm,
+  },
+  emptyText: {
+    fontSize: theme.typography.base,
+    color: theme.colors.textSecondary,
+    textAlign: 'center',
   },
   tripCard: {
     backgroundColor: theme.colors.surfaceElevated,
