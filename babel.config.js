@@ -20,7 +20,8 @@ module.exports = function(api) {
             '@ui': './src/ui',
             '@store': './src/store',
             '@db': './src/db',
-            '@utils': './src/utils'
+            '@utils': './src/utils',
+            '@hooks': './src/hooks'
           }
         }
       ]
