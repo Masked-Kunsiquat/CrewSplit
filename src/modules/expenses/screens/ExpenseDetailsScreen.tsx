@@ -4,7 +4,7 @@
  */
 
 import React, { useMemo } from 'react';
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Alert } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { theme } from '@ui/theme';
 import { Button, Card } from '@ui/components';
@@ -13,6 +13,7 @@ import { useParticipants } from '@modules/participants/hooks/use-participants';
 import { useDisplayCurrency } from '@hooks/use-display-currency';
 import { formatCurrency } from '@utils/currency';
 import { defaultFxRateProvider } from '@modules/settlement/service/DisplayCurrencyAdapter';
+import { deleteExpense } from '../repository';
 
 export default function ExpenseDetailsScreen() {
   const router = useRouter();
@@ -100,6 +101,28 @@ export default function ExpenseDetailsScreen() {
   const paidByName = participantMap.get(expense.paidBy) || 'Unknown';
   const showCurrencyConversion = expense.originalCurrency !== expense.currency;
   const showDisplayCurrency = !!displayAmounts;
+
+  const handleDelete = () => {
+    Alert.alert(
+      'Delete Expense',
+      `Delete "${expense.description}"? This action cannot be undone.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await deleteExpense(expenseId as string);
+              router.push(`/trips/${tripId}/expenses`);
+            } catch (error) {
+              Alert.alert('Error', 'Failed to delete expense');
+            }
+          },
+        },
+      ]
+    );
+  };
 
   return (
     <View style={styles.container}>
@@ -228,14 +251,24 @@ export default function ExpenseDetailsScreen() {
       </ScrollView>
 
       <View style={styles.footer}>
-        <Button
-          title="Back to list"
-          variant="outline"
-          onPress={() => router.push(`/trips/${tripId}/expenses`)}
-          fullWidth
-        />
-        <View style={{ height: theme.spacing.md }} />
-        <Button title="Edit Expense" onPress={() => {}} fullWidth />
+        <View style={styles.buttonRow}>
+          <View style={styles.buttonHalf}>
+            <Button
+              title="Back"
+              variant="outline"
+              onPress={() => router.push(`/trips/${tripId}/expenses`)}
+              fullWidth
+            />
+          </View>
+          <View style={styles.buttonHalf}>
+            <Button
+              title="Delete"
+              variant="outline"
+              onPress={handleDelete}
+              fullWidth
+            />
+          </View>
+        </View>
       </View>
     </View>
   );
@@ -403,5 +436,12 @@ const styles = StyleSheet.create({
     padding: theme.spacing.lg,
     borderTopWidth: 1,
     borderTopColor: theme.colors.border,
+  },
+  buttonRow: {
+    flexDirection: 'row',
+    gap: theme.spacing.md,
+  },
+  buttonHalf: {
+    flex: 1,
   },
 });
