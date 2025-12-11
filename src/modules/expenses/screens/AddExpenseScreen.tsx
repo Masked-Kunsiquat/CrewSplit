@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, ActivityIndicator, Alert } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { theme } from '@ui/theme';
-import { Button, Input, ParticipantChip } from '@ui/components';
+import { Button, Input, ParticipantChip, DatePicker } from '@ui/components';
 import { useTripById } from '../../trips/hooks/use-trips';
 import { useParticipants } from '../../participants/hooks/use-participants';
 import { addExpense } from '../repository';
@@ -17,6 +17,7 @@ export default function AddExpenseScreen() {
 
   const [description, setDescription] = useState('');
   const [amount, setAmount] = useState('');
+  const [date, setDate] = useState(new Date());
   const [paidBy, setPaidBy] = useState<string | null>(null);
   const [selectedParticipants, setSelectedParticipants] = useState<Set<string>>(new Set());
   const [isCreating, setIsCreating] = useState(false);
@@ -66,6 +67,7 @@ export default function AddExpenseScreen() {
         originalAmountMinor: amountMinor,
         originalCurrency: trip.currency,
         paidBy,
+        date: date.toISOString(),
         splits: Array.from(selectedParticipants).map(participantId => ({
           participantId,
           share: 1,
@@ -139,6 +141,13 @@ export default function AddExpenseScreen() {
           onChangeText={setAmount}
           keyboardType="decimal-pad"
           editable={!isCreating}
+        />
+
+        <DatePicker
+          label="Date"
+          value={date}
+          onChange={setDate}
+          maximumDate={new Date()}
         />
 
         <View style={styles.section}>

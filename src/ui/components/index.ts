@@ -13,3 +13,5 @@ export { Card } from './Card';
 export { ParticipantChip } from './ParticipantChip';
 
 export { CurrencyPicker } from './CurrencyPicker';
+
+export { DatePicker } from './DatePicker';

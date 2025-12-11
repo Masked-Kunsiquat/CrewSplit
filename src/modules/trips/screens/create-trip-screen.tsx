@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { theme } from '@ui/theme';
-import { Button, Input, CurrencyPicker } from '@ui/components';
+import { Button, Input, CurrencyPicker, DatePicker } from '@ui/components';
 import { createTrip } from '../repository';
 import { createParticipant } from '../../participants/repository';
 import { useDeviceOwner } from '@hooks/use-device-owner';
@@ -15,6 +15,7 @@ export default function CreateTripScreen() {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [currency, setCurrency] = useState<string | null>('USD');
+  const [startDate, setStartDate] = useState(new Date());
   const [isCreating, setIsCreating] = useState(false);
 
   const handleCreate = async () => {
@@ -28,7 +29,7 @@ export default function CreateTripScreen() {
         name: name.trim(),
         currencyCode: currency,
         description: description.trim() || undefined,
-        startDate: new Date().toISOString(),
+        startDate: startDate.toISOString(),
       });
 
       // Auto-add device owner as first participant if name is set
@@ -81,6 +82,12 @@ export default function CreateTripScreen() {
             placeholder="Select currency"
           />
         </View>
+
+        <DatePicker
+          label="Start Date"
+          value={startDate}
+          onChange={setStartDate}
+        />
 
         <Input
           label="Description (optional)"
