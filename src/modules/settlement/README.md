@@ -90,7 +90,69 @@ Minimizes transactions using a greedy algorithm.
 
 ---
 
+## Architecture Layers
+
+### 1. Pure Math Layer (MODELER)
+Pure functions with no side effects or dependencies:
+- `normalizeShares()` - Convert split types to amounts
+- `calculateBalances()` - Calculate participant balances
+- `optimizeSettlements()` - Minimize transactions
+
+### 2. Service Layer (SETTLEMENT INTEGRATION ENGINEER)
+Connects algorithms to the data layer:
+- `service/SettlementService.ts` - Loads data and calls pure functions
+- Operates exclusively on `convertedAmountMinor` (trip currency)
+- Returns complete settlement summary
+
+### 3. Hook Layer (UI INTEGRATION)
+React hooks for consuming settlement data:
+- `hooks/use-settlement.ts` - React hook for settlement queries
+- Integrates with app's query system
+- Handles loading and error states
+
 ## Usage
+
+### Using the Hook (Recommended)
+
+```tsx
+import { useSettlement } from '@modules/settlement';
+
+function SettlementScreen({ tripId }: { tripId: string }) {
+  const { settlement, loading, error } = useSettlement(tripId);
+
+  if (loading) return <Text>Loading...</Text>;
+  if (error) return <Text>Error: {error}</Text>;
+  if (!settlement) return null;
+
+  return (
+    <View>
+      <Text>Total: ${settlement.totalExpenses / 100} {settlement.currency}</Text>
+      {settlement.settlements.map(s => (
+        <Text key={`${s.from}-${s.to}`}>
+          {s.fromName} pays {s.toName} ${s.amount / 100}
+        </Text>
+      ))}
+    </View>
+  );
+}
+```
+
+### Using the Service Directly
+
+```typescript
+import { computeSettlement } from '@modules/settlement';
+
+async function generateSettlementReport(tripId: string) {
+  const settlement = await computeSettlement(tripId);
+
+  console.log(`Settlement in ${settlement.currency}`);
+  settlement.settlements.forEach(s => {
+    console.log(`${s.fromName} → ${s.toName}: $${s.amount / 100}`);
+  });
+}
+```
+
+### Using Pure Functions
 
 ```typescript
 import { calculateBalances, optimizeSettlements } from '@modules/settlement';
