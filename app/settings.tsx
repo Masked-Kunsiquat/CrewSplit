@@ -3,17 +3,21 @@
  * Global app settings including display currency preference
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { theme } from '@ui/theme';
-import { Card, CurrencyPicker, Button } from '@ui/components';
+import { Card, CurrencyPicker, Button, Input } from '@ui/components';
 import { useDisplayCurrency } from '@hooks/use-display-currency';
+import { useDeviceOwner } from '@hooks/use-device-owner';
 
 export default function SettingsScreen() {
   const router = useRouter();
-  const { displayCurrency, loading, setDisplayCurrency, clearPreference } =
-    useDisplayCurrency();
+  const { displayCurrency, loading, setDisplayCurrency } = useDisplayCurrency();
+  const { deviceOwnerName, loading: ownerLoading, setDeviceOwner } = useDeviceOwner();
+
+  const [editingName, setEditingName] = useState(false);
+  const [nameInput, setNameInput] = useState('');
 
   const handleCurrencyChange = async (currency: string | null) => {
     try {
@@ -26,10 +30,94 @@ export default function SettingsScreen() {
     }
   };
 
+  const handleEditName = () => {
+    setNameInput(deviceOwnerName || '');
+    setEditingName(true);
+  };
+
+  const handleSaveName = async () => {
+    if (!nameInput.trim()) {
+      Alert.alert('Error', 'Please enter your name');
+      return;
+    }
+
+    try {
+      await setDeviceOwner(nameInput.trim());
+      setEditingName(false);
+    } catch (error) {
+      Alert.alert('Error', 'Failed to save your name. Please try again.');
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditingName(false);
+    setNameInput('');
+  };
+
   return (
     <View style={styles.container}>
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
         <Text style={styles.title}>Settings</Text>
+
+        <Card style={styles.section}>
+          <Text style={styles.sectionTitle}>Your Name</Text>
+          <Text style={styles.sectionDescription}>
+            This identifies you as the device owner. You'll be automatically added to new trips.
+          </Text>
+
+          {!ownerLoading && (
+            <>
+              {editingName ? (
+                <>
+                  <Input
+                    label="Your name"
+                    placeholder="Enter your name"
+                    value={nameInput}
+                    onChangeText={setNameInput}
+                    autoFocus
+                  />
+                  <View style={styles.buttonRow}>
+                    <View style={styles.buttonHalf}>
+                      <Button
+                        title="Cancel"
+                        variant="outline"
+                        onPress={handleCancelEdit}
+                        fullWidth
+                      />
+                    </View>
+                    <View style={styles.buttonHalf}>
+                      <Button
+                        title="Save"
+                        onPress={handleSaveName}
+                        fullWidth
+                      />
+                    </View>
+                  </View>
+                </>
+              ) : (
+                <>
+                  {deviceOwnerName ? (
+                    <>
+                      <Text style={styles.deviceOwnerName}>{deviceOwnerName}</Text>
+                      <Button
+                        title="Change Name"
+                        variant="outline"
+                        onPress={handleEditName}
+                        fullWidth
+                      />
+                    </>
+                  ) : (
+                    <Button
+                      title="Set Your Name"
+                      onPress={handleEditName}
+                      fullWidth
+                    />
+                  )}
+                </>
+              )}
+            </>
+          )}
+        </Card>
 
         <Card style={styles.section}>
           <Text style={styles.sectionTitle}>Display Currency</Text>
@@ -111,6 +199,20 @@ const styles = StyleSheet.create({
     fontSize: theme.typography.sm,
     color: theme.colors.textSecondary,
     lineHeight: 20,
+  },
+  deviceOwnerName: {
+    fontSize: theme.typography.xl,
+    fontWeight: theme.typography.bold,
+    color: theme.colors.text,
+    textAlign: 'center',
+    paddingVertical: theme.spacing.md,
+  },
+  buttonRow: {
+    flexDirection: 'row',
+    gap: theme.spacing.md,
+  },
+  buttonHalf: {
+    flex: 1,
   },
   infoCard: {
     backgroundColor: theme.colors.surface,

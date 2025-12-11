@@ -4,9 +4,14 @@ import { useRouter } from 'expo-router';
 import { theme } from '@ui/theme';
 import { Button, Input, CurrencyPicker } from '@ui/components';
 import { createTrip } from '../repository';
+import { createParticipant } from '../../participants/repository';
+import { useDeviceOwner } from '@hooks/use-device-owner';
+
+const AVATAR_COLORS = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#F7DC6F', '#BB8FCE', '#85C1E2'];
 
 export default function CreateTripScreen() {
   const router = useRouter();
+  const { deviceOwnerName } = useDeviceOwner();
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [currency, setCurrency] = useState<string | null>('USD');
@@ -25,6 +30,20 @@ export default function CreateTripScreen() {
         description: description.trim() || undefined,
         startDate: new Date().toISOString(),
       });
+
+      // Auto-add device owner as first participant if name is set
+      if (deviceOwnerName) {
+        try {
+          await createParticipant({
+            tripId: trip.id,
+            name: deviceOwnerName,
+            avatarColor: AVATAR_COLORS[0], // First color for device owner
+          });
+        } catch (error) {
+          console.warn('Failed to add device owner as participant:', error);
+          // Don't fail trip creation if participant add fails
+        }
+      }
 
       router.replace(`/trips/${trip.id}`);
     } catch (err) {

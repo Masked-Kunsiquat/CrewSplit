@@ -5,3 +5,4 @@
 
 export * from './use-query';
 export * from './use-display-currency';
+export * from './use-device-owner';
