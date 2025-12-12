@@ -98,7 +98,9 @@ function ManageParticipantsContent({
               await deleteParticipant(participantId);
               refetch();
             } catch (err) {
-              Alert.alert('Error', 'Failed to remove participant');
+              const message = err instanceof Error ? err.message : String(err);
+              console.error(err);
+              Alert.alert('Error', `Failed to remove participant: ${message}`);
             }
           },
         },

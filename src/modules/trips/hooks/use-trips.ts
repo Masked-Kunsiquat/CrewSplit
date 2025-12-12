@@ -29,13 +29,8 @@ export function useTrips() {
  * @returns Object with trip, loading state, and error
  */
 export function useTripById(tripId: string | null) {
-  // When tripId is null, return empty state immediately
-  if (!tripId) {
-    return { trip: null, loading: false, error: null, refetch: () => {} };
-  }
-
   const { data: trip, loading, error, refetch } = useQuery(
-    () => getTripById(tripId),
+    () => (tripId ? getTripById(tripId) : Promise.resolve(null)),
     [tripId],
     null,
     'Failed to load trip'
