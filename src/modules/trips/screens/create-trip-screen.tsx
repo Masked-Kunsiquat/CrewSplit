@@ -18,9 +18,27 @@ export default function CreateTripScreen() {
   const [startDate, setStartDate] = useState(new Date());
   const [endDate, setEndDate] = useState<Date | null>(null);
   const [isCreating, setIsCreating] = useState(false);
+  const [dateError, setDateError] = useState<string | null>(null);
+
+  const handleStartDateChange = (date: Date) => {
+    setStartDate(date);
+    setDateError(null);
+  };
+
+  const handleEndDateChange = (date: Date | null) => {
+    setEndDate(date);
+    setDateError(null);
+  };
 
   const handleCreate = async () => {
     if (!name.trim() || !currency) {
+      return;
+    }
+
+    if (endDate && endDate < startDate) {
+      const message = 'End date must be on or after the start date.';
+      setDateError(message);
+      Alert.alert('Invalid Dates', message);
       return;
     }
 
@@ -79,6 +97,7 @@ export default function CreateTripScreen() {
           <CurrencyPicker
             value={currency}
             onChange={setCurrency}
+            label={undefined}
             placeholder="Select currency"
           />
         </View>
@@ -88,9 +107,10 @@ export default function CreateTripScreen() {
           endLabel="End Date"
           startDate={startDate}
           endDate={endDate}
-          onStartChange={setStartDate}
-          onEndChange={setEndDate}
+          onStartChange={handleStartDateChange}
+          onEndChange={handleEndDateChange}
         />
+        {dateError && <Text style={styles.errorText}>{dateError}</Text>}
 
         <Input
           label="Description (optional)"
@@ -146,6 +166,10 @@ const styles = StyleSheet.create({
     fontWeight: theme.typography.semibold,
     color: theme.colors.text,
     marginBottom: theme.spacing.xs,
+  },
+  errorText: {
+    color: theme.colors.error,
+    marginTop: theme.spacing.xs,
   },
   multiLine: {
     textAlignVertical: 'top',

@@ -28,7 +28,7 @@ interface CurrencyPickerProps {
 export function CurrencyPicker({
   value,
   onChange,
-  label = 'Display Currency',
+  label,
   placeholder = 'Select currency',
 }: CurrencyPickerProps) {
   const [isVisible, setIsVisible] = useState(false);
