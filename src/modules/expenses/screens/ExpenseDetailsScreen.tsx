@@ -17,14 +17,38 @@ import { deleteExpense } from '../repository';
 
 export default function ExpenseDetailsScreen() {
   const router = useRouter();
+  const params = useLocalSearchParams<{ id?: string | string[]; expenseId?: string | string[] }>();
+  const tripId = normalizeRouteParam(params.id);
+  const expenseId = normalizeRouteParam(params.expenseId);
+
+  if (!tripId || !expenseId) {
+    const message = !tripId
+      ? 'Missing trip ID. Please go back and try again.'
+      : 'Missing expense ID. Please select an expense.';
+
+    return (
+      <View style={styles.container}>
+        <View style={styles.centerContent}>
+          <Text style={styles.errorTitle}>Invalid Expense</Text>
+          <Text style={styles.errorText}>{message}</Text>
+          <Button title="Back" onPress={() => router.back()} />
+        </View>
+      </View>
+    );
+  }
+
+  return <ExpenseDetailsContent tripId={tripId} expenseId={expenseId} />;
+}
+
+function ExpenseDetailsContent({ tripId, expenseId }: { tripId: string; expenseId: string }) {
+  const router = useRouter();
   const navigation = useNavigation();
-  const { id: tripId, expenseId } = useLocalSearchParams<{ id: string; expenseId: string }>();
   const { displayCurrency } = useDisplayCurrency();
 
   const { expense, splits, loading: expenseLoading, error: expenseError } = useExpenseWithSplits(
-    expenseId as string
+    expenseId
   );
-  const { participants, loading: participantsLoading } = useParticipants(tripId as string);
+  const { participants, loading: participantsLoading } = useParticipants(tripId);
 
   // Update native header title
   useEffect(() => {
@@ -123,7 +147,7 @@ export default function ExpenseDetailsScreen() {
           style: 'destructive',
           onPress: async () => {
             try {
-              await deleteExpense(expenseId as string);
+              await deleteExpense(expenseId);
               router.back();
             } catch (error) {
               Alert.alert('Error', 'Failed to delete expense');
@@ -268,6 +292,13 @@ export default function ExpenseDetailsScreen() {
       </View>
     </View>
   );
+}
+
+function normalizeRouteParam(param: string | string[] | undefined) {
+  if (!param) return null;
+  const value = Array.isArray(param) ? param[0] : param;
+  const normalized = value.trim();
+  return normalized.length > 0 ? normalized : null;
 }
 
 const styles = StyleSheet.create({
