@@ -31,6 +31,8 @@ export function DateRangePicker({
   endDate,
   onStartChange,
   onEndChange,
+  minimumDate,
+  maximumDate,
 }: DateRangePickerProps) {
   const [showCalendar, setShowCalendar] = useState(false);
 
@@ -76,6 +78,10 @@ export function DateRangePicker({
       <TouchableOpacity
         style={styles.dateButton}
         onPress={() => setShowCalendar(true)}
+        accessible={true}
+        accessibilityRole="button"
+        accessibilityLabel={`Select date range. Start date ${formatDate(startDate)}. End date ${formatDate(endDate)}`}
+        accessibilityHint="Opens the date picker"
       >
         <View style={styles.dateDisplay}>
           <View style={styles.dateSection}>
@@ -93,7 +99,14 @@ export function DateRangePicker({
       </TouchableOpacity>
 
       {endDate && (
-        <TouchableOpacity onPress={handleClearEndDate} style={styles.clearButtonContainer}>
+        <TouchableOpacity
+          onPress={handleClearEndDate}
+          style={styles.clearButtonContainer}
+          accessible={true}
+          accessibilityRole="button"
+          accessibilityLabel="Clear end date"
+          accessibilityHint="Clears the selected end date"
+        >
           <Text style={styles.clearButton}>Clear end date</Text>
         </TouchableOpacity>
       )}
@@ -116,13 +129,15 @@ export function DateRangePicker({
               </View>
 
               <View style={styles.calendarContainer}>
-                <Calendar.List
-                  calendarActiveDateRanges={calendarActiveDateRanges}
-                  calendarInitialMonthId={toDateId(startDate)}
-                  onCalendarDayPress={onCalendarDayPress}
-                  calendarMonthHeaderHeight={40}
-                  calendarRowVerticalSpacing={8}
-                  theme={{
+              <Calendar.List
+                calendarActiveDateRanges={calendarActiveDateRanges}
+                calendarInitialMonthId={toDateId(startDate)}
+                onCalendarDayPress={onCalendarDayPress}
+                calendarMinDateId={minimumDate ? toDateId(minimumDate) : undefined}
+                calendarMaxDateId={maximumDate ? toDateId(maximumDate) : undefined}
+                calendarMonthHeaderHeight={40}
+                calendarRowVerticalSpacing={8}
+                theme={{
                     rowMonth: {
                       content: {
                         color: theme.colors.text,
