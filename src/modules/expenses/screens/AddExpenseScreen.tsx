@@ -10,9 +10,32 @@ import { parseCurrency } from '@utils/currency';
 
 export default function AddExpenseScreen() {
   const router = useRouter();
-  const navigation = useNavigation();
-  const { id: tripId } = useLocalSearchParams<{ id: string }>();
+  const params = useLocalSearchParams<{ id?: string | string[] }>();
+  const normalizedTripId = React.useMemo(() => normalizeTripIdParam(params.id), [params.id]);
 
+  if (!normalizedTripId) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.centerContent}>
+          <Text style={styles.errorTitle}>Invalid Trip</Text>
+          <Text style={styles.errorText}>
+            No trip ID provided. Please select a trip first.
+          </Text>
+          <Button
+            title="Back to trips"
+            onPress={() => router.replace('/')}
+          />
+        </View>
+      </View>
+    );
+  }
+
+  return <AddExpenseScreenContent tripId={normalizedTripId} />;
+}
+
+function AddExpenseScreenContent({ tripId }: { tripId: string }) {
+  const router = useRouter();
+  const navigation = useNavigation();
   const { trip, loading: tripLoading } = useTripById(tripId);
   const { participants, loading: participantsLoading } = useParticipants(tripId);
 
@@ -115,9 +138,16 @@ export default function AddExpenseScreen() {
     return (
       <View style={styles.container}>
         <View style={styles.centerContent}>
-          <Text style={styles.errorText}>
-            {!trip ? 'Trip not found' : 'Add participants first'}
+          <Text style={styles.errorTitle}>
+            {!trip ? 'Trip Not Found' : 'No Participants'}
           </Text>
+          <Text style={styles.errorText}>
+            {!trip ? 'The requested trip could not be found.' : 'Add participants to this trip before creating expenses.'}
+          </Text>
+          <Button
+            title="Back to trip"
+            onPress={() => router.back()}
+          />
         </View>
       </View>
     );
@@ -212,6 +242,13 @@ export default function AddExpenseScreen() {
   );
 }
 
+function normalizeTripIdParam(idParam: string | string[] | undefined) {
+  if (!idParam) return null;
+  const firstValue = Array.isArray(idParam) ? idParam[0] : idParam;
+  const normalized = firstValue.trim();
+  return normalized.length > 0 ? normalized : null;
+}
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -233,6 +270,12 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  errorTitle: {
+    fontSize: theme.typography.xl,
+    fontWeight: theme.typography.bold,
+    color: theme.colors.text,
+    marginBottom: theme.spacing.xs,
   },
   errorText: {
     fontSize: theme.typography.lg,
