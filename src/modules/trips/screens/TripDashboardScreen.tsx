@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Alert, TouchableOpacity } from 'react-native';
-import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useRouter, useLocalSearchParams, useNavigation } from 'expo-router';
 import { theme } from '@ui/theme';
 import { Button, Card, Input } from '@ui/components';
 import { useTripById } from '../hooks/use-trips';
@@ -11,6 +11,7 @@ import { formatCurrency } from '@utils/currency';
 
 export default function TripDashboardScreen() {
   const router = useRouter();
+  const navigation = useNavigation();
   const { id } = useLocalSearchParams<{ id: string }>();
 
   const { trip, loading: tripLoading, error: tripError } = useTripById(id);
@@ -19,6 +20,15 @@ export default function TripDashboardScreen() {
 
   const [editingName, setEditingName] = useState(false);
   const [nameInput, setNameInput] = useState('');
+
+  // Update native header title when trip loads
+  useEffect(() => {
+    if (trip) {
+      navigation.setOptions({
+        title: trip.name,
+      });
+    }
+  }, [trip, navigation]);
 
   const loading = tripLoading || participantsLoading || expensesLoading;
 

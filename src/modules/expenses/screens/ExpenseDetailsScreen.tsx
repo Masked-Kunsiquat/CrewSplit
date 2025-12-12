@@ -3,9 +3,9 @@
  * Shows expense details with original, converted, and display currency amounts
  */
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Alert } from 'react-native';
-import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useRouter, useLocalSearchParams, useNavigation } from 'expo-router';
 import { theme } from '@ui/theme';
 import { Button, Card } from '@ui/components';
 import { useExpenseWithSplits } from '../hooks/use-expenses';
@@ -17,6 +17,7 @@ import { deleteExpense } from '../repository';
 
 export default function ExpenseDetailsScreen() {
   const router = useRouter();
+  const navigation = useNavigation();
   const { id: tripId, expenseId } = useLocalSearchParams<{ id: string; expenseId: string }>();
   const { displayCurrency } = useDisplayCurrency();
 
@@ -24,6 +25,15 @@ export default function ExpenseDetailsScreen() {
     expenseId as string
   );
   const { participants, loading: participantsLoading } = useParticipants(tripId as string);
+
+  // Update native header title
+  useEffect(() => {
+    if (expense) {
+      navigation.setOptions({
+        title: expense.description,
+      });
+    }
+  }, [expense, navigation]);
 
   // Map participant IDs to names
   const participantMap = useMemo(() => {
