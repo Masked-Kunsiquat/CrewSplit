@@ -35,6 +35,7 @@ export function CurrencyPicker({
   const [searchQuery, setSearchQuery] = useState('');
 
   const selectedCurrency = COMMON_CURRENCIES.find((c) => c.code === value);
+  const hasUnknownSelection = !!value && !selectedCurrency;
 
   const filteredCurrencies = searchQuery
     ? COMMON_CURRENCIES.filter(
@@ -64,8 +65,13 @@ export function CurrencyPicker({
         style={styles.selector}
         onPress={() => setIsVisible(true)}
         activeOpacity={0.7}
+        accessible={true}
+        accessibilityRole="button"
+        accessibilityLabel="Open currency selector"
+        accessibilityHint="Opens a list of currencies"
+        accessibilityState={{ expanded: isVisible }}
       >
-        {selectedCurrency ? (
+        {selectedCurrency && (
           <View style={styles.selectedContent}>
             <Text style={styles.currencySymbol}>{selectedCurrency.symbol}</Text>
             <View style={styles.currencyInfo}>
@@ -73,9 +79,17 @@ export function CurrencyPicker({
               <Text style={styles.currencyName}>{selectedCurrency.name}</Text>
             </View>
           </View>
-        ) : (
-          <Text style={styles.placeholder}>{placeholder}</Text>
         )}
+        {hasUnknownSelection && (
+          <View style={styles.selectedContent}>
+            <Text style={styles.currencySymbol}>?</Text>
+            <View style={styles.currencyInfo}>
+              <Text style={styles.currencyCode}>{value}</Text>
+              <Text style={styles.currencyName}>Unknown currency</Text>
+            </View>
+          </View>
+        )}
+        {!value && <Text style={styles.placeholder}>{placeholder}</Text>}
         <Text style={styles.arrow}>▼</Text>
       </TouchableOpacity>
 
@@ -89,7 +103,13 @@ export function CurrencyPicker({
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Select Currency</Text>
-              <TouchableOpacity onPress={() => setIsVisible(false)}>
+              <TouchableOpacity
+                onPress={() => setIsVisible(false)}
+                accessible={true}
+                accessibilityRole="button"
+                accessibilityLabel="Close currency selector"
+                accessibilityHint="Closes the currency list"
+              >
                 <Text style={styles.closeButton}>✕</Text>
               </TouchableOpacity>
             </View>
@@ -108,6 +128,8 @@ export function CurrencyPicker({
                 title="Clear Selection"
                 variant="outline"
                 onPress={handleClear}
+                accessibilityLabel="Clear currency selection"
+                accessibilityHint="Clears the currently selected currency"
                 fullWidth
               />
             )}
@@ -123,6 +145,10 @@ export function CurrencyPicker({
                   ]}
                   onPress={() => handleSelect(item)}
                   activeOpacity={0.7}
+                  accessible={true}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Select ${item.name} (${item.code})`}
+                  accessibilityHint="Sets this currency"
                 >
                   <Text style={styles.itemSymbol}>{item.symbol}</Text>
                   <View style={styles.itemInfo}>

@@ -19,6 +19,9 @@ export default function TripsListScreen() {
           style={styles.headerButton}
           onPress={() => router.push('/settings')}
           activeOpacity={0.7}
+          accessibilityLabel="Open settings"
+          accessibilityRole="button"
+          accessibilityHint="Opens settings for the app"
         >
           <Text style={styles.settingsIcon}>⚙</Text>
         </TouchableOpacity>
