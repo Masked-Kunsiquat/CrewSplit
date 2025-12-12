@@ -161,15 +161,6 @@ export default function SettingsScreen() {
           <Text style={styles.versionText}>Version 1.0.0</Text>
         </Card>
       </ScrollView>
-
-      <View style={styles.footer}>
-        <Button
-          title="Back to Home"
-          variant="outline"
-          onPress={() => router.push('/')}
-          fullWidth
-        />
-      </View>
     </View>
   );
 }

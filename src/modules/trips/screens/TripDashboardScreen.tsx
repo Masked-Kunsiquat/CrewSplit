@@ -6,7 +6,7 @@ import { Button, Card, Input } from '@ui/components';
 import { useTripById } from '../hooks/use-trips';
 import { useParticipants } from '../../participants/hooks/use-participants';
 import { useExpenses } from '../../expenses/hooks/use-expenses';
-import { updateTrip } from '../repository';
+import { updateTrip, deleteTrip } from '../repository';
 import { formatCurrency } from '@utils/currency';
 
 export default function TripDashboardScreen() {
@@ -20,6 +20,7 @@ export default function TripDashboardScreen() {
 
   const [editingName, setEditingName] = useState(false);
   const [nameInput, setNameInput] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Update native header title when trip loads
   useEffect(() => {
@@ -60,12 +61,36 @@ export default function TripDashboardScreen() {
     setNameInput('');
   };
 
+  const handleDeleteTrip = () => {
+    Alert.alert(
+      'Delete Trip',
+      `Delete "${trip?.name}"? This will permanently delete all participants, expenses, and settlements for this trip. This action cannot be undone.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            setIsDeleting(true);
+            try {
+              await deleteTrip(id);
+              router.replace('/');
+            } catch (error) {
+              Alert.alert('Error', 'Failed to delete trip');
+              setIsDeleting(false);
+            }
+          },
+        },
+      ]
+    );
+  };
+
   if (tripError) {
     return (
       <View style={styles.container}>
         <View style={styles.errorContainer}>
           <Card style={styles.errorCard}>
-            <Text style={styles.errorText}>{tripError}</Text>
+            <Text style={styles.errorText}>{tripError.message}</Text>
           </Card>
         </View>
       </View>
@@ -172,6 +197,21 @@ export default function TripDashboardScreen() {
             </Text>
           </Card>
         </View>
+
+        {editingName && (
+          <Card style={styles.deleteCard}>
+            <Text style={styles.deleteWarning}>Danger Zone</Text>
+            <Text style={styles.deleteDescription}>
+              Deleting this trip will permanently remove all participants, expenses, and settlement data.
+            </Text>
+            <Button
+              title={isDeleting ? 'Deleting...' : 'Delete Trip'}
+              onPress={handleDeleteTrip}
+              fullWidth
+              disabled={isDeleting}
+            />
+          </Card>
+        )}
       </ScrollView>
 
       <View style={styles.footer}>
@@ -287,5 +327,24 @@ const styles = StyleSheet.create({
     padding: theme.spacing.lg,
     borderTopWidth: 1,
     borderTopColor: theme.colors.border,
+  },
+  deleteCard: {
+    backgroundColor: '#1a0000',
+    borderColor: theme.colors.error,
+    borderWidth: 2,
+  },
+  deleteWarning: {
+    fontSize: theme.typography.lg,
+    fontWeight: theme.typography.bold,
+    color: theme.colors.error,
+    marginBottom: theme.spacing.xs,
+    textAlign: 'center',
+  },
+  deleteDescription: {
+    fontSize: theme.typography.sm,
+    color: theme.colors.textSecondary,
+    marginBottom: theme.spacing.md,
+    lineHeight: 20,
+    textAlign: 'center',
   },
 });

@@ -101,7 +101,7 @@ export default function ExpenseDetailsScreen() {
           </Text>
           <Button
             title="Back to list"
-            onPress={() => router.push(`/trips/${tripId}/expenses`)}
+            onPress={() => router.replace(`/trips/${tripId}/expenses`)}
           />
         </View>
       </View>
@@ -124,7 +124,7 @@ export default function ExpenseDetailsScreen() {
           onPress: async () => {
             try {
               await deleteExpense(expenseId as string);
-              router.push(`/trips/${tripId}/expenses`);
+              router.back();
             } catch (error) {
               Alert.alert('Error', 'Failed to delete expense');
             }
@@ -259,24 +259,12 @@ export default function ExpenseDetailsScreen() {
       </ScrollView>
 
       <View style={styles.footer}>
-        <View style={styles.buttonRow}>
-          <View style={styles.buttonHalf}>
-            <Button
-              title="Back"
-              variant="outline"
-              onPress={() => router.push(`/trips/${tripId}/expenses`)}
-              fullWidth
-            />
-          </View>
-          <View style={styles.buttonHalf}>
-            <Button
-              title="Delete"
-              variant="outline"
-              onPress={handleDelete}
-              fullWidth
-            />
-          </View>
-        </View>
+        <Button
+          title="Delete Expense"
+          variant="outline"
+          onPress={handleDelete}
+          fullWidth
+        />
       </View>
     </View>
   );
