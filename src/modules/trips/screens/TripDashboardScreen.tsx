@@ -161,7 +161,14 @@ export default function TripDashboardScreen() {
                 }
               </Text>
             </View>
-            <TouchableOpacity onPress={handleEditName} style={styles.editButton}>
+            <TouchableOpacity
+              onPress={handleEditName}
+              style={styles.editButton}
+              accessible={true}
+              accessibilityRole="button"
+              accessibilityLabel="Edit trip name"
+              accessibilityHint="Opens the edit screen for the trip name"
+            >
               <Text style={styles.editButtonText}>Edit</Text>
             </TouchableOpacity>
           </View>

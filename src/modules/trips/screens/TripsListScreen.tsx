@@ -54,7 +54,7 @@ export default function TripsListScreen() {
           </Card>
         )}
 
-        {!loading && trips.map((trip) => (
+        {!loading && !error && trips.map((trip) => (
           <Card
             key={trip.id}
             style={styles.tripCard}
