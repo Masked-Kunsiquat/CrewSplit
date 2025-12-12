@@ -9,12 +9,12 @@ import type { Participant } from '../types';
 
 /**
  * Hook to fetch all participants for a trip
- * @param tripId - Trip UUID
+ * @param tripId - Trip UUID (nullable)
  * @returns Object with participants array, loading state, and error
  */
-export function useParticipants(tripId: string) {
+export function useParticipants(tripId: string | null) {
   const { data: participants, loading, error, refetch } = useQuery(
-    () => getParticipantsForTrip(tripId),
+    () => (tripId ? getParticipantsForTrip(tripId) : Promise.resolve<Participant[]>([])),
     [tripId],
     [],
     'Failed to load participants'

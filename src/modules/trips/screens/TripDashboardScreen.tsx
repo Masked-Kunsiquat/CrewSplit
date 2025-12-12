@@ -11,14 +11,30 @@ import { formatCurrency } from '@utils/currency';
 
 export default function TripDashboardScreen() {
   const router = useRouter();
-  const navigation = useNavigation();
   const { id } = useLocalSearchParams<{ id?: string }>();
-
   const tripId = id?.trim() || null;
 
+  if (!tripId) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.centerContent}>
+          <Text style={styles.errorText}>Invalid trip. Please select a trip again.</Text>
+          <Button title="Back to trips" onPress={() => router.replace('/')} />
+        </View>
+      </View>
+    );
+  }
+
+  return <TripDashboardScreenContent tripId={tripId} />;
+}
+
+function TripDashboardScreenContent({ tripId }: { tripId: string }) {
+  const router = useRouter();
+  const navigation = useNavigation();
+
   const { trip, loading: tripLoading, error: tripError, refetch: refetchTrip } = useTripById(tripId);
-  const { participants, loading: participantsLoading } = useParticipants(tripId || '');
-  const { expenses, loading: expensesLoading } = useExpenses(tripId || '');
+  const { participants, loading: participantsLoading } = useParticipants(tripId ?? null);
+  const { expenses, loading: expensesLoading } = useExpenses(tripId ?? null);
 
   const [editingName, setEditingName] = useState(false);
   const [nameInput, setNameInput] = useState('');
@@ -32,17 +48,6 @@ export default function TripDashboardScreen() {
       });
     }
   }, [trip, navigation]);
-
-  if (!tripId) {
-    return (
-      <View style={styles.container}>
-        <View style={styles.centerContent}>
-          <Text style={styles.errorText}>Invalid trip. Please select a trip again.</Text>
-          <Button title="Back to trips" onPress={() => router.replace('/')} />
-        </View>
-      </View>
-    );
-  }
 
   const loading = tripLoading || participantsLoading || expensesLoading;
 

@@ -9,12 +9,12 @@ import type { Expense, ExpenseSplit } from '../types';
 
 /**
  * Hook to fetch all expenses for a trip
- * @param tripId - Trip UUID
+ * @param tripId - Trip UUID (nullable)
  * @returns Object with expenses array, loading state, and error
  */
-export function useExpenses(tripId: string) {
+export function useExpenses(tripId: string | null) {
   const { data: expenses, loading, error } = useQuery(
-    () => getExpensesForTrip(tripId),
+    () => (tripId ? getExpensesForTrip(tripId) : Promise.resolve<Expense[]>([])),
     [tripId],
     [],
     'Failed to load expenses'
