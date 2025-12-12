@@ -15,3 +15,5 @@ export { ParticipantChip } from './ParticipantChip';
 export { CurrencyPicker } from './CurrencyPicker';
 
 export { DatePicker } from './DatePicker';
+
+export { DateRangePicker } from './DateRangePicker';

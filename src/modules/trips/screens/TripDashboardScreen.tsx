@@ -105,7 +105,13 @@ export default function TripDashboardScreen() {
           <View style={styles.header}>
             <View style={styles.titleContainer}>
               <Text style={styles.title}>{trip.name}</Text>
-              <Text style={styles.subtitle}>{trip.currency}</Text>
+              <Text style={styles.subtitle}>
+                {trip.currency}
+                {trip.endDate
+                  ? ` • ${new Date(trip.startDate).toLocaleDateString()} - ${new Date(trip.endDate).toLocaleDateString()}`
+                  : ` • ${new Date(trip.startDate).toLocaleDateString()}`
+                }
+              </Text>
             </View>
             <TouchableOpacity onPress={handleEditName} style={styles.editButton}>
               <Text style={styles.editButtonText}>Edit</Text>

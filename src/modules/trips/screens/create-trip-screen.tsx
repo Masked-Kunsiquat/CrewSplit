@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { theme } from '@ui/theme';
-import { Button, Input, CurrencyPicker, DatePicker } from '@ui/components';
+import { Button, Input, CurrencyPicker, DateRangePicker } from '@ui/components';
 import { createTrip } from '../repository';
 import { createParticipant } from '../../participants/repository';
 import { useDeviceOwner } from '@hooks/use-device-owner';
@@ -16,6 +16,7 @@ export default function CreateTripScreen() {
   const [description, setDescription] = useState('');
   const [currency, setCurrency] = useState<string | null>('USD');
   const [startDate, setStartDate] = useState(new Date());
+  const [endDate, setEndDate] = useState<Date | null>(null);
   const [isCreating, setIsCreating] = useState(false);
 
   const handleCreate = async () => {
@@ -30,6 +31,7 @@ export default function CreateTripScreen() {
         currencyCode: currency,
         description: description.trim() || undefined,
         startDate: startDate.toISOString(),
+        endDate: endDate?.toISOString() || undefined,
       });
 
       // Auto-add device owner as first participant if name is set
@@ -83,10 +85,13 @@ export default function CreateTripScreen() {
           />
         </View>
 
-        <DatePicker
-          label="Start Date"
-          value={startDate}
-          onChange={setStartDate}
+        <DateRangePicker
+          startLabel="Start Date"
+          endLabel="End Date"
+          startDate={startDate}
+          endDate={endDate}
+          onStartChange={setStartDate}
+          onEndChange={setEndDate}
         />
 
         <Input
