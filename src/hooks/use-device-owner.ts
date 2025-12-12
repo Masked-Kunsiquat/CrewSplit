@@ -15,19 +15,29 @@ export function useDeviceOwner() {
 
   // Load device owner name on mount
   useEffect(() => {
-    loadDeviceOwner();
-  }, []);
+    let isMounted = true;
 
-  const loadDeviceOwner = async () => {
-    try {
-      const name = await AsyncStorage.getItem(DEVICE_OWNER_KEY);
-      setDeviceOwnerName(name);
-    } catch (error) {
-      console.error('Failed to load device owner:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+    const loadDeviceOwner = async () => {
+      try {
+        const name = await AsyncStorage.getItem(DEVICE_OWNER_KEY);
+        if (isMounted) {
+          setDeviceOwnerName(name);
+        }
+      } catch (error) {
+        console.error('Failed to load device owner:', error);
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    loadDeviceOwner();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const setDeviceOwner = useCallback(async (name: string | null) => {
     try {
