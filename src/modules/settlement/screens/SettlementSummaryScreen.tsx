@@ -19,13 +19,9 @@ export default function SettlementSummaryScreen() {
   const tripId = normalizeTripId(params.id);
   const { displayCurrency } = useDisplayCurrency();
 
-  if (!tripId) {
-    return null;
-  }
-
   const { trip } = useTripById(tripId);
   const { settlement, loading, error, refetch } = useSettlementWithDisplay(
-    tripId,
+    tripId ?? null,
     displayCurrency ?? undefined
   );
 
@@ -37,6 +33,18 @@ export default function SettlementSummaryScreen() {
       });
     }
   }, [trip, navigation]);
+
+  if (!tripId) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.centerContent}>
+          <Text style={styles.errorTitle}>Invalid Trip</Text>
+          <Text style={styles.errorText}>Missing trip id. Please select a trip.</Text>
+          <Button title="Back to trips" onPress={() => navigation.navigate('index' as never)} />
+        </View>
+      </View>
+    );
+  }
 
   // Loading state
   if (loading) {

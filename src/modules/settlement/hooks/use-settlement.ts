@@ -9,10 +9,25 @@ import type { SettlementSummary } from '../types';
 
 /**
  * Hook to fetch settlement summary for a trip
- * @param tripId - Trip UUID
+ * @param tripId - Trip UUID (nullable - returns empty state when not provided)
  * @returns Object with settlement summary, loading state, and error
  */
-export function useSettlement(tripId: string) {
+export function useSettlement(tripId: string | null) {
+  if (!tripId) {
+    const emptySettlement: SettlementSummary = {
+      balances: [],
+      settlements: [],
+      totalExpenses: 0,
+      currency: 'USD',
+    };
+    return {
+      settlement: emptySettlement,
+      loading: false,
+      error: null,
+      refetch: () => {},
+    };
+  }
+
   const { data: settlement, loading, error, refetch } = useQuery(
     () => computeSettlement(tripId),
     [tripId],
