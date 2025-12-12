@@ -184,6 +184,7 @@ function AddExpenseScreenContent({ tripId }: { tripId: string }) {
         <DatePicker
           label="Date"
           value={date}
+          initialDate={trip ? new Date(trip.startDate) : undefined}
           onChange={setDate}
           maximumDate={new Date()}
         />

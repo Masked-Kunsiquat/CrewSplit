@@ -45,7 +45,7 @@ function ManageParticipantsContent({
   const [isAdding, setIsAdding] = useState(false);
 
   const { trip } = useTripById(tripId);
-  const { participants, loading, error } = useParticipants(tripId);
+  const { participants, loading, error, refetch } = useParticipants(tripId);
 
   // Update native header title
   useEffect(() => {
@@ -58,10 +58,6 @@ function ManageParticipantsContent({
 
   const handleAddParticipant = async () => {
     if (isAdding) return;
-    if (!tripId) {
-      Alert.alert('Error', 'Missing trip id');
-      return;
-    }
     if (!newParticipantName.trim()) {
       setNameError('Name is required');
       return;
@@ -78,9 +74,9 @@ function ManageParticipantsContent({
         avatarColor,
       });
 
+      refetch();
       setNewParticipantName('');
       setNameError(null);
-      // Participants will auto-refresh via useParticipants hook
     } catch (err) {
       Alert.alert('Error', err instanceof Error ? err.message : 'Failed to add participant');
     } finally {

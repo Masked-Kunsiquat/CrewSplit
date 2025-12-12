@@ -4,7 +4,7 @@
  */
 
 import React from 'react';
-import { TouchableOpacity, Text, StyleSheet, View } from 'react-native';
+import { TouchableOpacity, Text, StyleSheet, View, GestureResponderEvent } from 'react-native';
 import { theme } from '../theme';
 
 interface ParticipantChipProps {
@@ -13,6 +13,7 @@ interface ParticipantChipProps {
   avatarColor?: string;
   selected?: boolean;
   onToggle?: (id: string) => void;
+  onLongPress?: (event: GestureResponderEvent) => void;
   disabled?: boolean;
 }
 
@@ -22,6 +23,7 @@ export const ParticipantChip: React.FC<ParticipantChipProps> = ({
   avatarColor,
   selected = false,
   onToggle,
+  onLongPress,
   disabled = false,
 }) => {
   const handlePress = () => {
@@ -49,6 +51,7 @@ export const ParticipantChip: React.FC<ParticipantChipProps> = ({
     <TouchableOpacity
       style={chipStyle}
       onPress={handlePress}
+      onLongPress={onLongPress}
       disabled={disabled}
       activeOpacity={0.7}
     >

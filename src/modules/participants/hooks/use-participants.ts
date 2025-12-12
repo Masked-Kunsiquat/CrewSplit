@@ -13,12 +13,12 @@ import type { Participant } from '../types';
  * @returns Object with participants array, loading state, and error
  */
 export function useParticipants(tripId: string) {
-  const { data: participants, loading, error } = useQuery(
+  const { data: participants, loading, error, refetch } = useQuery(
     () => getParticipantsForTrip(tripId),
     [tripId],
     [],
     'Failed to load participants'
   );
 
-  return { participants, loading, error };
+  return { participants, loading, error, refetch };
 }

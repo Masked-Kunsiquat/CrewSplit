@@ -1,11 +1,11 @@
 /**
  * UI/UX ENGINEER: Date Picker Component
- * Cross-platform date picker wrapper
+ * Vanilla flash-calendar single-date selector (no custom calendar logic)
  */
 
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Platform } from 'react-native';
-import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
+import React, { useEffect, useMemo, useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Modal } from 'react-native';
+import { Calendar, fromDateId, toDateId } from '@marceloterreiro/flash-calendar';
 import { theme } from '@ui/theme';
 
 interface DatePickerProps {
@@ -14,27 +14,48 @@ interface DatePickerProps {
   onChange: (date: Date) => void;
   minimumDate?: Date;
   maximumDate?: Date;
+  /**
+   * Optional date to control the initial month the calendar opens on.
+   * Falls back to the current value if not provided.
+   */
+  initialDate?: Date;
 }
 
-export function DatePicker({ label, value, onChange, minimumDate, maximumDate }: DatePickerProps) {
-  const [showPicker, setShowPicker] = useState(false);
+const formatDate = (date: Date) =>
+  date.toLocaleDateString(undefined, {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
 
-  const handleChange = (_event: DateTimePickerEvent, selectedDate?: Date) => {
-    if (Platform.OS === 'android') {
-      setShowPicker(false);
-    }
+export function DatePicker({
+  label,
+  value,
+  onChange,
+  minimumDate,
+  maximumDate,
+  initialDate,
+}: DatePickerProps) {
+  const [showCalendar, setShowCalendar] = useState(false);
+  const selectedDateId = useMemo(() => toDateId(value), [value]);
+  const [pendingDateId, setPendingDateId] = useState(selectedDateId);
+  const initialMonthId = useMemo(
+    () => toDateId(initialDate ?? value),
+    [initialDate, value]
+  );
 
-    if (selectedDate) {
-      onChange(selectedDate);
-    }
+  useEffect(() => {
+    setPendingDateId(selectedDateId);
+  }, [selectedDateId]);
+
+  const handleConfirm = () => {
+    onChange(fromDateId(pendingDateId));
+    setShowCalendar(false);
   };
 
-  const formatDate = (date: Date) => {
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    });
+  const handleClose = () => {
+    setPendingDateId(selectedDateId);
+    setShowCalendar(false);
   };
 
   return (
@@ -43,7 +64,7 @@ export function DatePicker({ label, value, onChange, minimumDate, maximumDate }:
 
       <TouchableOpacity
         style={styles.button}
-        onPress={() => setShowPicker(true)}
+        onPress={() => setShowCalendar(true)}
         activeOpacity={0.7}
         accessible={true}
         accessibilityRole="button"
@@ -53,38 +74,45 @@ export function DatePicker({ label, value, onChange, minimumDate, maximumDate }:
         <Text style={styles.buttonText}>{formatDate(value)}</Text>
       </TouchableOpacity>
 
-      {showPicker && (
-        <>
-          {Platform.OS === 'ios' && (
-            <View style={styles.iosPickerContainer}>
-              <View style={styles.iosPickerHeader}>
-                <TouchableOpacity onPress={() => setShowPicker(false)}>
-                  <Text style={styles.iosPickerButton}>Done</Text>
+      {showCalendar && (
+        <Modal
+          visible={showCalendar}
+          animationType="slide"
+          transparent
+          onRequestClose={handleClose}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <View style={styles.modalHeader}>
+                <Text style={styles.modalTitle}>Select date</Text>
+                <TouchableOpacity onPress={handleConfirm}>
+                  <Text style={styles.modalButton}>Done</Text>
                 </TouchableOpacity>
               </View>
-              <DateTimePicker
-                value={value}
-                mode="date"
-                display="spinner"
-                onChange={handleChange}
-                minimumDate={minimumDate}
-                maximumDate={maximumDate}
-                textColor={theme.colors.text}
-              />
-            </View>
-          )}
 
-          {Platform.OS === 'android' && (
-            <DateTimePicker
-              value={value}
-              mode="date"
-              display="default"
-              onChange={handleChange}
-              minimumDate={minimumDate}
-              maximumDate={maximumDate}
-            />
-          )}
-        </>
+              <View style={styles.calendarContainer}>
+                <Calendar.List
+                  calendarActiveDateRanges={[
+                    { startId: pendingDateId, endId: pendingDateId },
+                  ]}
+                  calendarInitialMonthId={initialMonthId}
+                  calendarMinDateId={minimumDate ? toDateId(minimumDate) : undefined}
+                  calendarMaxDateId={maximumDate ? toDateId(maximumDate) : undefined}
+                  onCalendarDayPress={setPendingDateId}
+                />
+              </View>
+
+              <View style={styles.modalFooter}>
+                <Text style={styles.helperText}>
+                  Tap a day to pick it, then press Done
+                </Text>
+                <TouchableOpacity onPress={handleClose} style={styles.cancelButton}>
+                  <Text style={styles.cancelButtonText}>Cancel</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
       )}
     </View>
   );
@@ -113,21 +141,58 @@ const styles = StyleSheet.create({
     fontSize: theme.typography.base,
     color: theme.colors.text,
   },
-  iosPickerContainer: {
-    backgroundColor: theme.colors.surface,
-    borderTopWidth: 1,
-    borderTopColor: theme.colors.border,
-  },
-  iosPickerHeader: {
-    flexDirection: 'row',
+  modalOverlay: {
+    flex: 1,
     justifyContent: 'flex-end',
-    padding: theme.spacing.md,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+  },
+  modalContent: {
+    flex: 1,
+    backgroundColor: theme.colors.background,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingBottom: 34,
+    maxHeight: '80%',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: theme.spacing.lg,
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.border,
   },
-  iosPickerButton: {
+  modalTitle: {
+    fontSize: theme.typography.xl,
+    fontWeight: theme.typography.bold,
+    color: theme.colors.text,
+  },
+  modalButton: {
     fontSize: theme.typography.base,
     fontWeight: theme.typography.semibold,
     color: theme.colors.primary,
+  },
+  calendarContainer: {
+    flex: 1,
+  },
+  modalFooter: {
+    padding: theme.spacing.lg,
+    gap: theme.spacing.sm,
+    borderTopWidth: 1,
+    borderTopColor: theme.colors.border,
+  },
+  helperText: {
+    fontSize: theme.typography.sm,
+    color: theme.colors.textSecondary,
+    textAlign: 'center',
+  },
+  cancelButton: {
+    alignSelf: 'center',
+    paddingVertical: theme.spacing.xs,
+    paddingHorizontal: theme.spacing.sm,
+  },
+  cancelButtonText: {
+    fontSize: theme.typography.sm,
+    color: theme.colors.textMuted,
   },
 });
