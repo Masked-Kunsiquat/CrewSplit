@@ -15,12 +15,17 @@ import { formatCurrency } from '@utils/currency';
 
 export default function SettlementSummaryScreen() {
   const navigation = useNavigation();
-  const { id: tripId } = useLocalSearchParams<{ id: string }>();
+  const params = useLocalSearchParams<{ id?: string | string[] }>();
+  const tripId = normalizeTripId(params.id);
   const { displayCurrency } = useDisplayCurrency();
 
-  const { trip } = useTripById(tripId as string);
-  const { settlement, loading, error } = useSettlementWithDisplay(
-    tripId as string,
+  if (!tripId) {
+    return null;
+  }
+
+  const { trip } = useTripById(tripId);
+  const { settlement, loading, error, refetch } = useSettlementWithDisplay(
+    tripId,
     displayCurrency ?? undefined
   );
 
@@ -51,12 +56,13 @@ export default function SettlementSummaryScreen() {
       <View style={styles.container}>
         <View style={styles.centerContent}>
           <Text style={styles.errorTitle}>Error Loading Settlement</Text>
-          <Text style={styles.errorText}>{error.message}</Text>
+          <Text style={styles.errorText}>{formatErrorMessage(error)}</Text>
           <Button
             title="Retry"
             onPress={() => {
-              // The hook will automatically retry on remount
-              // For now, just show the button - a full refresh would require state management
+              if (refetch) {
+                refetch();
+              }
             }}
           />
         </View>
@@ -203,10 +209,33 @@ export default function SettlementSummaryScreen() {
       </ScrollView>
 
       <View style={styles.footer}>
-        <Button title="Export Trip" variant="outline" onPress={() => {}} fullWidth />
+        <Button
+          title="Export Trip (Coming Soon)"
+          variant="outline"
+          fullWidth
+          disabled
+          accessibilityLabel="Export Trip coming soon"
+          testID="export-trip-disabled"
+        />
       </View>
     </View>
   );
+}
+
+function normalizeTripId(idParam: string | string[] | undefined) {
+  if (!idParam) return null;
+  const first = Array.isArray(idParam) ? idParam[0] : idParam;
+  const normalized = first.trim();
+  return normalized.length > 0 ? normalized : null;
+}
+
+function formatErrorMessage(error: unknown) {
+  if (typeof error === 'string') return error;
+  if (error && typeof error === 'object' && 'message' in error) {
+    const maybeMessage = (error as { message?: unknown }).message;
+    if (typeof maybeMessage === 'string') return maybeMessage;
+  }
+  return 'Unknown error';
 }
 
 const styles = StyleSheet.create({

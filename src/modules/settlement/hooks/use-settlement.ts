@@ -13,7 +13,7 @@ import type { SettlementSummary } from '../types';
  * @returns Object with settlement summary, loading state, and error
  */
 export function useSettlement(tripId: string) {
-  const { data: settlement, loading, error } = useQuery(
+  const { data: settlement, loading, error, refetch } = useQuery(
     () => computeSettlement(tripId),
     [tripId],
     {
@@ -25,5 +25,5 @@ export function useSettlement(tripId: string) {
     'Failed to load settlement data'
   );
 
-  return { settlement, loading, error };
+  return { settlement, loading, error, refetch };
 }

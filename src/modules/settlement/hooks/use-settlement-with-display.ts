@@ -18,7 +18,7 @@ export function useSettlementWithDisplay(
   tripId: string,
   displayCurrency?: string
 ) {
-  const { settlement, loading, error } = useSettlement(tripId);
+  const { settlement, loading, error, refetch } = useSettlement(tripId);
 
   // Convert to display currency if requested
   const settlementWithDisplay = useMemo<SettlementSummaryWithDisplay>(() => {
@@ -45,5 +45,6 @@ export function useSettlementWithDisplay(
     settlement: settlementWithDisplay,
     loading,
     error,
+    refetch,
   };
 }
