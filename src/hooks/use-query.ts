@@ -3,7 +3,8 @@
  * Reusable pattern for data fetching with loading/error states
  */
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
+import { useFocusEffect } from 'expo-router';
 
 /**
  * Generic hook for fetching data with consistent loading/error handling
@@ -12,7 +13,7 @@ import { useEffect, useState } from 'react';
  * @param deps - Dependency array for the effect
  * @param initialValue - Initial value for the data state
  * @param errorMessage - Custom error message prefix (optional)
- * @returns Object with data, loading state, and error
+ * @returns Object with data, loading state, error, and refetch function
  *
  * @example
  * ```typescript
@@ -34,6 +35,11 @@ export function useQuery<T>(
   const [data, setData] = useState<T>(initialValue);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+  const refetch = useCallback(() => {
+    setRefreshTrigger((prev) => prev + 1);
+  }, []);
 
   useEffect(() => {
     let mounted = true;
@@ -63,7 +69,14 @@ export function useQuery<T>(
       mounted = false;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, deps);
+  }, [...deps, refreshTrigger]);
 
-  return { data, loading, error };
+  // Refetch when screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      refetch();
+    }, [refetch])
+  );
+
+  return { data, loading, error, refetch };
 }
