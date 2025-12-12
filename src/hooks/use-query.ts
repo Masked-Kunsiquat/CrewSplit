@@ -13,6 +13,7 @@ import { useFocusEffect } from 'expo-router';
  * @param deps - Dependency array for the effect
  * @param initialValue - Initial value for the data state
  * @param errorMessage - Custom error message prefix (optional)
+ * @param enableFocusRefetch - Whether to refetch when screen comes into focus (default: false)
  * @returns Object with data, loading state, error, and refetch function
  *
  * @example
@@ -21,7 +22,9 @@ import { useFocusEffect } from 'expo-router';
  *   return useQuery(
  *     getTrips,
  *     [],
- *     []
+ *     [],
+ *     'Failed to load trips',
+ *     true // Enable refetch on focus
  *   );
  * }
  * ```
@@ -30,7 +33,8 @@ export function useQuery<T>(
   queryFn: () => Promise<T>,
   deps: React.DependencyList,
   initialValue: T,
-  errorMessage: string = 'Failed to load data'
+  errorMessage: string = 'Failed to load data',
+  enableFocusRefetch: boolean = false
 ) {
   const [data, setData] = useState<T>(initialValue);
   const [loading, setLoading] = useState(true);
@@ -71,11 +75,13 @@ export function useQuery<T>(
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [...deps, refreshTrigger]);
 
-  // Refetch when screen comes into focus
+  // Optionally refetch when screen comes into focus
   useFocusEffect(
     useCallback(() => {
-      refetch();
-    }, [refetch])
+      if (enableFocusRefetch) {
+        refetch();
+      }
+    }, [refetch, enableFocusRefetch])
   );
 
   return { data, loading, error, refetch };

@@ -16,7 +16,8 @@ export function useTrips() {
     getTrips,
     [],
     [],
-    'Failed to load trips'
+    'Failed to load trips',
+    true // Refetch when navigating back to trips list
   );
 
   return { trips, loading, error };
