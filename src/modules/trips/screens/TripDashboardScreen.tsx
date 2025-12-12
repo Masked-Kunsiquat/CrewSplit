@@ -1,11 +1,12 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Alert, TouchableOpacity } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { theme } from '@ui/theme';
-import { Button, Card } from '@ui/components';
+import { Button, Card, Input } from '@ui/components';
 import { useTripById } from '../hooks/use-trips';
 import { useParticipants } from '../../participants/hooks/use-participants';
 import { useExpenses } from '../../expenses/hooks/use-expenses';
+import { updateTrip } from '../repository';
 import { formatCurrency } from '@utils/currency';
 
 export default function TripDashboardScreen() {
@@ -16,10 +17,38 @@ export default function TripDashboardScreen() {
   const { participants, loading: participantsLoading } = useParticipants(id);
   const { expenses, loading: expensesLoading } = useExpenses(id);
 
+  const [editingName, setEditingName] = useState(false);
+  const [nameInput, setNameInput] = useState('');
+
   const loading = tripLoading || participantsLoading || expensesLoading;
 
   // Calculate total expenses
   const totalExpenses = expenses.reduce((sum, expense) => sum + expense.convertedAmountMinor, 0);
+
+  const handleEditName = () => {
+    setNameInput(trip?.name || '');
+    setEditingName(true);
+  };
+
+  const handleSaveName = async () => {
+    if (!nameInput.trim()) {
+      Alert.alert('Error', 'Trip name cannot be empty');
+      return;
+    }
+
+    try {
+      await updateTrip(id, { name: nameInput.trim() });
+      setEditingName(false);
+      // Trip will refresh automatically via hook
+    } catch (error) {
+      Alert.alert('Error', 'Failed to update trip name');
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditingName(false);
+    setNameInput('');
+  };
 
   if (tripError) {
     return (
@@ -46,8 +75,43 @@ export default function TripDashboardScreen() {
   return (
     <View style={styles.container}>
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
-        <Text style={styles.title}>{trip.name}</Text>
-        <Text style={styles.subtitle}>{trip.currency}</Text>
+        {editingName ? (
+          <Card style={styles.editCard}>
+            <Input
+              label="Trip name"
+              value={nameInput}
+              onChangeText={setNameInput}
+              autoFocus
+            />
+            <View style={styles.buttonRow}>
+              <View style={styles.buttonHalf}>
+                <Button
+                  title="Cancel"
+                  variant="outline"
+                  onPress={handleCancelEdit}
+                  fullWidth
+                />
+              </View>
+              <View style={styles.buttonHalf}>
+                <Button
+                  title="Save"
+                  onPress={handleSaveName}
+                  fullWidth
+                />
+              </View>
+            </View>
+          </Card>
+        ) : (
+          <View style={styles.header}>
+            <View style={styles.titleContainer}>
+              <Text style={styles.title}>{trip.name}</Text>
+              <Text style={styles.subtitle}>{trip.currency}</Text>
+            </View>
+            <TouchableOpacity onPress={handleEditName} style={styles.editButton}>
+              <Text style={styles.editButtonText}>Edit</Text>
+            </TouchableOpacity>
+          </View>
+        )}
 
         <Card style={styles.summaryCard}>
           <View style={styles.summaryRow}>
@@ -113,6 +177,14 @@ const styles = StyleSheet.create({
     padding: theme.spacing.lg,
     gap: theme.spacing.md,
   },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+  },
+  titleContainer: {
+    flex: 1,
+  },
   title: {
     fontSize: theme.typography.xxxl,
     fontWeight: theme.typography.bold,
@@ -121,7 +193,30 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: theme.typography.sm,
     color: theme.colors.textSecondary,
-    marginBottom: theme.spacing.sm,
+    marginTop: theme.spacing.xs,
+  },
+  editButton: {
+    padding: theme.spacing.sm,
+    paddingHorizontal: theme.spacing.md,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+  },
+  editButtonText: {
+    fontSize: theme.typography.sm,
+    fontWeight: theme.typography.semibold,
+    color: theme.colors.primary,
+  },
+  editCard: {
+    backgroundColor: theme.colors.surfaceElevated,
+  },
+  buttonRow: {
+    flexDirection: 'row',
+    gap: theme.spacing.md,
+    marginTop: theme.spacing.sm,
+  },
+  buttonHalf: {
+    flex: 1,
   },
   centerContent: {
     flex: 1,
