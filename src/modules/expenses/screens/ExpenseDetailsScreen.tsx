@@ -137,8 +137,6 @@ export default function ExpenseDetailsScreen() {
   return (
     <View style={styles.container}>
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
-        <Text style={styles.title}>Expense Details</Text>
-
         {/* Main Expense Info */}
         <Card style={styles.section}>
           <Text style={styles.sectionTitle}>{expense.description}</Text>

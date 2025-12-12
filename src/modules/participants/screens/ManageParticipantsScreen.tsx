@@ -99,8 +99,6 @@ export default function ManageParticipantsScreen() {
   return (
     <View style={styles.container}>
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
-        <Text style={styles.title}>Participants</Text>
-
         <Input
           label="Add a participant"
           placeholder="Enter a name"

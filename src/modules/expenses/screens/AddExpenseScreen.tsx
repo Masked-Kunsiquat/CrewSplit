@@ -133,8 +133,6 @@ export default function AddExpenseScreen() {
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"
       >
-        <Text style={styles.title}>Add Expense</Text>
-
         <Input
           label="What was this?"
           placeholder="e.g., Dinner at Marina"

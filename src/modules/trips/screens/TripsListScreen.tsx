@@ -1,27 +1,34 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useNavigation } from 'expo-router';
 import { theme } from '@ui/theme';
 import { Button, Card } from '@ui/components';
 import { useTrips } from '../hooks/use-trips';
 
 export default function TripsListScreen() {
   const router = useRouter();
+  const navigation = useNavigation();
   const { trips, loading, error } = useTrips();
+
+  // Set header title for home screen
+  useEffect(() => {
+    navigation.setOptions({
+      title: 'Trips',
+      headerRight: () => (
+        <TouchableOpacity
+          style={styles.headerButton}
+          onPress={() => router.push('/settings')}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.settingsIcon}>⚙</Text>
+        </TouchableOpacity>
+      ),
+    });
+  }, [navigation, router]);
 
   return (
     <View style={styles.container}>
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
-        <View style={styles.header}>
-          <Text style={styles.title}>Trips</Text>
-          <TouchableOpacity
-            style={styles.settingsButton}
-            onPress={() => router.push('/settings')}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.settingsIcon}>⚙</Text>
-          </TouchableOpacity>
-        </View>
 
         {loading && (
           <View style={styles.centerContent}>
@@ -79,18 +86,9 @@ const styles = StyleSheet.create({
     padding: theme.spacing.lg,
     gap: theme.spacing.md,
   },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  title: {
-    fontSize: theme.typography.xxxl,
-    fontWeight: theme.typography.bold,
-    color: theme.colors.text,
-  },
-  settingsButton: {
+  headerButton: {
     padding: theme.spacing.sm,
+    marginRight: theme.spacing.sm,
   },
   settingsIcon: {
     fontSize: 24,
