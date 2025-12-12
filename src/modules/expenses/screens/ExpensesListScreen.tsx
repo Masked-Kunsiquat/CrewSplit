@@ -49,8 +49,6 @@ export default function ExpensesListScreen() {
   return (
     <View style={styles.container}>
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
-        <Text style={styles.title}>Expenses</Text>
-
         {expenses.length === 0 ? (
           <Card style={styles.emptyCard}>
             <Text style={styles.emptyTitle}>No expenses yet</Text>

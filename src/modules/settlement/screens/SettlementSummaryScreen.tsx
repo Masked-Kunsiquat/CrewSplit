@@ -71,7 +71,6 @@ export default function SettlementSummaryScreen() {
   return (
     <View style={styles.container}>
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
-        <Text style={styles.title}>Settlement</Text>
         <View style={styles.headerRow}>
           <Text style={styles.subtitle}>
             Total: {formatCurrency(settlement.totalExpenses, settlement.currency)}
