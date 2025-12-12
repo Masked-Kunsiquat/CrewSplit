@@ -1,32 +1,20 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Alert } from 'react-native';
-import { useLocalSearchParams, useNavigation } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
 import { theme } from '@ui/theme';
 import { Button, Card, Input, ParticipantChip } from '@ui/components';
 import { useParticipants } from '../hooks/use-participants';
-import { useTripById } from '@modules/trips/hooks/use-trips';
 import { createParticipant, deleteParticipant } from '../repository';
 
 // Predefined avatar colors for new participants
 const AVATAR_COLORS = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#F7DC6F', '#BB8FCE', '#85C1E2'];
 
 export default function ManageParticipantsScreen() {
-  const navigation = useNavigation();
   const { id: tripId } = useLocalSearchParams<{ id: string }>();
   const [newParticipantName, setNewParticipantName] = useState('');
   const [isAdding, setIsAdding] = useState(false);
 
-  const { trip } = useTripById(tripId);
   const { participants, loading, error } = useParticipants(tripId);
-
-  // Set dynamic header title
-  useEffect(() => {
-    if (trip) {
-      navigation.setOptions({
-        headerTitle: `${trip.name} - Participants`,
-      });
-    }
-  }, [trip, navigation]);
 
   const handleAddParticipant = async () => {
     if (!newParticipantName.trim()) {

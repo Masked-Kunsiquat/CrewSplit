@@ -3,14 +3,13 @@
  * Shows expense details with original, converted, and display currency amounts
  */
 
-import React, { useMemo, useEffect } from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Alert } from 'react-native';
-import { useRouter, useLocalSearchParams, useNavigation } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { theme } from '@ui/theme';
 import { Button, Card } from '@ui/components';
 import { useExpenseWithSplits } from '../hooks/use-expenses';
 import { useParticipants } from '@modules/participants/hooks/use-participants';
-import { useTripById } from '@modules/trips/hooks/use-trips';
 import { useDisplayCurrency } from '@hooks/use-display-currency';
 import { formatCurrency } from '@utils/currency';
 import { defaultFxRateProvider } from '@modules/settlement/service/DisplayCurrencyAdapter';
@@ -18,24 +17,13 @@ import { deleteExpense } from '../repository';
 
 export default function ExpenseDetailsScreen() {
   const router = useRouter();
-  const navigation = useNavigation();
   const { id: tripId, expenseId } = useLocalSearchParams<{ id: string; expenseId: string }>();
   const { displayCurrency } = useDisplayCurrency();
 
-  const { trip } = useTripById(tripId as string);
   const { expense, splits, loading: expenseLoading, error: expenseError } = useExpenseWithSplits(
     expenseId as string
   );
   const { participants, loading: participantsLoading } = useParticipants(tripId as string);
-
-  // Set dynamic header title
-  useEffect(() => {
-    if (trip && expense) {
-      navigation.setOptions({
-        headerTitle: `${trip.name} - ${expense.description}`,
-      });
-    }
-  }, [trip, expense, navigation]);
 
   // Map participant IDs to names
   const participantMap = useMemo(() => {

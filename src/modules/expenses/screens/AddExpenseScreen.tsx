@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, ActivityIndicator, Alert } from 'react-native';
-import { useRouter, useLocalSearchParams, useNavigation } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { theme } from '@ui/theme';
 import { Button, Input, ParticipantChip, DatePicker } from '@ui/components';
 import { useTripById } from '../../trips/hooks/use-trips';
@@ -10,20 +10,10 @@ import { parseCurrency } from '@utils/currency';
 
 export default function AddExpenseScreen() {
   const router = useRouter();
-  const navigation = useNavigation();
   const { id: tripId } = useLocalSearchParams<{ id: string }>();
 
   const { trip, loading: tripLoading } = useTripById(tripId);
   const { participants, loading: participantsLoading } = useParticipants(tripId);
-
-  // Set dynamic header title
-  useEffect(() => {
-    if (trip) {
-      navigation.setOptions({
-        headerTitle: `${trip.name} - Add Expense`,
-      });
-    }
-  }, [trip, navigation]);
 
   const [description, setDescription] = useState('');
   const [amount, setAmount] = useState('');
