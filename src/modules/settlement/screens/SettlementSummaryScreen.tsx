@@ -3,23 +3,35 @@
  * Displays participant balances and suggested payment transactions
  */
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
-import { useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, useNavigation } from 'expo-router';
 import { theme } from '@ui/theme';
 import { Card, Button } from '@ui/components';
 import { useSettlementWithDisplay } from '../hooks/use-settlement-with-display';
+import { useTripById } from '@modules/trips/hooks/use-trips';
 import { useDisplayCurrency } from '@hooks/use-display-currency';
 import { formatCurrency } from '@utils/currency';
 
 export default function SettlementSummaryScreen() {
+  const navigation = useNavigation();
   const { id: tripId } = useLocalSearchParams<{ id: string }>();
   const { displayCurrency } = useDisplayCurrency();
 
+  const { trip } = useTripById(tripId as string);
   const { settlement, loading, error } = useSettlementWithDisplay(
     tripId as string,
     displayCurrency ?? undefined
   );
+
+  // Set dynamic header title
+  useEffect(() => {
+    if (trip) {
+      navigation.setOptions({
+        headerTitle: `${trip.name} - Settlement`,
+      });
+    }
+  }, [trip, navigation]);
 
   // Loading state
   if (loading) {

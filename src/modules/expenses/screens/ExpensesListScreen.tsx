@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
-import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useRouter, useLocalSearchParams, useNavigation } from 'expo-router';
 import { theme } from '@ui/theme';
 import { Button, Card } from '@ui/components';
 import { useExpenses } from '../hooks/use-expenses';
@@ -9,10 +9,20 @@ import { formatCurrency } from '@utils/currency';
 
 export default function ExpensesListScreen() {
   const router = useRouter();
+  const navigation = useNavigation();
   const { id: tripId } = useLocalSearchParams<{ id: string }>();
 
   const { trip } = useTripById(tripId);
   const { expenses, loading, error } = useExpenses(tripId);
+
+  // Set dynamic header title
+  useEffect(() => {
+    if (trip) {
+      navigation.setOptions({
+        headerTitle: `${trip.name} - Expenses`,
+      });
+    }
+  }, [trip, navigation]);
 
   if (loading) {
     return (
