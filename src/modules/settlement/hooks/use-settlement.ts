@@ -13,30 +13,17 @@ import type { SettlementSummary } from '../types';
  * @returns Object with settlement summary, loading state, and error
  */
 export function useSettlement(tripId: string | null) {
-  if (!tripId) {
-    const emptySettlement: SettlementSummary = {
-      balances: [],
-      settlements: [],
-      totalExpenses: 0,
-      currency: 'USD',
-    };
-    return {
-      settlement: emptySettlement,
-      loading: false,
-      error: null,
-      refetch: () => {},
-    };
-  }
+  const emptySettlement: SettlementSummary = {
+    balances: [],
+    settlements: [],
+    totalExpenses: 0,
+    currency: 'USD',
+  };
 
   const { data: settlement, loading, error, refetch } = useQuery(
-    () => computeSettlement(tripId),
+    () => (tripId ? computeSettlement(tripId) : Promise.resolve(emptySettlement)),
     [tripId],
-    {
-      balances: [],
-      settlements: [],
-      totalExpenses: 0,
-      currency: 'USD',
-    } as SettlementSummary,
+    emptySettlement,
     'Failed to load settlement data'
   );
 

@@ -5,7 +5,7 @@
 
 import React, { useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
-import { useLocalSearchParams, useNavigation } from 'expo-router';
+import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
 import { theme } from '@ui/theme';
 import { Card, Button } from '@ui/components';
 import { useSettlementWithDisplay } from '../hooks/use-settlement-with-display';
@@ -15,6 +15,7 @@ import { formatCurrency } from '@utils/currency';
 
 export default function SettlementSummaryScreen() {
   const navigation = useNavigation();
+  const router = useRouter();
   const params = useLocalSearchParams<{ id?: string | string[] }>();
   const tripId = normalizeTripId(params.id);
   const { displayCurrency } = useDisplayCurrency();
@@ -40,7 +41,7 @@ export default function SettlementSummaryScreen() {
         <View style={styles.centerContent}>
           <Text style={styles.errorTitle}>Invalid Trip</Text>
           <Text style={styles.errorText}>Missing trip id. Please select a trip.</Text>
-          <Button title="Back to trips" onPress={() => navigation.navigate('index' as never)} />
+          <Button title="Back to trips" onPress={() => router.replace('/')} />
         </View>
       </View>
     );
