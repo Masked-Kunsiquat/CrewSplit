@@ -96,6 +96,7 @@ function ManageParticipantsContent({
           onPress: async () => {
             try {
               await deleteParticipant(participantId);
+              refetch();
             } catch (err) {
               Alert.alert('Error', 'Failed to remove participant');
             }
@@ -120,7 +121,9 @@ function ManageParticipantsContent({
       <View style={styles.container}>
         <View style={styles.errorContainer}>
           <Card style={styles.errorCard}>
-            <Text style={styles.errorText}>{error}</Text>
+            <Text style={styles.errorText}>
+              {typeof error === 'string' ? error : error?.message ?? String(error)}
+            </Text>
           </Card>
         </View>
       </View>

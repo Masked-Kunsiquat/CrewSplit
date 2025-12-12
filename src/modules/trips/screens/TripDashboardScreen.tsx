@@ -16,7 +16,7 @@ export default function TripDashboardScreen() {
 
   const tripId = id?.trim() || null;
 
-  const { trip, loading: tripLoading, error: tripError } = useTripById(tripId);
+  const { trip, loading: tripLoading, error: tripError, refetch: refetchTrip } = useTripById(tripId);
   const { participants, loading: participantsLoading } = useParticipants(tripId || '');
   const { expenses, loading: expensesLoading } = useExpenses(tripId || '');
 
@@ -61,7 +61,9 @@ export default function TripDashboardScreen() {
     }
 
     try {
-      await updateTrip(tripId, { name: nameInput.trim() });
+      const updated = await updateTrip(tripId, { name: nameInput.trim() });
+      navigation.setOptions({ title: updated.name });
+      refetchTrip();
       setEditingName(false);
       // Trip will refresh automatically via hook
     } catch (error) {

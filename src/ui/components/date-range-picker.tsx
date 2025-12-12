@@ -3,7 +3,7 @@
  * Beautiful calendar view with visual range selection using flash-calendar
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Modal } from 'react-native';
 import { Calendar, toDateId, fromDateId, useDateRange } from '@marceloterreiro/flash-calendar';
 import { theme } from '@ui/theme';

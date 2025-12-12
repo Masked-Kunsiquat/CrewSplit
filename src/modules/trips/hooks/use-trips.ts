@@ -31,15 +31,15 @@ export function useTrips() {
 export function useTripById(tripId: string | null) {
   // When tripId is null, return empty state immediately
   if (!tripId) {
-    return { trip: null, loading: false, error: null };
+    return { trip: null, loading: false, error: null, refetch: () => {} };
   }
 
-  const { data: trip, loading, error } = useQuery(
+  const { data: trip, loading, error, refetch } = useQuery(
     () => getTripById(tripId),
     [tripId],
     null,
     'Failed to load trip'
   );
 
-  return { trip, loading, error };
+  return { trip, loading, error, refetch };
 }

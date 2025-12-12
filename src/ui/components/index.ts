@@ -16,4 +16,4 @@ export { CurrencyPicker } from './CurrencyPicker';
 
 export { DatePicker } from './DatePicker';
 
-export { DateRangePicker } from './DateRangePicker';
+export { DateRangePicker } from './date-range-picker';

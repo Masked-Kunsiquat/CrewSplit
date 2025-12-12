@@ -83,17 +83,21 @@ function AddExpenseScreenContent({ tripId }: { tripId: string }) {
 
   const handleCreate = async () => {
     if (!trip || !paidBy || selectedParticipants.size === 0) {
-      return;
-    }
-
-    const amountMinor = parseCurrency(amount);
-    if (amountMinor <= 0) {
-      Alert.alert('Invalid Amount', 'Please enter a valid amount greater than zero.');
+      Alert.alert(
+        'Missing Information',
+        'Trip, payer, and at least one participant are required to create an expense.'
+      );
       return;
     }
 
     setIsCreating(true);
     try {
+      const amountMinor = parseCurrency(amount);
+      if (amountMinor <= 0) {
+        Alert.alert('Invalid Amount', 'Please enter a valid amount greater than zero.');
+        return;
+      }
+
       await addExpense({
         tripId,
         description: description.trim(),
@@ -111,6 +115,7 @@ function AddExpenseScreenContent({ tripId }: { tripId: string }) {
       router.back();
     } catch (err) {
       Alert.alert('Error', 'Failed to add expense');
+    } finally {
       setIsCreating(false);
     }
   };
