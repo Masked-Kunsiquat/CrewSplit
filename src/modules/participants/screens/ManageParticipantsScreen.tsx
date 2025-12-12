@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Alert } from 'react-native';
-import { useLocalSearchParams, useNavigation } from 'expo-router';
+import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
 import { theme } from '@ui/theme';
 import { Button, Card, Input, ParticipantChip } from '@ui/components';
 import { useParticipants } from '../hooks/use-participants';
@@ -11,9 +11,37 @@ import { createParticipant, deleteParticipant } from '../repository';
 const AVATAR_COLORS = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#F7DC6F', '#BB8FCE', '#85C1E2'];
 
 export default function ManageParticipantsScreen() {
+  const router = useRouter();
   const navigation = useNavigation();
-  const { id: tripId } = useLocalSearchParams<{ id: string }>();
+  const params = useLocalSearchParams<{ id?: string | string[] }>();
+  const tripIdParam = Array.isArray(params.id) ? params.id[0] : params.id;
+  const tripId = tripIdParam?.trim() || null;
+
+  if (!tripId) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.errorContainer}>
+          <Card style={styles.errorCard}>
+            <Text style={styles.errorText}>Missing trip id. Please navigate back and select a trip.</Text>
+            <Button title="Back to trips" onPress={() => router.replace('/')} fullWidth />
+          </Card>
+        </View>
+      </View>
+    );
+  }
+
+  return <ManageParticipantsContent tripId={tripId} navigation={navigation} />;
+}
+
+function ManageParticipantsContent({
+  tripId,
+  navigation,
+}: {
+  tripId: string;
+  navigation: ReturnType<typeof useNavigation>;
+}) {
   const [newParticipantName, setNewParticipantName] = useState('');
+  const [nameError, setNameError] = useState<string | null>(null);
   const [isAdding, setIsAdding] = useState(false);
 
   const { trip } = useTripById(tripId);
@@ -29,7 +57,13 @@ export default function ManageParticipantsScreen() {
   }, [trip, navigation]);
 
   const handleAddParticipant = async () => {
+    if (isAdding) return;
+    if (!tripId) {
+      Alert.alert('Error', 'Missing trip id');
+      return;
+    }
     if (!newParticipantName.trim()) {
+      setNameError('Name is required');
       return;
     }
 
@@ -45,9 +79,10 @@ export default function ManageParticipantsScreen() {
       });
 
       setNewParticipantName('');
+      setNameError(null);
       // Participants will auto-refresh via useParticipants hook
     } catch (err) {
-      Alert.alert('Error', 'Failed to add participant');
+      Alert.alert('Error', err instanceof Error ? err.message : 'Failed to add participant');
     } finally {
       setIsAdding(false);
     }
@@ -103,7 +138,11 @@ export default function ManageParticipantsScreen() {
           label="Add a participant"
           placeholder="Enter a name"
           value={newParticipantName}
-          onChangeText={setNewParticipantName}
+          error={nameError ?? undefined}
+          onChangeText={(t) => {
+            setNewParticipantName(t);
+            if (nameError) setNameError(null);
+          }}
           returnKeyType="done"
           onSubmitEditing={handleAddParticipant}
           editable={!isAdding}
