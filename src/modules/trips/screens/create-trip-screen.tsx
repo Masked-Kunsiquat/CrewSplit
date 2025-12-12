@@ -65,8 +65,6 @@ export default function CreateTripScreen() {
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"
       >
-        <Text style={styles.title}>Create Trip</Text>
-
         <Input
           label="Trip name"
           placeholder="e.g., Summer Vacation"

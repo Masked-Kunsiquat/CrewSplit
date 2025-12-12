@@ -3,9 +3,9 @@
  * Global app settings including display currency preference
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, Alert } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useNavigation } from 'expo-router';
 import { theme } from '@ui/theme';
 import { Card, CurrencyPicker, Button, Input } from '@ui/components';
 import { useDisplayCurrency } from '@hooks/use-display-currency';
@@ -13,8 +13,16 @@ import { useDeviceOwner } from '@hooks/use-device-owner';
 
 export default function SettingsScreen() {
   const router = useRouter();
+  const navigation = useNavigation();
   const { displayCurrency, loading, setDisplayCurrency } = useDisplayCurrency();
   const { deviceOwnerName, loading: ownerLoading, setDeviceOwner } = useDeviceOwner();
+
+  // Set header title
+  useEffect(() => {
+    navigation.setOptions({
+      title: 'Settings',
+    });
+  }, [navigation]);
 
   const [editingName, setEditingName] = useState(false);
   const [nameInput, setNameInput] = useState('');
@@ -57,8 +65,6 @@ export default function SettingsScreen() {
   return (
     <View style={styles.container}>
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
-        <Text style={styles.title}>Settings</Text>
-
         <Card style={styles.section}>
           <Text style={styles.sectionTitle}>Your Name</Text>
           <Text style={styles.sectionDescription}>
