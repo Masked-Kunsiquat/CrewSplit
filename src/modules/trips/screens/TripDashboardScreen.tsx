@@ -12,11 +12,13 @@ import { formatCurrency } from '@utils/currency';
 export default function TripDashboardScreen() {
   const router = useRouter();
   const navigation = useNavigation();
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id } = useLocalSearchParams<{ id?: string }>();
 
-  const { trip, loading: tripLoading, error: tripError } = useTripById(id);
-  const { participants, loading: participantsLoading } = useParticipants(id);
-  const { expenses, loading: expensesLoading } = useExpenses(id);
+  const tripId = id?.trim() || null;
+
+  const { trip, loading: tripLoading, error: tripError } = useTripById(tripId);
+  const { participants, loading: participantsLoading } = useParticipants(tripId || '');
+  const { expenses, loading: expensesLoading } = useExpenses(tripId || '');
 
   const [editingName, setEditingName] = useState(false);
   const [nameInput, setNameInput] = useState('');
@@ -30,6 +32,17 @@ export default function TripDashboardScreen() {
       });
     }
   }, [trip, navigation]);
+
+  if (!tripId) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.centerContent}>
+          <Text style={styles.errorText}>Invalid trip. Please select a trip again.</Text>
+          <Button title="Back to trips" onPress={() => router.replace('/')} />
+        </View>
+      </View>
+    );
+  }
 
   const loading = tripLoading || participantsLoading || expensesLoading;
 
@@ -48,7 +61,7 @@ export default function TripDashboardScreen() {
     }
 
     try {
-      await updateTrip(id, { name: nameInput.trim() });
+      await updateTrip(tripId, { name: nameInput.trim() });
       setEditingName(false);
       // Trip will refresh automatically via hook
     } catch (error) {
@@ -73,7 +86,7 @@ export default function TripDashboardScreen() {
           onPress: async () => {
             setIsDeleting(true);
             try {
-              await deleteTrip(id);
+              await deleteTrip(tripId);
               router.replace('/');
             } catch (error) {
               Alert.alert('Error', 'Failed to delete trip');
@@ -170,7 +183,7 @@ export default function TripDashboardScreen() {
         </Card>
 
         <View style={styles.actionGrid}>
-          <Card style={styles.actionCard} onPress={() => router.push(`/trips/${id}/participants`)}>
+          <Card style={styles.actionCard} onPress={() => router.push(`/trips/${tripId}/participants`)}>
             <Text style={styles.actionTitle}>Participants</Text>
             <Text style={styles.actionBody}>
               {participants.length === 0
@@ -179,7 +192,7 @@ export default function TripDashboardScreen() {
             </Text>
           </Card>
 
-          <Card style={styles.actionCard} onPress={() => router.push(`/trips/${id}/expenses`)}>
+          <Card style={styles.actionCard} onPress={() => router.push(`/trips/${tripId}/expenses`)}>
             <Text style={styles.actionTitle}>Expenses</Text>
             <Text style={styles.actionBody}>
               {expenses.length === 0
@@ -188,7 +201,7 @@ export default function TripDashboardScreen() {
             </Text>
           </Card>
 
-          <Card style={styles.actionCard} onPress={() => router.push(`/trips/${id}/settlement`)}>
+          <Card style={styles.actionCard} onPress={() => router.push(`/trips/${tripId}/settlement`)}>
             <Text style={styles.actionTitle}>Settlement</Text>
             <Text style={styles.actionBody}>
               {expenses.length === 0
@@ -215,7 +228,7 @@ export default function TripDashboardScreen() {
       </ScrollView>
 
       <View style={styles.footer}>
-        <Button title="Add Expense" onPress={() => router.push(`/trips/${id}/expenses/add`)} fullWidth />
+        <Button title="Add Expense" onPress={() => router.push(`/trips/${tripId}/expenses/add`)} fullWidth />
       </View>
     </View>
   );
