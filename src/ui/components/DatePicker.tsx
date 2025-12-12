@@ -5,7 +5,7 @@
 
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Platform } from 'react-native';
-import DateTimePicker from '@react-native-community/datetimepicker';
+import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { theme } from '@ui/theme';
 
 interface DatePickerProps {
@@ -19,7 +19,7 @@ interface DatePickerProps {
 export function DatePicker({ label, value, onChange, minimumDate, maximumDate }: DatePickerProps) {
   const [showPicker, setShowPicker] = useState(false);
 
-  const handleChange = (event: any, selectedDate?: Date) => {
+  const handleChange = (_event: DateTimePickerEvent, selectedDate?: Date) => {
     if (Platform.OS === 'android') {
       setShowPicker(false);
     }
@@ -45,6 +45,10 @@ export function DatePicker({ label, value, onChange, minimumDate, maximumDate }:
         style={styles.button}
         onPress={() => setShowPicker(true)}
         activeOpacity={0.7}
+        accessible={true}
+        accessibilityRole="button"
+        accessibilityLabel={`Select date, ${formatDate(value)}`}
+        accessibilityHint="Opens the date picker"
       >
         <Text style={styles.buttonText}>{formatDate(value)}</Text>
       </TouchableOpacity>
