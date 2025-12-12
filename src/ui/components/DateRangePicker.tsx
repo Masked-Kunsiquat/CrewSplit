@@ -41,6 +41,7 @@ export function DateRangePicker({
     calendarActiveDateRanges,
     onCalendarDayPress,
     dateRange,
+    onClearDateRange,
   } = useDateRange({
     startId: toDateId(startDate),
     endId: endDate ? toDateId(endDate) : undefined,
@@ -56,6 +57,7 @@ export function DateRangePicker({
   };
 
   const handleClearEndDate = () => {
+    onClearDateRange();
     onEndChange(null);
   };
 
@@ -123,7 +125,12 @@ export function DateRangePicker({
             <View style={styles.modalContent}>
               <View style={styles.modalHeader}>
                 <Text style={styles.modalTitle}>Select Dates</Text>
-                <TouchableOpacity onPress={handleConfirm}>
+                <TouchableOpacity
+                  onPress={handleConfirm}
+                  accessibilityRole="button"
+                  accessibilityLabel="Done selecting dates"
+                  accessibilityHint="Closes the date picker and applies selected dates"
+                >
                   <Text style={styles.modalButton}>Done</Text>
                 </TouchableOpacity>
               </View>
