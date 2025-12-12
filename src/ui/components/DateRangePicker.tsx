@@ -1,15 +1,12 @@
 /**
  * UI/UX ENGINEER: Date Range Picker Component
- * Flexible date range picker supporting both:
- * 1. Calendar view with visual range selection (fancy UX)
- * 2. Traditional separate start/end date fields (simple UX)
+ * Beautiful calendar view with visual range selection using flash-calendar
  */
 
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Modal, Platform } from 'react-native';
-import DateTimePicker from '@react-native-community/datetimepicker';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Modal } from 'react-native';
+import { Calendar, toDateId, fromDateId, useDateRange } from '@marceloterreiro/flash-calendar';
 import { theme } from '@ui/theme';
-import { Button } from './Button';
 
 interface DateRangePickerProps {
   startLabel?: string;
@@ -25,10 +22,7 @@ interface DateRangePickerProps {
 /**
  * DateRangePicker Component
  *
- * Provides two ways to select date ranges:
- * - Tap individual fields to use native date pickers (traditional)
- * - On iOS, shows native modal pickers with Done button
- * - On Android, shows native picker dialogs
+ * Uses flash-calendar's useDateRange hook for proper date range handling
  */
 export function DateRangePicker({
   startLabel = 'Start Date',
@@ -37,11 +31,18 @@ export function DateRangePicker({
   endDate,
   onStartChange,
   onEndChange,
-  minimumDate,
-  maximumDate,
 }: DateRangePickerProps) {
-  const [showStartPicker, setShowStartPicker] = useState(false);
-  const [showEndPicker, setShowEndPicker] = useState(false);
+  const [showCalendar, setShowCalendar] = useState(false);
+
+  // Let the library manage everything - completely uncontrolled
+  const {
+    calendarActiveDateRanges,
+    onCalendarDayPress,
+    dateRange,
+  } = useDateRange({
+    startId: toDateId(startDate),
+    endId: endDate ? toDateId(endDate) : undefined,
+  });
 
   const formatDate = (date: Date | null | undefined): string => {
     if (!date) return 'Not set';
@@ -52,131 +53,130 @@ export function DateRangePicker({
     });
   };
 
-  const handleStartChange = (event: any, selectedDate?: Date) => {
-    if (Platform.OS === 'android') {
-      setShowStartPicker(false);
-    }
-    if (selectedDate) {
-      onStartChange(selectedDate);
-      // If end date is before new start date, clear it
-      if (endDate && selectedDate > endDate) {
-        onEndChange(null);
-      }
-    }
-  };
-
-  const handleEndChange = (event: any, selectedDate?: Date) => {
-    if (Platform.OS === 'android') {
-      setShowEndPicker(false);
-    }
-    if (selectedDate) {
-      onEndChange(selectedDate);
-    }
-  };
-
   const handleClearEndDate = () => {
     onEndChange(null);
-    setShowEndPicker(false);
+  };
+
+  const handleConfirm = () => {
+    // Only sync to parent when user confirms
+    if (dateRange.startId) {
+      onStartChange(fromDateId(dateRange.startId));
+    }
+    if (dateRange.endId) {
+      onEndChange(fromDateId(dateRange.endId));
+    } else {
+      onEndChange(null);
+    }
+    setShowCalendar(false);
   };
 
   return (
     <View style={styles.container}>
-      {/* Start Date Field */}
-      <View style={styles.dateField}>
-        <Text style={styles.label}>{startLabel}</Text>
-        <TouchableOpacity
-          style={styles.dateButton}
-          onPress={() => setShowStartPicker(true)}
-        >
-          <Text style={styles.dateText}>{formatDate(startDate)}</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* End Date Field */}
-      <View style={styles.dateField}>
-        <View style={styles.labelRow}>
-          <Text style={styles.label}>{endLabel} (optional)</Text>
-          {endDate && (
-            <TouchableOpacity onPress={handleClearEndDate}>
-              <Text style={styles.clearButton}>Clear</Text>
-            </TouchableOpacity>
-          )}
+      {/* Date Display Button */}
+      <TouchableOpacity
+        style={styles.dateButton}
+        onPress={() => setShowCalendar(true)}
+      >
+        <View style={styles.dateDisplay}>
+          <View style={styles.dateSection}>
+            <Text style={styles.label}>{startLabel}</Text>
+            <Text style={styles.dateText}>{formatDate(startDate)}</Text>
+          </View>
+          <Text style={styles.separator}>→</Text>
+          <View style={styles.dateSection}>
+            <Text style={styles.label}>{endLabel}</Text>
+            <Text style={[styles.dateText, !endDate && styles.placeholderText]}>
+              {formatDate(endDate)}
+            </Text>
+          </View>
         </View>
-        <TouchableOpacity
-          style={styles.dateButton}
-          onPress={() => setShowEndPicker(true)}
-        >
-          <Text style={[styles.dateText, !endDate && styles.placeholderText]}>
-            {formatDate(endDate)}
-          </Text>
+      </TouchableOpacity>
+
+      {endDate && (
+        <TouchableOpacity onPress={handleClearEndDate} style={styles.clearButtonContainer}>
+          <Text style={styles.clearButton}>Clear end date</Text>
         </TouchableOpacity>
-      </View>
+      )}
 
-      {/* iOS Modal for Start Date */}
-      {Platform.OS === 'ios' && showStartPicker && (
-        <Modal transparent animationType="slide">
+      {/* Calendar Modal */}
+      {showCalendar && (
+        <Modal
+          visible={showCalendar}
+          animationType="slide"
+          transparent
+          onRequestClose={() => setShowCalendar(false)}
+        >
           <View style={styles.modalOverlay}>
             <View style={styles.modalContent}>
               <View style={styles.modalHeader}>
-                <TouchableOpacity onPress={() => setShowStartPicker(false)}>
+                <Text style={styles.modalTitle}>Select Dates</Text>
+                <TouchableOpacity onPress={handleConfirm}>
                   <Text style={styles.modalButton}>Done</Text>
                 </TouchableOpacity>
               </View>
-              <DateTimePicker
-                value={startDate}
-                mode="date"
-                display="spinner"
-                onChange={handleStartChange}
-                minimumDate={minimumDate}
-                maximumDate={endDate || maximumDate}
-              />
-            </View>
-          </View>
-        </Modal>
-      )}
 
-      {/* iOS Modal for End Date */}
-      {Platform.OS === 'ios' && showEndPicker && (
-        <Modal transparent animationType="slide">
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalContent}>
-              <View style={styles.modalHeader}>
-                <TouchableOpacity onPress={() => setShowEndPicker(false)}>
-                  <Text style={styles.modalButton}>Done</Text>
-                </TouchableOpacity>
+              <View style={styles.calendarContainer}>
+                <Calendar.List
+                  calendarActiveDateRanges={calendarActiveDateRanges}
+                  calendarInitialMonthId={toDateId(startDate)}
+                  onCalendarDayPress={onCalendarDayPress}
+                  calendarMonthHeaderHeight={40}
+                  calendarRowVerticalSpacing={8}
+                  theme={{
+                    rowMonth: {
+                      content: {
+                        color: theme.colors.text,
+                        fontWeight: '600',
+                      },
+                    },
+                    rowWeek: {
+                      container: {
+                        borderBottomWidth: 1,
+                        borderBottomColor: theme.colors.border,
+                        paddingBottom: 4,
+                      },
+                    },
+                    itemWeekName: {
+                      content: {
+                        color: theme.colors.textSecondary,
+                      },
+                    },
+                    itemDay: {
+                      base: () => ({
+                        container: {
+                          backgroundColor: theme.colors.surface,
+                        },
+                        content: {
+                          color: theme.colors.text,
+                        },
+                      }),
+                      today: () => ({
+                        container: {
+                          borderColor: theme.colors.primary,
+                          borderWidth: 1,
+                        },
+                      }),
+                      active: () => ({
+                        container: {
+                          backgroundColor: theme.colors.primary,
+                        },
+                        content: {
+                          color: theme.colors.background,
+                        },
+                      }),
+                    },
+                  }}
+                />
               </View>
-              <DateTimePicker
-                value={endDate || startDate}
-                mode="date"
-                display="spinner"
-                onChange={handleEndChange}
-                minimumDate={startDate}
-                maximumDate={maximumDate}
-              />
+
+              <View style={styles.modalFooter}>
+                <Text style={styles.helperText}>
+                  Tap dates to select your range
+                </Text>
+              </View>
             </View>
           </View>
         </Modal>
-      )}
-
-      {/* Android Pickers */}
-      {Platform.OS === 'android' && showStartPicker && (
-        <DateTimePicker
-          value={startDate}
-          mode="date"
-          onChange={handleStartChange}
-          minimumDate={minimumDate}
-          maximumDate={endDate || maximumDate}
-        />
-      )}
-
-      {Platform.OS === 'android' && showEndPicker && (
-        <DateTimePicker
-          value={endDate || startDate}
-          mode="date"
-          onChange={handleEndChange}
-          minimumDate={startDate}
-          maximumDate={maximumDate}
-        />
       )}
     </View>
   );
@@ -184,25 +184,7 @@ export function DateRangePicker({
 
 const styles = StyleSheet.create({
   container: {
-    gap: theme.spacing.md,
-  },
-  dateField: {
-    gap: theme.spacing.xs,
-  },
-  label: {
-    fontSize: theme.typography.sm,
-    fontWeight: theme.typography.semibold,
-    color: theme.colors.text,
-  },
-  labelRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  clearButton: {
-    fontSize: theme.typography.sm,
-    color: theme.colors.primary,
-    fontWeight: theme.typography.medium,
+    gap: theme.spacing.sm,
   },
   dateButton: {
     padding: theme.spacing.md,
@@ -211,34 +193,86 @@ const styles = StyleSheet.create({
     borderColor: theme.colors.border,
     backgroundColor: theme.colors.surface,
   },
+  dateDisplay: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: theme.spacing.md,
+  },
+  dateSection: {
+    flex: 1,
+    gap: theme.spacing.xs,
+  },
+  separator: {
+    fontSize: theme.typography.lg,
+    color: theme.colors.textMuted,
+    paddingHorizontal: theme.spacing.sm,
+  },
+  label: {
+    fontSize: theme.typography.xs,
+    fontWeight: theme.typography.semibold,
+    color: theme.colors.textSecondary,
+    textTransform: 'uppercase',
+  },
   dateText: {
     fontSize: theme.typography.base,
     color: theme.colors.text,
+    fontWeight: theme.typography.medium,
   },
   placeholderText: {
     color: theme.colors.textMuted,
   },
+  clearButtonContainer: {
+    alignSelf: 'flex-start',
+  },
+  clearButton: {
+    fontSize: theme.typography.sm,
+    color: theme.colors.primary,
+    fontWeight: theme.typography.medium,
+  },
   modalOverlay: {
     flex: 1,
     justifyContent: 'flex-end',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
   },
   modalContent: {
+    flex: 1,
     backgroundColor: theme.colors.background,
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
-    paddingBottom: 34, // Safe area for iOS
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingBottom: 34,
+    maxHeight: '80%',
   },
   modalHeader: {
     flexDirection: 'row',
-    justifyContent: 'flex-end',
-    padding: theme.spacing.md,
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: theme.spacing.lg,
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.border,
+  },
+  modalTitle: {
+    fontSize: theme.typography.xl,
+    fontWeight: theme.typography.bold,
+    color: theme.colors.text,
   },
   modalButton: {
     fontSize: theme.typography.base,
     fontWeight: theme.typography.semibold,
     color: theme.colors.primary,
+  },
+  calendarContainer: {
+    flex: 1,
+  },
+  modalFooter: {
+    padding: theme.spacing.lg,
+    paddingTop: theme.spacing.sm,
+    borderTopWidth: 1,
+    borderTopColor: theme.colors.border,
+  },
+  helperText: {
+    fontSize: theme.typography.sm,
+    color: theme.colors.textSecondary,
+    textAlign: 'center',
   },
 });
