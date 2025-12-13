@@ -170,16 +170,30 @@ function ExpenseDetailsContent({ tripId, expenseId }: { tripId: string; expenseI
         <Card style={styles.section}>
           <View style={styles.header}>
             <Text style={styles.sectionTitle}>{expense.description}</Text>
-            <TouchableOpacity
-              onPress={() => setEditingExpense(!editingExpense)}
-              style={styles.editButton}
-              accessible={true}
-              accessibilityRole="button"
-              accessibilityLabel={editingExpense ? "Cancel editing" : "Edit expense"}
-              accessibilityHint={editingExpense ? "Hides the delete option" : "Shows the delete option"}
-            >
-              <Text style={styles.editButtonText}>{editingExpense ? 'Cancel' : 'Edit'}</Text>
-            </TouchableOpacity>
+            <View style={styles.headerButtons}>
+              <TouchableOpacity
+                onPress={() => router.push(`/trips/${tripId}/expenses/${expenseId}/edit`)}
+                style={styles.editButton}
+                accessible={true}
+                accessibilityRole="button"
+                accessibilityLabel="Edit expense"
+                accessibilityHint="Opens the edit expense screen"
+              >
+                <Text style={styles.editButtonText}>Edit</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => setEditingExpense(!editingExpense)}
+                style={[styles.editButton, editingExpense && styles.deleteButtonActive]}
+                accessible={true}
+                accessibilityRole="button"
+                accessibilityLabel={editingExpense ? "Cancel delete" : "Delete expense"}
+                accessibilityHint={editingExpense ? "Hides the delete option" : "Shows the delete option"}
+              >
+                <Text style={[styles.editButtonText, editingExpense && styles.deleteButtonTextActive]}>
+                  {editingExpense ? 'Cancel' : 'Delete'}
+                </Text>
+              </TouchableOpacity>
+            </View>
           </View>
 
           {/* Original Amount (if different from trip currency) */}
@@ -350,6 +364,10 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     marginBottom: theme.spacing.sm,
   },
+  headerButtons: {
+    flexDirection: 'row',
+    gap: theme.spacing.sm,
+  },
   editButton: {
     padding: theme.spacing.sm,
     paddingHorizontal: theme.spacing.md,
@@ -361,6 +379,13 @@ const styles = StyleSheet.create({
     fontSize: theme.typography.sm,
     fontWeight: theme.typography.semibold,
     color: theme.colors.primary,
+  },
+  deleteButtonActive: {
+    backgroundColor: theme.colors.error,
+    borderColor: theme.colors.error,
+  },
+  deleteButtonTextActive: {
+    color: theme.colors.text,
   },
   loadingText: {
     fontSize: theme.typography.base,
