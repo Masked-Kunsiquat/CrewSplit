@@ -46,32 +46,21 @@ function ExpenseDetailsContent({ tripId, expenseId }: { tripId: string; expenseI
   const navigation = useNavigation();
   const { displayCurrency } = useDisplayCurrency();
   const [isDeleting, setIsDeleting] = useState(false);
+  const [editingExpense, setEditingExpense] = useState(false);
 
   const { expense, splits, loading: expenseLoading, error: expenseError } = useExpenseWithSplits(
     expenseId
   );
   const { participants, loading: participantsLoading } = useParticipants(tripId);
 
-  // Update native header title and add Edit button
+  // Update native header title
   useEffect(() => {
     if (expense) {
       navigation.setOptions({
         title: expense.description,
-        headerRight: () => (
-          <TouchableOpacity
-            onPress={() => router.push(`/trips/${tripId}/expenses/${expenseId}/edit`)}
-            style={styles.headerButton}
-            accessible={true}
-            accessibilityRole="button"
-            accessibilityLabel="Edit expense"
-            accessibilityHint="Opens the edit screen for this expense"
-          >
-            <Text style={styles.headerButtonText}>Edit</Text>
-          </TouchableOpacity>
-        ),
       });
     }
-  }, [expense, navigation, router, tripId, expenseId]);
+  }, [expense, navigation]);
 
   // Map participant IDs to names
   const participantMap = useMemo(() => {
@@ -179,7 +168,19 @@ function ExpenseDetailsContent({ tripId, expenseId }: { tripId: string; expenseI
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
         {/* Main Expense Info */}
         <Card style={styles.section}>
-          <Text style={styles.sectionTitle}>{expense.description}</Text>
+          <View style={styles.header}>
+            <Text style={styles.sectionTitle}>{expense.description}</Text>
+            <TouchableOpacity
+              onPress={() => setEditingExpense(!editingExpense)}
+              style={styles.editButton}
+              accessible={true}
+              accessibilityRole="button"
+              accessibilityLabel={editingExpense ? "Cancel editing" : "Edit expense"}
+              accessibilityHint={editingExpense ? "Hides the delete option" : "Shows the delete option"}
+            >
+              <Text style={styles.editButtonText}>{editingExpense ? 'Cancel' : 'Edit'}</Text>
+            </TouchableOpacity>
+          </View>
 
           {/* Original Amount (if different from trip currency) */}
           {showCurrencyConversion && (
@@ -296,18 +297,23 @@ function ExpenseDetailsContent({ tripId, expenseId }: { tripId: string; expenseI
               ' Currency conversions are applied at the time of expense creation.'}
           </Text>
         </Card>
-      </ScrollView>
 
-      <View style={styles.footer}>
-        <View style={styles.deleteButtonContainer}>
-          <Button
-            title={isDeleting ? 'Deleting...' : 'Delete Expense'}
-            onPress={handleDelete}
-            fullWidth
-            disabled={isDeleting}
-          />
-        </View>
-      </View>
+        {/* Danger Zone - Only show when editing */}
+        {editingExpense && (
+          <Card style={styles.deleteCard}>
+            <Text style={styles.deleteWarning}>Danger Zone</Text>
+            <Text style={styles.deleteDescription}>
+              Deleting this expense will permanently remove it and all its split data. This action cannot be undone.
+            </Text>
+            <Button
+              title={isDeleting ? 'Deleting...' : 'Delete Expense'}
+              onPress={handleDelete}
+              fullWidth
+              disabled={isDeleting}
+            />
+          </Card>
+        )}
+      </ScrollView>
     </View>
   );
 }
@@ -338,21 +344,23 @@ const styles = StyleSheet.create({
     padding: theme.spacing.lg,
     gap: theme.spacing.md,
   },
-  headerButton: {
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.sm,
-    marginRight: theme.spacing.sm,
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: theme.spacing.sm,
   },
-  headerButtonText: {
-    fontSize: theme.typography.base,
+  editButton: {
+    padding: theme.spacing.sm,
+    paddingHorizontal: theme.spacing.md,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+  },
+  editButtonText: {
+    fontSize: theme.typography.sm,
     fontWeight: theme.typography.semibold,
     color: theme.colors.primary,
-  },
-  title: {
-    fontSize: theme.typography.xxxl,
-    fontWeight: theme.typography.bold,
-    color: theme.colors.text,
-    marginBottom: theme.spacing.sm,
   },
   loadingText: {
     fontSize: theme.typography.base,
@@ -487,24 +495,23 @@ const styles = StyleSheet.create({
     color: theme.colors.textSecondary,
     lineHeight: 20,
   },
-  footer: {
-    padding: theme.spacing.lg,
-    borderTopWidth: 1,
-    borderTopColor: theme.colors.border,
-    backgroundColor: theme.colors.background,
-  },
-  deleteButtonContainer: {
+  deleteCard: {
     backgroundColor: '#1a0000',
-    borderRadius: theme.borderRadius.md,
-    borderWidth: 2,
     borderColor: theme.colors.error,
-    padding: theme.spacing.md,
+    borderWidth: 2,
   },
-  buttonRow: {
-    flexDirection: 'row',
-    gap: theme.spacing.md,
+  deleteWarning: {
+    fontSize: theme.typography.lg,
+    fontWeight: theme.typography.bold,
+    color: theme.colors.error,
+    marginBottom: theme.spacing.xs,
+    textAlign: 'center',
   },
-  buttonHalf: {
-    flex: 1,
+  deleteDescription: {
+    fontSize: theme.typography.sm,
+    color: theme.colors.textSecondary,
+    marginBottom: theme.spacing.md,
+    lineHeight: 20,
+    textAlign: 'center',
   },
 });
