@@ -1,47 +1,248 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
-import { useRouter, useLocalSearchParams } from 'expo-router';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Alert, TouchableOpacity } from 'react-native';
+import { useRouter, useLocalSearchParams, useNavigation } from 'expo-router';
 import { theme } from '@ui/theme';
-import { Button, Card } from '@ui/components';
+import { Button, Card, Input } from '@ui/components';
+import { useTripById } from '../hooks/use-trips';
+import { useParticipants } from '../../participants/hooks/use-participants';
+import { useExpenses } from '../../expenses/hooks/use-expenses';
+import { updateTrip, deleteTrip } from '../repository';
+import { formatCurrency } from '@utils/currency';
 
 export default function TripDashboardScreen() {
   const router = useRouter();
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id } = useLocalSearchParams<{ id?: string }>();
+  const tripId = id?.trim() || null;
+
+  if (!tripId) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.centerContent}>
+          <Text style={styles.errorText}>Invalid trip. Please select a trip again.</Text>
+          <Button title="Back to trips" onPress={() => router.replace('/')} />
+        </View>
+      </View>
+    );
+  }
+
+  return <TripDashboardScreenContent tripId={tripId} />;
+}
+
+function TripDashboardScreenContent({ tripId }: { tripId: string }) {
+  const router = useRouter();
+  const navigation = useNavigation();
+
+  const { trip, loading: tripLoading, error: tripError, refetch: refetchTrip } = useTripById(tripId);
+  const { participants, loading: participantsLoading } = useParticipants(tripId ?? null);
+  const { expenses, loading: expensesLoading } = useExpenses(tripId ?? null);
+
+  const [editingName, setEditingName] = useState(false);
+  const [nameInput, setNameInput] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  // Update native header title when trip loads
+  useEffect(() => {
+    if (trip) {
+      navigation.setOptions({
+        title: trip.name,
+      });
+    }
+  }, [trip, navigation]);
+
+  const loading = tripLoading || participantsLoading || expensesLoading;
+
+  // Calculate total expenses
+  const totalExpenses = expenses.reduce((sum, expense) => sum + expense.convertedAmountMinor, 0);
+
+  const handleEditName = () => {
+    setNameInput(trip?.name || '');
+    setEditingName(true);
+  };
+
+  const handleSaveName = async () => {
+    if (!nameInput.trim()) {
+      Alert.alert('Error', 'Trip name cannot be empty');
+      return;
+    }
+
+    try {
+      const updated = await updateTrip(tripId, { name: nameInput.trim() });
+      navigation.setOptions({ title: updated.name });
+      refetchTrip();
+      setEditingName(false);
+      // Trip will refresh automatically via hook
+    } catch (error) {
+      Alert.alert('Error', 'Failed to update trip name');
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditingName(false);
+    setNameInput('');
+  };
+
+  const handleDeleteTrip = () => {
+    Alert.alert(
+      'Delete Trip',
+      `Delete "${trip?.name}"? This will permanently delete all participants, expenses, and settlements for this trip. This action cannot be undone.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            setIsDeleting(true);
+            try {
+              await deleteTrip(tripId);
+              router.replace('/');
+            } catch (error) {
+              Alert.alert('Error', 'Failed to delete trip');
+              setIsDeleting(false);
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  if (tripError) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.errorContainer}>
+          <Card style={styles.errorCard}>
+            <Text style={styles.errorText}>{tripError.message}</Text>
+          </Card>
+        </View>
+      </View>
+    );
+  }
+
+  if (loading || !trip) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.centerContent}>
+          <ActivityIndicator size="large" color={theme.colors.primary} />
+        </View>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
-        <Text style={styles.title}>Trip Dashboard</Text>
-        <Text style={styles.subtitle}>Trip ID: {id}</Text>
+        {editingName ? (
+          <Card style={styles.editCard}>
+            <Input
+              label="Trip name"
+              value={nameInput}
+              onChangeText={setNameInput}
+              autoFocus
+            />
+            <View style={styles.buttonRow}>
+              <View style={styles.buttonHalf}>
+                <Button
+                  title="Cancel"
+                  variant="outline"
+                  onPress={handleCancelEdit}
+                  fullWidth
+                />
+              </View>
+              <View style={styles.buttonHalf}>
+                <Button
+                  title="Save"
+                  onPress={handleSaveName}
+                  fullWidth
+                />
+              </View>
+            </View>
+          </Card>
+        ) : (
+          <View style={styles.header}>
+            <View style={styles.titleContainer}>
+              <Text style={styles.title}>{trip.name}</Text>
+              <Text style={styles.subtitle}>
+                {trip.currency}
+                {trip.endDate
+                  ? ` • ${new Date(trip.startDate).toLocaleDateString()} - ${new Date(trip.endDate).toLocaleDateString()}`
+                  : ` • ${new Date(trip.startDate).toLocaleDateString()}`
+                }
+              </Text>
+            </View>
+            <TouchableOpacity
+              onPress={handleEditName}
+              style={styles.editButton}
+              accessible={true}
+              accessibilityRole="button"
+              accessibilityLabel="Edit trip name"
+              accessibilityHint="Opens the edit screen for the trip name"
+            >
+              <Text style={styles.editButtonText}>Edit</Text>
+            </TouchableOpacity>
+          </View>
+        )}
 
-        <Card style={styles.placeholderCard}>
-          <Text style={styles.eyebrow}>Coming soon</Text>
-          <Text style={styles.placeholderText}>
-            Trip health, quick stats, and settlement prompts will live here once data and math
-            engines plug in.
-          </Text>
+        <Card style={styles.summaryCard}>
+          <View style={styles.summaryRow}>
+            <Text style={styles.summaryLabel}>Participants</Text>
+            <Text style={styles.summaryValue}>{participants.length}</Text>
+          </View>
+          <View style={styles.summaryRow}>
+            <Text style={styles.summaryLabel}>Expenses</Text>
+            <Text style={styles.summaryValue}>{expenses.length}</Text>
+          </View>
+          <View style={styles.summaryRow}>
+            <Text style={styles.summaryLabel}>Total</Text>
+            <Text style={styles.summaryValue}>{formatCurrency(totalExpenses, trip.currency)}</Text>
+          </View>
         </Card>
 
         <View style={styles.actionGrid}>
-          <Card style={styles.actionCard} onPress={() => router.push(`/trips/${id}/participants`)}>
+          <Card style={styles.actionCard} onPress={() => router.push(`/trips/${tripId}/participants`)}>
             <Text style={styles.actionTitle}>Participants</Text>
-            <Text style={styles.actionBody}>Tap to add family members and toggle them into splits.</Text>
+            <Text style={styles.actionBody}>
+              {participants.length === 0
+                ? 'Add participants to track who shares expenses'
+                : `Manage ${participants.length} participant${participants.length !== 1 ? 's' : ''}`}
+            </Text>
           </Card>
 
-          <Card style={styles.actionCard} onPress={() => router.push(`/trips/${id}/expenses`)}>
+          <Card style={styles.actionCard} onPress={() => router.push(`/trips/${tripId}/expenses`)}>
             <Text style={styles.actionTitle}>Expenses</Text>
-            <Text style={styles.actionBody}>Review the placeholder list before wiring to SQLite.</Text>
+            <Text style={styles.actionBody}>
+              {expenses.length === 0
+                ? 'No expenses yet - add your first expense'
+                : `View ${expenses.length} expense${expenses.length !== 1 ? 's' : ''}`}
+            </Text>
           </Card>
 
-          <Card style={styles.actionCard} onPress={() => router.push(`/trips/${id}/settlement`)}>
+          <Card style={styles.actionCard} onPress={() => router.push(`/trips/${tripId}/settlement`)}>
             <Text style={styles.actionTitle}>Settlement</Text>
-            <Text style={styles.actionBody}>See the mock flows for who owes whom.</Text>
+            <Text style={styles.actionBody}>
+              {expenses.length === 0
+                ? 'Settlement will appear once expenses are added'
+                : 'View who owes whom'}
+            </Text>
           </Card>
         </View>
+
+        {editingName && (
+          <Card style={styles.deleteCard}>
+            <Text style={styles.deleteWarning}>Danger Zone</Text>
+            <Text style={styles.deleteDescription}>
+              Deleting this trip will permanently remove all participants, expenses, and settlement data.
+            </Text>
+            <Button
+              title={isDeleting ? 'Deleting...' : 'Delete Trip'}
+              onPress={handleDeleteTrip}
+              fullWidth
+              disabled={isDeleting}
+            />
+          </Card>
+        )}
       </ScrollView>
 
       <View style={styles.footer}>
-        <Button title="Add Expense" onPress={() => router.push(`/trips/${id}/expenses/add`)} fullWidth />
+        <Button title="Add Expense" onPress={() => router.push(`/trips/${tripId}/expenses/add`)} fullWidth />
       </View>
     </View>
   );
@@ -59,6 +260,14 @@ const styles = StyleSheet.create({
     padding: theme.spacing.lg,
     gap: theme.spacing.md,
   },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+  },
+  titleContainer: {
+    flex: 1,
+  },
   title: {
     fontSize: theme.typography.xxxl,
     fontWeight: theme.typography.bold,
@@ -67,22 +276,62 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: theme.typography.sm,
     color: theme.colors.textSecondary,
+    marginTop: theme.spacing.xs,
   },
-  placeholderCard: {
-    borderStyle: 'dashed',
-    borderColor: theme.colors.border,
+  editButton: {
+    padding: theme.spacing.sm,
+    paddingHorizontal: theme.spacing.md,
+    borderRadius: 8,
     borderWidth: 1,
+    borderColor: theme.colors.border,
   },
-  eyebrow: {
+  editButtonText: {
     fontSize: theme.typography.sm,
     fontWeight: theme.typography.semibold,
-    color: theme.colors.textSecondary,
-    marginBottom: theme.spacing.xs,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    color: theme.colors.primary,
   },
-  placeholderText: {
+  editCard: {
+    backgroundColor: theme.colors.surfaceElevated,
+  },
+  buttonRow: {
+    flexDirection: 'row',
+    gap: theme.spacing.md,
+    marginTop: theme.spacing.sm,
+  },
+  buttonHalf: {
+    flex: 1,
+  },
+  centerContent: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  errorContainer: {
+    padding: theme.spacing.lg,
+  },
+  errorCard: {
+    backgroundColor: theme.colors.error,
+  },
+  errorText: {
     fontSize: theme.typography.base,
+    color: theme.colors.background,
+  },
+  summaryCard: {
+    backgroundColor: theme.colors.surfaceElevated,
+  },
+  summaryRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: theme.spacing.xs,
+  },
+  summaryLabel: {
+    fontSize: theme.typography.base,
+    color: theme.colors.textSecondary,
+  },
+  summaryValue: {
+    fontSize: theme.typography.lg,
+    fontWeight: theme.typography.semibold,
     color: theme.colors.text,
   },
   actionGrid: {
@@ -105,5 +354,24 @@ const styles = StyleSheet.create({
     padding: theme.spacing.lg,
     borderTopWidth: 1,
     borderTopColor: theme.colors.border,
+  },
+  deleteCard: {
+    backgroundColor: '#1a0000',
+    borderColor: theme.colors.error,
+    borderWidth: 2,
+  },
+  deleteWarning: {
+    fontSize: theme.typography.lg,
+    fontWeight: theme.typography.bold,
+    color: theme.colors.error,
+    marginBottom: theme.spacing.xs,
+    textAlign: 'center',
+  },
+  deleteDescription: {
+    fontSize: theme.typography.sm,
+    color: theme.colors.textSecondary,
+    marginBottom: theme.spacing.md,
+    lineHeight: 20,
+    textAlign: 'center',
   },
 });

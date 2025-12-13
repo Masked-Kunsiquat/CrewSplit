@@ -19,6 +19,7 @@ export interface CreateTripInput {
   name: string;
   description?: string;
   startDate: string;
+  endDate?: string;
   currencyCode: string;
 }
 

@@ -21,7 +21,7 @@ const mapTrip = (row: TripRow): Trip => ({
   updatedAt: row.updatedAt,
 });
 
-export const createTrip = async ({ name, currencyCode, description, startDate }: CreateTripInput): Promise<Trip> => {
+export const createTrip = async ({ name, currencyCode, description, startDate, endDate }: CreateTripInput): Promise<Trip> => {
   const now = new Date().toISOString();
   const tripId = Crypto.randomUUID();
   const effectiveStartDate = startDate ?? now;
@@ -33,6 +33,7 @@ export const createTrip = async ({ name, currencyCode, description, startDate }:
       name,
       description,
       startDate: effectiveStartDate,
+      endDate,
       currency: currencyCode,
       currencyCode,
       createdAt: now,

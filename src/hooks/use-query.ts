@@ -3,7 +3,8 @@
  * Reusable pattern for data fetching with loading/error states
  */
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
+import { useFocusEffect } from 'expo-router';
 
 /**
  * Generic hook for fetching data with consistent loading/error handling
@@ -12,7 +13,8 @@ import { useEffect, useState } from 'react';
  * @param deps - Dependency array for the effect
  * @param initialValue - Initial value for the data state
  * @param errorMessage - Custom error message prefix (optional)
- * @returns Object with data, loading state, and error
+ * @param enableFocusRefetch - Whether to refetch when screen comes into focus (default: false)
+ * @returns Object with data, loading state, error, and refetch function
  *
  * @example
  * ```typescript
@@ -20,7 +22,9 @@ import { useEffect, useState } from 'react';
  *   return useQuery(
  *     getTrips,
  *     [],
- *     []
+ *     [],
+ *     'Failed to load trips',
+ *     true // Enable refetch on focus
  *   );
  * }
  * ```
@@ -29,11 +33,17 @@ export function useQuery<T>(
   queryFn: () => Promise<T>,
   deps: React.DependencyList,
   initialValue: T,
-  errorMessage: string = 'Failed to load data'
+  errorMessage: string = 'Failed to load data',
+  enableFocusRefetch: boolean = false
 ) {
   const [data, setData] = useState<T>(initialValue);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+  const refetch = useCallback(() => {
+    setRefreshTrigger((prev) => prev + 1);
+  }, []);
 
   useEffect(() => {
     let mounted = true;
@@ -63,7 +73,16 @@ export function useQuery<T>(
       mounted = false;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, deps);
+  }, [...deps, refreshTrigger]);
 
-  return { data, loading, error };
+  // Optionally refetch when screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      if (enableFocusRefetch) {
+        refetch();
+      }
+    }, [refetch, enableFocusRefetch])
+  );
+
+  return { data, loading, error, refetch };
 }

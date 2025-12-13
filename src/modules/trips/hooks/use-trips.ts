@@ -16,7 +16,8 @@ export function useTrips() {
     getTrips,
     [],
     [],
-    'Failed to load trips'
+    'Failed to load trips',
+    true // Refetch when navigating back to trips list
   );
 
   return { trips, loading, error };
@@ -28,17 +29,12 @@ export function useTrips() {
  * @returns Object with trip, loading state, and error
  */
 export function useTripById(tripId: string | null) {
-  // When tripId is null, return empty state immediately
-  if (!tripId) {
-    return { trip: null, loading: false, error: null };
-  }
-
-  const { data: trip, loading, error } = useQuery(
-    () => getTripById(tripId),
+  const { data: trip, loading, error, refetch } = useQuery(
+    () => (tripId ? getTripById(tripId) : Promise.resolve(null)),
     [tripId],
     null,
     'Failed to load trip'
   );
 
-  return { trip, loading, error };
+  return { trip, loading, error, refetch };
 }

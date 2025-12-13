@@ -9,21 +9,23 @@ import type { SettlementSummary } from '../types';
 
 /**
  * Hook to fetch settlement summary for a trip
- * @param tripId - Trip UUID
+ * @param tripId - Trip UUID (nullable - returns empty state when not provided)
  * @returns Object with settlement summary, loading state, and error
  */
-export function useSettlement(tripId: string) {
-  const { data: settlement, loading, error } = useQuery(
-    () => computeSettlement(tripId),
+export function useSettlement(tripId: string | null) {
+  const emptySettlement: SettlementSummary = {
+    balances: [],
+    settlements: [],
+    totalExpenses: 0,
+    currency: 'USD',
+  };
+
+  const { data: settlement, loading, error, refetch } = useQuery(
+    () => (tripId ? computeSettlement(tripId) : Promise.resolve(emptySettlement)),
     [tripId],
-    {
-      balances: [],
-      settlements: [],
-      totalExpenses: 0,
-      currency: 'USD',
-    } as SettlementSummary,
+    emptySettlement,
     'Failed to load settlement data'
   );
 
-  return { settlement, loading, error };
+  return { settlement, loading, error, refetch };
 }

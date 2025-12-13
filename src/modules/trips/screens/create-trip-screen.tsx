@@ -1,18 +1,76 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { theme } from '@ui/theme';
-import { Button, Card, Input } from '@ui/components';
+import { Button, Input, CurrencyPicker, DateRangePicker } from '@ui/components';
+import { createTrip } from '../repository';
+import { createParticipant } from '../../participants/repository';
+import { useDeviceOwner } from '@hooks/use-device-owner';
+
+const AVATAR_COLORS = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#F7DC6F', '#BB8FCE', '#85C1E2'];
 
 export default function CreateTripScreen() {
   const router = useRouter();
-  const [name, setName] = useState('Crew Trip');
-  const [notes, setNotes] = useState('');
+  const { deviceOwnerName } = useDeviceOwner();
+  const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
+  const [currency, setCurrency] = useState<string | null>('USD');
+  const [startDate, setStartDate] = useState(new Date());
+  const [endDate, setEndDate] = useState<Date | null>(null);
+  const [isCreating, setIsCreating] = useState(false);
+  const [dateError, setDateError] = useState<string | null>(null);
 
-  const handleCreate = () => {
-    // Placeholder navigation — real creation will be wired to the repository layer
-    const targetId = name.trim() ? name.trim().toLowerCase().replace(/\s+/g, '-') : 'new-trip';
-    router.replace(`/trips/${targetId}`);
+  const handleStartDateChange = (date: Date) => {
+    setStartDate(date);
+    setDateError(null);
+  };
+
+  const handleEndDateChange = (date: Date | null) => {
+    setEndDate(date);
+    setDateError(null);
+  };
+
+  const handleCreate = async () => {
+    if (!name.trim() || !currency) {
+      return;
+    }
+
+    if (endDate && endDate < startDate) {
+      const message = 'End date must be on or after the start date.';
+      setDateError(message);
+      Alert.alert('Invalid Dates', message);
+      return;
+    }
+
+    setIsCreating(true);
+    try {
+      const trip = await createTrip({
+        name: name.trim(),
+        currencyCode: currency,
+        description: description.trim() || undefined,
+        startDate: startDate.toISOString(),
+        endDate: endDate?.toISOString() || undefined,
+      });
+
+      // Auto-add device owner as first participant if name is set
+      if (deviceOwnerName) {
+        try {
+          await createParticipant({
+            tripId: trip.id,
+            name: deviceOwnerName,
+            avatarColor: AVATAR_COLORS[0], // First color for device owner
+          });
+        } catch (error) {
+          console.warn('Failed to add device owner as participant:', error);
+          // Don't fail trip creation if participant add fails
+        }
+      }
+
+      router.replace(`/trips/${trip.id}`);
+    } catch (err) {
+      Alert.alert('Error', 'Failed to create trip');
+      setIsCreating(false);
+    }
   };
 
   return (
@@ -25,36 +83,45 @@ export default function CreateTripScreen() {
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"
       >
-        <Text style={styles.title}>Create Trip</Text>
-
-        <Card style={styles.placeholderCard}>
-          <Text style={styles.eyebrow}>Coming soon</Text>
-          <Text style={styles.placeholderText}>
-            This form will save to SQLite/Drizzle next. For now it just routes to a mock dashboard.
-          </Text>
-        </Card>
-
         <Input
           label="Trip name"
           placeholder="e.g., Summer Vacation"
           value={name}
           onChangeText={setName}
           autoFocus
+          editable={!isCreating}
         />
 
+        <View>
+          <Text style={styles.label}>Trip Currency</Text>
+          <CurrencyPicker
+            value={currency}
+            onChange={setCurrency}
+            label={undefined}
+            placeholder="Select currency"
+          />
+        </View>
+
+        <DateRangePicker
+          startLabel="Start Date"
+          endLabel="End Date"
+          startDate={startDate}
+          endDate={endDate}
+          onStartChange={handleStartDateChange}
+          onEndChange={handleEndDateChange}
+        />
+        {dateError && <Text style={styles.errorText}>{dateError}</Text>}
+
         <Input
-          label="Notes (optional)"
+          label="Description (optional)"
           placeholder="Add a short note or theme"
-          value={notes}
-          onChangeText={setNotes}
+          value={description}
+          onChangeText={setDescription}
           multiline
           numberOfLines={3}
           style={styles.multiLine}
+          editable={!isCreating}
         />
-
-        <Text style={styles.helperText}>
-          Participants, expenses, and settlement stay empty until the data layer is plugged in.
-        </Text>
       </ScrollView>
 
       <View style={styles.footer}>
@@ -63,13 +130,14 @@ export default function CreateTripScreen() {
           variant="outline"
           onPress={() => router.back()}
           fullWidth
+          disabled={isCreating}
         />
         <View style={{ height: theme.spacing.md }} />
         <Button
-          title="Create (mock)"
+          title={isCreating ? 'Creating...' : 'Create Trip'}
           onPress={handleCreate}
           fullWidth
-          disabled={!name.trim()}
+          disabled={!name.trim() || !currency || isCreating}
         />
       </View>
     </KeyboardAvoidingView>
@@ -93,30 +161,19 @@ const styles = StyleSheet.create({
     fontWeight: theme.typography.bold,
     color: theme.colors.text,
   },
-  placeholderCard: {
-    borderStyle: 'dashed',
-    borderColor: theme.colors.border,
-    borderWidth: 1,
-  },
-  eyebrow: {
+  label: {
     fontSize: theme.typography.sm,
     fontWeight: theme.typography.semibold,
-    color: theme.colors.textSecondary,
-    marginBottom: theme.spacing.xs,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  placeholderText: {
-    fontSize: theme.typography.base,
     color: theme.colors.text,
+    marginBottom: theme.spacing.xs,
+  },
+  errorText: {
+    color: theme.colors.error,
+    marginTop: theme.spacing.xs,
   },
   multiLine: {
     textAlignVertical: 'top',
     minHeight: 96,
-  },
-  helperText: {
-    fontSize: theme.typography.sm,
-    color: theme.colors.textMuted,
   },
   footer: {
     padding: theme.spacing.lg,

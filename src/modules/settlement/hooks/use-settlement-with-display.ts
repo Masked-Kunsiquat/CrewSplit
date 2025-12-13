@@ -10,15 +10,15 @@ import type { SettlementSummaryWithDisplay } from '../types';
 
 /**
  * Hook to fetch settlement summary with optional display currency conversion
- * @param tripId - Trip UUID
+ * @param tripId - Trip UUID (nullable - returns empty state when not provided)
  * @param displayCurrency - Optional display currency code (e.g., 'EUR', 'GBP')
  * @returns Object with settlement summary (with display data), loading state, and error
  */
 export function useSettlementWithDisplay(
-  tripId: string,
+  tripId: string | null,
   displayCurrency?: string
 ) {
-  const { settlement, loading, error } = useSettlement(tripId);
+  const { settlement, loading, error, refetch } = useSettlement(tripId);
 
   // Convert to display currency if requested
   const settlementWithDisplay = useMemo<SettlementSummaryWithDisplay>(() => {
@@ -45,5 +45,6 @@ export function useSettlementWithDisplay(
     settlement: settlementWithDisplay,
     loading,
     error,
+    refetch,
   };
 }
