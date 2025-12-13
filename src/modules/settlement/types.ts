@@ -22,8 +22,15 @@ export interface Settlement {
 export interface SettlementSummary {
   balances: ParticipantBalance[];
   settlements: Settlement[];
-  totalExpenses: number; // In cents
+  totalExpenses: number; // In cents (sum of all three expense types)
   currency: string;
+
+  // Expense breakdown by type
+  splitExpensesTotal: number; // In cents - expenses included in settlement calculations
+  personalExpensesTotal: number; // In cents - single participant who is also payer (no debt)
+  unsplitExpensesTotal: number; // In cents - expenses with zero participants (needs allocation)
+  unsplitExpensesCount: number; // Count of expenses needing allocation
+  unsplitExpenseIds: string[]; // IDs of expenses needing allocation
 }
 
 /**
@@ -56,4 +63,11 @@ export interface SettlementSummaryWithDisplay {
   currency: string; // Trip currency
   displayCurrency?: string; // User's preferred display currency
   displayTotalExpenses?: DisplayAmount;
+
+  // Expense breakdown by type
+  splitExpensesTotal?: number; // In cents
+  personalExpensesTotal?: number; // In cents
+  unsplitExpensesTotal?: number; // In cents
+  unsplitExpensesCount?: number;
+  unsplitExpenseIds?: string[]; // IDs of expenses needing allocation
 }

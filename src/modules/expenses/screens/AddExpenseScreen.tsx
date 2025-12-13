@@ -1,12 +1,54 @@
+/**
+ * EXPENSES MODULE - Add Expense Screen
+ * UI/UX ENGINEER: Screen for creating new expenses with advanced split interface
+ */
+
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, ActivityIndicator, Alert, Pressable } from 'react-native';
 import { useRouter, useLocalSearchParams, useNavigation } from 'expo-router';
 import { theme } from '@ui/theme';
-import { Button, Input, ParticipantChip, DatePicker } from '@ui/components';
+import {
+  Button,
+  Input,
+  DatePicker,
+  Picker,
+  PickerOption,
+  ParticipantSplitRow,
+  SplitValidationSummary,
+  SplitType,
+} from '@ui/components';
 import { useTripById } from '../../trips/hooks/use-trips';
 import { useParticipants } from '../../participants/hooks/use-participants';
 import { addExpense } from '../repository';
 import { parseCurrency } from '@utils/currency';
+
+// Checkbox component for Personal Expense toggle
+function Checkbox({ checked, onToggle, label, helperText }: {
+  checked: boolean;
+  onToggle: () => void;
+  label: string;
+  helperText?: string;
+}) {
+  return (
+    <View style={styles.checkboxContainer}>
+      <Pressable
+        style={styles.checkboxRow}
+        onPress={onToggle}
+        accessibilityRole="checkbox"
+        accessibilityState={{ checked }}
+        accessibilityLabel={label}
+      >
+        <View style={[styles.checkbox, checked && styles.checkboxChecked]}>
+          {checked && <View style={styles.checkboxInner} />}
+        </View>
+        <Text style={styles.checkboxLabel}>
+          {label}
+        </Text>
+      </Pressable>
+      {helperText && <Text style={styles.checkboxHelper}>{helperText}</Text>}
+    </View>
+  );
+}
 
 export default function AddExpenseScreen() {
   const router = useRouter();
@@ -48,32 +90,56 @@ function AddExpenseScreenContent({ tripId }: { tripId: string }) {
     }
   }, [trip, navigation]);
 
+  // Basic expense fields
   const [description, setDescription] = useState('');
   const [amount, setAmount] = useState('');
   const [date, setDate] = useState(new Date());
   const [paidBy, setPaidBy] = useState<string | null>(null);
+
+  // Split configuration
+  const [splitType, setSplitType] = useState<SplitType>('equal');
+  const [isPersonalExpense, setIsPersonalExpense] = useState(false);
   const [selectedParticipants, setSelectedParticipants] = useState<Set<string>>(new Set());
+  const [splitValues, setSplitValues] = useState<Record<string, string>>({});
+
   const [isCreating, setIsCreating] = useState(false);
 
   // Auto-select first participant as payer if not set
-  React.useEffect(() => {
+  useEffect(() => {
     if (participants.length > 0 && !paidBy) {
       setPaidBy(participants[0].id);
     }
   }, [participants, paidBy]);
 
-  // Auto-select all participants for split if none selected
-  React.useEffect(() => {
-    if (participants.length > 0 && selectedParticipants.size === 0) {
-      setSelectedParticipants(new Set(participants.map(p => p.id)));
+  // Handle personal expense toggle
+  useEffect(() => {
+    if (isPersonalExpense && paidBy) {
+      // Auto-select only the payer
+      setSelectedParticipants(new Set([paidBy]));
+    } else if (isPersonalExpense && !paidBy) {
+      // Clear selection if no payer
+      setSelectedParticipants(new Set());
     }
-  }, [participants]);
+  }, [isPersonalExpense, paidBy]);
+
+  // Update selection when payer changes in personal expense mode
+  useEffect(() => {
+    if (isPersonalExpense && paidBy) {
+      setSelectedParticipants(new Set([paidBy]));
+    }
+  }, [paidBy, isPersonalExpense]);
 
   const handleToggleParticipant = (participantId: string) => {
+    if (isPersonalExpense) return; // Don't allow manual toggle in personal mode
+
     setSelectedParticipants(prev => {
       const next = new Set(prev);
       if (next.has(participantId)) {
         next.delete(participantId);
+        // Remove split value when unselecting
+        const newValues = { ...splitValues };
+        delete newValues[participantId];
+        setSplitValues(newValues);
       } else {
         next.add(participantId);
       }
@@ -81,11 +147,82 @@ function AddExpenseScreenContent({ tripId }: { tripId: string }) {
     });
   };
 
+  const handleSplitValueChange = (participantId: string, value: string) => {
+    setSplitValues(prev => ({
+      ...prev,
+      [participantId]: value,
+    }));
+  };
+
+  const handlePaidByChange = (newPayerId: string) => {
+    setPaidBy(newPayerId);
+  };
+
+  const handlePersonalExpenseToggle = () => {
+    const newValue = !isPersonalExpense;
+    setIsPersonalExpense(newValue);
+
+    if (!newValue) {
+      // When unchecking, clear all selections
+      setSelectedParticipants(new Set());
+    }
+  };
+
+  // Validation logic
+  const validateSplits = (): { isValid: boolean; error?: string; current?: number; target?: number } => {
+    const selectedCount = selectedParticipants.size;
+
+    if (selectedCount === 0) {
+      return { isValid: true }; // Allow zero participants (unallocated expense)
+    }
+
+    const expenseAmountMinor = parseCurrency(amount);
+
+    if (splitType === 'equal' || splitType === 'weight') {
+      // No validation needed - weights can be any positive number
+      return { isValid: true };
+    }
+
+    if (splitType === 'percentage') {
+      const total = Array.from(selectedParticipants).reduce((sum, pid) => {
+        const value = parseFloat(splitValues[pid] || '0');
+        return sum + value;
+      }, 0);
+
+      const isValid = Math.abs(total - 100) < 0.01; // Allow small floating point errors
+      return {
+        isValid,
+        error: isValid ? undefined : `Percentages must add up to 100% (currently ${total.toFixed(1)}%)`,
+        current: total,
+        target: 100,
+      };
+    }
+
+    if (splitType === 'amount') {
+      const total = Array.from(selectedParticipants).reduce((sum, pid) => {
+        const value = parseCurrency(splitValues[pid] || '0');
+        return sum + value;
+      }, 0);
+
+      const isValid = total === expenseAmountMinor;
+      return {
+        isValid,
+        error: isValid ? undefined : 'Split amounts must equal expense total',
+        current: total,
+        target: expenseAmountMinor,
+      };
+    }
+
+    return { isValid: true };
+  };
+
+  const validation = validateSplits();
+
   const handleCreate = async () => {
-    if (!trip || !paidBy || selectedParticipants.size === 0) {
+    if (!trip || !paidBy) {
       Alert.alert(
         'Missing Information',
-        'Trip, payer, and at least one participant are required to create an expense.'
+        'Trip and payer are required to create an expense.'
       );
       return;
     }
@@ -95,8 +232,61 @@ function AddExpenseScreenContent({ tripId }: { tripId: string }) {
       const amountMinor = parseCurrency(amount);
       if (amountMinor <= 0) {
         Alert.alert('Invalid Amount', 'Please enter a valid amount greater than zero.');
+        setIsCreating(false);
         return;
       }
+
+      if (!validation.isValid) {
+        Alert.alert('Invalid Split', validation.error || 'Please check your split configuration.');
+        setIsCreating(false);
+        return;
+      }
+
+      // Build splits based on split type
+      const splits = Array.from(selectedParticipants).map(participantId => {
+        if (splitType === 'equal') {
+          return {
+            participantId,
+            share: 1,
+            shareType: 'equal' as const,
+          };
+        }
+
+        if (splitType === 'percentage') {
+          const percentage = parseFloat(splitValues[participantId] || '0');
+          return {
+            participantId,
+            share: percentage,
+            shareType: 'percentage' as const,
+          };
+        }
+
+        if (splitType === 'weight') {
+          const weight = parseFloat(splitValues[participantId] || '1');
+          return {
+            participantId,
+            share: weight,
+            shareType: 'weight' as const,
+          };
+        }
+
+        if (splitType === 'amount') {
+          const splitAmount = parseCurrency(splitValues[participantId] || '0');
+          return {
+            participantId,
+            share: 0, // Not used for amount type
+            shareType: 'amount' as const,
+            amount: splitAmount,
+          };
+        }
+
+        // Fallback (should never reach here)
+        return {
+          participantId,
+          share: 1,
+          shareType: 'equal' as const,
+        };
+      });
 
       await addExpense({
         tripId,
@@ -105,11 +295,7 @@ function AddExpenseScreenContent({ tripId }: { tripId: string }) {
         originalCurrency: trip.currency,
         paidBy,
         date: date.toISOString(),
-        splits: Array.from(selectedParticipants).map(participantId => ({
-          participantId,
-          share: 1,
-          shareType: 'equal' as const,
-        })),
+        splits,
       });
 
       router.back();
@@ -127,7 +313,7 @@ function AddExpenseScreenContent({ tripId }: { tripId: string }) {
     description.trim().length > 0 &&
     amount.trim().length > 0 &&
     paidBy !== null &&
-    selectedParticipants.size > 0;
+    validation.isValid;
 
   if (loading) {
     return (
@@ -157,6 +343,25 @@ function AddExpenseScreenContent({ tripId }: { tripId: string }) {
       </View>
     );
   }
+
+  // Prepare split type options
+  const splitTypeOptions: PickerOption<SplitType>[] = [
+    { label: 'Equal', value: 'equal' },
+    { label: 'Percentage', value: 'percentage' },
+    { label: 'Weight', value: 'weight' },
+    { label: 'Amount', value: 'amount' },
+  ];
+
+  // Prepare payer options
+  const payerOptions: PickerOption<string>[] = participants.map(p => ({
+    label: p.name,
+    value: p.id,
+  }));
+
+  // Sort participants alphabetically
+  const sortedParticipants = [...participants].sort((a, b) =>
+    a.name.localeCompare(b.name)
+  );
 
   return (
     <KeyboardAvoidingView
@@ -194,37 +399,68 @@ function AddExpenseScreenContent({ tripId }: { tripId: string }) {
           maximumDate={new Date()}
         />
 
-        <View style={styles.section}>
-          <Text style={styles.sectionLabel}>Paid by</Text>
-          <View style={styles.participantChips}>
-            {participants.map(participant => (
-              <ParticipantChip
-                key={participant.id}
-                id={participant.id}
-                name={participant.name}
-                avatarColor={participant.avatarColor}
-                selected={paidBy === participant.id}
-                onToggle={() => setPaidBy(participant.id)}
-              />
-            ))}
-          </View>
-        </View>
+        <Picker
+          label="Paid by"
+          value={paidBy || ''}
+          options={payerOptions}
+          onChange={handlePaidByChange}
+          placeholder="Select payer"
+        />
 
-        <View style={styles.section}>
-          <Text style={styles.sectionLabel}>Split between</Text>
-          <Text style={styles.sectionHelper}>Tap to toggle participants in this expense</Text>
-          <View style={styles.participantChips}>
-            {participants.map(participant => (
-              <ParticipantChip
+        <Checkbox
+          checked={isPersonalExpense}
+          onToggle={handlePersonalExpenseToggle}
+          label="Personal Expense"
+          helperText="This expense is just for you—no splitting needed"
+        />
+
+        <View style={[styles.section, !validation.isValid && styles.sectionError]}>
+          {!validation.isValid && (
+            <Text style={styles.sectionErrorText}>{validation.error}</Text>
+          )}
+
+          <Picker
+            label="Split Type"
+            value={splitType}
+            options={splitTypeOptions}
+            onChange={setSplitType}
+          />
+
+          <Text style={styles.sectionLabel}>Participants</Text>
+          <Text style={styles.sectionHelper}>
+            {isPersonalExpense
+              ? 'Only the payer is selected for personal expenses'
+              : 'Tap to select participants in this expense'
+            }
+          </Text>
+
+          <View style={styles.participantList}>
+            {sortedParticipants.map(participant => (
+              <ParticipantSplitRow
                 key={participant.id}
                 id={participant.id}
                 name={participant.name}
                 avatarColor={participant.avatarColor}
                 selected={selectedParticipants.has(participant.id)}
+                splitType={splitType}
+                value={splitValues[participant.id] || ''}
+                currency={trip.currency}
                 onToggle={handleToggleParticipant}
+                onValueChange={handleSplitValueChange}
+                disabled={isPersonalExpense}
               />
             ))}
           </View>
+
+          {validation.current !== undefined && validation.target !== undefined && (
+            <SplitValidationSummary
+              splitType={splitType}
+              current={validation.current}
+              target={validation.target}
+              currency={trip.currency}
+              isValid={validation.isValid}
+            />
+          )}
         </View>
       </ScrollView>
 
@@ -267,15 +503,11 @@ const styles = StyleSheet.create({
     padding: theme.spacing.lg,
     gap: theme.spacing.md,
   },
-  title: {
-    fontSize: theme.typography.xxxl,
-    fontWeight: theme.typography.bold,
-    color: theme.colors.text,
-  },
   centerContent: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    padding: theme.spacing.lg,
   },
   errorTitle: {
     fontSize: theme.typography.xl,
@@ -287,23 +519,78 @@ const styles = StyleSheet.create({
     fontSize: theme.typography.lg,
     color: theme.colors.error,
     textAlign: 'center',
+    marginBottom: theme.spacing.lg,
   },
   section: {
-    gap: theme.spacing.xs,
+    gap: theme.spacing.sm,
+    padding: theme.spacing.md,
+    backgroundColor: theme.colors.surface,
+    borderRadius: theme.borderRadius.md,
+    borderWidth: 2,
+    borderColor: 'transparent',
+  },
+  sectionError: {
+    borderColor: theme.colors.error,
+  },
+  sectionErrorText: {
+    fontSize: theme.typography.sm,
+    color: theme.colors.error,
+    marginBottom: theme.spacing.sm,
+    fontWeight: theme.typography.medium,
   },
   sectionLabel: {
     fontSize: theme.typography.sm,
     fontWeight: theme.typography.medium,
     color: theme.colors.textSecondary,
+    marginTop: theme.spacing.sm,
   },
   sectionHelper: {
     fontSize: theme.typography.xs,
     color: theme.colors.textMuted,
+    marginBottom: theme.spacing.sm,
   },
-  participantChips: {
+  participantList: {
+    backgroundColor: theme.colors.background,
+    borderRadius: theme.borderRadius.sm,
+    overflow: 'hidden',
+  },
+  checkboxContainer: {
+    marginBottom: theme.spacing.md,
+  },
+  checkboxRow: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    marginTop: theme.spacing.sm,
+    alignItems: 'center',
+  },
+  checkbox: {
+    width: 24,
+    height: 24,
+    borderRadius: theme.borderRadius.sm,
+    borderWidth: 2,
+    borderColor: theme.colors.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: theme.spacing.md,
+  },
+  checkboxChecked: {
+    borderColor: theme.colors.primary,
+    backgroundColor: theme.colors.primary,
+  },
+  checkboxInner: {
+    width: 12,
+    height: 12,
+    borderRadius: 2,
+    backgroundColor: theme.colors.text,
+  },
+  checkboxLabel: {
+    fontSize: theme.typography.base,
+    color: theme.colors.text,
+    fontWeight: theme.typography.medium,
+  },
+  checkboxHelper: {
+    fontSize: theme.typography.sm,
+    color: theme.colors.textMuted,
+    marginLeft: 40, // Align with label after checkbox
+    marginTop: theme.spacing.xs,
   },
   footer: {
     padding: theme.spacing.lg,

@@ -42,6 +42,11 @@ export async function computeSettlement(tripId: string): Promise<SettlementSumma
       settlements: [],
       totalExpenses: 0,
       currency: tripCurrency,
+      splitExpensesTotal: 0,
+      personalExpensesTotal: 0,
+      unsplitExpensesTotal: 0,
+      unsplitExpensesCount: 0,
+      unsplitExpenseIds: [],
     };
   }
 
@@ -59,6 +64,11 @@ export async function computeSettlement(tripId: string): Promise<SettlementSumma
       settlements: [],
       totalExpenses,
       currency: tripCurrency,
+      splitExpensesTotal: 0,
+      personalExpensesTotal: 0,
+      unsplitExpensesTotal: totalExpenses,
+      unsplitExpensesCount: expenses.length,
+      unsplitExpenseIds: expenses.map(e => e.id),
     };
   }
 
@@ -67,8 +77,56 @@ export async function computeSettlement(tripId: string): Promise<SettlementSumma
     await Promise.all(expenses.map((expense) => getExpenseSplits(expense.id)))
   ).flat();
 
+  // Build a map of expense ID to splits for classification
+  const splitsByExpense = new Map<string, typeof allSplits>();
+  allSplits.forEach(split => {
+    if (!splitsByExpense.has(split.expenseId)) {
+      splitsByExpense.set(split.expenseId, []);
+    }
+    splitsByExpense.get(split.expenseId)!.push(split);
+  });
+
+  // Classify expenses by type
+  // 1. Unallocated: Zero participants in splits
+  const unsplitExpenses = expenses.filter(e => {
+    const splits = splitsByExpense.get(e.id) || [];
+    return splits.length === 0;
+  });
+
+  // 2. Personal: Single participant who is also the payer
+  const personalExpenses = expenses.filter(e => {
+    const splits = splitsByExpense.get(e.id) || [];
+    return splits.length === 1 && splits[0].participantId === e.paidBy;
+  });
+
+  // 3. Split: 2+ participants OR 1 participant != payer
+  const splitExpenses = expenses.filter(e => {
+    const splits = splitsByExpense.get(e.id) || [];
+    return splits.length > 1 || (splits.length === 1 && splits[0].participantId !== e.paidBy);
+  });
+
+  // Calculate totals for each type
+  const unsplitExpensesTotal = unsplitExpenses.reduce((sum, e) => sum + e.amount, 0);
+  const personalExpensesTotal = personalExpenses.reduce((sum, e) => sum + e.amount, 0);
+  const splitExpensesTotal = splitExpenses.reduce((sum, e) => sum + e.amount, 0);
+
+  settlementLogger.debug('Classified expenses by type', {
+    tripId,
+    unsplitCount: unsplitExpenses.length,
+    unsplitTotal: unsplitExpensesTotal,
+    personalCount: personalExpenses.length,
+    personalTotal: personalExpensesTotal,
+    splitCount: splitExpenses.length,
+    splitTotal: splitExpensesTotal,
+  });
+
+  // Filter splits to only those belonging to split expenses
+  const splitExpenseIds = new Set(splitExpenses.map(e => e.id));
+  const splitsForCalculation = allSplits.filter(split => splitExpenseIds.has(split.expenseId));
+
   // Step 1: Calculate balances (who paid what, who owes what)
-  const balances = calculateBalances(expenses, allSplits, participants);
+  // Only process split expenses through the settlement engine
+  const balances = calculateBalances(splitExpenses, splitsForCalculation, participants);
 
   // Step 2: Optimize settlements (minimize transactions)
   const settlements = optimizeSettlements(balances);
@@ -79,6 +137,10 @@ export async function computeSettlement(tripId: string): Promise<SettlementSumma
     currency: tripCurrency,
     balanceCount: balances.length,
     settlementCount: settlements.length,
+    splitExpensesTotal,
+    personalExpensesTotal,
+    unsplitExpensesTotal,
+    unsplitExpensesCount: unsplitExpenses.length,
   });
 
   return {
@@ -86,5 +148,10 @@ export async function computeSettlement(tripId: string): Promise<SettlementSumma
     settlements,
     totalExpenses,
     currency: tripCurrency,
+    splitExpensesTotal,
+    personalExpensesTotal,
+    unsplitExpensesTotal,
+    unsplitExpensesCount: unsplitExpenses.length,
+    unsplitExpenseIds: unsplitExpenses.map(e => e.id),
   };
 }

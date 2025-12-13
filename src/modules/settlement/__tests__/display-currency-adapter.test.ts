@@ -93,6 +93,11 @@ describe('DisplayCurrencyAdapter', () => {
       ],
       totalExpenses: 15000,
       currency,
+      splitExpensesTotal: 15000,
+      personalExpensesTotal: 0,
+      unsplitExpensesTotal: 0,
+      unsplitExpensesCount: 0,
+      unsplitExpenseIds: [],
     });
 
     describe('enrichSettlement - same currency', () => {
@@ -209,6 +214,11 @@ describe('DisplayCurrencyAdapter', () => {
           settlements: [],
           totalExpenses: 0,
           currency: 'USD',
+          splitExpensesTotal: 0,
+          personalExpensesTotal: 0,
+          unsplitExpensesTotal: 0,
+          unsplitExpensesCount: 0,
+      unsplitExpenseIds: [],
         };
 
         const result = adapter.enrichSettlement(settlement, 'EUR');
@@ -249,6 +259,11 @@ describe('DisplayCurrencyAdapter', () => {
           settlements: [],
           totalExpenses: 1_000_000_00, // $1,000,000.00
           currency: 'USD',
+          splitExpensesTotal: 1_000_000_00,
+          personalExpensesTotal: 0,
+          unsplitExpensesTotal: 0,
+          unsplitExpensesCount: 0,
+      unsplitExpenseIds: [],
         };
 
         const result = adapter.enrichSettlement(settlement, 'EUR');

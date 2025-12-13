@@ -18,6 +18,11 @@ export function useSettlement(tripId: string | null) {
     settlements: [],
     totalExpenses: 0,
     currency: 'USD',
+    splitExpensesTotal: 0,
+    personalExpensesTotal: 0,
+    unsplitExpensesTotal: 0,
+    unsplitExpensesCount: 0,
+    unsplitExpenseIds: [],
   };
 
   const { data: settlement, loading, error, refetch } = useQuery(
