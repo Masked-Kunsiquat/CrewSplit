@@ -10,19 +10,36 @@ import { formatCurrency } from '@utils/currency';
 export default function ExpensesListScreen() {
   const router = useRouter();
   const navigation = useNavigation();
-  const { id: tripId } = useLocalSearchParams<{ id: string }>();
+  const { id: tripId, filter, ids } = useLocalSearchParams<{
+    id: string;
+    filter?: string;
+    ids?: string;
+  }>();
 
   const { trip } = useTripById(tripId);
   const { expenses, loading, error } = useExpenses(tripId);
 
+  // Parse filter IDs if provided
+  const filterIds = ids ? ids.split(',').map(id => id.trim()) : null;
+
+  // Filter expenses if IDs are provided
+  const displayedExpenses = filterIds
+    ? expenses.filter(expense => filterIds.includes(expense.id))
+    : expenses;
+
+  // Determine header title based on filter
+  const headerTitle = filter === 'unsplit'
+    ? 'Unsplit Expenses'
+    : trip
+      ? `${trip.name} - Expenses`
+      : 'Expenses';
+
   // Update native header title
   useEffect(() => {
-    if (trip) {
-      navigation.setOptions({
-        title: `${trip.name} - Expenses`,
-      });
-    }
-  }, [trip, navigation]);
+    navigation.setOptions({
+      title: headerTitle,
+    });
+  }, [headerTitle, navigation]);
 
   if (loading) {
     return (
@@ -49,15 +66,19 @@ export default function ExpensesListScreen() {
   return (
     <View style={styles.container}>
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
-        {expenses.length === 0 ? (
+        {displayedExpenses.length === 0 ? (
           <Card style={styles.emptyCard}>
-            <Text style={styles.emptyTitle}>No expenses yet</Text>
+            <Text style={styles.emptyTitle}>
+              {filterIds ? 'No matching expenses' : 'No expenses yet'}
+            </Text>
             <Text style={styles.emptyText}>
-              Add your first expense to start tracking shared costs.
+              {filterIds
+                ? 'The filtered expenses are not available.'
+                : 'Add your first expense to start tracking shared costs.'}
             </Text>
           </Card>
         ) : (
-          expenses.map((expense) => (
+          displayedExpenses.map((expense) => (
             <Card
               key={expense.id}
               style={styles.expenseCard}

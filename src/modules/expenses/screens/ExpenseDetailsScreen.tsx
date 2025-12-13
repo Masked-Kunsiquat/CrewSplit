@@ -3,8 +3,8 @@
  * Shows expense details with original, converted, and display currency amounts
  */
 
-import React, { useMemo, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Alert } from 'react-native';
+import React, { useMemo, useEffect, useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Alert, TouchableOpacity } from 'react-native';
 import { useRouter, useLocalSearchParams, useNavigation } from 'expo-router';
 import { theme } from '@ui/theme';
 import { Button, Card } from '@ui/components';
@@ -45,20 +45,33 @@ function ExpenseDetailsContent({ tripId, expenseId }: { tripId: string; expenseI
   const router = useRouter();
   const navigation = useNavigation();
   const { displayCurrency } = useDisplayCurrency();
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const { expense, splits, loading: expenseLoading, error: expenseError } = useExpenseWithSplits(
     expenseId
   );
   const { participants, loading: participantsLoading } = useParticipants(tripId);
 
-  // Update native header title
+  // Update native header title and add Edit button
   useEffect(() => {
     if (expense) {
       navigation.setOptions({
         title: expense.description,
+        headerRight: () => (
+          <TouchableOpacity
+            onPress={() => router.push(`/trips/${tripId}/expenses/${expenseId}/edit`)}
+            style={styles.headerButton}
+            accessible={true}
+            accessibilityRole="button"
+            accessibilityLabel="Edit expense"
+            accessibilityHint="Opens the edit screen for this expense"
+          >
+            <Text style={styles.headerButtonText}>Edit</Text>
+          </TouchableOpacity>
+        ),
       });
     }
-  }, [expense, navigation]);
+  }, [expense, navigation, router, tripId, expenseId]);
 
   // Map participant IDs to names
   const participantMap = useMemo(() => {
@@ -147,11 +160,13 @@ function ExpenseDetailsContent({ tripId, expenseId }: { tripId: string; expenseI
           text: 'Delete',
           style: 'destructive',
           onPress: async () => {
+            setIsDeleting(true);
             try {
               await deleteExpense(expenseId);
               router.back();
             } catch (error) {
               Alert.alert('Error', 'Failed to delete expense');
+              setIsDeleting(false);
             }
           },
         },
@@ -284,12 +299,14 @@ function ExpenseDetailsContent({ tripId, expenseId }: { tripId: string; expenseI
       </ScrollView>
 
       <View style={styles.footer}>
-        <Button
-          title="Delete Expense"
-          variant="outline"
-          onPress={handleDelete}
-          fullWidth
-        />
+        <View style={styles.deleteButtonContainer}>
+          <Button
+            title={isDeleting ? 'Deleting...' : 'Delete Expense'}
+            onPress={handleDelete}
+            fullWidth
+            disabled={isDeleting}
+          />
+        </View>
       </View>
     </View>
   );
@@ -320,6 +337,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: theme.spacing.lg,
     gap: theme.spacing.md,
+  },
+  headerButton: {
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.sm,
+    marginRight: theme.spacing.sm,
+  },
+  headerButtonText: {
+    fontSize: theme.typography.base,
+    fontWeight: theme.typography.semibold,
+    color: theme.colors.primary,
   },
   title: {
     fontSize: theme.typography.xxxl,
@@ -464,6 +491,14 @@ const styles = StyleSheet.create({
     padding: theme.spacing.lg,
     borderTopWidth: 1,
     borderTopColor: theme.colors.border,
+    backgroundColor: theme.colors.background,
+  },
+  deleteButtonContainer: {
+    backgroundColor: '#1a0000',
+    borderRadius: theme.borderRadius.md,
+    borderWidth: 2,
+    borderColor: theme.colors.error,
+    padding: theme.spacing.md,
   },
   buttonRow: {
     flexDirection: 'row',
