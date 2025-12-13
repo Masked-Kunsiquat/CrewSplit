@@ -9,6 +9,7 @@ import {
   saveDisplayCurrency,
   clearDisplayCurrency,
 } from '@utils/display-currency-storage';
+import { currencyLogger } from '@utils/logger';
 
 /**
  * Hook to manage display currency preference
@@ -29,7 +30,7 @@ export function useDisplayCurrency() {
           setDisplayCurrencyState(currency);
         }
       } catch (error) {
-        console.error('Failed to load display currency:', error);
+        currencyLogger.error('Failed to load display currency in hook', error);
       } finally {
         if (mounted) {
           setLoading(false);
@@ -50,7 +51,7 @@ export function useDisplayCurrency() {
       await saveDisplayCurrency(currency);
       setDisplayCurrencyState(currency);
     } catch (error) {
-      console.error('Failed to save display currency:', error);
+      currencyLogger.error('Failed to save display currency in hook', error);
       throw error;
     }
   }, []);
@@ -61,7 +62,7 @@ export function useDisplayCurrency() {
       await clearDisplayCurrency();
       setDisplayCurrencyState(null);
     } catch (error) {
-      console.error('Failed to clear display currency:', error);
+      currencyLogger.error('Failed to clear display currency in hook', error);
       throw error;
     }
   }, []);

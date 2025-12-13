@@ -61,7 +61,7 @@ export default function CreateTripScreen() {
             avatarColor: AVATAR_COLORS[0], // First color for device owner
           });
         } catch (error) {
-          console.warn('Failed to add device owner as participant:', error);
+          participantLogger.warn('Failed to add device owner as participant', error);
           // Don't fail trip creation if participant add fails
         }
       }

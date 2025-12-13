@@ -4,6 +4,7 @@
  */
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { storageLogger } from './logger';
 
 const DISPLAY_CURRENCY_KEY = '@crewsplit:displayCurrency';
 
@@ -15,11 +16,13 @@ export const saveDisplayCurrency = async (currency: string | null): Promise<void
   try {
     if (currency === null) {
       await AsyncStorage.removeItem(DISPLAY_CURRENCY_KEY);
+      storageLogger.info('Cleared display currency');
     } else {
       await AsyncStorage.setItem(DISPLAY_CURRENCY_KEY, currency);
+      storageLogger.info('Saved display currency', { currency });
     }
   } catch (error) {
-    console.error('Failed to save display currency:', error);
+    storageLogger.error('Failed to save display currency', error);
     throw error;
   }
 };
@@ -30,8 +33,16 @@ export const saveDisplayCurrency = async (currency: string | null): Promise<void
  * @throws Error when storage retrieval fails
  */
 export const loadDisplayCurrency = async (): Promise<string | null> => {
-  const currency = await AsyncStorage.getItem(DISPLAY_CURRENCY_KEY);
-  return currency;
+  try {
+    const currency = await AsyncStorage.getItem(DISPLAY_CURRENCY_KEY);
+    if (currency) {
+      storageLogger.debug('Loaded display currency', { currency });
+    }
+    return currency;
+  } catch (error) {
+    storageLogger.error('Failed to load display currency', error);
+    return null;
+  }
 };
 
 /**
