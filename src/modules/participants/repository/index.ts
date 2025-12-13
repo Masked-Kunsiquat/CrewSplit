@@ -8,6 +8,7 @@ import { db } from '@db/client';
 import { participants as participantsTable, Participant as ParticipantRow } from '@db/schema/participants';
 import { eq } from 'drizzle-orm';
 import { CreateParticipantInput, Participant, UpdateParticipantInput } from '../types';
+import { participantLogger } from '@utils/logger';
 
 const mapParticipant = (row: ParticipantRow): Participant => ({
   id: row.id,
@@ -21,6 +22,8 @@ export const createParticipant = async (input: CreateParticipantInput): Promise<
   const now = new Date().toISOString();
   const participantId = Crypto.randomUUID();
 
+  participantLogger.debug('Creating participant', { participantId, tripId: input.tripId, name: input.name });
+
   const [created] = await db
     .insert(participantsTable)
     .values({
@@ -33,17 +36,23 @@ export const createParticipant = async (input: CreateParticipantInput): Promise<
     })
     .returning();
 
+  participantLogger.info('Participant created', { participantId, tripId: input.tripId, name: input.name });
   return mapParticipant(created);
 };
 
 export const getParticipantsForTrip = async (tripId: string): Promise<Participant[]> => {
   const rows = await db.select().from(participantsTable).where(eq(participantsTable.tripId, tripId));
+  participantLogger.debug('Loaded participants for trip', { tripId, count: rows.length });
   return rows.map(mapParticipant);
 };
 
 export const getParticipantById = async (id: string): Promise<Participant | null> => {
   const rows = await db.select().from(participantsTable).where(eq(participantsTable.id, id)).limit(1);
-  if (!rows.length) return null;
+  if (!rows.length) {
+    participantLogger.warn('Participant not found', { participantId: id });
+    return null;
+  }
+  participantLogger.debug('Loaded participant', { participantId: id, name: rows[0].name });
   return mapParticipant(rows[0]);
 };
 
@@ -56,17 +65,23 @@ export const updateParticipant = async (id: string, patch: UpdateParticipantInpu
   if (patch.name !== undefined) updatePayload.name = patch.name;
   if (patch.avatarColor !== undefined) updatePayload.avatarColor = patch.avatarColor;
 
+  participantLogger.debug('Updating participant', { participantId: id });
+
   const updatedRows = await db.update(participantsTable).set(updatePayload).where(eq(participantsTable.id, id)).returning();
   const updated = updatedRows[0];
   if (!updated) {
+    participantLogger.error('Participant not found on update', { participantId: id });
     throw new Error(`Participant not found for id ${id}`);
   }
 
+  participantLogger.info('Participant updated', { participantId: id, name: updated.name });
   return mapParticipant(updated);
 };
 
 export const deleteParticipant = async (id: string): Promise<void> => {
+  participantLogger.info('Deleting participant', { participantId: id });
   await db.delete(participantsTable).where(eq(participantsTable.id, id));
+  participantLogger.info('Participant deleted', { participantId: id });
 };
 
 export const ParticipantRepository = {
