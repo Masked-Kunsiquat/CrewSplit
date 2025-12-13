@@ -26,7 +26,7 @@ export function useDeviceOwner() {
         }
       } catch (error) {
         storageLogger.error('Failed to load device owner', error);
-      } finally{
+      } finally {
         if (isMounted) {
           setLoading(false);
         }
