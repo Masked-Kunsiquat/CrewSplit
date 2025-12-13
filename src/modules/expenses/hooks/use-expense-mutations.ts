@@ -7,6 +7,7 @@
 import { useState, useCallback } from 'react';
 import { addExpense, updateExpense, deleteExpense } from '../repository';
 import type { Expense, CreateExpenseInput, UpdateExpenseInput } from '../types';
+import { expenseLogger } from '@utils/logger';
 
 /**
  * Hook for creating an expense with splits in a single atomic transaction
@@ -25,6 +26,7 @@ export function useAddExpense() {
         return newExpense;
       } catch (err) {
         const error = err instanceof Error ? err : new Error('Failed to create expense');
+        expenseLogger.error('Failed to add expense', error);
         setError(error);
         return null;
       } finally {
@@ -54,6 +56,7 @@ export function useUpdateExpense() {
         return updated;
       } catch (err) {
         const error = err instanceof Error ? err : new Error('Failed to update expense');
+        expenseLogger.error('Failed to update expense', error);
         setError(error);
         return null;
       } finally {
@@ -81,6 +84,7 @@ export function useDeleteExpense() {
       await deleteExpense(id);
     } catch (err) {
       const error = err instanceof Error ? err : new Error('Failed to delete expense');
+      expenseLogger.error('Failed to delete expense', error);
       setError(error);
     } finally {
       setLoading(false);

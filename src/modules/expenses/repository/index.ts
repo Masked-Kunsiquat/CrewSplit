@@ -11,6 +11,7 @@ import { trips as tripsTable } from '@db/schema/trips';
 import { mapExpenseFromDb } from '@db/mappers';
 import { eq } from 'drizzle-orm';
 import { CreateExpenseInput, Expense, ExpenseSplit, UpdateExpenseInput } from '../types';
+import { expenseLogger } from '@utils/logger';
 
 const mapSplit = (row: typeof expenseSplitsTable.$inferSelect): ExpenseSplit => ({
   id: row.id,
@@ -24,6 +25,7 @@ const mapSplit = (row: typeof expenseSplitsTable.$inferSelect): ExpenseSplit => 
 const getTripCurrency = async (tripId: string): Promise<string> => {
   const rows = await db.select({ currencyCode: tripsTable.currencyCode }).from(tripsTable).where(eq(tripsTable.id, tripId)).limit(1);
   if (!rows.length) {
+    expenseLogger.error('Trip not found for currency lookup', { tripId });
     throw new Error(`Trip not found for id ${tripId}`);
   }
   return rows[0].currencyCode;
@@ -37,17 +39,21 @@ const computeConversion = (
   providedConverted?: number,
 ): { convertedAmountMinor: number; fxRateToTrip: number | null } => {
   if (originalCurrency === tripCurrencyCode) {
+    expenseLogger.debug('No currency conversion needed', { originalCurrency, tripCurrency: tripCurrencyCode });
     return { convertedAmountMinor: originalAmountMinor, fxRateToTrip: null };
   }
 
   if (providedRate === undefined || providedRate === null) {
+    expenseLogger.error('Missing FX rate for currency conversion', { originalCurrency, tripCurrency: tripCurrencyCode });
     throw new Error('fxRateToTrip is required when expense currency differs from trip currency');
   }
   if (providedRate <= 0) {
+    expenseLogger.error('Invalid FX rate', { fxRate: providedRate });
     throw new Error('fxRateToTrip must be positive');
   }
 
   const converted = providedConverted ?? Math.round(originalAmountMinor * providedRate);
+  expenseLogger.debug('Currency converted', { originalCurrency, tripCurrency: tripCurrencyCode, fxRate: providedRate });
   return { convertedAmountMinor: converted, fxRateToTrip: providedRate };
 };
 
@@ -72,6 +78,8 @@ export const addExpense = async (expenseData: CreateExpenseInput): Promise<Expen
   const now = new Date().toISOString();
   const expenseId = Crypto.randomUUID();
 
+  expenseLogger.debug('Creating expense', { expenseId, tripId: expenseData.tripId, amountMinor: convertedAmountMinor });
+
   return db.transaction(async (tx) => {
     const [insertedExpense] = await tx
       .insert(expensesTable)
@@ -94,6 +102,7 @@ export const addExpense = async (expenseData: CreateExpenseInput): Promise<Expen
       .returning();
 
     if (expenseData.splits?.length) {
+      expenseLogger.debug('Adding expense splits', { expenseId, splitCount: expenseData.splits.length });
       const splitRows = expenseData.splits.map((split) => ({
         id: Crypto.randomUUID(),
         expenseId,
@@ -108,24 +117,31 @@ export const addExpense = async (expenseData: CreateExpenseInput): Promise<Expen
       await tx.insert(expenseSplitsTable).values(splitRows);
     }
 
+    expenseLogger.info('Expense created', { expenseId, tripId: expenseData.tripId, amountMinor: convertedAmountMinor });
     return mapExpenseRow(insertedExpense);
   });
 };
 
 export const getExpensesForTrip = async (tripId: string): Promise<Expense[]> => {
   const rows = await db.select().from(expensesTable).where(eq(expensesTable.tripId, tripId));
+  expenseLogger.debug('Loaded expenses for trip', { tripId, count: rows.length });
   return rows.map(mapExpenseRow);
 };
 
 export const getExpenseById = async (id: string): Promise<Expense | null> => {
   const rows = await db.select().from(expensesTable).where(eq(expensesTable.id, id)).limit(1);
-  if (!rows.length) return null;
+  if (!rows.length) {
+    expenseLogger.warn('Expense not found', { expenseId: id });
+    return null;
+  }
+  expenseLogger.debug('Loaded expense', { expenseId: id, tripId: rows[0].tripId });
   return mapExpenseRow(rows[0]);
 };
 
 export const updateExpense = async (id: string, patch: UpdateExpenseInput): Promise<Expense> => {
   const existingRows = await db.select().from(expensesTable).where(eq(expensesTable.id, id)).limit(1);
   if (!existingRows.length) {
+    expenseLogger.error('Expense not found on update', { expenseId: id });
     throw new Error(`Expense not found for id ${id}`);
   }
   const existing = existingRows[0];
@@ -156,10 +172,13 @@ export const updateExpense = async (id: string, patch: UpdateExpenseInput): Prom
     updatedAt: now,
   };
 
+  expenseLogger.debug('Updating expense', { expenseId: id, tripId: existing.tripId });
+
   return db.transaction(async (tx) => {
     const [updated] = await tx.update(expensesTable).set(updatePayload).where(eq(expensesTable.id, id)).returning();
 
     if (patch.splits) {
+      expenseLogger.debug('Updating expense splits', { expenseId: id, splitCount: patch.splits.length });
       await tx.delete(expenseSplitsTable).where(eq(expenseSplitsTable.expenseId, id));
       if (patch.splits.length) {
         const splitRows = patch.splits.map((split) => ({
@@ -176,6 +195,7 @@ export const updateExpense = async (id: string, patch: UpdateExpenseInput): Prom
       }
     }
 
+    expenseLogger.info('Expense updated', { expenseId: id, tripId: existing.tripId });
     return mapExpenseRow(updated);
   });
 };
@@ -184,14 +204,18 @@ export const deleteExpense = async (id: string): Promise<void> => {
   await db.transaction(async (tx) => {
     const existingRows = await tx.select().from(expensesTable).where(eq(expensesTable.id, id)).limit(1);
     if (!existingRows.length) {
+      expenseLogger.error('Expense not found on delete', { expenseId: id });
       throw new Error(`Expense not found for id ${id}`);
     }
+    expenseLogger.info('Deleting expense', { expenseId: id, tripId: existingRows[0].tripId });
     await tx.delete(expensesTable).where(eq(expensesTable.id, id));
+    expenseLogger.info('Expense deleted', { expenseId: id });
   });
 };
 
 export const getExpenseSplits = async (expenseId: string): Promise<ExpenseSplit[]> => {
   const rows = await db.select().from(expenseSplitsTable).where(eq(expenseSplitsTable.expenseId, expenseId));
+  expenseLogger.debug('Loaded expense splits', { expenseId, count: rows.length });
   return rows.map(mapSplit);
 };
 

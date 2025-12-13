@@ -6,6 +6,7 @@
 import { useState, useCallback } from 'react';
 import { createParticipant, updateParticipant, deleteParticipant } from '../repository';
 import type { Participant, CreateParticipantInput, UpdateParticipantInput } from '../types';
+import { participantLogger } from '@utils/logger';
 
 /**
  * Hook for adding a new participant
@@ -25,6 +26,7 @@ export function useAddParticipant() {
         return newParticipant;
       } catch (err) {
         const error = err instanceof Error ? err : new Error('Failed to add participant');
+        participantLogger.error('Failed to create participant', error);
         setError(error);
         return null;
       } finally {
@@ -56,6 +58,7 @@ export function useUpdateParticipant() {
         return updated;
       } catch (err) {
         const error = err instanceof Error ? err : new Error('Failed to update participant');
+        participantLogger.error('Failed to update participant', error);
         setError(error);
         return null;
       } finally {
@@ -83,6 +86,7 @@ export function useRemoveParticipant() {
       await deleteParticipant(id);
     } catch (err) {
       const error = err instanceof Error ? err : new Error('Failed to remove participant');
+      participantLogger.error('Failed to delete participant', error);
       setError(error);
     } finally {
       setLoading(false);

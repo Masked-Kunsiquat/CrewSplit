@@ -6,6 +6,7 @@
 import { useState, useCallback } from 'react';
 import { createTrip, updateTrip, deleteTrip } from '../repository';
 import type { Trip, CreateTripInput, UpdateTripInput } from '../types';
+import { tripLogger } from '@utils/logger';
 
 /**
  * Hook for creating a new trip
@@ -23,6 +24,7 @@ export function useCreateTrip() {
         return newTrip;
       } catch (err) {
         const error = err instanceof Error ? err : new Error('Failed to create trip');
+        tripLogger.error('Failed to create trip', error);
         setError(error);
         return null;
       } finally {
@@ -54,6 +56,7 @@ export function useUpdateTrip() {
         return updated;
       } catch (err) {
         const error = err instanceof Error ? err : new Error('Failed to update trip');
+        tripLogger.error('Failed to update trip', error);
         setError(error);
         return null;
       } finally {
@@ -80,6 +83,7 @@ export function useDeleteTrip() {
       await deleteTrip(id);
     } catch (err) {
       const error = err instanceof Error ? err : new Error('Failed to delete trip');
+      tripLogger.error('Failed to delete trip', error);
       setError(error);
     } finally {
       setLoading(false);

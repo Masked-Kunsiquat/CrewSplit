@@ -92,7 +92,44 @@ class Logger {
     // Redact PII if enabled
     const formattedData = this.config.redactPII ? this.redactData(data) : data;
 
-    return `${prefix} ${message}\n${JSON.stringify(formattedData, null, 2)}`;
+    // Smart formatting: one-line for simple data, multi-line for complex/errors
+    const dataStr = this.formatData(formattedData, level);
+    return `${prefix} ${message} ${dataStr}`;
+  }
+
+  /**
+   * Format data intelligently based on complexity
+   * - Simple objects (<=3 keys): inline format
+   * - Errors or complex objects: multi-line JSON
+   */
+  private formatData(data: unknown, level: LogLevel): string {
+    if (data === null || data === undefined) {
+      return '';
+    }
+
+    // For errors, always use multi-line for readability
+    if (level === 'error' || (typeof data === 'object' && 'stack' in data)) {
+      return `\n${JSON.stringify(data, null, 2)}`;
+    }
+
+    // For simple objects, format inline
+    if (typeof data === 'object' && !Array.isArray(data)) {
+      const entries = Object.entries(data as Record<string, unknown>);
+
+      // Simple object: format inline (key: value, key: value)
+      if (entries.length <= 3) {
+        const formatted = entries
+          .map(([key, value]) => {
+            const valStr = typeof value === 'string' ? value : JSON.stringify(value);
+            return `${key}: ${valStr}`;
+          })
+          .join(', ');
+        return `(${formatted})`;
+      }
+    }
+
+    // Complex data: multi-line JSON
+    return `\n${JSON.stringify(data, null, 2)}`;
   }
 
   /**
