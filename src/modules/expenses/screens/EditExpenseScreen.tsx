@@ -213,12 +213,37 @@ function EditExpenseScreenContent({ tripId, expenseId }: { tripId: string; expen
 
     const expenseAmountMinor = parseCurrency(amount);
 
-    if (splitType === 'equal' || splitType === 'weight') {
-      // No validation needed - weights can be any positive number
+    if (splitType === 'equal') {
+      return { isValid: true }; // Equal splits require no validation
+    }
+
+    if (splitType === 'weight') {
+      // Validate each weight is a finite positive number
+      for (const pid of selectedParticipants) {
+        const value = parseFloat(splitValues[pid] || '1');
+        if (!Number.isFinite(value) || value <= 0) {
+          return {
+            isValid: false,
+            error: 'Weights must be positive numbers',
+          };
+        }
+      }
       return { isValid: true };
     }
 
     if (splitType === 'percentage') {
+      // Validate each percentage is finite and within 0-100
+      for (const pid of selectedParticipants) {
+        const value = parseFloat(splitValues[pid] || '0');
+        if (!Number.isFinite(value) || value < 0 || value > 100) {
+          return {
+            isValid: false,
+            error: 'Each percentage must be between 0 and 100',
+          };
+        }
+      }
+
+      // Check that percentages sum to 100
       const total = Array.from(selectedParticipants).reduce((sum, pid) => {
         const value = parseFloat(splitValues[pid] || '0');
         return sum + value;
@@ -234,6 +259,19 @@ function EditExpenseScreenContent({ tripId, expenseId }: { tripId: string; expen
     }
 
     if (splitType === 'amount') {
+      // Validate each split amount is finite and non-negative
+      for (const pid of selectedParticipants) {
+        const valueStr = splitValues[pid] || '0';
+        const value = parseCurrency(valueStr);
+        if (!Number.isFinite(value) || value < 0) {
+          return {
+            isValid: false,
+            error: 'Split amounts must be non-negative',
+          };
+        }
+      }
+
+      // Check that split amounts sum to expense total
       const total = Array.from(selectedParticipants).reduce((sum, pid) => {
         const value = parseCurrency(splitValues[pid] || '0');
         return sum + value;
@@ -274,7 +312,7 @@ function EditExpenseScreenContent({ tripId, expenseId }: { tripId: string; expen
         return;
       }
 
-      // Build splits based on split type
+      // Build splits based on split type with validation
       const updatedSplits = Array.from(selectedParticipants).map(participantId => {
         if (splitType === 'equal') {
           return {
@@ -286,6 +324,10 @@ function EditExpenseScreenContent({ tripId, expenseId }: { tripId: string; expen
 
         if (splitType === 'percentage') {
           const percentage = parseFloat(splitValues[participantId] || '0');
+          // Validate percentage is finite and within bounds
+          if (!Number.isFinite(percentage) || percentage < 0 || percentage > 100) {
+            throw new Error('Each percentage must be between 0 and 100');
+          }
           return {
             participantId,
             share: percentage,
@@ -295,6 +337,10 @@ function EditExpenseScreenContent({ tripId, expenseId }: { tripId: string; expen
 
         if (splitType === 'weight') {
           const weight = parseFloat(splitValues[participantId] || '1');
+          // Validate weight is finite and positive
+          if (!Number.isFinite(weight) || weight <= 0) {
+            throw new Error('Weights must be positive numbers');
+          }
           return {
             participantId,
             share: weight,
@@ -304,6 +350,10 @@ function EditExpenseScreenContent({ tripId, expenseId }: { tripId: string; expen
 
         if (splitType === 'amount') {
           const splitAmount = parseCurrency(splitValues[participantId] || '0');
+          // Validate amount is finite and non-negative
+          if (!Number.isFinite(splitAmount) || splitAmount < 0) {
+            throw new Error('Split amounts must be non-negative');
+          }
           return {
             participantId,
             share: 0, // Not used for amount type
@@ -320,10 +370,34 @@ function EditExpenseScreenContent({ tripId, expenseId }: { tripId: string; expen
         };
       });
 
+      // Additional validation for percentage sum
+      if (splitType === 'percentage') {
+        const totalPercentage = updatedSplits.reduce((sum, split) => sum + split.share, 0);
+        if (Math.abs(totalPercentage - 100) >= 0.01) {
+          Alert.alert(
+            'Invalid Split',
+            `Percentages must add up to 100% (currently ${totalPercentage.toFixed(1)}%)`
+          );
+          return;
+        }
+      }
+
+      // Additional validation for amount sum
+      if (splitType === 'amount') {
+        const totalAmount = updatedSplits.reduce((sum, split) => sum + (split.amount || 0), 0);
+        if (totalAmount !== amountMinor) {
+          Alert.alert(
+            'Invalid Split',
+            'Split amounts must equal expense total'
+          );
+          return;
+        }
+      }
+
       const result = await update(expenseId, {
         description: description.trim(),
         originalAmountMinor: amountMinor,
-        originalCurrency: trip.currency,
+        originalCurrency: expense.originalCurrency ?? trip.currency,
         paidBy,
         date: date.toISOString(),
         splits: updatedSplits,
