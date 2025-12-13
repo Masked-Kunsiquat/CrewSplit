@@ -9,6 +9,7 @@ import { getParticipantsForTrip } from '../../participants/repository';
 import { calculateBalances } from '../calculate-balances';
 import { optimizeSettlements } from '../optimize-settlements';
 import type { SettlementSummary } from '../types';
+import { settlementLogger } from '@utils/logger';
 
 /**
  * Compute settlement summary for a trip
@@ -16,17 +17,26 @@ import type { SettlementSummary } from '../types';
  * @returns Settlement summary with balances and optimized settlements
  */
 export async function computeSettlement(tripId: string): Promise<SettlementSummary> {
+  settlementLogger.debug('Computing settlement', { tripId });
+
   // Load all data in parallel for performance
   const [expenses, participants] = await Promise.all([
     getExpensesForTrip(tripId),
     getParticipantsForTrip(tripId),
   ]);
 
+  settlementLogger.debug('Loaded settlement data', {
+    tripId,
+    expenseCount: expenses.length,
+    participantCount: participants.length,
+  });
+
   // Determine trip currency from first expense (all are normalized to trip currency)
   const tripCurrency = expenses.length > 0 ? expenses[0].currency : 'USD';
 
   // Edge case: no expenses
   if (expenses.length === 0) {
+    settlementLogger.debug('No expenses found, returning empty settlement', { tripId });
     return {
       balances: [],
       settlements: [],
@@ -40,6 +50,10 @@ export async function computeSettlement(tripId: string): Promise<SettlementSumma
 
   // Edge case: participants missing — keep totalExpenses for auditing but skip settlements
   if (participants.length === 0) {
+    settlementLogger.warn('No participants found, cannot compute settlements', {
+      tripId,
+      totalExpenses,
+    });
     return {
       balances: [],
       settlements: [],
@@ -58,6 +72,14 @@ export async function computeSettlement(tripId: string): Promise<SettlementSumma
 
   // Step 2: Optimize settlements (minimize transactions)
   const settlements = optimizeSettlements(balances);
+
+  settlementLogger.info('Settlement computed successfully', {
+    tripId,
+    totalExpenses,
+    currency: tripCurrency,
+    balanceCount: balances.length,
+    settlementCount: settlements.length,
+  });
 
   return {
     balances,

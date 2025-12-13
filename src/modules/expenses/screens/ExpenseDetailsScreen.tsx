@@ -14,6 +14,7 @@ import { useDisplayCurrency } from '@hooks/use-display-currency';
 import { formatCurrency } from '@utils/currency';
 import { defaultFxRateProvider } from '@modules/settlement/service/DisplayCurrencyAdapter';
 import { deleteExpense } from '../repository';
+import { currencyLogger } from '@utils/logger';
 
 export default function ExpenseDetailsScreen() {
   const router = useRouter();
@@ -95,7 +96,7 @@ function ExpenseDetailsContent({ tripId, expenseId }: { tripId: string; expenseI
         fxRate,
       };
     } catch (error) {
-      console.warn('Failed to convert to display currency:', error);
+      currencyLogger.warn('Failed to convert to display currency', error);
       return null;
     }
   }, [expense, displayCurrency]);
