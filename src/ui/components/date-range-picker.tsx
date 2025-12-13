@@ -57,7 +57,8 @@ export function DateRangePicker({
   };
 
   const handleClearEndDate = () => {
-    onClearDateRange();
+    // Don't call onClearDateRange() - it clears both start and end.
+    // Just update parent state; hook will re-initialize on next open.
     onEndChange(null);
   };
 
