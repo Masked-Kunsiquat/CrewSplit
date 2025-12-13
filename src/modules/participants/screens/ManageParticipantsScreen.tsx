@@ -39,7 +39,7 @@ function ManageParticipantsContent({
   navigation,
 }: {
   tripId: string;
-  navigation: ReturnType<typeof useNavigation>;
+  navigation: any;
 }) {
   const [newParticipantName, setNewParticipantName] = useState('');
   const [nameError, setNameError] = useState<string | null>(null);

@@ -56,7 +56,7 @@ export default function ExpensesListScreen() {
       <View style={styles.container}>
         <View style={styles.errorContainer}>
           <Card style={styles.errorCard}>
-            <Text style={styles.errorText}>{error}</Text>
+            <Text style={styles.errorText}>{error.message}</Text>
           </Card>
         </View>
       </View>

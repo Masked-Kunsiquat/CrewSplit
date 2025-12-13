@@ -279,6 +279,7 @@ export default function SettlementSummaryScreen() {
           variant="outline"
           fullWidth
           disabled
+          onPress={() => {}}
           accessibilityLabel="Export Trip coming soon"
           testID="export-trip-disabled"
         />
