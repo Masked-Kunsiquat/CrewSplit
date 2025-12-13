@@ -136,10 +136,12 @@ function AddExpenseScreenContent({ tripId }: { tripId: string }) {
       const next = new Set(prev);
       if (next.has(participantId)) {
         next.delete(participantId);
-        // Remove split value when unselecting
-        const newValues = { ...splitValues };
-        delete newValues[participantId];
-        setSplitValues(newValues);
+        // Remove split value when unselecting using functional updater
+        setSplitValues(prevValues => {
+          const copy = { ...prevValues };
+          delete copy[participantId];
+          return copy;
+        });
       } else {
         next.add(participantId);
       }
