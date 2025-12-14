@@ -5,7 +5,7 @@
 
 import React from 'react';
 import { View, Text, StyleSheet, Pressable, TextInput } from 'react-native';
-import { theme } from '../theme';
+import { theme } from '@ui/theme';
 
 export type SplitType = 'equal' | 'percentage' | 'amount' | 'weight';
 
@@ -79,40 +79,47 @@ export function ParticipantSplitRow({
   const inputConfig = getInputConfig();
 
   return (
-    <Pressable
-      style={({ pressed }) => [
+    <View
+      style={[
         styles.row,
-        pressed && styles.rowPressed,
         !selected && styles.rowUnselected,
       ]}
-      onPress={() => onToggle(id)}
-      disabled={disabled}
-      accessibilityRole="checkbox"
-      accessibilityState={{ checked: selected, disabled }}
-      accessibilityLabel={`${name}, ${selected ? 'selected' : 'not selected'}`}
     >
-      {/* Checkbox */}
-      <View style={[styles.checkbox, selected && styles.checkboxSelected]}>
-        {selected && <View style={styles.checkboxInner} />}
-      </View>
-
-      {/* Avatar */}
-      <View style={[styles.avatar, { backgroundColor: avatarBgColor }]}>
-        <Text style={styles.avatarText}>{name.charAt(0).toUpperCase()}</Text>
-      </View>
-
-      {/* Name */}
-      <Text
-        style={[
-          styles.name,
-          !selected && styles.nameUnselected,
+      {/* Pressable area for checkbox + avatar + name */}
+      <Pressable
+        style={({ pressed }) => [
+          styles.toggleArea,
+          pressed && styles.toggleAreaPressed,
         ]}
-        numberOfLines={1}
+        onPress={() => onToggle(id)}
+        disabled={disabled}
+        accessibilityRole="checkbox"
+        accessibilityState={{ checked: selected, disabled }}
+        accessibilityLabel={`${name}, ${selected ? 'selected' : 'not selected'}`}
       >
-        {name}
-      </Text>
+        {/* Checkbox */}
+        <View style={[styles.checkbox, selected && styles.checkboxSelected]}>
+          {selected && <View style={styles.checkboxInner} />}
+        </View>
 
-      {/* Input field (conditional) */}
+        {/* Avatar */}
+        <View style={[styles.avatar, { backgroundColor: avatarBgColor }]}>
+          <Text style={styles.avatarText}>{name.charAt(0).toUpperCase()}</Text>
+        </View>
+
+        {/* Name */}
+        <Text
+          style={[
+            styles.name,
+            !selected && styles.nameUnselected,
+          ]}
+          numberOfLines={1}
+        >
+          {name}
+        </Text>
+      </Pressable>
+
+      {/* Input field (conditional) - outside pressable */}
       {showInput && (
         <View style={styles.inputContainer}>
           <TextInput
@@ -130,7 +137,7 @@ export function ParticipantSplitRow({
           )}
         </View>
       )}
-    </Pressable>
+    </View>
   );
 }
 
@@ -138,17 +145,23 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: theme.spacing.sm,
-    paddingHorizontal: theme.spacing.md,
     minHeight: theme.touchTarget.minHeight,
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.border,
   },
-  rowPressed: {
-    backgroundColor: theme.colors.surface,
-  },
   rowUnselected: {
     opacity: 0.5,
+  },
+  toggleArea: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: theme.spacing.sm,
+    paddingLeft: theme.spacing.md,
+    paddingRight: theme.spacing.sm,
+  },
+  toggleAreaPressed: {
+    backgroundColor: theme.colors.surface,
   },
   checkbox: {
     width: 24,
@@ -200,6 +213,7 @@ const styles = StyleSheet.create({
     borderColor: theme.colors.border,
     borderRadius: theme.borderRadius.sm,
     paddingHorizontal: theme.spacing.sm,
+    marginRight: theme.spacing.md,
     minWidth: 80,
     height: 36,
   },

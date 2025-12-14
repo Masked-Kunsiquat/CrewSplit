@@ -5,10 +5,9 @@
 
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { theme } from '../theme';
+import { theme } from '@ui/theme';
 import { formatCurrency } from '@utils/currency';
-
-export type SplitType = 'equal' | 'percentage' | 'amount' | 'weight';
+import type { SplitType } from './ParticipantSplitRow';
 
 interface SplitValidationSummaryProps {
   /** Split type to determine validation logic */
