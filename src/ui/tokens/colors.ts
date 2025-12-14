@@ -21,9 +21,9 @@ export const colors = {
   // Semantic colors
   success: '#4ade80',
   error: '#f87171',
-  warning: '#fbbf24',
-  warningLight: '#FFF3CD',
-  warningDark: '#000000',
+  warning: '#fbbf24', // Saturated amber for accents/borders
+  warningBg: '#3d2e1f', // Muted dark amber/bronze for banner backgrounds
+  warningText: '#fbbf24', // Amber text for warnings (alias to warning for consistency)
 
   // Borders
   border: '#333333',

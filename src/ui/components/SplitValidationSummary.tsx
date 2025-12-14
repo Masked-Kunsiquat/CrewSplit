@@ -55,10 +55,19 @@ export function SplitValidationSummary({
     return '';
   };
 
+  const displayText = getDisplayText();
+  const accessibilityLabel = `${displayText}, ${isValid ? 'valid' : 'invalid'}`;
+
   return (
-    <View style={styles.container}>
+    <View
+      style={styles.container}
+      accessible={true}
+      accessibilityRole="text"
+      accessibilityLabel={accessibilityLabel}
+      accessibilityState={{ selected: isValid }}
+    >
       <Text style={[styles.text, isValid && styles.textValid]}>
-        {getDisplayText()}
+        {displayText}
         {isValid && ' ✓'}
       </Text>
     </View>

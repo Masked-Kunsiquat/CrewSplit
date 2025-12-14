@@ -85,7 +85,7 @@ class Logger {
     const emoji = CONTEXT_EMOJI[context];
     const prefix = `${emoji} [${context.toUpperCase()}]`;
 
-    if (!data) {
+    if (data === undefined || data === null) {
       return `${prefix} ${message}`;
     }
 
@@ -226,9 +226,12 @@ class Logger {
 
     for (const [key, value] of Object.entries(obj)) {
       const lowerKey = key.toLowerCase();
+      // Normalize key by removing separators for ID pattern matching
+      const normalizedKey = lowerKey.replace(/[-_]/g, '');
 
       // Keep IDs for debugging (truncated)
-      if (key.endsWith('Id') || key === 'id') {
+      // Matches: id, userId, user_id, user-id, userID, etc.
+      if (normalizedKey === 'id' || normalizedKey.endsWith('id')) {
         redacted[key] = typeof value === 'string' ? `${value.slice(0, 8)}...` : value;
       }
       // Truncate names (first 8 chars for debugging)
