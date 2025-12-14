@@ -29,8 +29,7 @@ export const saveDisplayCurrency = async (currency: string | null): Promise<void
 
 /**
  * Load display currency preference
- * @returns Currency code or null if not set
- * @throws Error when storage retrieval fails
+ * @returns Currency code or null if not set or if storage retrieval fails
  */
 export const loadDisplayCurrency = async (): Promise<string | null> => {
   try {
