@@ -22,6 +22,8 @@ export const colors = {
   success: '#4ade80',
   error: '#f87171',
   warning: '#fbbf24',
+  warningLight: '#FFF3CD',
+  warningDark: '#000000',
 
   // Borders
   border: '#333333',
