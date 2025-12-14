@@ -41,7 +41,7 @@ export default function TripsListScreen() {
 
         {error && (
           <Card style={styles.errorCard}>
-            <Text style={styles.errorText}>{error}</Text>
+            <Text style={styles.errorText}>{error.message}</Text>
           </Card>
         )}
 

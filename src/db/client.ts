@@ -5,18 +5,10 @@
 
 import { drizzle } from 'drizzle-orm/expo-sqlite';
 import { useMigrations } from 'drizzle-orm/expo-sqlite/migrator';
-import { openDatabaseSync, deleteDatabaseSync } from 'expo-sqlite';
+import { openDatabaseSync } from 'expo-sqlite';
 import migrations from './migrations/migrations';
 import * as schema from './schema';
-
-// TEMPORARY: Delete existing database to start fresh
-// Remove this after the first successful migration
-try {
-  deleteDatabaseSync('crewsplit.db');
-  console.log('🗑️ Deleted old database');
-} catch (error) {
-  console.log('No existing database to delete');
-}
+import { migrationLogger } from '@utils/logger';
 
 // Open SQLite database
 const expoDb = openDatabaseSync('crewsplit.db');
@@ -31,8 +23,22 @@ export const db = drizzle(expoDb, { schema });
 /**
  * React hook to run pending migrations.
  * Blocks UI until all migrations succeed.
+ *
+ * Migration strategy:
+ * - Drizzle tracks applied migrations in __drizzle_migrations table
+ * - Only new migrations are applied (idempotent)
+ * - Failures surface to _layout.tsx for user-visible error
+ * - Never auto-wipe data - rely on proper migration files
  */
 export const useDbMigrations = () => {
   const { success, error } = useMigrations(db, migrations);
+
+  // Log migration status for debugging
+  if (success) {
+    migrationLogger.info('Database migrations applied successfully');
+  } else if (error) {
+    migrationLogger.error('Migration failed', error);
+  }
+
   return { success, error };
 };

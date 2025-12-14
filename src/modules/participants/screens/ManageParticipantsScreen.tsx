@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Alert } from 'react-native';
 import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
 import { theme } from '@ui/theme';
+import { participantLogger } from '@utils/logger';
 import { Button, Card, Input, ParticipantChip } from '@ui/components';
 import { useParticipants } from '../hooks/use-participants';
 import { useTripById } from '@modules/trips/hooks/use-trips';
@@ -38,7 +39,7 @@ function ManageParticipantsContent({
   navigation,
 }: {
   tripId: string;
-  navigation: ReturnType<typeof useNavigation>;
+  navigation: any;
 }) {
   const [newParticipantName, setNewParticipantName] = useState('');
   const [nameError, setNameError] = useState<string | null>(null);
@@ -99,7 +100,7 @@ function ManageParticipantsContent({
               refetch();
             } catch (err) {
               const message = err instanceof Error ? err.message : String(err);
-              console.error(err);
+              participantLogger.error('Failed to delete participant', err);
               Alert.alert('Error', `Failed to remove participant: ${message}`);
             }
           },

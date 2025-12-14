@@ -3,8 +3,8 @@
  * Shows expense details with original, converted, and display currency amounts
  */
 
-import React, { useMemo, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Alert } from 'react-native';
+import React, { useMemo, useEffect, useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Alert, TouchableOpacity } from 'react-native';
 import { useRouter, useLocalSearchParams, useNavigation } from 'expo-router';
 import { theme } from '@ui/theme';
 import { Button, Card } from '@ui/components';
@@ -14,6 +14,7 @@ import { useDisplayCurrency } from '@hooks/use-display-currency';
 import { formatCurrency } from '@utils/currency';
 import { defaultFxRateProvider } from '@modules/settlement/service/DisplayCurrencyAdapter';
 import { deleteExpense } from '../repository';
+import { currencyLogger } from '@utils/logger';
 
 export default function ExpenseDetailsScreen() {
   const router = useRouter();
@@ -44,6 +45,8 @@ function ExpenseDetailsContent({ tripId, expenseId }: { tripId: string; expenseI
   const router = useRouter();
   const navigation = useNavigation();
   const { displayCurrency } = useDisplayCurrency();
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [editingExpense, setEditingExpense] = useState(false);
 
   const { expense, splits, loading: expenseLoading, error: expenseError } = useExpenseWithSplits(
     expenseId
@@ -95,7 +98,7 @@ function ExpenseDetailsContent({ tripId, expenseId }: { tripId: string; expenseI
         fxRate,
       };
     } catch (error) {
-      console.warn('Failed to convert to display currency:', error);
+      currencyLogger.warn('Failed to convert to display currency', error);
       return null;
     }
   }, [expense, displayCurrency]);
@@ -146,11 +149,13 @@ function ExpenseDetailsContent({ tripId, expenseId }: { tripId: string; expenseI
           text: 'Delete',
           style: 'destructive',
           onPress: async () => {
+            setIsDeleting(true);
             try {
               await deleteExpense(expenseId);
               router.back();
             } catch (error) {
               Alert.alert('Error', 'Failed to delete expense');
+              setIsDeleting(false);
             }
           },
         },
@@ -163,7 +168,33 @@ function ExpenseDetailsContent({ tripId, expenseId }: { tripId: string; expenseI
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
         {/* Main Expense Info */}
         <Card style={styles.section}>
-          <Text style={styles.sectionTitle}>{expense.description}</Text>
+          <View style={styles.header}>
+            <Text style={styles.sectionTitle}>{expense.description}</Text>
+            <View style={styles.headerButtons}>
+              <TouchableOpacity
+                onPress={() => router.push(`/trips/${tripId}/expenses/${expenseId}/edit`)}
+                style={styles.editButton}
+                accessible={true}
+                accessibilityRole="button"
+                accessibilityLabel="Edit expense"
+                accessibilityHint="Opens the edit expense screen"
+              >
+                <Text style={styles.editButtonText}>Edit</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => setEditingExpense(!editingExpense)}
+                style={[styles.editButton, editingExpense && styles.deleteButtonActive]}
+                accessible={true}
+                accessibilityRole="button"
+                accessibilityLabel={editingExpense ? "Cancel delete" : "Delete expense"}
+                accessibilityHint={editingExpense ? "Hides the delete option" : "Shows the delete option"}
+              >
+                <Text style={[styles.editButtonText, editingExpense && styles.deleteButtonTextActive]}>
+                  {editingExpense ? 'Cancel' : 'Delete'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
 
           {/* Original Amount (if different from trip currency) */}
           {showCurrencyConversion && (
@@ -280,16 +311,23 @@ function ExpenseDetailsContent({ tripId, expenseId }: { tripId: string; expenseI
               ' Currency conversions are applied at the time of expense creation.'}
           </Text>
         </Card>
-      </ScrollView>
 
-      <View style={styles.footer}>
-        <Button
-          title="Delete Expense"
-          variant="outline"
-          onPress={handleDelete}
-          fullWidth
-        />
-      </View>
+        {/* Danger Zone - Only show when editing */}
+        {editingExpense && (
+          <Card style={styles.deleteCard}>
+            <Text style={styles.deleteWarning}>Danger Zone</Text>
+            <Text style={styles.deleteDescription}>
+              Deleting this expense will permanently remove it and all its split data. This action cannot be undone.
+            </Text>
+            <Button
+              title={isDeleting ? 'Deleting...' : 'Delete Expense'}
+              onPress={handleDelete}
+              fullWidth
+              disabled={isDeleting}
+            />
+          </Card>
+        )}
+      </ScrollView>
     </View>
   );
 }
@@ -320,11 +358,34 @@ const styles = StyleSheet.create({
     padding: theme.spacing.lg,
     gap: theme.spacing.md,
   },
-  title: {
-    fontSize: theme.typography.xxxl,
-    fontWeight: theme.typography.bold,
-    color: theme.colors.text,
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
     marginBottom: theme.spacing.sm,
+  },
+  headerButtons: {
+    flexDirection: 'row',
+    gap: theme.spacing.sm,
+  },
+  editButton: {
+    padding: theme.spacing.sm,
+    paddingHorizontal: theme.spacing.md,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+  },
+  editButtonText: {
+    fontSize: theme.typography.sm,
+    fontWeight: theme.typography.semibold,
+    color: theme.colors.primary,
+  },
+  deleteButtonActive: {
+    backgroundColor: theme.colors.error,
+    borderColor: theme.colors.error,
+  },
+  deleteButtonTextActive: {
+    color: theme.colors.text,
   },
   loadingText: {
     fontSize: theme.typography.base,
@@ -459,16 +520,23 @@ const styles = StyleSheet.create({
     color: theme.colors.textSecondary,
     lineHeight: 20,
   },
-  footer: {
-    padding: theme.spacing.lg,
-    borderTopWidth: 1,
-    borderTopColor: theme.colors.border,
+  deleteCard: {
+    backgroundColor: '#1a0000',
+    borderColor: theme.colors.error,
+    borderWidth: 2,
   },
-  buttonRow: {
-    flexDirection: 'row',
-    gap: theme.spacing.md,
+  deleteWarning: {
+    fontSize: theme.typography.lg,
+    fontWeight: theme.typography.bold,
+    color: theme.colors.error,
+    marginBottom: theme.spacing.xs,
+    textAlign: 'center',
   },
-  buttonHalf: {
-    flex: 1,
+  deleteDescription: {
+    fontSize: theme.typography.sm,
+    color: theme.colors.textSecondary,
+    marginBottom: theme.spacing.md,
+    lineHeight: 20,
+    textAlign: 'center',
   },
 });

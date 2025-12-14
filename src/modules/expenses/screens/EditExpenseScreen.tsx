@@ -1,6 +1,6 @@
 /**
- * EXPENSES MODULE - Add Expense Screen
- * UI/UX ENGINEER: Screen for creating new expenses with advanced split interface
+ * EXPENSES MODULE - Edit Expense Screen
+ * UI/UX ENGINEER: Screen for editing existing expenses with advanced split interface
  */
 
 import React, { useState, useEffect } from 'react';
@@ -19,7 +19,8 @@ import {
 } from '@ui/components';
 import { useTripById } from '../../trips/hooks/use-trips';
 import { useParticipants } from '../../participants/hooks/use-participants';
-import { addExpense } from '../repository';
+import { useExpenseWithSplits } from '../hooks/use-expenses';
+import { useUpdateExpense } from '../hooks/use-expense-mutations';
 import { parseCurrency } from '@utils/currency';
 
 // Checkbox component for Personal Expense toggle
@@ -50,42 +51,45 @@ function Checkbox({ checked, onToggle, label, helperText }: {
   );
 }
 
-export default function AddExpenseScreen() {
+export default function EditExpenseScreen() {
   const router = useRouter();
-  const params = useLocalSearchParams<{ id?: string | string[] }>();
+  const params = useLocalSearchParams<{ id?: string | string[]; expenseId?: string | string[] }>();
   const normalizedTripId = React.useMemo(() => normalizeTripIdParam(params.id), [params.id]);
+  const normalizedExpenseId = React.useMemo(() => normalizeTripIdParam(params.expenseId), [params.expenseId]);
 
-  if (!normalizedTripId) {
+  if (!normalizedTripId || !normalizedExpenseId) {
     return (
       <View style={styles.container}>
         <View style={styles.centerContent}>
-          <Text style={styles.errorTitle}>Invalid Trip</Text>
+          <Text style={styles.errorTitle}>Invalid Request</Text>
           <Text style={styles.errorText}>
-            No trip ID provided. Please select a trip first.
+            {!normalizedTripId ? 'No trip ID provided.' : 'No expense ID provided.'}
           </Text>
           <Button
-            title="Back to trips"
-            onPress={() => router.replace('/')}
+            title="Go back"
+            onPress={() => router.back()}
           />
         </View>
       </View>
     );
   }
 
-  return <AddExpenseScreenContent tripId={normalizedTripId} />;
+  return <EditExpenseScreenContent tripId={normalizedTripId} expenseId={normalizedExpenseId} />;
 }
 
-function AddExpenseScreenContent({ tripId }: { tripId: string }) {
+function EditExpenseScreenContent({ tripId, expenseId }: { tripId: string; expenseId: string }) {
   const router = useRouter();
   const navigation = useNavigation();
   const { trip, loading: tripLoading } = useTripById(tripId);
   const { participants, loading: participantsLoading } = useParticipants(tripId);
+  const { expense, splits, loading: expenseLoading } = useExpenseWithSplits(expenseId);
+  const { update, loading: updateLoading } = useUpdateExpense();
 
   // Update native header title
   useEffect(() => {
     if (trip) {
       navigation.setOptions({
-        title: `Add Expense - ${trip.name}`,
+        title: `Edit Expense - ${trip.name}`,
       });
     }
   }, [trip, navigation]);
@@ -102,14 +106,45 @@ function AddExpenseScreenContent({ tripId }: { tripId: string }) {
   const [selectedParticipants, setSelectedParticipants] = useState<Set<string>>(new Set());
   const [splitValues, setSplitValues] = useState<Record<string, string>>({});
 
-  const [isCreating, setIsCreating] = useState(false);
-
-  // Auto-select first participant as payer if not set
+  // Pre-populate form when expense data loads
   useEffect(() => {
-    if (participants.length > 0 && !paidBy) {
-      setPaidBy(participants[0].id);
+    if (!expense || !splits) return;
+
+    setDescription(expense.description);
+    // Convert from minor units to major units for display (without currency symbol)
+    setAmount((expense.originalAmountMinor / 100).toFixed(2));
+    setDate(new Date(expense.date));
+    setPaidBy(expense.paidBy);
+
+    // Determine split type from first split
+    if (splits.length > 0) {
+      const firstSplit = splits[0];
+      setSplitType(firstSplit.shareType);
+
+      // Check if this is a personal expense (only one split matching the payer)
+      if (splits.length === 1 && splits[0].participantId === expense.paidBy) {
+        setIsPersonalExpense(true);
+      }
+
+      // Pre-populate selected participants
+      const selectedIds = new Set(splits.map(s => s.participantId));
+      setSelectedParticipants(selectedIds);
+
+      // Pre-populate split values
+      const values: Record<string, string> = {};
+      splits.forEach(split => {
+        if (split.shareType === 'percentage') {
+          values[split.participantId] = split.share.toString();
+        } else if (split.shareType === 'weight') {
+          values[split.participantId] = split.share.toString();
+        } else if (split.shareType === 'amount' && split.amount !== undefined) {
+          // Convert from minor units to major units for display (without currency symbol)
+          values[split.participantId] = (split.amount / 100).toFixed(2);
+        }
+      });
+      setSplitValues(values);
     }
-  }, [participants, paidBy]);
+  }, [expense, splits]);
 
   // Handle personal expense toggle
   useEffect(() => {
@@ -258,32 +293,29 @@ function AddExpenseScreenContent({ tripId }: { tripId: string }) {
 
   const validation = validateSplits();
 
-  const handleCreate = async () => {
-    if (!trip || !paidBy) {
+  const handleSave = async () => {
+    if (!trip || !paidBy || !expense) {
       Alert.alert(
         'Missing Information',
-        'Trip and payer are required to create an expense.'
+        'Trip, expense, and payer are required to update an expense.'
       );
       return;
     }
 
-    setIsCreating(true);
     try {
       const amountMinor = parseCurrency(amount);
       if (amountMinor <= 0) {
         Alert.alert('Invalid Amount', 'Please enter a valid amount greater than zero.');
-        setIsCreating(false);
         return;
       }
 
       if (!validation.isValid) {
         Alert.alert('Invalid Split', validation.error || 'Please check your split configuration.');
-        setIsCreating(false);
         return;
       }
 
       // Build splits based on split type with validation
-      const splits = Array.from(selectedParticipants).map(participantId => {
+      const updatedSplits = Array.from(selectedParticipants).map(participantId => {
         if (splitType === 'equal') {
           return {
             participantId,
@@ -342,52 +374,51 @@ function AddExpenseScreenContent({ tripId }: { tripId: string }) {
 
       // Additional validation for percentage sum
       if (splitType === 'percentage') {
-        const totalPercentage = splits.reduce((sum, split) => sum + split.share, 0);
+        const totalPercentage = updatedSplits.reduce((sum, split) => sum + split.share, 0);
         if (Math.abs(totalPercentage - 100) >= 0.01) {
           Alert.alert(
             'Invalid Split',
             `Percentages must add up to 100% (currently ${totalPercentage.toFixed(1)}%)`
           );
-          setIsCreating(false);
           return;
         }
       }
 
       // Additional validation for amount sum
       if (splitType === 'amount') {
-        const totalAmount = splits.reduce((sum, split) => sum + (split.amount || 0), 0);
+        const totalAmount = updatedSplits.reduce((sum, split) => sum + (split.amount || 0), 0);
         if (totalAmount !== amountMinor) {
           Alert.alert(
             'Invalid Split',
             'Split amounts must equal expense total'
           );
-          setIsCreating(false);
           return;
         }
       }
 
-      await addExpense({
-        tripId,
+      const result = await update(expenseId, {
         description: description.trim(),
         originalAmountMinor: amountMinor,
-        originalCurrency: trip.currency,
+        originalCurrency: expense.originalCurrency ?? trip.currency,
         paidBy,
         date: date.toISOString(),
-        splits,
+        splits: updatedSplits,
       });
 
-      router.back();
+      if (result) {
+        // Navigate back to expense details
+        router.back();
+      }
     } catch (err) {
-      Alert.alert('Error', 'Failed to add expense');
-    } finally {
-      setIsCreating(false);
+      Alert.alert('Error', 'Failed to update expense');
     }
   };
 
-  const loading = tripLoading || participantsLoading;
+  const loading = tripLoading || participantsLoading || expenseLoading;
+  const isSaving = updateLoading;
 
   const canSubmit =
-    !isCreating &&
+    !isSaving &&
     description.trim().length > 0 &&
     amount.trim().length > 0 &&
     paidBy !== null &&
@@ -398,23 +429,28 @@ function AddExpenseScreenContent({ tripId }: { tripId: string }) {
       <View style={styles.container}>
         <View style={styles.centerContent}>
           <ActivityIndicator size="large" color={theme.colors.primary} />
+          <Text style={styles.loadingText}>Loading expense...</Text>
         </View>
       </View>
     );
   }
 
-  if (!trip || participants.length === 0) {
+  if (!trip || participants.length === 0 || !expense) {
     return (
       <View style={styles.container}>
         <View style={styles.centerContent}>
           <Text style={styles.errorTitle}>
-            {!trip ? 'Trip Not Found' : 'No Participants'}
+            {!trip ? 'Trip Not Found' : !expense ? 'Expense Not Found' : 'No Participants'}
           </Text>
           <Text style={styles.errorText}>
-            {!trip ? 'The requested trip could not be found.' : 'Add participants to this trip before creating expenses.'}
+            {!trip
+              ? 'The requested trip could not be found.'
+              : !expense
+              ? 'The requested expense could not be found.'
+              : 'Add participants to this trip before editing expenses.'}
           </Text>
           <Button
-            title="Back to trip"
+            title="Go back"
             onPress={() => router.back()}
           />
         </View>
@@ -456,8 +492,7 @@ function AddExpenseScreenContent({ tripId }: { tripId: string }) {
           placeholder="e.g., Dinner at Marina"
           value={description}
           onChangeText={setDescription}
-          autoFocus
-          editable={!isCreating}
+          editable={!isSaving}
         />
 
         <Input
@@ -466,7 +501,7 @@ function AddExpenseScreenContent({ tripId }: { tripId: string }) {
           value={amount}
           onChangeText={setAmount}
           keyboardType="decimal-pad"
-          editable={!isCreating}
+          editable={!isSaving}
         />
 
         <DatePicker
@@ -548,12 +583,12 @@ function AddExpenseScreenContent({ tripId }: { tripId: string }) {
           variant="outline"
           onPress={() => router.back()}
           fullWidth
-          disabled={isCreating}
+          disabled={isSaving}
         />
         <View style={{ height: theme.spacing.md }} />
         <Button
-          title={isCreating ? 'Saving...' : 'Save Expense'}
-          onPress={handleCreate}
+          title={isSaving ? 'Saving...' : 'Save Changes'}
+          onPress={handleSave}
           fullWidth
           disabled={!canSubmit}
         />
@@ -586,6 +621,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     padding: theme.spacing.lg,
+  },
+  loadingText: {
+    fontSize: theme.typography.base,
+    color: theme.colors.textSecondary,
+    marginTop: theme.spacing.md,
   },
   errorTitle: {
     fontSize: theme.typography.xl,

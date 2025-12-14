@@ -30,8 +30,9 @@ npm run lint             # ESLint
 
 ### Database Migrations
 ```bash
-npx drizzle-kit generate # Generate migration files from schema
-npx drizzle-kit push     # Push schema changes to database
+npx drizzle-kit generate # Generate migration files from schema changes
+# Migrations auto-apply at app startup via useDbMigrations() hook
+# NEVER manually wipe database - use proper migrations for schema changes
 ```
 
 ## Architecture Principles
@@ -154,9 +155,18 @@ All schemas in `src/db/schema/`:
 ### Migration Workflow
 1. Modify schema files in `src/db/schema/`
 2. Generate migration: `npx drizzle-kit generate`
-3. Review generated SQL in `src/db/migrations/`
-4. Migrations run automatically on app startup via `useDbMigrations()` hook
-5. **Never** manually drop tables or reset database in production
+3. Review generated SQL in `src/db/migrations/NNNN_*.sql`
+4. Update `src/db/migrations/migrations.js` with new migration content
+5. Test locally with existing data
+6. Commit migration files + schema changes together
+7. Migrations run automatically on app startup via `useDbMigrations()` hook
+
+**Critical Rules:**
+- NEVER wipe database in production code
+- Prefer additive changes (new nullable columns, new tables)
+- Avoid dropping columns with user data
+- Test migrations with realistic data before shipping
+- See `src/db/migrations/README.md` for safe patterns
 
 ### Repository Pattern
 Each module has a repository under `src/modules/<domain>/repository/`:

@@ -6,6 +6,7 @@ import { Button, Input, CurrencyPicker, DateRangePicker } from '@ui/components';
 import { createTrip } from '../repository';
 import { createParticipant } from '../../participants/repository';
 import { useDeviceOwner } from '@hooks/use-device-owner';
+import { participantLogger } from '@utils/logger';
 
 const AVATAR_COLORS = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#F7DC6F', '#BB8FCE', '#85C1E2'];
 
@@ -61,7 +62,7 @@ export default function CreateTripScreen() {
             avatarColor: AVATAR_COLORS[0], // First color for device owner
           });
         } catch (error) {
-          console.warn('Failed to add device owner as participant:', error);
+          participantLogger.warn('Failed to add device owner as participant', error);
           // Don't fail trip creation if participant add fails
         }
       }

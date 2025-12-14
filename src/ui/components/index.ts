@@ -17,3 +17,11 @@ export { CurrencyPicker } from './CurrencyPicker';
 export { DatePicker } from './DatePicker';
 
 export { DateRangePicker } from './date-range-picker';
+
+export { Picker } from './Picker';
+export type { PickerOption } from './Picker';
+
+export { ParticipantSplitRow } from './ParticipantSplitRow';
+export type { SplitType } from './ParticipantSplitRow';
+
+export { SplitValidationSummary } from './SplitValidationSummary';

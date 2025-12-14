@@ -4,7 +4,7 @@
  */
 
 import React, { useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
 import { theme } from '@ui/theme';
 import { Card, Button } from '@ui/components';
@@ -82,10 +82,14 @@ export default function SettlementSummaryScreen() {
   const hasSettlements = settlement.settlements.length > 0;
   const hasBalances = settlement.balances.length > 0;
   const showDisplayCurrency = !!settlement.displayCurrency;
+  const hasUnsplitExpenses = (settlement.unsplitExpensesCount ?? 0) > 0;
+  const hasPersonalExpenses = (settlement.personalExpensesTotal ?? 0) > 0;
+  const hasSplitExpenses = (settlement.splitExpensesTotal ?? 0) > 0;
 
   return (
     <View style={styles.container}>
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
+        {/* Expense Breakdown */}
         <View style={styles.headerRow}>
           <Text style={styles.subtitle}>
             Total: {formatCurrency(settlement.totalExpenses, settlement.currency)}
@@ -99,6 +103,58 @@ export default function SettlementSummaryScreen() {
             </Text>
           )}
         </View>
+
+        {/* Show expense breakdown if there are different types */}
+        {(hasSplitExpenses || hasPersonalExpenses || hasUnsplitExpenses) && (
+          <Card style={styles.breakdownCard}>
+            {hasSplitExpenses && (
+              <View style={styles.breakdownRow}>
+                <Text style={styles.breakdownLabel}>Split Expenses:</Text>
+                <Text style={styles.breakdownAmount}>
+                  {formatCurrency(settlement.splitExpensesTotal ?? 0, settlement.currency)}
+                </Text>
+              </View>
+            )}
+            {hasPersonalExpenses && (
+              <View style={styles.breakdownRow}>
+                <Text style={styles.breakdownLabel}>Personal Expenses:</Text>
+                <Text style={styles.breakdownAmount}>
+                  {formatCurrency(settlement.personalExpensesTotal ?? 0, settlement.currency)}
+                </Text>
+              </View>
+            )}
+            {hasUnsplitExpenses && (
+              <View style={[styles.breakdownRow, styles.warningRow]}>
+                <Text style={styles.warningLabel}>⚠️ Unallocated:</Text>
+                <Text style={styles.warningAmount}>
+                  {formatCurrency(settlement.unsplitExpensesTotal ?? 0, settlement.currency)}
+                </Text>
+              </View>
+            )}
+          </Card>
+        )}
+
+        {/* Warning banner for unsplit expenses */}
+        {hasUnsplitExpenses && (
+          <Card style={styles.warningBanner}>
+            <Text style={styles.warningTitle}>
+              ⚠️ {settlement.unsplitExpensesCount} {settlement.unsplitExpensesCount === 1 ? 'expense needs' : 'expenses need'} splitting
+            </Text>
+            <Text style={styles.warningText}>
+              Some expenses don't have participants assigned. These are excluded from settlement calculations.
+            </Text>
+            <TouchableOpacity
+              style={styles.reviewButton}
+              onPress={() => {
+                // Navigate to expenses with filter parameter for unsplit expenses
+                const expenseIds = settlement.unsplitExpenseIds?.join(',') || '';
+                router.push(`/trips/${tripId}/expenses?filter=unsplit&ids=${expenseIds}`);
+              }}
+            >
+              <Text style={styles.reviewButtonText}>Review Unsplit Expenses</Text>
+            </TouchableOpacity>
+          </Card>
+        )}
 
         {/* Participant Balances Section */}
         {hasBalances && (
@@ -223,6 +279,7 @@ export default function SettlementSummaryScreen() {
           variant="outline"
           fullWidth
           disabled
+          onPress={() => {}}
           accessibilityLabel="Export Trip coming soon"
           testID="export-trip-disabled"
         />
@@ -414,6 +471,72 @@ const styles = StyleSheet.create({
     fontSize: theme.typography.sm,
     color: theme.colors.textSecondary,
     lineHeight: 20,
+  },
+  breakdownCard: {
+    marginBottom: theme.spacing.md,
+    padding: theme.spacing.md,
+  },
+  breakdownRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: theme.spacing.xs,
+  },
+  breakdownLabel: {
+    fontSize: theme.typography.sm,
+    color: theme.colors.textSecondary,
+  },
+  breakdownAmount: {
+    fontSize: theme.typography.sm,
+    fontWeight: theme.typography.semibold,
+    color: theme.colors.text,
+  },
+  warningRow: {
+    paddingTop: theme.spacing.sm,
+    marginTop: theme.spacing.xs,
+    borderTopWidth: 1,
+    borderTopColor: theme.colors.border,
+  },
+  warningLabel: {
+    fontSize: theme.typography.sm,
+    color: theme.colors.warning,
+    fontWeight: theme.typography.semibold,
+  },
+  warningAmount: {
+    fontSize: theme.typography.sm,
+    fontWeight: theme.typography.bold,
+    color: theme.colors.warning,
+  },
+  warningBanner: {
+    marginBottom: theme.spacing.md,
+    padding: theme.spacing.md,
+    backgroundColor: theme.colors.warningBg,
+    borderLeftWidth: 4,
+    borderLeftColor: theme.colors.warning,
+  },
+  warningTitle: {
+    fontSize: theme.typography.base,
+    fontWeight: theme.typography.bold,
+    color: theme.colors.text,
+    marginBottom: theme.spacing.xs,
+  },
+  warningText: {
+    fontSize: theme.typography.sm,
+    color: theme.colors.text,
+    marginBottom: theme.spacing.md,
+    lineHeight: 20,
+  },
+  reviewButton: {
+    backgroundColor: theme.colors.primary,
+    padding: theme.spacing.sm,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginTop: theme.spacing.xs,
+  },
+  reviewButtonText: {
+    color: theme.colors.background,
+    fontSize: theme.typography.sm,
+    fontWeight: theme.typography.semibold,
   },
   footer: {
     padding: theme.spacing.lg,
