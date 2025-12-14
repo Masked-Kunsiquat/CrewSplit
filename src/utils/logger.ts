@@ -205,8 +205,12 @@ class Logger {
 
   /**
    * Redact potentially sensitive information
-   * - Replace names with UUIDs (first 8 chars)
-   * - Keep IDs for debugging
+   * - IDs: Truncate to first 8 chars + "..." for debugging
+   * - Names: Truncate to first 8 chars + "..." (not fully redacted)
+   * - Descriptions: Fully redact with "[REDACTED]"
+   * - Secrets/tokens: Truncate to first 8 chars + "..."
+   * - PII (email/phone/address): Fully redact with "[REDACTED]"
+   * - Recursively process nested objects and arrays
    */
   private redactData(data: unknown): unknown {
     if (typeof data !== 'object' || data === null) {
@@ -221,19 +225,35 @@ class Logger {
     const obj = data as Record<string, unknown>;
 
     for (const [key, value] of Object.entries(obj)) {
-      // Keep IDs for debugging
+      const lowerKey = key.toLowerCase();
+
+      // Keep IDs for debugging (truncated)
       if (key.endsWith('Id') || key === 'id') {
         redacted[key] = typeof value === 'string' ? `${value.slice(0, 8)}...` : value;
       }
-      // Redact names
-      else if (key.includes('name') || key.includes('Name')) {
+      // Truncate names (first 8 chars for debugging)
+      else if (lowerKey.includes('name') || lowerKey === 'name') {
+        redacted[key] = typeof value === 'string' ? `${value.slice(0, 8)}...` : value;
+      }
+      // Fully redact PII
+      else if (lowerKey.includes('email') || lowerKey.includes('phone') || lowerKey.includes('address')) {
         redacted[key] = '[REDACTED]';
       }
-      // Redact descriptions
-      else if (key.includes('description') || key.includes('Description')) {
+      // Truncate secrets/tokens (first 8 chars for debugging)
+      else if (
+        lowerKey.includes('token') ||
+        lowerKey.includes('secret') ||
+        lowerKey.includes('password') ||
+        lowerKey.includes('authorization') ||
+        lowerKey.includes('cookie')
+      ) {
+        redacted[key] = typeof value === 'string' ? `${value.slice(0, 8)}...` : '[REDACTED]';
+      }
+      // Fully redact descriptions
+      else if (lowerKey.includes('description')) {
         redacted[key] = '[REDACTED]';
       }
-      // Keep everything else
+      // Recursively process nested objects, keep primitives
       else {
         redacted[key] = typeof value === 'object' ? this.redactData(value) : value;
       }
