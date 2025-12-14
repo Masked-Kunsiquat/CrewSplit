@@ -98,6 +98,59 @@ class Logger {
   }
 
   /**
+   * Safe JSON stringify that handles circular references and errors
+   * - Replaces circular references with "[Circular]"
+   * - Properly serializes Error objects
+   */
+  private safeStringify(data: unknown, indent?: number): string {
+    const seen = new WeakSet();
+
+    return JSON.stringify(
+      data,
+      (_key, value) => {
+        // Handle Error instances
+        if (value instanceof Error) {
+          const errorObj: Record<string, unknown> = {
+            name: value.name,
+            message: value.message,
+            stack: value.stack,
+          };
+          if (value.cause !== undefined) {
+            errorObj.cause = value.cause;
+          }
+          return errorObj;
+        }
+
+        // Handle circular references
+        if (typeof value === 'object' && value !== null) {
+          if (seen.has(value)) {
+            return '[Circular]';
+          }
+          seen.add(value);
+        }
+
+        return value;
+      },
+      indent
+    );
+  }
+
+  /**
+   * Convert Error to plain object with all relevant properties
+   */
+  private errorToObject(error: Error): Record<string, unknown> {
+    const errorObj: Record<string, unknown> = {
+      name: error.name,
+      message: error.message,
+      stack: error.stack,
+    };
+    if (error.cause !== undefined) {
+      errorObj.cause = error.cause;
+    }
+    return errorObj;
+  }
+
+  /**
    * Format data intelligently based on complexity
    * - Simple objects (<=3 keys): inline format
    * - Errors or complex objects: multi-line JSON
@@ -107,21 +160,35 @@ class Logger {
       return '';
     }
 
+    // Convert Error instances to plain objects
+    let processedData = data;
+    if (data instanceof Error) {
+      processedData = this.errorToObject(data);
+    }
+
     // For errors, always use multi-line for readability
-    if (level === 'error' || (typeof data === 'object' && 'stack' in data)) {
-      return `\n${JSON.stringify(data, null, 2)}`;
+    if (level === 'error' || (typeof processedData === 'object' && processedData !== null && 'stack' in processedData)) {
+      try {
+        return `\n${this.safeStringify(processedData, 2)}`;
+      } catch (err) {
+        return '\n[Error serializing data]';
+      }
     }
 
     // For simple objects, format inline
-    if (typeof data === 'object' && !Array.isArray(data)) {
-      const entries = Object.entries(data as Record<string, unknown>);
+    if (typeof processedData === 'object' && !Array.isArray(processedData)) {
+      const entries = Object.entries(processedData as Record<string, unknown>);
 
       // Simple object: format inline (key: value, key: value)
       if (entries.length <= 3) {
         const formatted = entries
           .map(([key, value]) => {
-            const valStr = typeof value === 'string' ? value : JSON.stringify(value);
-            return `${key}: ${valStr}`;
+            try {
+              const valStr = typeof value === 'string' ? value : this.safeStringify(value);
+              return `${key}: ${valStr}`;
+            } catch {
+              return `${key}: [Error]`;
+            }
           })
           .join(', ');
         return `(${formatted})`;
@@ -129,7 +196,11 @@ class Logger {
     }
 
     // Complex data: multi-line JSON
-    return `\n${JSON.stringify(data, null, 2)}`;
+    try {
+      return `\n${this.safeStringify(processedData, 2)}`;
+    } catch (err) {
+      return '\n[Error serializing data]';
+    }
   }
 
   /**
@@ -192,7 +263,7 @@ class Logger {
   error(context: LogContext, message: string, error?: unknown): void {
     if (this.shouldLog('error')) {
       const errorData = error instanceof Error
-        ? { message: error.message, stack: error.stack }
+        ? this.errorToObject(error)
         : error;
       console.error(this.formatMessage('error', context, message, errorData));
     }
