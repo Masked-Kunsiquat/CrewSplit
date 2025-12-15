@@ -4,6 +4,7 @@ import { useRouter, useLocalSearchParams, useNavigation } from 'expo-router';
 import { theme } from '@ui/theme';
 import { Button, Card } from '@ui/components';
 import { useExpenses } from '../hooks/use-expenses';
+import { useExpenseCategories } from '../hooks/use-expense-categories';
 import { useTripById } from '../../trips/hooks/use-trips';
 import { formatCurrency } from '@utils/currency';
 
@@ -18,6 +19,7 @@ export default function ExpensesListScreen() {
 
   const { trip } = useTripById(tripId);
   const { expenses, loading, error } = useExpenses(tripId);
+  const { categories } = useExpenseCategories(tripId);
 
   // Parse filter IDs if provided
   const filterIds = ids ? ids.split(',').map(id => id.trim()) : null;
@@ -78,24 +80,30 @@ export default function ExpensesListScreen() {
             </Text>
           </Card>
         ) : (
-          displayedExpenses.map((expense) => (
-            <Card
-              key={expense.id}
-              style={styles.expenseCard}
-              onPress={() => router.push(`/trips/${tripId}/expenses/${expense.id}`)}
-            >
-              <View style={styles.expenseHeader}>
-                <Text style={styles.expenseTitle}>{expense.description}</Text>
-                <Text style={styles.expenseAmount}>
-                  {formatCurrency(expense.convertedAmountMinor, trip?.currency || 'USD')}
+          displayedExpenses.map((expense) => {
+            const category = categories.find(c => c.id === expense.categoryId);
+            return (
+              <Card
+                key={expense.id}
+                style={styles.expenseCard}
+                onPress={() => router.push(`/trips/${tripId}/expenses/${expense.id}`)}
+              >
+                <View style={styles.expenseHeader}>
+                  <View style={styles.expenseTitleRow}>
+                    {category && <Text style={styles.categoryEmoji}>{category.emoji}</Text>}
+                    <Text style={styles.expenseTitle}>{expense.description}</Text>
+                  </View>
+                  <Text style={styles.expenseAmount}>
+                    {formatCurrency(expense.convertedAmountMinor, trip?.currency || 'USD')}
+                  </Text>
+                </View>
+                <Text style={styles.expenseMeta}>
+                  {new Date(expense.date).toLocaleDateString()}
+                  {category ? ` • ${category.name}` : ''}
                 </Text>
-              </View>
-              <Text style={styles.expenseMeta}>
-                {new Date(expense.date).toLocaleDateString()}
-                {expense.category ? ` • ${expense.category}` : ''}
-              </Text>
-            </Card>
-          ))
+              </Card>
+            );
+          })
         )}
       </ScrollView>
 
@@ -168,6 +176,15 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: theme.spacing.xs,
+  },
+  expenseTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.sm,
+    flex: 1,
+  },
+  categoryEmoji: {
+    fontSize: 20,
   },
   expenseTitle: {
     fontSize: theme.typography.lg,

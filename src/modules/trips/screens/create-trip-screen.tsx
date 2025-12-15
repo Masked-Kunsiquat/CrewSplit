@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, Alert, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
+import EmojiPicker from 'rn-emoji-keyboard';
 import { theme } from '@ui/theme';
 import { Button, Input, CurrencyPicker, DateRangePicker } from '@ui/components';
 import { createTrip } from '../repository';
@@ -20,6 +21,8 @@ export default function CreateTripScreen() {
   const [endDate, setEndDate] = useState<Date | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [dateError, setDateError] = useState<string | null>(null);
+  const [emoji, setEmoji] = useState<string | undefined>(undefined);
+  const [emojiPickerOpen, setEmojiPickerOpen] = useState(false);
 
   const handleStartDateChange = (date: Date) => {
     setStartDate(date);
@@ -51,6 +54,7 @@ export default function CreateTripScreen() {
         description: description.trim() || undefined,
         startDate: startDate.toISOString(),
         endDate: endDate?.toISOString() || undefined,
+        emoji,
       });
 
       // Auto-add device owner as first participant if name is set
@@ -92,6 +96,26 @@ export default function CreateTripScreen() {
           autoFocus
           editable={!isCreating}
         />
+
+        <View>
+          <Text style={styles.label}>Trip Emoji (optional)</Text>
+          <TouchableOpacity
+            style={styles.emojiButton}
+            onPress={() => setEmojiPickerOpen(true)}
+            disabled={isCreating}
+          >
+            <Text style={styles.emojiText}>{emoji || '+ Add emoji'}</Text>
+          </TouchableOpacity>
+          {emoji && (
+            <TouchableOpacity
+              onPress={() => setEmoji(undefined)}
+              style={styles.clearEmojiButton}
+              disabled={isCreating}
+            >
+              <Text style={styles.clearEmojiText}>Clear</Text>
+            </TouchableOpacity>
+          )}
+        </View>
 
         <View>
           <Text style={styles.label}>Trip Currency</Text>
@@ -141,6 +165,15 @@ export default function CreateTripScreen() {
           disabled={!name.trim() || !currency || isCreating}
         />
       </View>
+
+      <EmojiPicker
+        onEmojiSelected={(emojiObject) => {
+          setEmoji(emojiObject.emoji);
+          setEmojiPickerOpen(false);
+        }}
+        open={emojiPickerOpen}
+        onClose={() => setEmojiPickerOpen(false)}
+      />
     </KeyboardAvoidingView>
   );
 }
@@ -175,6 +208,28 @@ const styles = StyleSheet.create({
   multiLine: {
     textAlignVertical: 'top',
     minHeight: 96,
+  },
+  emojiButton: {
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    borderRadius: theme.spacing.sm,
+    padding: theme.spacing.md,
+    backgroundColor: theme.colors.surface,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 56,
+  },
+  emojiText: {
+    fontSize: 32,
+    color: theme.colors.text,
+  },
+  clearEmojiButton: {
+    marginTop: theme.spacing.xs,
+    alignSelf: 'flex-end',
+  },
+  clearEmojiText: {
+    fontSize: theme.typography.sm,
+    color: theme.colors.error,
   },
   footer: {
     padding: theme.spacing.lg,

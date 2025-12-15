@@ -158,6 +158,7 @@ function TripDashboardScreenContent({ tripId }: { tripId: string }) {
           </Card>
         ) : (
           <View style={styles.header}>
+            {trip.emoji && <Text style={styles.headerEmoji}>{trip.emoji}</Text>}
             <View style={styles.titleContainer}>
               <Text style={styles.title}>{trip.name}</Text>
               <Text style={styles.subtitle}>
@@ -264,6 +265,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
+    gap: theme.spacing.md,
+  },
+  headerEmoji: {
+    fontSize: 48,
+    marginTop: -theme.spacing.xs,
   },
   titleContainer: {
     flex: 1,
