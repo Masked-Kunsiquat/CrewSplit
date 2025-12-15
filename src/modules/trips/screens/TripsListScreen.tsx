@@ -4,11 +4,15 @@ import { useRouter, useNavigation } from 'expo-router';
 import { theme } from '@ui/theme';
 import { Button, Card } from '@ui/components';
 import { useTrips } from '../hooks/use-trips';
+import { useRefreshControl } from '@hooks/use-refresh-control';
 
 export default function TripsListScreen() {
   const router = useRouter();
   const navigation = useNavigation();
-  const { trips, loading, error } = useTrips();
+  const { trips, loading, error, refetch } = useTrips();
+
+  // Pull-to-refresh support
+  const refreshControl = useRefreshControl([refetch]);
 
   // Set header title for home screen
   useEffect(() => {
@@ -31,7 +35,11 @@ export default function TripsListScreen() {
 
   return (
     <View style={styles.container}>
-      <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.content}
+        refreshControl={refreshControl}
+      >
 
         {loading && (
           <View style={styles.centerContent}>

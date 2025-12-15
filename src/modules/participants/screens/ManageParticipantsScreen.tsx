@@ -1,3 +1,8 @@
+/**
+ * UI/UX ENGINEER: ManageParticipants screen
+ * Manages participant list with add/remove actions and pull-to-refresh
+ */
+
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Alert } from 'react-native';
 import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
@@ -7,6 +12,7 @@ import { Button, Card, Input, ParticipantListRow } from '@ui/components';
 import { useParticipants } from '../hooks/use-participants';
 import { useTripById } from '@modules/trips/hooks/use-trips';
 import { createParticipant, deleteParticipant } from '../repository';
+import { useRefreshControl } from '@hooks/use-refresh-control';
 
 // Predefined avatar colors for new participants
 const AVATAR_COLORS = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#F7DC6F', '#BB8FCE', '#85C1E2'];
@@ -45,8 +51,11 @@ function ManageParticipantsContent({
   const [nameError, setNameError] = useState<string | null>(null);
   const [isAdding, setIsAdding] = useState(false);
 
-  const { trip } = useTripById(tripId);
-  const { participants, loading, error, refetch } = useParticipants(tripId);
+  const { trip, refetch: refetchTrip } = useTripById(tripId);
+  const { participants, loading, error, refetch: refetchParticipants } = useParticipants(tripId);
+
+  // Pull-to-refresh support
+  const refreshControl = useRefreshControl([refetchTrip, refetchParticipants]);
 
   // Update native header title
   useEffect(() => {
@@ -75,7 +84,7 @@ function ManageParticipantsContent({
         avatarColor,
       });
 
-      refetch();
+      refetchParticipants();
       setNewParticipantName('');
       setNameError(null);
     } catch (err) {
@@ -97,7 +106,7 @@ function ManageParticipantsContent({
           onPress: async () => {
             try {
               await deleteParticipant(participantId);
-              refetch();
+              refetchParticipants();
             } catch (err) {
               const message = err instanceof Error ? err.message : String(err);
               participantLogger.error('Failed to delete participant', err);
@@ -135,7 +144,11 @@ function ManageParticipantsContent({
 
   return (
     <View style={styles.container}>
-      <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.content}
+        refreshControl={refreshControl}
+      >
         <Input
           label="Add a participant"
           placeholder="Enter a name"

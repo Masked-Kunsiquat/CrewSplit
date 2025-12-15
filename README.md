@@ -2,6 +2,17 @@
 
 A deterministic, family-focused trip expense-splitting app built with Expo.
 
+## Features
+
+- **Trip Management** - Create and manage trips with custom currencies and date ranges
+- **Expense Tracking** - Track expenses with categories, custom splits, and multi-currency support
+- **Smart Settlement** - Automatic calculation of who owes whom with transaction minimization
+- **Participant Management** - Add participants with color-coded avatars
+- **Display Currency** - View all amounts in your preferred currency with real-time conversion
+- **Offline-First** - Full functionality without internet connection
+- **Pull-to-Refresh** - Update data across all screens with pull-down gesture
+- **Dark Mode Ready** - Built with dark-mode-first design tokens
+
 ## Project Structure
 
 ```

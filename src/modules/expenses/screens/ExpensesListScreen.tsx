@@ -7,6 +7,7 @@ import { useExpenses } from '../hooks/use-expenses';
 import { useExpenseCategories } from '../hooks/use-expense-categories';
 import { useTripById } from '../../trips/hooks/use-trips';
 import { formatCurrency } from '@utils/currency';
+import { useRefreshControl } from '@hooks/use-refresh-control';
 
 export default function ExpensesListScreen() {
   const router = useRouter();
@@ -17,9 +18,12 @@ export default function ExpensesListScreen() {
     ids?: string;
   }>();
 
-  const { trip } = useTripById(tripId);
-  const { expenses, loading, error } = useExpenses(tripId);
+  const { trip, refetch: refetchTrip } = useTripById(tripId);
+  const { expenses, loading, error, refetch: refetchExpenses } = useExpenses(tripId);
   const { categories } = useExpenseCategories(tripId);
+
+  // Pull-to-refresh support (note: categories hook doesn't expose refetch, uses dependency-based refresh)
+  const refreshControl = useRefreshControl([refetchTrip, refetchExpenses]);
 
   // Category filter state - null means "All"
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
@@ -120,7 +124,11 @@ export default function ExpensesListScreen() {
         </ScrollView>
       )}
 
-      <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.content}
+        refreshControl={refreshControl}
+      >
         {displayedExpenses.length === 0 ? (
           <Card style={styles.emptyCard}>
             <Text style={styles.emptyTitle}>

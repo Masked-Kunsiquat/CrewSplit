@@ -10,10 +10,10 @@ import type { Expense, ExpenseSplit } from '../types';
 /**
  * Hook to fetch all expenses for a trip
  * @param tripId - Trip UUID (nullable)
- * @returns Object with expenses array, loading state, and error
+ * @returns Object with expenses array, loading state, error, and refetch function
  */
 export function useExpenses(tripId: string | null) {
-  const { data: expenses, loading, error } = useQuery(
+  const { data: expenses, loading, error, refetch } = useQuery(
     () => (tripId ? getExpensesForTrip(tripId) : Promise.resolve<Expense[]>([])),
     [tripId],
     [],
@@ -21,19 +21,20 @@ export function useExpenses(tripId: string | null) {
     true // Enable refetch on focus to reflect create/edit changes
   );
 
-  return { expenses, loading, error };
+  return { expenses, loading, error, refetch };
 }
 
 /**
  * Hook to fetch a single expense by ID with its splits (parallel fetch)
  * @param expenseId - Expense UUID
- * @returns Object with expense, splits, loading state, and error
+ * @returns Object with expense, splits, loading state, error, and refetch function
  */
 export function useExpenseWithSplits(expenseId: string) {
   const {
     data,
     loading,
     error,
+    refetch,
   } = useQuery(
     async () => {
       // Fetch expense and splits in parallel
@@ -49,5 +50,5 @@ export function useExpenseWithSplits(expenseId: string) {
     'Failed to load expense'
   );
 
-  return { expense: data.expense, splits: data.splits, loading, error };
+  return { expense: data.expense, splits: data.splits, loading, error, refetch };
 }

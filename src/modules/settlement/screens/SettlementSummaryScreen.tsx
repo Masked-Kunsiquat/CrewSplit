@@ -12,6 +12,7 @@ import { useSettlementWithDisplay } from '../hooks/use-settlement-with-display';
 import { useTripById } from '@modules/trips/hooks/use-trips';
 import { useDisplayCurrency } from '@hooks/use-display-currency';
 import { formatCurrency } from '@utils/currency';
+import { useRefreshControl } from '@hooks/use-refresh-control';
 
 export default function SettlementSummaryScreen() {
   const navigation = useNavigation();
@@ -20,11 +21,14 @@ export default function SettlementSummaryScreen() {
   const tripId = normalizeTripId(params.id);
   const { displayCurrency } = useDisplayCurrency();
 
-  const { trip } = useTripById(tripId);
-  const { settlement, loading, error, refetch } = useSettlementWithDisplay(
+  const { trip, refetch: refetchTrip } = useTripById(tripId);
+  const { settlement, loading, error, refetch: refetchSettlement } = useSettlementWithDisplay(
     tripId ?? null,
     displayCurrency ?? undefined
   );
+
+  // Pull-to-refresh support
+  const refreshControl = useRefreshControl([refetchTrip, refetchSettlement]);
 
   // Update native header title
   useEffect(() => {
@@ -69,9 +73,7 @@ export default function SettlementSummaryScreen() {
           <Button
             title="Retry"
             onPress={() => {
-              if (refetch) {
-                refetch();
-              }
+              refetchSettlement();
             }}
           />
         </View>
@@ -88,7 +90,11 @@ export default function SettlementSummaryScreen() {
 
   return (
     <View style={styles.container}>
-      <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.content}
+        refreshControl={refreshControl}
+      >
         {/* Expense Breakdown */}
         <View style={styles.headerRow}>
           <Text style={styles.subtitle}>

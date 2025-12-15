@@ -19,6 +19,9 @@
       "expo-router",
       "expo-asset"
     ],
-    "scheme": "crewsplit"
+    "scheme": "crewsplit",
+    "experiments": {
+      "typedRoutes": true
+    }
   }
 }
