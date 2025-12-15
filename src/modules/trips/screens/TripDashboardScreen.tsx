@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Alert, Touchable
 import { useRouter, useLocalSearchParams, useNavigation } from 'expo-router';
 import EmojiPicker from 'rn-emoji-keyboard';
 import { theme } from '@ui/theme';
-import { Button, Card, Input, DateRangePicker } from '@ui/components';
+import { Button, Card, Input, DatePicker } from '@ui/components';
 import { useTripById } from '../hooks/use-trips';
 import { useParticipants } from '../../participants/hooks/use-participants';
 import { useExpenses } from '../../expenses/hooks/use-expenses';
@@ -41,7 +41,6 @@ function TripDashboardScreenContent({ tripId }: { tripId: string }) {
   const [nameInput, setNameInput] = useState('');
   const [emojiInput, setEmojiInput] = useState<string | undefined>(undefined);
   const [emojiPickerOpen, setEmojiPickerOpen] = useState(false);
-  const [startDateInput, setStartDateInput] = useState<Date>(new Date());
   const [endDateInput, setEndDateInput] = useState<Date | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -62,7 +61,6 @@ function TripDashboardScreenContent({ tripId }: { tripId: string }) {
   const handleEditName = () => {
     setNameInput(trip?.name || '');
     setEmojiInput(trip?.emoji);
-    setStartDateInput(trip?.startDate ? new Date(trip.startDate) : new Date());
     setEndDateInput(trip?.endDate ? new Date(trip.endDate) : null);
     setEditingName(true);
   };
@@ -73,7 +71,7 @@ function TripDashboardScreenContent({ tripId }: { tripId: string }) {
       return;
     }
 
-    if (endDateInput && endDateInput < startDateInput) {
+    if (endDateInput && trip && endDateInput < new Date(trip.startDate)) {
       Alert.alert('Invalid Dates', 'End date must be on or after the start date.');
       return;
     }
@@ -177,14 +175,40 @@ function TripDashboardScreenContent({ tripId }: { tripId: string }) {
               </View>
             </View>
 
-            <DateRangePicker
-              startLabel="Start Date"
-              endLabel="End Date (optional)"
-              startDate={startDateInput}
-              endDate={endDateInput}
-              onStartChange={setStartDateInput}
-              onEndChange={setEndDateInput}
-            />
+            <View style={styles.dateSection}>
+              <Text style={styles.dateLabel}>Start Date (cannot be changed)</Text>
+              <Text style={styles.dateValue}>
+                {trip ? new Date(trip.startDate).toLocaleDateString() : ''}
+              </Text>
+            </View>
+
+            {endDateInput ? (
+              <DatePicker
+                label="End Date (optional)"
+                value={endDateInput}
+                onChange={setEndDateInput}
+                minimumDate={trip ? new Date(trip.startDate) : undefined}
+              />
+            ) : (
+              <View>
+                <Text style={styles.dateLabel}>End Date (optional)</Text>
+                <TouchableOpacity
+                  style={styles.addEndDateButton}
+                  onPress={() => setEndDateInput(trip ? new Date(trip.startDate) : new Date())}
+                >
+                  <Text style={styles.addEndDateText}>+ Add end date</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+
+            {endDateInput && (
+              <TouchableOpacity
+                onPress={() => setEndDateInput(null)}
+                style={styles.clearEndDateButton}
+              >
+                <Text style={styles.clearEndDateText}>Clear end date</Text>
+              </TouchableOpacity>
+            )}
 
             <View style={styles.buttonRow}>
               <View style={styles.buttonHalf}>
@@ -433,6 +457,45 @@ const styles = StyleSheet.create({
   clearEmojiText: {
     fontSize: theme.typography.sm,
     color: theme.colors.error,
+  },
+  dateSection: {
+    gap: theme.spacing.xs,
+  },
+  dateLabel: {
+    fontSize: theme.typography.sm,
+    fontWeight: theme.typography.semibold,
+    color: theme.colors.textSecondary,
+  },
+  dateValue: {
+    fontSize: theme.typography.base,
+    color: theme.colors.text,
+    padding: theme.spacing.md,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    backgroundColor: theme.colors.surfaceElevated,
+  },
+  addEndDateButton: {
+    padding: theme.spacing.md,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    borderStyle: 'dashed',
+    backgroundColor: theme.colors.surface,
+    alignItems: 'center',
+  },
+  addEndDateText: {
+    fontSize: theme.typography.base,
+    color: theme.colors.primary,
+    fontWeight: theme.typography.medium,
+  },
+  clearEndDateButton: {
+    alignSelf: 'flex-start',
+  },
+  clearEndDateText: {
+    fontSize: theme.typography.sm,
+    color: theme.colors.error,
+    fontWeight: theme.typography.medium,
   },
   buttonRow: {
     flexDirection: 'row',
