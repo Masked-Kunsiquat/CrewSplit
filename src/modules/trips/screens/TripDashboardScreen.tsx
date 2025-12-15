@@ -233,9 +233,8 @@ function TripDashboardScreenContent({ tripId }: { tripId: string }) {
             {trip.emoji && <Text style={styles.headerEmoji}>{trip.emoji}</Text>}
             <View style={styles.titleContainer}>
               <Text style={styles.title}>{trip.name}</Text>
-              <Text style={styles.subtitle}>{trip.currency}</Text>
               <Text style={styles.subtitle}>
-                {trip.endDate
+                {trip.currency} • {trip.endDate
                   ? `${new Date(trip.startDate).toLocaleDateString()} - ${new Date(trip.endDate).toLocaleDateString()}`
                   : new Date(trip.startDate).toLocaleDateString()
                 }
@@ -372,12 +371,11 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     gap: theme.spacing.md,
   },
   headerEmoji: {
     fontSize: 48,
-    marginTop: -theme.spacing.xs,
   },
   titleContainer: {
     flex: 1,
