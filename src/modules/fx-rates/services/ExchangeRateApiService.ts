@@ -228,9 +228,9 @@ export const checkAvailability = async (timeout = 5000): Promise<boolean> => {
   const timeoutId = setTimeout(() => controller.abort(), timeout);
 
   try {
-    // Minimal request to /latest/USD
+    // Minimal GET request to /latest/USD (HEAD not supported)
     const response = await fetch(`${EXCHANGERATE_API_BASE_URL}/latest/USD`, {
-      method: 'HEAD', // HEAD request is faster
+      method: 'GET',
       signal: controller.signal,
     });
 

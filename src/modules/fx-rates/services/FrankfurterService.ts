@@ -208,14 +208,32 @@ export const checkAvailability = async (timeout = 5000): Promise<boolean> => {
   try {
     // Minimal request to /latest (defaults to EUR base)
     const response = await fetch(`${FRANKFURTER_BASE_URL}/latest`, {
-      method: 'HEAD', // HEAD request is faster
+      method: 'HEAD', // try HEAD first
       signal: controller.signal,
     });
+
+    if (response.status === 405) {
+      // HEAD not supported, retry with GET
+      fxLogger.debug('Frankfurter availability retrying with GET after 405 HEAD', {
+        status: response.status,
+      });
+      const getResponse = await fetch(`${FRANKFURTER_BASE_URL}/latest`, {
+        method: 'GET',
+        signal: controller.signal,
+      });
+      clearTimeout(timeoutId);
+      const isAvailable = getResponse.ok;
+      fxLogger.debug('Frankfurter availability check (GET fallback)', {
+        available: isAvailable,
+        status: getResponse.status,
+      });
+      return isAvailable;
+    }
 
     clearTimeout(timeoutId);
 
     const isAvailable = response.ok;
-    fxLogger.debug('Frankfurter availability check', { available: isAvailable });
+    fxLogger.debug('Frankfurter availability check', { available: isAvailable, status: response.status });
     return isAvailable;
   } catch (error) {
     clearTimeout(timeoutId);
