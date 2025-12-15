@@ -3,18 +3,21 @@
  * LOCAL DATA ENGINEER: Repository ↔ service orchestration and fallback
  */
 
-import { mockDb, mockFxRatesTable, drizzleOrmMock as mockDrizzleOrm } from '../test-utils/mockDb';
+import { mockDb } from '../test-utils/mockDb';
 
 jest.mock('@db/client', () => ({
   db: mockDb,
 }));
 
-const mockFxRates = mockFxRatesTable;
-jest.mock('@db/schema/fx-rates', () => ({
-  fxRates: mockFxRates,
-}));
+jest.mock('@db/schema/fx-rates', () => {
+  const { mockFxRatesTable } = require('../test-utils/mockDb');
+  return { fxRates: mockFxRatesTable };
+});
 
-jest.mock('drizzle-orm', () => mockDrizzleOrm);
+jest.mock('drizzle-orm', () => {
+  const { drizzleOrmMock: mockDrizzleOrm } = require('../test-utils/mockDb');
+  return mockDrizzleOrm;
+});
 
 jest.mock('@utils/logger', () => {
   const logger = { debug: jest.fn(), info: jest.fn(), warn: jest.fn(), error: jest.fn() };
@@ -25,19 +28,19 @@ jest.mock('expo-crypto', () => ({
   randomUUID: jest.fn(() => 'uuid-seed'),
 }));
 
-const frankfurterLatest = jest.fn();
-const exchangeRateLatest = jest.fn();
+const mockFrankfurterLatest = jest.fn();
+const mockExchangeRateLatest = jest.fn();
 
 jest.mock('../services/FrankfurterService', () => ({
   FrankfurterService: {
-    fetchLatestRates: (...args: any[]) => frankfurterLatest(...args),
+    fetchLatestRates: (...args: any[]) => mockFrankfurterLatest(...args),
     checkAvailability: jest.fn(async () => true),
   },
 }));
 
 jest.mock('../services/ExchangeRateApiService', () => ({
   ExchangeRateApiService: {
-    fetchLatestRates: (...args: any[]) => exchangeRateLatest(...args),
+    fetchLatestRates: (...args: any[]) => mockExchangeRateLatest(...args),
     getAttributionText: () => 'Exchange rates by ExchangeRate-API',
     checkAvailability: jest.fn(async () => true),
   },
@@ -52,8 +55,8 @@ describe('FxRateService integration', () => {
   beforeEach(() => {
     jest.useFakeTimers().setSystemTime(new Date(now));
     mockDb.reset();
-    frankfurterLatest.mockReset();
-    exchangeRateLatest.mockReset();
+    mockFrankfurterLatest.mockReset();
+    mockExchangeRateLatest.mockReset();
     cachedFxRateProvider.clearCache();
     (cachedFxRateProvider as any).initialized = false;
   });
@@ -63,7 +66,7 @@ describe('FxRateService integration', () => {
   });
 
   it('persists rates from Frankfurter and returns metadata', async () => {
-    frankfurterLatest.mockResolvedValue([
+    mockFrankfurterLatest.mockResolvedValue([
       { baseCurrency: 'USD', quoteCurrency: 'EUR', rate: 0.9 },
       { baseCurrency: 'USD', quoteCurrency: 'GBP', rate: 0.8 },
     ]);
@@ -76,8 +79,8 @@ describe('FxRateService integration', () => {
   });
 
   it('falls back to ExchangeRate-API when Frankfurter fails', async () => {
-    frankfurterLatest.mockRejectedValue(new Error('Frankfurter down'));
-    exchangeRateLatest.mockResolvedValue([{ baseCurrency: 'USD', quoteCurrency: 'CAD', rate: 1.35 }]);
+    mockFrankfurterLatest.mockRejectedValue(new Error('Frankfurter down'));
+    mockExchangeRateLatest.mockResolvedValue([{ baseCurrency: 'USD', quoteCurrency: 'CAD', rate: 1.35 }]);
 
     const result = await FxRateService.updateRates({ baseCurrency: 'USD' });
 
@@ -87,15 +90,15 @@ describe('FxRateService integration', () => {
   });
 
   it('throws when all sources fail', async () => {
-    frankfurterLatest.mockRejectedValue(new Error('Frankfurter down'));
-    exchangeRateLatest.mockRejectedValue(new Error('Fallback down'));
+    mockFrankfurterLatest.mockRejectedValue(new Error('Frankfurter down'));
+    mockExchangeRateLatest.mockRejectedValue(new Error('Fallback down'));
 
     await expect(FxRateService.updateRates()).rejects.toHaveProperty('code', 'ALL_SOURCES_FAILED');
     expect(mockDb.rows).toHaveLength(0);
   });
 
   it('updateCommonRates runs multiple fetches but returns first result', async () => {
-    frankfurterLatest.mockResolvedValue([
+    mockFrankfurterLatest.mockResolvedValue([
       { baseCurrency: 'USD', quoteCurrency: 'EUR', rate: 0.9 },
       { baseCurrency: 'USD', quoteCurrency: 'JPY', rate: 140 },
     ]);
@@ -106,7 +109,7 @@ describe('FxRateService integration', () => {
   });
 
   it('provider cache reflects persisted rates after refresh', async () => {
-    frankfurterLatest.mockResolvedValue([{ baseCurrency: 'USD', quoteCurrency: 'EUR', rate: 0.9 }]);
+    mockFrankfurterLatest.mockResolvedValue([{ baseCurrency: 'USD', quoteCurrency: 'EUR', rate: 0.9 }]);
 
     await FxRateService.updateRates({ baseCurrency: 'USD' });
     await cachedFxRateProvider.initialize();

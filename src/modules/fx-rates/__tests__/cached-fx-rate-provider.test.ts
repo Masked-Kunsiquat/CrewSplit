@@ -5,21 +5,22 @@
 
 import {
   mockDb,
-  mockFxRatesTable,
   createRateRow,
-  drizzleOrmMock as mockDrizzleOrm,
 } from '../test-utils/mockDb';
 
 jest.mock('@db/client', () => ({
   db: mockDb,
 }));
 
-const mockFxRates = mockFxRatesTable;
-jest.mock('@db/schema/fx-rates', () => ({
-  fxRates: mockFxRates,
-}));
+jest.mock('@db/schema/fx-rates', () => {
+  const { mockFxRatesTable } = require('../test-utils/mockDb');
+  return { fxRates: mockFxRatesTable };
+});
 
-jest.mock('drizzle-orm', () => mockDrizzleOrm);
+jest.mock('drizzle-orm', () => {
+  const { drizzleOrmMock: mockDrizzleOrm } = require('../test-utils/mockDb');
+  return mockDrizzleOrm;
+});
 
 jest.mock('expo-crypto', () => ({
   randomUUID: jest.fn(() => 'manual-uuid'),
