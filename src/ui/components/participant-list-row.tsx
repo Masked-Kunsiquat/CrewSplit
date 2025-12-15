@@ -33,13 +33,28 @@ function getContrastRatio(l1: number, l2: number): number {
 /**
  * Get accessible text color for a given background color
  * Returns white or black based on WCAG AA contrast requirements (4.5:1)
+ * Falls back to white if the input is not a valid hex color
  */
 function getAccessibleTextColor(backgroundColor: string): string {
+  // Validate hex color format (#RRGGBB or RRGGBB)
+  const hexPattern = /^#?([0-9A-Fa-f]{6})$/;
+  const match = backgroundColor.match(hexPattern);
+
+  if (!match) {
+    // Invalid format - fall back to white for safety
+    return '#FFFFFF';
+  }
+
   // Parse hex color
-  const hex = backgroundColor.replace('#', '');
+  const hex = match[1];
   const r = parseInt(hex.substring(0, 2), 16);
   const g = parseInt(hex.substring(2, 4), 16);
   const b = parseInt(hex.substring(4, 6), 16);
+
+  // Additional validation: ensure parsed values are valid numbers
+  if (isNaN(r) || isNaN(g) || isNaN(b)) {
+    return '#FFFFFF';
+  }
 
   const bgLuminance = getLuminance(r, g, b);
   const whiteLuminance = 1; // White has luminance of 1
