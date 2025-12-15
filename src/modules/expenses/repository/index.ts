@@ -78,25 +78,25 @@ export const addExpense = async (expenseData: CreateExpenseInput): Promise<Expen
 
   // Default to "Other" category if not provided
   const categoryId = expenseData.categoryId ?? 'cat-other';
-
-  // Validate categoryId exists
-  const categoryExists = await db
-    .select({ id: expenseCategories.id })
-    .from(expenseCategories)
-    .where(eq(expenseCategories.id, categoryId))
-    .limit(1);
-
-  if (!categoryExists.length) {
-    expenseLogger.error('Invalid category ID', { categoryId });
-    throw new Error(`Category not found: ${categoryId}`);
-  }
-
   const now = new Date().toISOString();
   const expenseId = Crypto.randomUUID();
 
   expenseLogger.debug('Creating expense', { expenseId, tripId: expenseData.tripId, amountMinor: convertedAmountMinor, categoryId });
 
   return db.transaction(async (tx) => {
+    // Validate categoryId exists
+    const categoryExists = await tx
+      .select({ id: expenseCategories.id })
+      .from(expenseCategories)
+      .where(eq(expenseCategories.id, categoryId))
+      .limit(1);
+
+    if (!categoryExists.length) {
+      expenseLogger.error('Invalid category ID', { categoryId });
+      const error = new Error(`Category not found: ${categoryId}`) as Error & { code: string };
+      error.code = 'CATEGORY_NOT_FOUND';
+      throw error;
+    }
     const [insertedExpense] = await tx
       .insert(expensesTable)
       .values({
@@ -174,22 +174,7 @@ export const updateExpense = async (id: string, patch: UpdateExpenseInput): Prom
     patch.convertedAmountMinor ?? existing.convertedAmountMinor,
   );
 
-  // If categoryId is provided, validate it
-  let categoryId = patch.categoryId ?? existing.categoryId;
-  if (patch.categoryId !== undefined) {
-    const categoryExists = await db
-      .select({ id: expenseCategories.id })
-      .from(expenseCategories)
-      .where(eq(expenseCategories.id, patch.categoryId))
-      .limit(1);
-
-    if (!categoryExists.length) {
-      expenseLogger.error('Invalid category ID', { categoryId: patch.categoryId });
-      throw new Error(`Category not found: ${patch.categoryId}`);
-    }
-    categoryId = patch.categoryId;
-  }
-
+  const categoryId = patch.categoryId ?? existing.categoryId;
   const now = new Date().toISOString();
   const updatePayload: Partial<typeof expensesTable.$inferInsert> = {
     description: patch.description ?? existing.description,
@@ -209,6 +194,22 @@ export const updateExpense = async (id: string, patch: UpdateExpenseInput): Prom
   expenseLogger.debug('Updating expense', { expenseId: id, tripId: existing.tripId });
 
   return db.transaction(async (tx) => {
+    // If categoryId is being updated, validate it exists
+    if (patch.categoryId !== undefined) {
+      const categoryExists = await tx
+        .select({ id: expenseCategories.id })
+        .from(expenseCategories)
+        .where(eq(expenseCategories.id, patch.categoryId))
+        .limit(1);
+
+      if (!categoryExists.length) {
+        expenseLogger.error('Invalid category ID', { categoryId: patch.categoryId });
+        const error = new Error(`Category not found: ${patch.categoryId}`) as Error & { code: string };
+        error.code = 'CATEGORY_NOT_FOUND';
+        throw error;
+      }
+    }
+
     const [updated] = await tx.update(expensesTable).set(updatePayload).where(eq(expensesTable.id, id)).returning();
 
     if (patch.splits) {

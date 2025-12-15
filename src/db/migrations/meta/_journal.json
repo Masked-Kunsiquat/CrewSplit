@@ -22,6 +22,13 @@
       "when": 1765757400000,
       "tag": "0002_seed_system_categories",
       "breakpoints": false
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1734192000000,
+      "tag": "0003_fix_category_fk_restrict",
+      "breakpoints": true
     }
   ]
 }
