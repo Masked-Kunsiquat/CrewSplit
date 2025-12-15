@@ -97,34 +97,36 @@ export default function CreateTripScreen() {
           editable={!isCreating}
         />
 
-        <View>
-          <Text style={styles.label}>Trip Emoji (optional)</Text>
-          <TouchableOpacity
-            style={styles.emojiButton}
-            onPress={() => setEmojiPickerOpen(true)}
-            disabled={isCreating}
-          >
-            <Text style={styles.emojiText}>{emoji || '+ Add emoji'}</Text>
-          </TouchableOpacity>
-          {emoji && (
+        <View style={styles.row}>
+          <View style={styles.halfColumn}>
+            <Text style={styles.label}>Trip Emoji (optional)</Text>
             <TouchableOpacity
-              onPress={() => setEmoji(undefined)}
-              style={styles.clearEmojiButton}
+              style={styles.emojiButton}
+              onPress={() => setEmojiPickerOpen(true)}
               disabled={isCreating}
             >
-              <Text style={styles.clearEmojiText}>Clear</Text>
+              <Text style={styles.emojiText}>{emoji || '➕'}</Text>
             </TouchableOpacity>
-          )}
-        </View>
+            {emoji && (
+              <TouchableOpacity
+                onPress={() => setEmoji(undefined)}
+                style={styles.clearEmojiButton}
+                disabled={isCreating}
+              >
+                <Text style={styles.clearEmojiText}>Clear</Text>
+              </TouchableOpacity>
+            )}
+          </View>
 
-        <View>
-          <Text style={styles.label}>Trip Currency</Text>
-          <CurrencyPicker
-            value={currency}
-            onChange={setCurrency}
-            label={undefined}
-            placeholder="Select currency"
-          />
+          <View style={styles.halfColumn}>
+            <Text style={styles.label}>Trip Currency</Text>
+            <CurrencyPicker
+              value={currency}
+              onChange={setCurrency}
+              label={undefined}
+              placeholder="Select currency"
+            />
+          </View>
         </View>
 
         <DateRangePicker
@@ -208,6 +210,13 @@ const styles = StyleSheet.create({
   multiLine: {
     textAlignVertical: 'top',
     minHeight: 96,
+  },
+  row: {
+    flexDirection: 'row',
+    gap: theme.spacing.md,
+  },
+  halfColumn: {
+    flex: 1,
   },
   emojiButton: {
     borderWidth: 1,

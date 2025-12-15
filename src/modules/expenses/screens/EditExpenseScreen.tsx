@@ -19,6 +19,7 @@ import {
 } from '@ui/components';
 import { useTripById } from '../../trips/hooks/use-trips';
 import { useParticipants } from '../../participants/hooks/use-participants';
+import { useExpenseCategories } from '../hooks/use-expense-categories';
 import { useExpenseWithSplits } from '../hooks/use-expenses';
 import { useUpdateExpense } from '../hooks/use-expense-mutations';
 import { parseCurrency } from '@utils/currency';
@@ -82,6 +83,7 @@ function EditExpenseScreenContent({ tripId, expenseId }: { tripId: string; expen
   const navigation = useNavigation();
   const { trip, loading: tripLoading } = useTripById(tripId);
   const { participants, loading: participantsLoading } = useParticipants(tripId);
+  const { categories, loading: categoriesLoading } = useExpenseCategories(tripId);
   const { expense, splits, loading: expenseLoading } = useExpenseWithSplits(expenseId);
   const { update, loading: updateLoading } = useUpdateExpense();
 
@@ -99,6 +101,7 @@ function EditExpenseScreenContent({ tripId, expenseId }: { tripId: string; expen
   const [amount, setAmount] = useState('');
   const [date, setDate] = useState(new Date());
   const [paidBy, setPaidBy] = useState<string | null>(null);
+  const [categoryId, setCategoryId] = useState<string>('cat-other');
 
   // Split configuration
   const [splitType, setSplitType] = useState<SplitType>('equal');
@@ -115,6 +118,7 @@ function EditExpenseScreenContent({ tripId, expenseId }: { tripId: string; expen
     setAmount((expense.originalAmountMinor / 100).toFixed(2));
     setDate(new Date(expense.date));
     setPaidBy(expense.paidBy);
+    setCategoryId(expense.categoryId || 'cat-other');
 
     // Determine split type from first split
     if (splits.length > 0) {
@@ -401,6 +405,7 @@ function EditExpenseScreenContent({ tripId, expenseId }: { tripId: string; expen
         originalAmountMinor: amountMinor,
         originalCurrency: expense.originalCurrency ?? trip.currency,
         paidBy,
+        categoryId,
         date: date.toISOString(),
         splits: updatedSplits,
       });
@@ -414,7 +419,7 @@ function EditExpenseScreenContent({ tripId, expenseId }: { tripId: string; expen
     }
   };
 
-  const loading = tripLoading || participantsLoading || expenseLoading;
+  const loading = tripLoading || participantsLoading || expenseLoading || categoriesLoading;
   const isSaving = updateLoading;
 
   const canSubmit =
@@ -495,30 +500,53 @@ function EditExpenseScreenContent({ tripId, expenseId }: { tripId: string; expen
           editable={!isSaving}
         />
 
-        <Input
-          label={`Amount (${trip.currency})`}
-          placeholder="0.00"
-          value={amount}
-          onChangeText={setAmount}
-          keyboardType="decimal-pad"
-          editable={!isSaving}
-        />
+        <View style={styles.row}>
+          <View style={styles.halfColumn}>
+            <Input
+              label={`Amount (${trip.currency})`}
+              placeholder="0.00"
+              value={amount}
+              onChangeText={setAmount}
+              keyboardType="decimal-pad"
+              editable={!isSaving}
+            />
+          </View>
 
-        <DatePicker
-          label="Date"
-          value={date}
-          initialDate={trip ? new Date(trip.startDate) : undefined}
-          onChange={setDate}
-          maximumDate={new Date()}
-        />
+          <View style={styles.halfColumn}>
+            <DatePicker
+              label="Date"
+              value={date}
+              initialDate={trip ? new Date(trip.startDate) : undefined}
+              onChange={setDate}
+              maximumDate={new Date()}
+            />
+          </View>
+        </View>
 
-        <Picker
-          label="Paid by"
-          value={paidBy || ''}
-          options={payerOptions}
-          onChange={handlePaidByChange}
-          placeholder="Select payer"
-        />
+        <View style={styles.row}>
+          <View style={styles.halfColumn}>
+            <Picker
+              label="Paid by"
+              value={paidBy || ''}
+              options={payerOptions}
+              onChange={handlePaidByChange}
+              placeholder="Select payer"
+            />
+          </View>
+
+          <View style={styles.halfColumn}>
+            <Picker
+              label="Category"
+              value={categoryId}
+              options={categories.map((cat) => ({
+                label: `${cat.emoji} ${cat.name}`,
+                value: cat.id,
+              }))}
+              onChange={setCategoryId}
+              placeholder="Select category"
+            />
+          </View>
+        </View>
 
         <Checkbox
           checked={isPersonalExpense}
@@ -615,6 +643,13 @@ const styles = StyleSheet.create({
   content: {
     padding: theme.spacing.lg,
     gap: theme.spacing.md,
+  },
+  row: {
+    flexDirection: 'row',
+    gap: theme.spacing.md,
+  },
+  halfColumn: {
+    flex: 1,
   },
   centerContent: {
     flex: 1,

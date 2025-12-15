@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Alert, TouchableOpacity } from 'react-native';
 import { useRouter, useLocalSearchParams, useNavigation } from 'expo-router';
+import EmojiPicker from 'rn-emoji-keyboard';
 import { theme } from '@ui/theme';
 import { Button, Card, Input } from '@ui/components';
 import { useTripById } from '../hooks/use-trips';
@@ -38,6 +39,8 @@ function TripDashboardScreenContent({ tripId }: { tripId: string }) {
 
   const [editingName, setEditingName] = useState(false);
   const [nameInput, setNameInput] = useState('');
+  const [emojiInput, setEmojiInput] = useState<string | undefined>(undefined);
+  const [emojiPickerOpen, setEmojiPickerOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
   // Update native header title when trip loads
@@ -56,6 +59,7 @@ function TripDashboardScreenContent({ tripId }: { tripId: string }) {
 
   const handleEditName = () => {
     setNameInput(trip?.name || '');
+    setEmojiInput(trip?.emoji);
     setEditingName(true);
   };
 
@@ -66,19 +70,23 @@ function TripDashboardScreenContent({ tripId }: { tripId: string }) {
     }
 
     try {
-      const updated = await updateTrip(tripId, { name: nameInput.trim() });
+      const updated = await updateTrip(tripId, {
+        name: nameInput.trim(),
+        emoji: emojiInput,
+      });
       navigation.setOptions({ title: updated.name });
       refetchTrip();
       setEditingName(false);
       // Trip will refresh automatically via hook
     } catch (error) {
-      Alert.alert('Error', 'Failed to update trip name');
+      Alert.alert('Error', 'Failed to update trip');
     }
   };
 
   const handleCancelEdit = () => {
     setEditingName(false);
     setNameInput('');
+    setEmojiInput(undefined);
   };
 
   const handleDeleteTrip = () => {
@@ -138,6 +146,25 @@ function TripDashboardScreenContent({ tripId }: { tripId: string }) {
               onChangeText={setNameInput}
               autoFocus
             />
+
+            <View>
+              <Text style={styles.editLabel}>Trip Emoji (optional)</Text>
+              <TouchableOpacity
+                style={styles.emojiEditButton}
+                onPress={() => setEmojiPickerOpen(true)}
+              >
+                <Text style={styles.emojiEditText}>{emojiInput || '+ Add emoji'}</Text>
+              </TouchableOpacity>
+              {emojiInput && (
+                <TouchableOpacity
+                  onPress={() => setEmojiInput(undefined)}
+                  style={styles.clearEmojiButton}
+                >
+                  <Text style={styles.clearEmojiText}>Clear</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+
             <View style={styles.buttonRow}>
               <View style={styles.buttonHalf}>
                 <Button
@@ -245,6 +272,15 @@ function TripDashboardScreenContent({ tripId }: { tripId: string }) {
       <View style={styles.footer}>
         <Button title="Add Expense" onPress={() => router.push(`/trips/${tripId}/expenses/add`)} fullWidth />
       </View>
+
+      <EmojiPicker
+        onEmojiSelected={(emojiObject) => {
+          setEmojiInput(emojiObject.emoji);
+          setEmojiPickerOpen(false);
+        }}
+        open={emojiPickerOpen}
+        onClose={() => setEmojiPickerOpen(false)}
+      />
     </View>
   );
 }
@@ -298,6 +334,34 @@ const styles = StyleSheet.create({
   },
   editCard: {
     backgroundColor: theme.colors.surfaceElevated,
+  },
+  editLabel: {
+    fontSize: theme.typography.sm,
+    fontWeight: theme.typography.semibold,
+    color: theme.colors.text,
+    marginBottom: theme.spacing.xs,
+  },
+  emojiEditButton: {
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    borderRadius: theme.spacing.sm,
+    padding: theme.spacing.md,
+    backgroundColor: theme.colors.surface,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 56,
+  },
+  emojiEditText: {
+    fontSize: 32,
+    color: theme.colors.text,
+  },
+  clearEmojiButton: {
+    marginTop: theme.spacing.xs,
+    alignSelf: 'flex-end',
+  },
+  clearEmojiText: {
+    fontSize: theme.typography.sm,
+    color: theme.colors.error,
   },
   buttonRow: {
     flexDirection: 'row',

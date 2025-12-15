@@ -464,41 +464,53 @@ function AddExpenseScreenContent({ tripId }: { tripId: string }) {
           editable={!isCreating}
         />
 
-        <Input
-          label={`Amount (${trip.currency})`}
-          placeholder="0.00"
-          value={amount}
-          onChangeText={setAmount}
-          keyboardType="decimal-pad"
-          editable={!isCreating}
-        />
+        <View style={styles.row}>
+          <View style={styles.halfColumn}>
+            <Input
+              label={`Amount (${trip.currency})`}
+              placeholder="0.00"
+              value={amount}
+              onChangeText={setAmount}
+              keyboardType="decimal-pad"
+              editable={!isCreating}
+            />
+          </View>
 
-        <DatePicker
-          label="Date"
-          value={date}
-          initialDate={trip ? new Date(trip.startDate) : undefined}
-          onChange={setDate}
-          maximumDate={new Date()}
-        />
+          <View style={styles.halfColumn}>
+            <DatePicker
+              label="Date"
+              value={date}
+              initialDate={trip ? new Date(trip.startDate) : undefined}
+              onChange={setDate}
+              maximumDate={new Date()}
+            />
+          </View>
+        </View>
 
-        <Picker
-          label="Paid by"
-          value={paidBy || ''}
-          options={payerOptions}
-          onChange={handlePaidByChange}
-          placeholder="Select payer"
-        />
+        <View style={styles.row}>
+          <View style={styles.halfColumn}>
+            <Picker
+              label="Paid by"
+              value={paidBy || ''}
+              options={payerOptions}
+              onChange={handlePaidByChange}
+              placeholder="Select payer"
+            />
+          </View>
 
-        <Picker
-          label="Category"
-          value={categoryId}
-          options={categories.map((cat) => ({
-            label: `${cat.emoji} ${cat.name}`,
-            value: cat.id,
-          }))}
-          onChange={setCategoryId}
-          placeholder="Select category"
-        />
+          <View style={styles.halfColumn}>
+            <Picker
+              label="Category"
+              value={categoryId}
+              options={categories.map((cat) => ({
+                label: `${cat.emoji} ${cat.name}`,
+                value: cat.id,
+              }))}
+              onChange={setCategoryId}
+              placeholder="Select category"
+            />
+          </View>
+        </View>
 
         <Checkbox
           checked={isPersonalExpense}
@@ -595,6 +607,13 @@ const styles = StyleSheet.create({
   content: {
     padding: theme.spacing.lg,
     gap: theme.spacing.md,
+  },
+  row: {
+    flexDirection: 'row',
+    gap: theme.spacing.md,
+  },
+  halfColumn: {
+    flex: 1,
   },
   centerContent: {
     flex: 1,
