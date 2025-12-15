@@ -17,7 +17,8 @@ export function useExpenses(tripId: string | null) {
     () => (tripId ? getExpensesForTrip(tripId) : Promise.resolve<Expense[]>([])),
     [tripId],
     [],
-    'Failed to load expenses'
+    'Failed to load expenses',
+    true // Enable refetch on focus to reflect create/edit changes
   );
 
   return { expenses, loading, error };

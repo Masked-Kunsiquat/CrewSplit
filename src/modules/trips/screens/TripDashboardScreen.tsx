@@ -209,11 +209,11 @@ function TripDashboardScreenContent({ tripId }: { tripId: string }) {
             {trip.emoji && <Text style={styles.headerEmoji}>{trip.emoji}</Text>}
             <View style={styles.titleContainer}>
               <Text style={styles.title}>{trip.name}</Text>
+              <Text style={styles.subtitle}>{trip.currency}</Text>
               <Text style={styles.subtitle}>
-                {trip.currency}
                 {trip.endDate
-                  ? ` • ${new Date(trip.startDate).toLocaleDateString()} - ${new Date(trip.endDate).toLocaleDateString()}`
-                  : ` • ${new Date(trip.startDate).toLocaleDateString()}`
+                  ? `${new Date(trip.startDate).toLocaleDateString()} - ${new Date(trip.endDate).toLocaleDateString()}`
+                  : new Date(trip.startDate).toLocaleDateString()
                 }
               </Text>
             </View>
