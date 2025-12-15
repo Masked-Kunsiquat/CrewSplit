@@ -83,7 +83,7 @@ function EditExpenseScreenContent({ tripId, expenseId }: { tripId: string; expen
   const navigation = useNavigation();
   const { trip, loading: tripLoading } = useTripById(tripId);
   const { participants, loading: participantsLoading } = useParticipants(tripId);
-  const { categories, loading: categoriesLoading } = useExpenseCategories(tripId);
+  const { categories, loading: categoriesLoading, error: categoriesError } = useExpenseCategories(tripId);
   const { expense, splits, loading: expenseLoading } = useExpenseWithSplits(expenseId);
   const { update, loading: updateLoading } = useUpdateExpense();
 
@@ -435,6 +435,24 @@ function EditExpenseScreenContent({ tripId, expenseId }: { tripId: string; expen
         <View style={styles.centerContent}>
           <ActivityIndicator size="large" color={theme.colors.primary} />
           <Text style={styles.loadingText}>Loading expense...</Text>
+        </View>
+      </View>
+    );
+  }
+
+  // Handle categories error
+  if (categoriesError) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.centerContent}>
+          <Text style={styles.errorTitle}>Failed to Load Categories</Text>
+          <Text style={styles.errorText}>
+            {categoriesError.message || 'Unable to load expense categories. Please try again.'}
+          </Text>
+          <Button
+            title="Go back"
+            onPress={() => router.back()}
+          />
         </View>
       </View>
     );

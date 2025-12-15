@@ -5,7 +5,7 @@
 
 import { useEffect, useState } from 'react';
 import { ExpenseCategory } from '../types';
-import { ExpenseCategoryRepository } from '../repository/ExpenseCategoryRepository';
+import { ExpenseCategoryRepository } from '../repository/expense-category-repository';
 
 export const useExpenseCategories = (tripId: string) => {
   const [categories, setCategories] = useState<ExpenseCategory[]>([]);

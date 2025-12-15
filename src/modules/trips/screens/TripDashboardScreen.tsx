@@ -95,6 +95,7 @@ function TripDashboardScreenContent({ tripId }: { tripId: string }) {
     setEditingName(false);
     setNameInput('');
     setEmojiInput(undefined);
+    setEndDateInput(null);
   };
 
   const handleDeleteTrip = () => {
