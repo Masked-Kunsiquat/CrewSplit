@@ -143,6 +143,10 @@ function TripDashboardScreenContent({ tripId }: { tripId: string }) {
     );
   }
 
+  const startDateLabel = new Date(trip.startDate).toLocaleDateString();
+  const endDateLabel = trip.endDate ? new Date(trip.endDate).toLocaleDateString() : null;
+  const dateRangeLabel = endDateLabel ? `${startDateLabel} - ${endDateLabel}` : startDateLabel;
+
   return (
     <View style={styles.container}>
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
@@ -230,15 +234,13 @@ function TripDashboardScreenContent({ tripId }: { tripId: string }) {
           </Card>
         ) : (
           <View style={styles.header}>
-            {trip.emoji && <Text style={styles.headerEmoji}>{trip.emoji}</Text>}
-            <View style={styles.titleContainer}>
-              <Text style={styles.title}>{trip.name}</Text>
-              <Text style={styles.subtitle}>
-                {trip.currency} • {trip.endDate
-                  ? `${new Date(trip.startDate).toLocaleDateString()} - ${new Date(trip.endDate).toLocaleDateString()}`
-                  : new Date(trip.startDate).toLocaleDateString()
-                }
-              </Text>
+            <View style={styles.headerMain}>
+              {trip.emoji && <Text style={styles.headerEmoji}>{trip.emoji}</Text>}
+              <View style={styles.titleContainer}>
+                <Text style={styles.title}>{trip.name}</Text>
+                <Text style={styles.subtitle}>{trip.currency}</Text>
+                <Text style={[styles.subtitle, styles.dateLine]}>{dateRangeLabel}</Text>
+              </View>
             </View>
             <TouchableOpacity
               onPress={handleEditName}
@@ -248,7 +250,7 @@ function TripDashboardScreenContent({ tripId }: { tripId: string }) {
               accessibilityLabel="Edit trip name"
               accessibilityHint="Opens the edit screen for the trip name"
             >
-              <Text style={styles.editButtonText}>Edit</Text>
+              <Text style={styles.editButtonText}>✏️</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -371,8 +373,14 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     gap: theme.spacing.md,
+  },
+  headerMain: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: theme.spacing.md,
+    flex: 1,
   },
   headerEmoji: {
     fontSize: 48,
@@ -390,12 +398,16 @@ const styles = StyleSheet.create({
     color: theme.colors.textSecondary,
     marginTop: theme.spacing.xs,
   },
+  dateLine: {
+    marginTop: theme.spacing.xs / 2,
+  },
   editButton: {
-    padding: theme.spacing.sm,
-    paddingHorizontal: theme.spacing.md,
+    padding: theme.spacing.xs,
+    paddingHorizontal: theme.spacing.sm,
     borderRadius: 8,
     borderWidth: 1,
     borderColor: theme.colors.border,
+    alignSelf: 'flex-start',
   },
   editButtonText: {
     fontSize: theme.typography.sm,
