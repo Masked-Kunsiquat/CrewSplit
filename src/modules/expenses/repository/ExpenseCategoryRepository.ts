@@ -91,23 +91,29 @@ export const createCategory = async (
  * Cannot delete system categories
  */
 export const archiveCategory = async (id: string): Promise<void> => {
-  const existing = await db
-    .select()
-    .from(expenseCategories)
-    .where(eq(expenseCategories.id, id))
-    .limit(1);
+  await db.transaction(async (tx) => {
+    const existing = await tx
+      .select()
+      .from(expenseCategories)
+      .where(eq(expenseCategories.id, id))
+      .limit(1);
 
-  if (!existing.length) {
-    throw new Error(`Category not found: ${id}`);
-  }
-  if (existing[0].isSystem) {
-    throw new Error('Cannot archive system categories');
-  }
+    if (!existing.length) {
+      const error = new Error(`Category not found: ${id}`) as Error & { code: string };
+      error.code = 'CATEGORY_NOT_FOUND';
+      throw error;
+    }
+    if (existing[0].isSystem) {
+      const error = new Error('Cannot archive system categories') as Error & { code: string };
+      error.code = 'CANNOT_ARCHIVE_SYSTEM_CATEGORY';
+      throw error;
+    }
 
-  await db
-    .update(expenseCategories)
-    .set({ isArchived: true, updatedAt: new Date().toISOString() })
-    .where(eq(expenseCategories.id, id));
+    await tx
+      .update(expenseCategories)
+      .set({ isArchived: true, updatedAt: new Date().toISOString() })
+      .where(eq(expenseCategories.id, id));
+  });
 };
 
 export const ExpenseCategoryRepository = {
