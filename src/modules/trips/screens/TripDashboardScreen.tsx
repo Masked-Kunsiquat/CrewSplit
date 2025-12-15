@@ -157,11 +157,11 @@ function TripDashboardScreenContent({ tripId }: { tripId: string }) {
               autoFocus
             />
 
-            <View style={styles.row}>
-              <View style={styles.halfColumn}>
-                <Text style={styles.editLabel}>Trip Emoji (optional)</Text>
+            <View style={styles.emojiRow}>
+              <Text style={styles.editLabel}>Trip Emoji (optional)</Text>
+              <View style={styles.emojiControls}>
                 <TouchableOpacity
-                  style={styles.emojiEditButton}
+                  style={styles.emojiEditButtonCompact}
                   onPress={() => setEmojiPickerOpen(true)}
                 >
                   <Text style={styles.emojiEditText}>{emojiInput || '➕'}</Text>
@@ -169,24 +169,22 @@ function TripDashboardScreenContent({ tripId }: { tripId: string }) {
                 {emojiInput && (
                   <TouchableOpacity
                     onPress={() => setEmojiInput(undefined)}
-                    style={styles.clearEmojiButton}
+                    style={styles.clearEmojiButtonInline}
                   >
                     <Text style={styles.clearEmojiText}>Clear</Text>
                   </TouchableOpacity>
                 )}
               </View>
-
-              <View style={styles.halfColumn}>
-                <DateRangePicker
-                  startLabel="Start Date"
-                  endLabel="End Date (optional)"
-                  startDate={startDateInput}
-                  endDate={endDateInput}
-                  onStartChange={setStartDateInput}
-                  onEndChange={setEndDateInput}
-                />
-              </View>
             </View>
+
+            <DateRangePicker
+              startLabel="Start Date"
+              endLabel="End Date (optional)"
+              startDate={startDateInput}
+              endDate={endDateInput}
+              onStartChange={setStartDateInput}
+              onEndChange={setEndDateInput}
+            />
 
             <View style={styles.buttonRow}>
               <View style={styles.buttonHalf}>
@@ -389,7 +387,16 @@ const styles = StyleSheet.create({
     fontSize: theme.typography.sm,
     fontWeight: theme.typography.semibold,
     color: theme.colors.text,
-    marginBottom: theme.spacing.xs,
+  },
+  emojiRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  emojiControls: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.sm,
   },
   emojiEditButton: {
     borderWidth: 1,
@@ -401,6 +408,16 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     minHeight: 56,
   },
+  emojiEditButtonCompact: {
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    borderRadius: theme.spacing.sm,
+    paddingVertical: theme.spacing.xs,
+    paddingHorizontal: theme.spacing.md,
+    backgroundColor: theme.colors.surface,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   emojiEditText: {
     fontSize: 32,
     color: theme.colors.text,
@@ -408,6 +425,10 @@ const styles = StyleSheet.create({
   clearEmojiButton: {
     marginTop: theme.spacing.xs,
     alignSelf: 'flex-end',
+  },
+  clearEmojiButtonInline: {
+    paddingVertical: theme.spacing.xs,
+    paddingHorizontal: theme.spacing.sm,
   },
   clearEmojiText: {
     fontSize: theme.typography.sm,
