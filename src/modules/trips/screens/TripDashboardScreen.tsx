@@ -9,6 +9,7 @@ import { useParticipants } from '../../participants/hooks/use-participants';
 import { useExpenses } from '../../expenses/hooks/use-expenses';
 import { updateTrip, deleteTrip } from '../repository';
 import { formatCurrency } from '@utils/currency';
+import { useRefreshControl } from '@hooks/use-refresh-control';
 
 export default function TripDashboardScreen() {
   const router = useRouter();
@@ -34,8 +35,11 @@ function TripDashboardScreenContent({ tripId }: { tripId: string }) {
   const navigation = useNavigation();
 
   const { trip, loading: tripLoading, error: tripError, refetch: refetchTrip } = useTripById(tripId);
-  const { participants, loading: participantsLoading } = useParticipants(tripId ?? null);
-  const { expenses, loading: expensesLoading } = useExpenses(tripId ?? null);
+  const { participants, loading: participantsLoading, refetch: refetchParticipants } = useParticipants(tripId ?? null);
+  const { expenses, loading: expensesLoading, refetch: refetchExpenses } = useExpenses(tripId ?? null);
+
+  // Pull-to-refresh support
+  const refreshControl = useRefreshControl([refetchTrip, refetchParticipants, refetchExpenses]);
 
   const [editingName, setEditingName] = useState(false);
   const [nameInput, setNameInput] = useState('');
@@ -150,7 +154,11 @@ function TripDashboardScreenContent({ tripId }: { tripId: string }) {
 
   return (
     <View style={styles.container}>
-      <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.content}
+        refreshControl={refreshControl}
+      >
         {editingName ? (
           <Card style={styles.editCard}>
             <Input

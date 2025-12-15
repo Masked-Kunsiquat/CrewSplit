@@ -16,6 +16,7 @@ import { formatCurrency } from '@utils/currency';
 import { defaultFxRateProvider } from '@modules/settlement/service/DisplayCurrencyAdapter';
 import { deleteExpense } from '../repository';
 import { currencyLogger } from '@utils/logger';
+import { useRefreshControl } from '@hooks/use-refresh-control';
 
 export default function ExpenseDetailsScreen() {
   const router = useRouter();
@@ -49,11 +50,14 @@ function ExpenseDetailsContent({ tripId, expenseId }: { tripId: string; expenseI
   const [isDeleting, setIsDeleting] = useState(false);
   const [editingExpense, setEditingExpense] = useState(false);
 
-  const { expense, splits, loading: expenseLoading, error: expenseError } = useExpenseWithSplits(
+  const { expense, splits, loading: expenseLoading, error: expenseError, refetch: refetchExpense } = useExpenseWithSplits(
     expenseId
   );
-  const { participants, loading: participantsLoading } = useParticipants(tripId);
+  const { participants, loading: participantsLoading, refetch: refetchParticipants } = useParticipants(tripId);
   const { categories } = useExpenseCategories(tripId);
+
+  // Pull-to-refresh support (note: categories hook doesn't expose refetch, uses dependency-based refresh)
+  const refreshControl = useRefreshControl([refetchExpense, refetchParticipants]);
 
   // Update native header title with category emoji
   useEffect(() => {
@@ -170,7 +174,11 @@ function ExpenseDetailsContent({ tripId, expenseId }: { tripId: string; expenseI
 
   return (
     <View style={styles.container}>
-      <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.content}
+        refreshControl={refreshControl}
+      >
         {/* Main Expense Info */}
         <Card style={styles.section}>
           <View style={styles.header}>
