@@ -18,16 +18,17 @@ const mapTrip = (row: TripRow): Trip => ({
   endDate: row.endDate ?? undefined,
   currency: row.currency,
   currencyCode: row.currencyCode,
+  emoji: row.emoji ?? undefined,
   createdAt: row.createdAt,
   updatedAt: row.updatedAt,
 });
 
-export const createTrip = async ({ name, currencyCode, description, startDate, endDate }: CreateTripInput): Promise<Trip> => {
+export const createTrip = async ({ name, currencyCode, description, startDate, endDate, emoji }: CreateTripInput): Promise<Trip> => {
   const now = new Date().toISOString();
   const tripId = Crypto.randomUUID();
   const effectiveStartDate = startDate ?? now;
 
-  tripLogger.debug('Creating trip', { tripId, name, currencyCode });
+  tripLogger.debug('Creating trip', { tripId, name, currencyCode, emoji });
 
   const [created] = await db
     .insert(tripsTable)
@@ -39,6 +40,7 @@ export const createTrip = async ({ name, currencyCode, description, startDate, e
       endDate,
       currency: currencyCode,
       currencyCode,
+      emoji,
       createdAt: now,
       updatedAt: now,
     })
@@ -73,6 +75,7 @@ export const updateTrip = async (id: string, patch: UpdateTripInput): Promise<Tr
   if (patch.name !== undefined) updatePayload.name = patch.name;
   if (patch.description !== undefined) updatePayload.description = patch.description;
   if (patch.endDate !== undefined) updatePayload.endDate = patch.endDate;
+  if (patch.emoji !== undefined) updatePayload.emoji = patch.emoji;
   if (patch.currencyCode !== undefined) {
     updatePayload.currencyCode = patch.currencyCode;
     updatePayload.currency = patch.currencyCode;

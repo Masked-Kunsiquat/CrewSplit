@@ -7,3 +7,4 @@ export * from './trips';
 export * from './participants';
 export * from './expenses';
 export * from './expense-splits';
+export * from './expense-categories';

@@ -7,6 +7,7 @@ import { sql } from 'drizzle-orm';
 import { sqliteTable, text, integer, real } from 'drizzle-orm/sqlite-core';
 import { trips } from './trips';
 import { participants } from './participants';
+import { expenseCategories } from './expense-categories';
 
 /**
  * EXPENSES TABLE
@@ -48,8 +49,16 @@ export const expenses = sqliteTable('expenses', {
     .notNull()
     .references(() => participants.id, { onDelete: 'restrict' }),
 
-  // Optional category for filtering/reporting
-  category: text('category'),
+  /**
+   * Category reference
+   * - If categoryId is set: FK to expense_categories table (RESTRICT on delete)
+   * - If categoryId is NULL but category is set: legacy free-form text (pre-migration)
+   * - Migration strategy: Populate categoryId from category text, fallback to "Other"
+   */
+  categoryId: text('category_id').references(() => expenseCategories.id, {
+    onDelete: 'restrict',
+  }),
+  category: text('category'), // DEPRECATED: Keep for backward compat during migration
 
   // Date of expense (ISO 8601 string)
   date: text('date').notNull(),

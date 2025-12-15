@@ -26,6 +26,9 @@ export const trips = sqliteTable('trips', {
   currency: text('currency').notNull().default('USD'),
   currencyCode: text('currency_code').notNull().default('USD'),
 
+  // Optional emoji for visual identification
+  emoji: text('emoji'),
+
   // Timestamps
   createdAt: text('created_at')
     .notNull()

@@ -2,6 +2,25 @@
  * EXPENSES MODULE - Type Definitions
  */
 
+export interface ExpenseCategory {
+  id: string;
+  name: string;
+  emoji: string;
+  tripId?: string | null; // NULL = global, otherwise trip-specific
+  isSystem: boolean;
+  sortOrder: number;
+  isArchived: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateExpenseCategoryInput {
+  name: string;
+  emoji: string;
+  tripId?: string | null; // NULL = global category
+  sortOrder?: number;
+}
+
 export interface Expense {
   id: string;
   tripId: string;
@@ -13,7 +32,8 @@ export interface Expense {
   fxRateToTrip?: number | null; // Null/undefined when currencies match
   convertedAmountMinor: number; // Always in trip currency minor units
   paidBy: string; // participantId
-  category?: string;
+  categoryId?: string; // FK to expense_categories
+  category?: string; // DEPRECATED: Legacy text field
   date: string; // ISO 8601
   createdAt: string;
   updatedAt: string;
@@ -35,7 +55,8 @@ export interface CreateExpenseInput {
   originalCurrency: string;
   fxRateToTrip?: number | null;
   paidBy: string;
-  category?: string;
+  categoryId?: string;
+  category?: never; // Prevent usage in new code
   date?: string;
   convertedAmountMinor?: number;
   splits: Array<{
@@ -53,7 +74,8 @@ export interface UpdateExpenseInput {
   fxRateToTrip?: number | null;
   convertedAmountMinor?: number;
   paidBy?: string;
-  category?: string;
+  categoryId?: string;
+  category?: never; // Prevent usage in new code
   date?: string;
   splits?: Array<{
     participantId: string;
