@@ -1,6 +1,6 @@
 /**
  * EXPENSE CATEGORIES HOOK
- * UI INTEGRATION: React hook for expense categories with trip scope
+ * UI/UX ENGINEER: React hook for expense categories with trip scope
  */
 
 import { useEffect, useState } from 'react';
