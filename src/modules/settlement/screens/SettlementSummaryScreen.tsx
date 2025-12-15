@@ -73,9 +73,7 @@ export default function SettlementSummaryScreen() {
           <Button
             title="Retry"
             onPress={() => {
-              if (refetchSettlement) {
-                refetchSettlement();
-              }
+              refetchSettlement();
             }}
           />
         </View>
