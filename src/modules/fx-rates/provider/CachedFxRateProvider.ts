@@ -91,6 +91,19 @@ export class CachedFxRateProvider implements FxRateProvider {
    * @returns Exchange rate (throws if not found)
    */
   getRate(fromCurrency: string, toCurrency: string): number {
+    if (!this.initialized) {
+      const error = new Error(
+        'CachedFxRateProvider not initialized. Call initialize() at app startup.'
+      ) as Error & { code: string };
+      error.code = 'FX_CACHE_NOT_INITIALIZED';
+      fxLogger.error('FX rate cache not initialized', {
+        fromCurrency,
+        toCurrency,
+        code: error.code,
+      });
+      throw error;
+    }
+
     // Same currency = 1.0
     if (fromCurrency === toCurrency) {
       return 1.0;
@@ -100,11 +113,13 @@ export class CachedFxRateProvider implements FxRateProvider {
     const cached = this.cache.get(key);
 
     if (!cached) {
-      fxLogger.error('FX rate not found in cache', { fromCurrency, toCurrency });
-      throw new Error(
-        `No exchange rate available for ${fromCurrency} to ${toCurrency}. ` +
-          `Please update rates or set a manual rate.`
-      );
+      const error = new Error(
+        `No exchange rate available for ${fromCurrency} to ${toCurrency}. Please update rates or set a manual rate.`
+      ) as Error & { code: string };
+      error.code = 'FX_RATE_NOT_FOUND';
+
+      fxLogger.error('FX rate not found in cache', { fromCurrency, toCurrency, code: error.code });
+      throw error;
     }
 
     fxLogger.debug('FX rate retrieved from cache', {
