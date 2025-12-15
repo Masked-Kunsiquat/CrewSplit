@@ -12,7 +12,7 @@ export { Card } from './Card';
 
 export { ParticipantChip } from './ParticipantChip';
 
-export { ParticipantListRow } from './ParticipantListRow';
+export { ParticipantListRow } from './participant-list-row';
 
 export { CurrencyPicker } from './CurrencyPicker';
 
