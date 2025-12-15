@@ -59,7 +59,7 @@ function ExpenseDetailsContent({ tripId, expenseId }: { tripId: string; expenseI
   useEffect(() => {
     if (expense) {
       const category = categories.find(c => c.id === expense.categoryId);
-      const title = category ? `${category.emoji} ${expense.description}` : expense.description;
+      const title = category ? `${expense.description}  •  ${category.emoji}` : expense.description;
       navigation.setOptions({
         title,
       });
