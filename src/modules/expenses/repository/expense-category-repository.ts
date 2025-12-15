@@ -58,10 +58,18 @@ export const getCategoryById = async (
 /**
  * Create custom category (trip-scoped)
  * System categories cannot be created via this method
+ * Custom categories must be associated with a trip
  */
 export const createCategory = async (
   input: CreateExpenseCategoryInput
 ): Promise<ExpenseCategory> => {
+  // Enforce trip-scoped requirement
+  if (!input.tripId || input.tripId.trim() === '') {
+    const error = new Error('Custom categories must be associated with a trip') as Error & { code: string };
+    error.code = 'TRIP_ID_REQUIRED';
+    throw error;
+  }
+
   const now = new Date().toISOString();
   const categoryId = Crypto.randomUUID();
 
@@ -71,7 +79,7 @@ export const createCategory = async (
       id: categoryId,
       name: input.name,
       emoji: input.emoji,
-      tripId: input.tripId ?? null,
+      tripId: input.tripId,
       isSystem: false,
       sortOrder: input.sortOrder ?? 1000,
       isArchived: false,

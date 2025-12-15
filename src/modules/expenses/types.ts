@@ -17,7 +17,7 @@ export interface ExpenseCategory {
 export interface CreateExpenseCategoryInput {
   name: string;
   emoji: string;
-  tripId?: string | null; // NULL = global category
+  tripId: string; // Trip-scoped custom categories only (global categories are system-managed)
   sortOrder?: number;
 }
 
