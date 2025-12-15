@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, Alert, TouchableOpacity } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useNavigation } from 'expo-router';
 import EmojiPicker from 'rn-emoji-keyboard';
 import { theme } from '@ui/theme';
 import { Button, Input, CurrencyPicker, DateRangePicker } from '@ui/components';
@@ -13,6 +13,7 @@ const AVATAR_COLORS = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#F7DC6F', '#BB8FCE', '#
 
 export default function CreateTripScreen() {
   const router = useRouter();
+  const navigation = useNavigation();
   const { deviceOwnerName } = useDeviceOwner();
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -23,6 +24,13 @@ export default function CreateTripScreen() {
   const [dateError, setDateError] = useState<string | null>(null);
   const [emoji, setEmoji] = useState<string | undefined>(undefined);
   const [emojiPickerOpen, setEmojiPickerOpen] = useState(false);
+
+  // Set dynamic header title
+  useEffect(() => {
+    navigation.setOptions({
+      title: 'Create Trip',
+    });
+  }, [navigation]);
 
   const handleStartDateChange = (date: Date) => {
     setStartDate(date);
@@ -175,6 +183,26 @@ export default function CreateTripScreen() {
         }}
         open={emojiPickerOpen}
         onClose={() => setEmojiPickerOpen(false)}
+        enableSearchBar
+        theme={{
+          backdrop: '#0a0a0a88',
+          knob: theme.colors.primary,
+          container: theme.colors.surface,
+          header: theme.colors.text,
+          skinTonesContainer: theme.colors.surfaceElevated,
+          category: {
+            icon: theme.colors.primary,
+            iconActive: theme.colors.text,
+            container: theme.colors.surfaceElevated,
+            containerActive: theme.colors.primary,
+          },
+          search: {
+            text: theme.colors.text,
+            placeholder: theme.colors.textMuted,
+            icon: theme.colors.textSecondary,
+            background: theme.colors.surfaceElevated,
+          },
+        }}
       />
     </KeyboardAvoidingView>
   );
@@ -190,6 +218,7 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: theme.spacing.lg,
+    paddingBottom: theme.spacing.xl * 3, // Extra padding to prevent button cutoff
     gap: theme.spacing.md,
   },
   title: {

@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Alert, Touchable
 import { useRouter, useLocalSearchParams, useNavigation } from 'expo-router';
 import EmojiPicker from 'rn-emoji-keyboard';
 import { theme } from '@ui/theme';
-import { Button, Card, Input } from '@ui/components';
+import { Button, Card, Input, DateRangePicker } from '@ui/components';
 import { useTripById } from '../hooks/use-trips';
 import { useParticipants } from '../../participants/hooks/use-participants';
 import { useExpenses } from '../../expenses/hooks/use-expenses';
@@ -41,6 +41,8 @@ function TripDashboardScreenContent({ tripId }: { tripId: string }) {
   const [nameInput, setNameInput] = useState('');
   const [emojiInput, setEmojiInput] = useState<string | undefined>(undefined);
   const [emojiPickerOpen, setEmojiPickerOpen] = useState(false);
+  const [startDateInput, setStartDateInput] = useState<Date>(new Date());
+  const [endDateInput, setEndDateInput] = useState<Date | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
   // Update native header title when trip loads
@@ -60,6 +62,8 @@ function TripDashboardScreenContent({ tripId }: { tripId: string }) {
   const handleEditName = () => {
     setNameInput(trip?.name || '');
     setEmojiInput(trip?.emoji);
+    setStartDateInput(trip?.startDate ? new Date(trip.startDate) : new Date());
+    setEndDateInput(trip?.endDate ? new Date(trip.endDate) : null);
     setEditingName(true);
   };
 
@@ -69,10 +73,16 @@ function TripDashboardScreenContent({ tripId }: { tripId: string }) {
       return;
     }
 
+    if (endDateInput && endDateInput < startDateInput) {
+      Alert.alert('Invalid Dates', 'End date must be on or after the start date.');
+      return;
+    }
+
     try {
       const updated = await updateTrip(tripId, {
         name: nameInput.trim(),
         emoji: emojiInput,
+        endDate: endDateInput?.toISOString(),
       });
       navigation.setOptions({ title: updated.name });
       refetchTrip();
@@ -147,22 +157,35 @@ function TripDashboardScreenContent({ tripId }: { tripId: string }) {
               autoFocus
             />
 
-            <View>
-              <Text style={styles.editLabel}>Trip Emoji (optional)</Text>
-              <TouchableOpacity
-                style={styles.emojiEditButton}
-                onPress={() => setEmojiPickerOpen(true)}
-              >
-                <Text style={styles.emojiEditText}>{emojiInput || '+ Add emoji'}</Text>
-              </TouchableOpacity>
-              {emojiInput && (
+            <View style={styles.row}>
+              <View style={styles.halfColumn}>
+                <Text style={styles.editLabel}>Trip Emoji (optional)</Text>
                 <TouchableOpacity
-                  onPress={() => setEmojiInput(undefined)}
-                  style={styles.clearEmojiButton}
+                  style={styles.emojiEditButton}
+                  onPress={() => setEmojiPickerOpen(true)}
                 >
-                  <Text style={styles.clearEmojiText}>Clear</Text>
+                  <Text style={styles.emojiEditText}>{emojiInput || '➕'}</Text>
                 </TouchableOpacity>
-              )}
+                {emojiInput && (
+                  <TouchableOpacity
+                    onPress={() => setEmojiInput(undefined)}
+                    style={styles.clearEmojiButton}
+                  >
+                    <Text style={styles.clearEmojiText}>Clear</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+
+              <View style={styles.halfColumn}>
+                <DateRangePicker
+                  startLabel="Start Date"
+                  endLabel="End Date (optional)"
+                  startDate={startDateInput}
+                  endDate={endDateInput}
+                  onStartChange={setStartDateInput}
+                  onEndChange={setEndDateInput}
+                />
+              </View>
             </View>
 
             <View style={styles.buttonRow}>
@@ -280,6 +303,26 @@ function TripDashboardScreenContent({ tripId }: { tripId: string }) {
         }}
         open={emojiPickerOpen}
         onClose={() => setEmojiPickerOpen(false)}
+        enableSearchBar
+        theme={{
+          backdrop: '#0a0a0a88',
+          knob: theme.colors.primary,
+          container: theme.colors.surface,
+          header: theme.colors.text,
+          skinTonesContainer: theme.colors.surfaceElevated,
+          category: {
+            icon: theme.colors.primary,
+            iconActive: theme.colors.text,
+            container: theme.colors.surfaceElevated,
+            containerActive: theme.colors.primary,
+          },
+          search: {
+            text: theme.colors.text,
+            placeholder: theme.colors.textMuted,
+            icon: theme.colors.textSecondary,
+            background: theme.colors.surfaceElevated,
+          },
+        }}
       />
     </View>
   );
@@ -296,6 +339,13 @@ const styles = StyleSheet.create({
   content: {
     padding: theme.spacing.lg,
     gap: theme.spacing.md,
+  },
+  row: {
+    flexDirection: 'row',
+    gap: theme.spacing.md,
+  },
+  halfColumn: {
+    flex: 1,
   },
   header: {
     flexDirection: 'row',
