@@ -8,6 +8,27 @@
       "when": 1765327727245,
       "tag": "0000_aberrant_moira_mactaggert",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1765757331424,
+      "tag": "0001_closed_wind_dancer",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1765757400000,
+      "tag": "0002_seed_system_categories",
+      "breakpoints": false
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1734192000000,
+      "tag": "0003_fix_category_fk_restrict",
+      "breakpoints": true
     }
   ]
 }

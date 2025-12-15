@@ -19,6 +19,7 @@ import {
 } from '@ui/components';
 import { useTripById } from '../../trips/hooks/use-trips';
 import { useParticipants } from '../../participants/hooks/use-participants';
+import { useExpenseCategories } from '../hooks/use-expense-categories';
 import { addExpense } from '../repository';
 import { parseCurrency } from '@utils/currency';
 
@@ -80,6 +81,7 @@ function AddExpenseScreenContent({ tripId }: { tripId: string }) {
   const navigation = useNavigation();
   const { trip, loading: tripLoading } = useTripById(tripId);
   const { participants, loading: participantsLoading } = useParticipants(tripId);
+  const { categories, loading: categoriesLoading } = useExpenseCategories(tripId);
 
   // Update native header title
   useEffect(() => {
@@ -95,6 +97,7 @@ function AddExpenseScreenContent({ tripId }: { tripId: string }) {
   const [amount, setAmount] = useState('');
   const [date, setDate] = useState(new Date());
   const [paidBy, setPaidBy] = useState<string | null>(null);
+  const [categoryId, setCategoryId] = useState<string>('cat-other'); // Default to "Other"
 
   // Split configuration
   const [splitType, setSplitType] = useState<SplitType>('equal');
@@ -372,6 +375,7 @@ function AddExpenseScreenContent({ tripId }: { tripId: string }) {
         originalAmountMinor: amountMinor,
         originalCurrency: trip.currency,
         paidBy,
+        categoryId,
         date: date.toISOString(),
         splits,
       });
@@ -384,7 +388,7 @@ function AddExpenseScreenContent({ tripId }: { tripId: string }) {
     }
   };
 
-  const loading = tripLoading || participantsLoading;
+  const loading = tripLoading || participantsLoading || categoriesLoading;
 
   const canSubmit =
     !isCreating &&
@@ -460,30 +464,53 @@ function AddExpenseScreenContent({ tripId }: { tripId: string }) {
           editable={!isCreating}
         />
 
-        <Input
-          label={`Amount (${trip.currency})`}
-          placeholder="0.00"
-          value={amount}
-          onChangeText={setAmount}
-          keyboardType="decimal-pad"
-          editable={!isCreating}
-        />
+        <View style={styles.row}>
+          <View style={styles.halfColumn}>
+            <Input
+              label={`Amount (${trip.currency})`}
+              placeholder="0.00"
+              value={amount}
+              onChangeText={setAmount}
+              keyboardType="decimal-pad"
+              editable={!isCreating}
+            />
+          </View>
 
-        <DatePicker
-          label="Date"
-          value={date}
-          initialDate={trip ? new Date(trip.startDate) : undefined}
-          onChange={setDate}
-          maximumDate={new Date()}
-        />
+          <View style={styles.halfColumn}>
+            <DatePicker
+              label="Date"
+              value={date}
+              initialDate={trip ? new Date(trip.startDate) : undefined}
+              onChange={setDate}
+              maximumDate={new Date()}
+            />
+          </View>
+        </View>
 
-        <Picker
-          label="Paid by"
-          value={paidBy || ''}
-          options={payerOptions}
-          onChange={handlePaidByChange}
-          placeholder="Select payer"
-        />
+        <View style={styles.row}>
+          <View style={styles.halfColumn}>
+            <Picker
+              label="Paid by"
+              value={paidBy || ''}
+              options={payerOptions}
+              onChange={handlePaidByChange}
+              placeholder="Select payer"
+            />
+          </View>
+
+          <View style={styles.halfColumn}>
+            <Picker
+              label="Category"
+              value={categoryId}
+              options={categories.length > 0 ? categories.map((cat) => ({
+                label: `${cat.emoji} ${cat.name}`,
+                value: cat.id,
+              })) : [{ label: '📝 Other', value: 'cat-other' }]}
+              onChange={setCategoryId}
+              placeholder="Select category"
+            />
+          </View>
+        </View>
 
         <Checkbox
           checked={isPersonalExpense}
@@ -580,6 +607,13 @@ const styles = StyleSheet.create({
   content: {
     padding: theme.spacing.lg,
     gap: theme.spacing.md,
+  },
+  row: {
+    flexDirection: 'row',
+    gap: theme.spacing.md,
+  },
+  halfColumn: {
+    flex: 1,
   },
   centerContent: {
     flex: 1,

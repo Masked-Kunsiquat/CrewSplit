@@ -60,8 +60,13 @@ export default function TripsListScreen() {
             style={styles.tripCard}
             onPress={() => router.push(`/trips/${trip.id}`)}
           >
-            <Text style={styles.tripName}>{trip.name}</Text>
-            <Text style={styles.tripMeta}>{trip.currency} • {new Date(trip.startDate).toLocaleDateString()}</Text>
+            <View style={styles.tripHeader}>
+              {trip.emoji && <Text style={styles.tripEmoji}>{trip.emoji}</Text>}
+              <View style={styles.tripInfo}>
+                <Text style={styles.tripName}>{trip.name}</Text>
+                <Text style={styles.tripMeta}>{trip.currency} • {new Date(trip.startDate).toLocaleDateString()}</Text>
+              </View>
+            </View>
           </Card>
         ))}
       </ScrollView>
@@ -128,6 +133,17 @@ const styles = StyleSheet.create({
   },
   tripCard: {
     backgroundColor: theme.colors.surfaceElevated,
+  },
+  tripHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.md,
+  },
+  tripEmoji: {
+    fontSize: 32,
+  },
+  tripInfo: {
+    flex: 1,
   },
   tripName: {
     fontSize: theme.typography.xl,

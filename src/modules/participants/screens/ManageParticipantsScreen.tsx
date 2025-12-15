@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Alert } from 're
 import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
 import { theme } from '@ui/theme';
 import { participantLogger } from '@utils/logger';
-import { Button, Card, Input, ParticipantChip } from '@ui/components';
+import { Button, Card, Input, ParticipantListRow } from '@ui/components';
 import { useParticipants } from '../hooks/use-participants';
 import { useTripById } from '@modules/trips/hooks/use-trips';
 import { createParticipant, deleteParticipant } from '../repository';
@@ -166,18 +166,18 @@ function ManageParticipantsContent({
         ) : (
           <Card style={styles.participantCard}>
             <Text style={styles.sectionTitle}>Participants ({participants.length})</Text>
-            <View style={styles.chips}>
-              {participants.map((participant) => (
-                <ParticipantChip
-                  key={participant.id}
-                  id={participant.id}
-                  name={participant.name}
-                  avatarColor={participant.avatarColor}
-                  selected={false}
-                  onToggle={() => {}}
-                  onLongPress={() => handleDeleteParticipant(participant.id, participant.name)}
-                />
-              ))}
+            <View style={styles.participantList}>
+              {[...participants]
+                .sort((a, b) => a.name.localeCompare(b.name))
+                .map((participant) => (
+                  <ParticipantListRow
+                    key={participant.id}
+                    id={participant.id}
+                    name={participant.name}
+                    avatarColor={participant.avatarColor}
+                    onLongPress={handleDeleteParticipant}
+                  />
+                ))}
             </View>
             <Text style={styles.hintText}>Long-press to remove a participant</Text>
           </Card>
@@ -239,21 +239,26 @@ const styles = StyleSheet.create({
   },
   participantCard: {
     gap: theme.spacing.sm,
+    paddingBottom: theme.spacing.md,
   },
   sectionTitle: {
     fontSize: theme.typography.lg,
     fontWeight: theme.typography.semibold,
     color: theme.colors.text,
+    paddingHorizontal: theme.spacing.md,
+    paddingTop: theme.spacing.sm,
   },
-  chips: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: theme.spacing.sm,
+  participantList: {
+    backgroundColor: theme.colors.background,
+    borderRadius: theme.borderRadius.sm,
+    overflow: 'hidden',
+    marginTop: theme.spacing.xs,
   },
   hintText: {
     fontSize: theme.typography.sm,
     color: theme.colors.textSecondary,
     fontStyle: 'italic',
-    marginTop: theme.spacing.xs,
+    marginTop: theme.spacing.sm,
+    paddingHorizontal: theme.spacing.md,
   },
 });

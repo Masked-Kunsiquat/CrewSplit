@@ -9,6 +9,7 @@ import { useRouter, useLocalSearchParams, useNavigation } from 'expo-router';
 import { theme } from '@ui/theme';
 import { Button, Card } from '@ui/components';
 import { useExpenseWithSplits } from '../hooks/use-expenses';
+import { useExpenseCategories } from '../hooks/use-expense-categories';
 import { useParticipants } from '@modules/participants/hooks/use-participants';
 import { useDisplayCurrency } from '@hooks/use-display-currency';
 import { formatCurrency } from '@utils/currency';
@@ -52,15 +53,18 @@ function ExpenseDetailsContent({ tripId, expenseId }: { tripId: string; expenseI
     expenseId
   );
   const { participants, loading: participantsLoading } = useParticipants(tripId);
+  const { categories } = useExpenseCategories(tripId);
 
-  // Update native header title
+  // Update native header title with category emoji
   useEffect(() => {
     if (expense) {
+      const category = categories.find(c => c.id === expense.categoryId);
+      const title = category ? `${expense.description}  •  ${category.emoji}` : expense.description;
       navigation.setOptions({
-        title: expense.description,
+        title,
       });
     }
-  }, [expense, navigation]);
+  }, [expense, categories, navigation]);
 
   // Map participant IDs to names
   const participantMap = useMemo(() => {
@@ -136,6 +140,7 @@ function ExpenseDetailsContent({ tripId, expenseId }: { tripId: string; expenseI
   }
 
   const paidByName = participantMap.get(expense.paidBy) || 'Unknown';
+  const category = categories.find(c => c.id === expense.categoryId);
   const showCurrencyConversion = expense.originalCurrency !== expense.currency;
   const showDisplayCurrency = !!displayAmounts;
 

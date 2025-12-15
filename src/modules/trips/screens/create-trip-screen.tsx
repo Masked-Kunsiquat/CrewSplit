@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, Alert } from 'react-native';
-import { useRouter } from 'expo-router';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, Alert, TouchableOpacity } from 'react-native';
+import { useRouter, useNavigation } from 'expo-router';
+import EmojiPicker from 'rn-emoji-keyboard';
 import { theme } from '@ui/theme';
 import { Button, Input, CurrencyPicker, DateRangePicker } from '@ui/components';
 import { createTrip } from '../repository';
@@ -12,6 +13,7 @@ const AVATAR_COLORS = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#F7DC6F', '#BB8FCE', '#
 
 export default function CreateTripScreen() {
   const router = useRouter();
+  const navigation = useNavigation();
   const { deviceOwnerName } = useDeviceOwner();
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -20,6 +22,15 @@ export default function CreateTripScreen() {
   const [endDate, setEndDate] = useState<Date | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [dateError, setDateError] = useState<string | null>(null);
+  const [emoji, setEmoji] = useState<string | undefined>(undefined);
+  const [emojiPickerOpen, setEmojiPickerOpen] = useState(false);
+
+  // Set dynamic header title
+  useEffect(() => {
+    navigation.setOptions({
+      title: 'Create Trip',
+    });
+  }, [navigation]);
 
   const handleStartDateChange = (date: Date) => {
     setStartDate(date);
@@ -51,6 +62,7 @@ export default function CreateTripScreen() {
         description: description.trim() || undefined,
         startDate: startDate.toISOString(),
         endDate: endDate?.toISOString() || undefined,
+        emoji,
       });
 
       // Auto-add device owner as first participant if name is set
@@ -93,14 +105,36 @@ export default function CreateTripScreen() {
           editable={!isCreating}
         />
 
-        <View>
-          <Text style={styles.label}>Trip Currency</Text>
-          <CurrencyPicker
-            value={currency}
-            onChange={setCurrency}
-            label={undefined}
-            placeholder="Select currency"
-          />
+        <View style={styles.row}>
+          <View style={styles.halfColumn}>
+            <Text style={styles.label}>Trip Emoji (optional)</Text>
+            <TouchableOpacity
+              style={styles.emojiButton}
+              onPress={() => setEmojiPickerOpen(true)}
+              disabled={isCreating}
+            >
+              <Text style={styles.emojiText}>{emoji || '➕'}</Text>
+            </TouchableOpacity>
+            {emoji && (
+              <TouchableOpacity
+                onPress={() => setEmoji(undefined)}
+                style={styles.clearEmojiButton}
+                disabled={isCreating}
+              >
+                <Text style={styles.clearEmojiText}>Clear</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+
+          <View style={styles.halfColumn}>
+            <Text style={styles.label}>Trip Currency</Text>
+            <CurrencyPicker
+              value={currency}
+              onChange={setCurrency}
+              label={undefined}
+              placeholder="Select currency"
+            />
+          </View>
         </View>
 
         <DateRangePicker
@@ -141,6 +175,35 @@ export default function CreateTripScreen() {
           disabled={!name.trim() || !currency || isCreating}
         />
       </View>
+
+      <EmojiPicker
+        onEmojiSelected={(emojiObject) => {
+          setEmoji(emojiObject.emoji);
+          setEmojiPickerOpen(false);
+        }}
+        open={emojiPickerOpen}
+        onClose={() => setEmojiPickerOpen(false)}
+        enableSearchBar
+        theme={{
+          backdrop: '#0a0a0a88',
+          knob: theme.colors.primary,
+          container: theme.colors.surface,
+          header: theme.colors.text,
+          skinTonesContainer: theme.colors.surfaceElevated,
+          category: {
+            icon: theme.colors.primary,
+            iconActive: theme.colors.text,
+            container: theme.colors.surfaceElevated,
+            containerActive: theme.colors.primary,
+          },
+          search: {
+            text: theme.colors.text,
+            placeholder: theme.colors.textMuted,
+            icon: theme.colors.textSecondary,
+            background: theme.colors.surfaceElevated,
+          },
+        }}
+      />
     </KeyboardAvoidingView>
   );
 }
@@ -155,6 +218,7 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: theme.spacing.lg,
+    paddingBottom: theme.spacing.xl * 3, // Extra padding to prevent button cutoff
     gap: theme.spacing.md,
   },
   title: {
@@ -175,6 +239,35 @@ const styles = StyleSheet.create({
   multiLine: {
     textAlignVertical: 'top',
     minHeight: 96,
+  },
+  row: {
+    flexDirection: 'row',
+    gap: theme.spacing.md,
+  },
+  halfColumn: {
+    flex: 1,
+  },
+  emojiButton: {
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    borderRadius: theme.spacing.sm,
+    padding: theme.spacing.md,
+    backgroundColor: theme.colors.surface,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 56,
+  },
+  emojiText: {
+    fontSize: 32,
+    color: theme.colors.text,
+  },
+  clearEmojiButton: {
+    marginTop: theme.spacing.xs,
+    alignSelf: 'flex-end',
+  },
+  clearEmojiText: {
+    fontSize: theme.typography.sm,
+    color: theme.colors.error,
   },
   footer: {
     padding: theme.spacing.lg,
