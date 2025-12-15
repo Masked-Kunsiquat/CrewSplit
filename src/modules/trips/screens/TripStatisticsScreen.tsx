@@ -8,15 +8,28 @@
  * - Currency breakdown
  */
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
-import { useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, useNavigation } from 'expo-router';
 import { theme } from '@ui/theme';
 import { Card } from '@ui/components';
+import { useTripById } from '../hooks/use-trips';
 
 export default function TripStatisticsScreen() {
+  const navigation = useNavigation();
   const { id } = useLocalSearchParams<{ id?: string }>();
   const tripId = id?.trim() || null;
+
+  const { trip } = useTripById(tripId);
+
+  // Update native header title
+  useEffect(() => {
+    if (trip) {
+      navigation.setOptions({
+        title: `${trip.name} - Statistics`,
+      });
+    }
+  }, [trip, navigation]);
 
   if (!tripId) {
     return (
