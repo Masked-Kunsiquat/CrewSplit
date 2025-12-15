@@ -14,5 +14,8 @@ export { CachedFxRateProvider, cachedFxRateProvider } from './provider';
 export { FrankfurterService, ExchangeRateApiService, FxRateService } from './services';
 export type { UpdateRatesOptions, FetchResult } from './services';
 
+// Hooks (React integration)
+export { useFxRates } from './hooks';
+
 // Types
 export type { RatePair, StalenessInfo } from './types';
