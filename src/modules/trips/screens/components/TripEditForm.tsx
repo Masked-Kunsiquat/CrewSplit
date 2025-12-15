@@ -37,6 +37,8 @@ export function TripEditForm({
   onSave,
   onCancel,
 }: TripEditFormProps) {
+  const startDate = new Date(trip.startDate);
+
   return (
     <>
       <Card style={styles.editCard}>
@@ -70,7 +72,7 @@ export function TripEditForm({
         <View style={styles.dateSection}>
           <Text style={styles.dateLabel}>Start Date (cannot be changed)</Text>
           <Text style={styles.dateValue}>
-            {new Date(trip.startDate).toLocaleDateString()}
+            {startDate.toLocaleDateString()}
           </Text>
         </View>
 
@@ -79,14 +81,14 @@ export function TripEditForm({
             label="End Date (optional)"
             value={endDateInput}
             onChange={setEndDateInput}
-            minimumDate={new Date(trip.startDate)}
+            minimumDate={startDate}
           />
         ) : (
           <View>
             <Text style={styles.dateLabel}>End Date (optional)</Text>
             <TouchableOpacity
               style={styles.addEndDateButton}
-              onPress={() => setEndDateInput(new Date(trip.startDate))}
+              onPress={() => setEndDateInput(startDate)}
             >
               <Text style={styles.addEndDateText}>+ Add end date</Text>
             </TouchableOpacity>

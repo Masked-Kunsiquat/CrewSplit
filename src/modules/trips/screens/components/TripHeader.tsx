@@ -33,8 +33,8 @@ export function TripHeader({ trip, onEdit }: TripHeaderProps) {
         style={styles.editButton}
         accessible={true}
         accessibilityRole="button"
-        accessibilityLabel="Edit trip name"
-        accessibilityHint="Opens the edit screen for the trip name"
+        accessibilityLabel="Edit trip details"
+        accessibilityHint="Opens the edit screen for this trip"
       >
         <Text style={styles.editButtonText}>✏️</Text>
       </TouchableOpacity>

@@ -26,7 +26,7 @@ export function useTrips() {
 /**
  * Hook to fetch a single trip by ID
  * @param tripId - Trip UUID (nullable - returns null data when not provided)
- * @returns Object with trip, loading state, and error
+ * @returns Object with trip, loading state, error, and refetch function
  */
 export function useTripById(tripId: string | null) {
   const { data: trip, loading, error, refetch } = useQuery(
