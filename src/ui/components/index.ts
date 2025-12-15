@@ -12,6 +12,8 @@ export { Card } from './Card';
 
 export { ParticipantChip } from './ParticipantChip';
 
+export { ParticipantListRow } from './ParticipantListRow';
+
 export { CurrencyPicker } from './CurrencyPicker';
 
 export { DatePicker } from './DatePicker';

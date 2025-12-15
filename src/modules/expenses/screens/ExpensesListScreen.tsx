@@ -1,5 +1,5 @@
-import React, { useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Pressable } from 'react-native';
 import { useRouter, useLocalSearchParams, useNavigation } from 'expo-router';
 import { theme } from '@ui/theme';
 import { Button, Card } from '@ui/components';
@@ -21,13 +21,23 @@ export default function ExpensesListScreen() {
   const { expenses, loading, error } = useExpenses(tripId);
   const { categories } = useExpenseCategories(tripId);
 
+  // Category filter state - null means "All"
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
+
   // Parse filter IDs if provided
   const filterIds = ids ? ids.split(',').map(id => id.trim()) : null;
 
-  // Filter expenses if IDs are provided
-  const displayedExpenses = filterIds
+  // Filter expenses by IDs first, then by category
+  let displayedExpenses = filterIds
     ? expenses.filter(expense => filterIds.includes(expense.id))
     : expenses;
+
+  // Apply category filter if selected
+  if (selectedCategoryId) {
+    displayedExpenses = displayedExpenses.filter(
+      expense => expense.categoryId === selectedCategoryId
+    );
+  }
 
   // Determine header title based on filter
   const headerTitle = filter === 'unsplit'
@@ -67,6 +77,49 @@ export default function ExpensesListScreen() {
 
   return (
     <View style={styles.container}>
+      {/* Category Filter */}
+      {categories.length > 0 && (
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.filterScroll}
+          contentContainerStyle={styles.filterContent}
+        >
+          {/* "All" filter */}
+          <Pressable
+            style={[
+              styles.filterChip,
+              selectedCategoryId === null && styles.filterChipActive,
+            ]}
+            onPress={() => setSelectedCategoryId(null)}
+          >
+            <Text
+              style={[
+                styles.filterChipText,
+                selectedCategoryId === null && styles.filterChipTextActive,
+              ]}
+            >
+              All
+            </Text>
+          </Pressable>
+
+          {/* Category filters */}
+          {categories.map((category) => (
+            <Pressable
+              key={category.id}
+              style={[
+                styles.filterChip,
+                selectedCategoryId === category.id && styles.filterChipActive,
+              ]}
+              onPress={() => setSelectedCategoryId(category.id)}
+              accessibilityLabel={`Filter by ${category.name}`}
+            >
+              <Text style={styles.filterEmoji}>{category.emoji}</Text>
+            </Pressable>
+          ))}
+        </ScrollView>
+      )}
+
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
         {displayedExpenses.length === 0 ? (
           <Card style={styles.emptyCard}>
@@ -127,7 +180,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   content: {
-    padding: theme.spacing.lg,
+    paddingTop: theme.spacing.md,
+    paddingHorizontal: theme.spacing.lg,
+    paddingBottom: theme.spacing.lg,
     gap: theme.spacing.md,
   },
   title: {
@@ -205,5 +260,45 @@ const styles = StyleSheet.create({
     padding: theme.spacing.lg,
     borderTopWidth: 1,
     borderTopColor: theme.colors.border,
+  },
+  filterScroll: {
+    maxHeight: 48, // Constrain height to prevent extra spacing
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.border,
+    backgroundColor: theme.colors.surface,
+  },
+  filterContent: {
+    paddingHorizontal: theme.spacing.lg,
+    paddingVertical: theme.spacing.xs,
+    gap: theme.spacing.sm,
+  },
+  filterChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: 32, // Material Design 3 spec: 32px height
+    paddingHorizontal: 12, // Material Design 3 spec: 12dp horizontal padding
+    borderRadius: 16, // Half of height for pill shape
+    backgroundColor: theme.colors.background,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    gap: 6,
+  },
+  filterChipActive: {
+    backgroundColor: theme.colors.primary,
+    borderColor: theme.colors.primary,
+  },
+  filterEmoji: {
+    fontSize: 16,
+    lineHeight: 18,
+  },
+  filterChipText: {
+    fontSize: theme.typography.sm,
+    fontWeight: theme.typography.medium,
+    color: theme.colors.text,
+    lineHeight: 18,
+  },
+  filterChipTextActive: {
+    color: theme.colors.background,
   },
 });
