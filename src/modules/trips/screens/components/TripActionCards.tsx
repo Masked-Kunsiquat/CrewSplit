@@ -5,6 +5,7 @@
 
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { Href } from 'expo-router';
 import { theme } from '@ui/theme';
 import { Card } from '@ui/components';
 
@@ -12,7 +13,7 @@ interface TripActionCardsProps {
   tripId: string;
   participantCount: number;
   expenseCount: number;
-  onNavigate: (path: string) => void;
+  onNavigate: (path: Href) => void;
 }
 
 export function TripActionCards({
@@ -25,7 +26,9 @@ export function TripActionCards({
     <View style={styles.actionGrid}>
       <Card
         style={styles.actionCard}
-        onPress={() => onNavigate(`/trips/${tripId}/participants`)}
+        onPress={() =>
+          onNavigate({ pathname: '/trips/[id]/participants', params: { id: tripId } })
+        }
       >
         <Text style={styles.actionTitle}>Participants</Text>
         <Text style={styles.actionBody}>
@@ -37,7 +40,7 @@ export function TripActionCards({
 
       <Card
         style={styles.actionCard}
-        onPress={() => onNavigate(`/trips/${tripId}/expenses`)}
+        onPress={() => onNavigate({ pathname: '/trips/[id]/expenses', params: { id: tripId } })}
       >
         <Text style={styles.actionTitle}>Expenses</Text>
         <Text style={styles.actionBody}>
@@ -49,7 +52,7 @@ export function TripActionCards({
 
       <Card
         style={styles.actionCard}
-        onPress={() => onNavigate(`/trips/${tripId}/settlement`)}
+        onPress={() => onNavigate({ pathname: '/trips/[id]/settlement', params: { id: tripId } })}
       >
         <Text style={styles.actionTitle}>Settlement</Text>
         <Text style={styles.actionBody}>
@@ -61,7 +64,7 @@ export function TripActionCards({
 
       <Card
         style={styles.actionCard}
-        onPress={() => onNavigate(`/trips/${tripId}/statistics`)}
+        onPress={() => onNavigate({ pathname: '/trips/[id]/statistics', params: { id: tripId } })}
       >
         <Text style={styles.actionTitle}>Statistics</Text>
         <Text style={styles.actionBody}>

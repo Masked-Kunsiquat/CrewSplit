@@ -13,7 +13,8 @@ import { theme } from '@ui/theme';
  * Handles multiple data sources by calling all refetch functions in parallel.
  * Manages refreshing state automatically.
  *
- * @param refetchFunctions - Array of refetch functions from useQuery-based hooks
+ * @param refetchFunctions - Array of refetch functions from useQuery-based hooks.
+ *   For optimal performance, memoize this array with useMemo if refetch references are stable.
  * @returns RefreshControl component ready to pass to ScrollView
  *
  * @example
@@ -41,7 +42,7 @@ import { theme } from '@ui/theme';
  * ```
  */
 export function useRefreshControl(
-  refetchFunctions: Array<(() => void) | undefined>
+  refetchFunctions: Array<(() => void | Promise<void>) | undefined>
 ) {
   const [refreshing, setRefreshing] = useState(false);
 
@@ -58,14 +59,12 @@ export function useRefreshControl(
       // Note: refetch() from useQuery is synchronous (triggers re-render via state)
       // but we wrap in Promise to ensure proper async handling
       await Promise.all(
-        validRefetchFns.map(
-          (fn) =>
-            new Promise<void>((resolve) => {
-              fn();
-              // Small delay to allow state updates to propagate
-              setTimeout(resolve, 100);
-            })
-        )
+        validRefetchFns.map(async (fn) => {
+          const result = fn();
+          if (result && typeof (result as Promise<unknown>).then === 'function') {
+            await result;
+          }
+        })
       );
     } catch (error) {
       // Refetch errors are already handled by individual hooks

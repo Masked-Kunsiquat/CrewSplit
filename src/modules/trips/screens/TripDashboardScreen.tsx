@@ -3,7 +3,7 @@
  * Main dashboard for viewing and managing a trip
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Alert } from 'react-native';
 import { useRouter, useLocalSearchParams, useNavigation } from 'expo-router';
 import { theme } from '@ui/theme';
@@ -45,11 +45,16 @@ function TripDashboardScreenContent({ tripId }: { tripId: string }) {
   const navigation = useNavigation();
 
   const { trip, loading: tripLoading, error: tripError, refetch: refetchTrip } = useTripById(tripId);
-  const { participants, loading: participantsLoading, refetch: refetchParticipants } = useParticipants(tripId ?? null);
-  const { expenses, loading: expensesLoading, refetch: refetchExpenses } = useExpenses(tripId ?? null);
+  const { participants, loading: participantsLoading, refetch: refetchParticipants } = useParticipants(tripId);
+  const { expenses, loading: expensesLoading, refetch: refetchExpenses } = useExpenses(tripId);
+
+  const refetchFunctions = useMemo(
+    () => [refetchTrip, refetchParticipants, refetchExpenses],
+    [refetchTrip, refetchParticipants, refetchExpenses]
+  );
 
   // Pull-to-refresh support
-  const refreshControl = useRefreshControl([refetchTrip, refetchParticipants, refetchExpenses]);
+  const refreshControl = useRefreshControl(refetchFunctions);
 
   const [editingName, setEditingName] = useState(false);
   const [nameInput, setNameInput] = useState('');
@@ -202,7 +207,13 @@ function TripDashboardScreenContent({ tripId }: { tripId: string }) {
       </ScrollView>
 
       <View style={styles.footer}>
-        <Button title="Add Expense" onPress={() => router.push(`/trips/${tripId}/expenses/add`)} fullWidth />
+        <Button
+          title="Add Expense"
+          onPress={() =>
+            router.push({ pathname: '/trips/[id]/expenses/add', params: { id: tripId } })
+          }
+          fullWidth
+        />
       </View>
     </View>
   );

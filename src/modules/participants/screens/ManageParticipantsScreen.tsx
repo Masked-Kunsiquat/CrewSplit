@@ -1,3 +1,8 @@
+/**
+ * UI/UX ENGINEER: ManageParticipants screen
+ * Manages participant list with add/remove actions and pull-to-refresh
+ */
+
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Alert } from 'react-native';
 import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router';

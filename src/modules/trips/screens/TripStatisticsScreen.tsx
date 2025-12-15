@@ -9,10 +9,10 @@
  */
 
 import React, { useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
 import { useLocalSearchParams, useNavigation } from 'expo-router';
 import { theme } from '@ui/theme';
-import { Card } from '@ui/components';
+import { Card, Button } from '@ui/components';
 import { useTripById } from '../hooks/use-trips';
 
 export default function TripStatisticsScreen() {
@@ -20,7 +20,7 @@ export default function TripStatisticsScreen() {
   const { id } = useLocalSearchParams<{ id?: string }>();
   const tripId = id?.trim() || null;
 
-  const { trip } = useTripById(tripId);
+  const { trip, loading, error, refetch } = useTripById(tripId);
 
   // Update native header title
   useEffect(() => {
@@ -36,6 +36,33 @@ export default function TripStatisticsScreen() {
       <View style={styles.container}>
         <View style={styles.centerContent}>
           <Text style={styles.errorText}>Invalid trip ID</Text>
+        </View>
+      </View>
+    );
+  }
+
+  if (loading) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.centerContent}>
+          <ActivityIndicator size="large" color={theme.colors.primary} />
+          <Text style={styles.loadingText}>Loading trip...</Text>
+        </View>
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.centerContent}>
+          <Card style={styles.errorCard}>
+            <Text style={styles.errorTitle}>Unable to load trip</Text>
+            <Text style={styles.errorText}>
+              {typeof error === 'string' ? error : (error as { message?: unknown }).message ?? 'Unknown error'}
+            </Text>
+            <Button title="Retry" onPress={refetch} fullWidth />
+          </Card>
         </View>
       </View>
     );
@@ -83,9 +110,26 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     padding: theme.spacing.lg,
   },
+  loadingText: {
+    fontSize: theme.typography.base,
+    color: theme.colors.textSecondary,
+    marginTop: theme.spacing.sm,
+  },
+  errorCard: {
+    gap: theme.spacing.sm,
+    alignItems: 'center',
+    padding: theme.spacing.lg,
+    backgroundColor: theme.colors.surfaceElevated,
+  },
+  errorTitle: {
+    fontSize: theme.typography.lg,
+    fontWeight: theme.typography.semibold,
+    color: theme.colors.error,
+  },
   errorText: {
     fontSize: theme.typography.base,
-    color: theme.colors.error,
+    color: theme.colors.textSecondary,
+    textAlign: 'center',
   },
   comingSoonCard: {
     backgroundColor: theme.colors.surfaceElevated,
