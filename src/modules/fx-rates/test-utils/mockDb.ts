@@ -30,6 +30,8 @@ type SqlDescriptor =
   | { sqlType: 'count' }
   | { sqlType: 'raw' };
 
+type SqlLike = SqlDescriptor | Condition;
+
 export const eq = (column: keyof MockFxRateRow, value: unknown): Condition => ({
   type: 'eq',
   column,
@@ -51,7 +53,7 @@ export const desc = (column: keyof MockFxRateRow) => ({
   column,
 });
 
-export const sql = <T = unknown>(strings: TemplateStringsArray, ...values: unknown[]): SqlDescriptor => {
+export const sql = <T = unknown>(strings: TemplateStringsArray, ...values: unknown[]): SqlLike => {
   const raw = strings.join('');
 
   if (raw.includes('MIN')) {
@@ -64,11 +66,10 @@ export const sql = <T = unknown>(strings: TemplateStringsArray, ...values: unkno
 
   if (raw.includes('<')) {
     return {
-      sqlType: 'raw',
+      type: 'lt',
       column: values[0] as keyof MockFxRateRow,
       value: values[1],
-      type: 'lt',
-    } as unknown as Condition;
+    };
   }
 
   return { sqlType: 'raw' };
