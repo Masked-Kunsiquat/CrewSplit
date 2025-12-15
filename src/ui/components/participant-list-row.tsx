@@ -7,6 +7,51 @@ import React from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { theme } from '@ui/theme';
 
+/**
+ * Calculate relative luminance of an RGB color (WCAG 2.0)
+ * @param r Red component (0-255)
+ * @param g Green component (0-255)
+ * @param b Blue component (0-255)
+ */
+function getLuminance(r: number, g: number, b: number): number {
+  const [rs, gs, bs] = [r, g, b].map((c) => {
+    const val = c / 255;
+    return val <= 0.03928 ? val / 12.92 : Math.pow((val + 0.055) / 1.055, 2.4);
+  });
+  return 0.2126 * rs + 0.7152 * gs + 0.0722 * bs;
+}
+
+/**
+ * Calculate WCAG contrast ratio between two colors
+ */
+function getContrastRatio(l1: number, l2: number): number {
+  const lighter = Math.max(l1, l2);
+  const darker = Math.min(l1, l2);
+  return (lighter + 0.05) / (darker + 0.05);
+}
+
+/**
+ * Get accessible text color for a given background color
+ * Returns white or black based on WCAG AA contrast requirements (4.5:1)
+ */
+function getAccessibleTextColor(backgroundColor: string): string {
+  // Parse hex color
+  const hex = backgroundColor.replace('#', '');
+  const r = parseInt(hex.substring(0, 2), 16);
+  const g = parseInt(hex.substring(2, 4), 16);
+  const b = parseInt(hex.substring(4, 6), 16);
+
+  const bgLuminance = getLuminance(r, g, b);
+  const whiteLuminance = 1; // White has luminance of 1
+  const blackLuminance = 0; // Black has luminance of 0
+
+  const whiteContrast = getContrastRatio(whiteLuminance, bgLuminance);
+  const blackContrast = getContrastRatio(blackLuminance, bgLuminance);
+
+  // Choose the color with better contrast
+  return whiteContrast > blackContrast ? '#FFFFFF' : '#000000';
+}
+
 interface ParticipantListRowProps {
   /** Participant ID */
   id: string;
@@ -37,6 +82,7 @@ export function ParticipantListRow({
   onLongPress,
 }: ParticipantListRowProps) {
   const avatarBgColor = avatarColor || theme.colors.primary;
+  const textColor = getAccessibleTextColor(avatarBgColor);
 
   return (
     <Pressable
@@ -51,7 +97,9 @@ export function ParticipantListRow({
     >
       {/* Avatar */}
       <View style={[styles.avatar, { backgroundColor: avatarBgColor }]}>
-        <Text style={styles.avatarText}>{name.charAt(0).toUpperCase()}</Text>
+        <Text style={[styles.avatarText, { color: textColor }]}>
+          {name.charAt(0).toUpperCase()}
+        </Text>
       </View>
 
       {/* Name */}
@@ -84,7 +132,7 @@ const styles = StyleSheet.create({
     marginRight: theme.spacing.md,
   },
   avatarText: {
-    color: theme.colors.text,
+    // Color is dynamically set based on background for WCAG AA contrast
     fontSize: theme.typography.base,
     fontWeight: theme.typography.bold,
   },
