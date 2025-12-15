@@ -80,7 +80,7 @@ function TripDashboardScreenContent({ tripId }: { tripId: string }) {
       const updated = await updateTrip(tripId, {
         name: nameInput.trim(),
         emoji: emojiInput,
-        endDate: endDateInput?.toISOString(),
+        endDate: endDateInput ? endDateInput.toISOString() : null,
       });
       navigation.setOptions({ title: updated.name });
       refetchTrip();

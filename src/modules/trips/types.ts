@@ -28,7 +28,7 @@ export interface CreateTripInput {
 export interface UpdateTripInput {
   name?: string;
   description?: string;
-  endDate?: string;
+  endDate?: string | null; // null explicitly clears the end date
   currencyCode?: string;
   emoji?: string;
 }
