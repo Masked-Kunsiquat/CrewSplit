@@ -502,10 +502,10 @@ function AddExpenseScreenContent({ tripId }: { tripId: string }) {
             <Picker
               label="Category"
               value={categoryId}
-              options={categories.map((cat) => ({
+              options={categories.length > 0 ? categories.map((cat) => ({
                 label: `${cat.emoji} ${cat.name}`,
                 value: cat.id,
-              }))}
+              })) : [{ label: '📝 Other', value: 'cat-other' }]}
               onChange={setCategoryId}
               placeholder="Select category"
             />
