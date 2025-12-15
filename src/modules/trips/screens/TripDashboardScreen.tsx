@@ -306,6 +306,15 @@ function TripDashboardScreenContent({ tripId }: { tripId: string }) {
                 : 'View who owes whom'}
             </Text>
           </Card>
+
+          <Card style={styles.actionCard} onPress={() => router.push(`/trips/${tripId}/statistics`)}>
+            <Text style={styles.actionTitle}>Statistics</Text>
+            <Text style={styles.actionBody}>
+              {expenses.length === 0
+                ? 'Statistics will appear once expenses are added'
+                : 'View trip insights and breakdowns'}
+            </Text>
+          </Card>
         </View>
 
         {editingName && (
