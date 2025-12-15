@@ -33,13 +33,21 @@ jobs:
       - name: Run ESLint
         env:
           SARIF_ESLINT_IGNORE_SUPPRESSED: "true"
+        id: lint
+        continue-on-error: true
         run: |
           npm run lint -- \
+            --format stylish \
             --format @microsoft/eslint-formatter-sarif \
             --output-file eslint-results.sarif
 
       - name: Upload analysis results to GitHub
+        if: always()
         uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: eslint-results.sarif
           wait-for-processing: true
+
+      - name: Fail if lint errors occurred
+        if: steps.lint.outcome == 'failure'
+        run: exit 1
