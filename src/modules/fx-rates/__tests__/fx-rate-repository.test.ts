@@ -3,18 +3,24 @@
  * LOCAL DATA ENGINEER: ACID safety, versioning, priority selection
  */
 
-import { mockDb, fxRatesTable, createRateRow, drizzleOrmMock } from './mockDb';
+import {
+  mockDb,
+  mockFxRatesTable,
+  createRateRow,
+  drizzleOrmMock as mockDrizzleOrm,
+} from '../test-utils/mockDb';
 
 jest.mock('@db/client', () => ({
   db: mockDb,
 }));
 
+const mockFxRates = mockFxRatesTable;
 jest.mock('@db/schema/fx-rates', () => ({
-  fxRates: fxRatesTable,
+  fxRates: mockFxRates,
   fxRateSnapshots: {},
 }));
 
-jest.mock('drizzle-orm', () => drizzleOrmMock);
+jest.mock('drizzle-orm', () => mockDrizzleOrm);
 
 jest.mock('expo-crypto', () => {
   let counter = 0;

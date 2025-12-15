@@ -30,9 +30,6 @@ type SqlDescriptor =
   | { sqlType: 'count' }
   | { sqlType: 'raw' };
 
-/**
-  * Drizzle function shims
-  */
 export const eq = (column: keyof MockFxRateRow, value: unknown): Condition => ({
   type: 'eq',
   column,
@@ -68,7 +65,6 @@ export const sql = <T = unknown>(strings: TemplateStringsArray, ...values: unkno
   if (raw.includes('<')) {
     return {
       sqlType: 'raw',
-      // This descriptor is interpreted inside matches()
       column: values[0] as keyof MockFxRateRow,
       value: values[1],
       type: 'lt',
@@ -255,7 +251,7 @@ export class InMemoryDb {
 
 export const mockDb = new InMemoryDb();
 
-export const fxRatesTable = {
+export const mockFxRatesTable = {
   id: 'id',
   baseCurrency: 'baseCurrency',
   quoteCurrency: 'quoteCurrency',
