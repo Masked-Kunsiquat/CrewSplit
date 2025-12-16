@@ -175,12 +175,6 @@ export default function SettingsScreen() {
               description: 'Drizzle ORM + SQLite (offline-first)',
             },
             {
-              name: 'Frankfurter API',
-              url: 'https://www.frankfurter.app',
-              icon: require('../assets/attribution/frankfurter-api.svg'),
-              description: 'Frankfurter API (ECB reference rates)',
-            },
-            {
               name: 'ExchangeRate-API',
               url: 'https://www.exchangerate-api.com',
               icon: require('../assets/attribution/exchangerate-api.svg'),
@@ -191,6 +185,12 @@ export default function SettingsScreen() {
               url: 'https://expo.dev',
               icon: require('../assets/attribution/expo-go-app.svg'),
               description: 'Expo & React Native',
+            },
+            {
+              name: 'Frankfurter API',
+              url: 'https://www.frankfurter.app',
+              icon: require('../assets/attribution/frankfurter-api.svg'),
+              description: 'Frankfurter API (ECB reference rates)',
             },
           ].map((item) => (
             <View key={item.name} style={styles.attributionRow}>
