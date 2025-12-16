@@ -31,7 +31,7 @@ jest.mock('@utils/logger', () => {
   return { fxLogger: logger };
 });
 
-import { CachedFxRateProvider } from '../provider/CachedFxRateProvider';
+import { CachedFxRateProvider } from '../provider/cached-fx-rate-provider';
 import { FxRateRepository } from '../repository';
 
 describe('CachedFxRateProvider', () => {

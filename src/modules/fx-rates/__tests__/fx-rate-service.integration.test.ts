@@ -46,8 +46,8 @@ jest.mock('../services/exchange-rate-api-service', () => ({
   },
 }));
 
-import { FxRateService } from '../services/FxRateService';
-import { cachedFxRateProvider } from '../provider/CachedFxRateProvider';
+import { FxRateService } from '../services/fx-rate-service';
+import { cachedFxRateProvider } from '../provider/cached-fx-rate-provider';
 
 describe('FxRateService integration', () => {
   const now = '2024-01-10T00:00:00.000Z';
