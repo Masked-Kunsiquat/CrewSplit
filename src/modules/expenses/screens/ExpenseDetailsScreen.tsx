@@ -497,7 +497,6 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
     textAlign: 'right',
     flexShrink: 1,
-    flexWrap: 'wrap',
   },
   fxRateRow: {
     marginTop: theme.spacing.xs,
@@ -563,7 +562,6 @@ const styles = StyleSheet.create({
     color: theme.colors.text,
     textAlign: 'right',
     flexShrink: 1,
-    flexWrap: 'wrap',
   },
   emptyText: {
     fontSize: theme.typography.base,

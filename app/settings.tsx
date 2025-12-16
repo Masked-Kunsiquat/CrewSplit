@@ -5,7 +5,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, Alert, Linking } from 'react-native';
-import { useRouter, useNavigation } from 'expo-router';
+import { useNavigation } from 'expo-router';
 import { Image } from 'expo-image';
 import { theme } from '@ui/theme';
 import { Card, CurrencyPicker, Button, Input } from '@ui/components';
@@ -13,7 +13,6 @@ import { useDisplayCurrency } from '@hooks/use-display-currency';
 import { useDeviceOwner } from '@hooks/use-device-owner';
 
 export default function SettingsScreen() {
-  const router = useRouter();
   const navigation = useNavigation();
   const { displayCurrency, loading, setDisplayCurrency } = useDisplayCurrency();
   const { deviceOwnerName, loading: ownerLoading, setDeviceOwner } = useDeviceOwner();
