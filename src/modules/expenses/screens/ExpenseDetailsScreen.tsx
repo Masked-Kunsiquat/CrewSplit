@@ -495,6 +495,9 @@ const styles = StyleSheet.create({
     fontSize: theme.typography.xs,
     color: theme.colors.textMuted,
     fontStyle: 'italic',
+    textAlign: 'right',
+    flexShrink: 1,
+    flexWrap: 'wrap',
   },
   fxRateRow: {
     marginTop: theme.spacing.xs,
@@ -551,13 +554,16 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
     gap: 2,
     minWidth: 120,
-    flexShrink: 0,
+    flexShrink: 1,
+    flexBasis: '45%',
   },
   splitAmount: {
     fontSize: theme.typography.base,
     fontWeight: theme.typography.semibold,
     color: theme.colors.text,
     textAlign: 'right',
+    flexShrink: 1,
+    flexWrap: 'wrap',
   },
   emptyText: {
     fontSize: theme.typography.base,
