@@ -129,4 +129,9 @@ describe('FrankfurterService', () => {
     (global.fetch as jest.Mock).mockRejectedValue(new Error('network'));
     await expect(FrankfurterService.checkAvailability()).resolves.toBe(false);
   });
+
+  it('getSupportedCurrencies excludes BGN after ECB deprecation', () => {
+    const supported = FrankfurterService.getSupportedCurrencies();
+    expect(supported).not.toContain('BGN');
+  });
 });

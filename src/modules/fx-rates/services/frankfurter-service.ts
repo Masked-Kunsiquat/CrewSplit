@@ -261,7 +261,6 @@ export const checkAvailability = async (timeout = 5000): Promise<boolean> => {
 export const getSupportedCurrencies = (): string[] => {
   return [
     'AUD', // Australian Dollar
-    'BGN', // Bulgarian Lev
     'BRL', // Brazilian Real
     'CAD', // Canadian Dollar
     'CHF', // Swiss Franc
@@ -292,6 +291,8 @@ export const getSupportedCurrencies = (): string[] => {
     'USD', // US Dollar
     'ZAR', // South African Rand
   ];
+  // TODO: Keep this list aligned with ECB/Frankfurter supported currencies.
+  // BGN is intentionally omitted ahead of ECB deprecation in 2026.
 };
 
 /**
