@@ -8,7 +8,7 @@ jest.mock('@utils/logger', () => {
   return { fxLogger: logger };
 });
 
-import { FrankfurterService } from '../services/FrankfurterService';
+import { FrankfurterService } from '../services/frankfurter-service';
 
 describe('FrankfurterService', () => {
   const originalFetch = global.fetch;

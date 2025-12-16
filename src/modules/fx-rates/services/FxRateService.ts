@@ -9,8 +9,8 @@
  * 4. Refresh CachedFxRateProvider cache after successful update
  */
 
-import { FrankfurterService } from './FrankfurterService';
-import { ExchangeRateApiService } from './ExchangeRateApiService';
+import { FrankfurterService } from './frankfurter-service';
+import { ExchangeRateApiService } from './exchange-rate-api-service';
 import { FxRateRepository } from '../repository';
 import type { FxRateSource } from '@db/schema/fx-rates';
 import type { RatePair } from '../types';

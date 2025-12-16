@@ -31,14 +31,14 @@ jest.mock('expo-crypto', () => ({
 const mockFrankfurterLatest = jest.fn();
 const mockExchangeRateLatest = jest.fn();
 
-jest.mock('../services/FrankfurterService', () => ({
+jest.mock('../services/frankfurter-service', () => ({
   FrankfurterService: {
     fetchLatestRates: (...args: any[]) => mockFrankfurterLatest(...args),
     checkAvailability: jest.fn(async () => true),
   },
 }));
 
-jest.mock('../services/ExchangeRateApiService', () => ({
+jest.mock('../services/exchange-rate-api-service', () => ({
   ExchangeRateApiService: {
     fetchLatestRates: (...args: any[]) => mockExchangeRateLatest(...args),
     getAttributionText: () => 'Exchange rates by ExchangeRate-API',
