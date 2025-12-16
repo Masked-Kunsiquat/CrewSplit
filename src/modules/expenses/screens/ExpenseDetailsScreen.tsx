@@ -536,6 +536,7 @@ const styles = StyleSheet.create({
   splitInfo: {
     flex: 1,
     gap: 2,
+    marginRight: theme.spacing.md,
   },
   splitName: {
     fontSize: theme.typography.base,
@@ -549,11 +550,14 @@ const styles = StyleSheet.create({
   splitAmounts: {
     alignItems: 'flex-end',
     gap: 2,
+    minWidth: 120,
+    flexShrink: 0,
   },
   splitAmount: {
     fontSize: theme.typography.base,
     fontWeight: theme.typography.semibold,
     color: theme.colors.text,
+    textAlign: 'right',
   },
   emptyText: {
     fontSize: theme.typography.base,
