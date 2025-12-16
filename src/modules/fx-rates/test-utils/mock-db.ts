@@ -1,3 +1,4 @@
+// ROLE: QA + TESTING ENGINEER — Responsible for test utilities and mocks
 /**
  * In-memory Drizzle/SQLite mock for FX rate tests.
  * Provides minimal query builders used by the repository.
@@ -82,7 +83,20 @@ const evaluateCondition = (row: MockFxRateRow, condition?: Condition): boolean =
     case 'eq':
       return row[condition.column] === condition.value;
     case 'lt':
-      return (row[condition.column] as unknown as string) < (condition.value as string);
+      {
+        const left = row[condition.column];
+        const right = condition.value;
+
+        if (left === null || left === undefined || right === null || right === undefined) {
+          return false;
+        }
+
+        if (typeof left === 'number' && typeof right === 'number') {
+          return left < right;
+        }
+
+        return String(left) < String(right);
+      }
     case 'and':
       return condition.clauses.every((clause) => evaluateCondition(row, clause));
     case 'or':

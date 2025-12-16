@@ -6,14 +6,14 @@
 import {
   mockDb,
   createRateRow,
-} from '../test-utils/mockDb';
+} from '../test-utils/mock-db';
 
 jest.mock('@db/client', () => ({
   db: mockDb,
 }));
 
 jest.mock('@db/schema/fx-rates', () => {
-  const { mockFxRatesTable } = require('../test-utils/mockDb');
+  const { mockFxRatesTable } = require('../test-utils/mock-db');
   return {
     fxRates: mockFxRatesTable,
     fxRateSnapshots: {},
@@ -21,7 +21,7 @@ jest.mock('@db/schema/fx-rates', () => {
 });
 
 jest.mock('drizzle-orm', () => {
-  const { drizzleOrmMock: mockDrizzleOrm } = require('../test-utils/mockDb');
+  const { drizzleOrmMock: mockDrizzleOrm } = require('../test-utils/mock-db');
   return mockDrizzleOrm;
 });
 

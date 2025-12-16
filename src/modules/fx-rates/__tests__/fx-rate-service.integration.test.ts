@@ -3,19 +3,19 @@
  * LOCAL DATA ENGINEER: Repository ↔ service orchestration and fallback
  */
 
-import { mockDb } from '../test-utils/mockDb';
+import { mockDb } from '../test-utils/mock-db';
 
 jest.mock('@db/client', () => ({
   db: mockDb,
 }));
 
 jest.mock('@db/schema/fx-rates', () => {
-  const { mockFxRatesTable } = require('../test-utils/mockDb');
+  const { mockFxRatesTable } = require('../test-utils/mock-db');
   return { fxRates: mockFxRatesTable };
 });
 
 jest.mock('drizzle-orm', () => {
-  const { drizzleOrmMock: mockDrizzleOrm } = require('../test-utils/mockDb');
+  const { drizzleOrmMock: mockDrizzleOrm } = require('../test-utils/mock-db');
   return mockDrizzleOrm;
 });
 
