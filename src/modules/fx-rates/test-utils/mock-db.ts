@@ -255,6 +255,14 @@ export class InMemoryDb {
     return new InsertBuilder(this);
   }
 
+  /**
+   * Mock transaction helper (no real ACID semantics).
+   * Invokes the callback synchronously and wraps the result in Promise.resolve.
+   * No rollback or isolation is provided; errors are propagated without undoing prior writes.
+   *
+   * @param callback - Function invoked with this in-memory DB
+   * @returns Promise of the callback result
+   */
   transaction<T>(callback: (tx: InMemoryDb) => Promise<T> | T): Promise<T> {
     return Promise.resolve(callback(this));
   }
