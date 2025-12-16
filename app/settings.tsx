@@ -4,8 +4,9 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Alert, Linking } from 'react-native';
 import { useRouter, useNavigation } from 'expo-router';
+import { Image } from 'expo-image';
 import { theme } from '@ui/theme';
 import { Card, CurrencyPicker, Button, Input } from '@ui/components';
 import { useDisplayCurrency } from '@hooks/use-display-currency';
@@ -160,6 +161,57 @@ export default function SettingsScreen() {
           </Text>
           <Text style={styles.versionText}>Version 1.0.0</Text>
         </Card>
+
+        <Card style={styles.section}>
+          <Text style={styles.sectionTitle}>Attribution</Text>
+          <Text style={styles.aboutText}>
+            CrewSplit is powered by open tools and data sources:
+          </Text>
+          {[
+            {
+              name: 'Drizzle ORM + SQLite',
+              url: 'https://orm.drizzle.team',
+              icon: require('../assets/attribution/drizzle-orm.svg'),
+              description: 'Drizzle ORM + SQLite (offline-first)',
+            },
+            {
+              name: 'Frankfurter API',
+              url: 'https://www.frankfurter.app',
+              icon: require('../assets/attribution/frankfurter-api.svg'),
+              description: 'Frankfurter API (ECB reference rates)',
+            },
+            {
+              name: 'ExchangeRate-API',
+              url: 'https://www.exchangerate-api.com',
+              icon: require('../assets/attribution/exchangerate-api.svg'),
+              description: 'Exchange rates by ExchangeRate-API',
+            },
+            {
+              name: 'Expo & React Native',
+              url: 'https://expo.dev',
+              icon: require('../assets/attribution/expo-go-app.svg'),
+              description: 'Expo & React Native',
+            },
+          ].map((item) => (
+            <View key={item.name} style={styles.attributionRow}>
+              <Image
+                source={item.icon}
+                style={styles.attributionIcon}
+                contentFit="contain"
+                accessibilityLabel={`${item.name} logo`}
+              />
+              <Text
+                style={styles.linkText}
+                onPress={() => Linking.openURL(item.url)}
+                accessible
+                accessibilityRole="link"
+                accessibilityLabel={item.name}
+              >
+                {item.description}
+              </Text>
+            </View>
+          ))}
+        </Card>
       </ScrollView>
     </View>
   );
@@ -223,6 +275,24 @@ const styles = StyleSheet.create({
     fontSize: theme.typography.base,
     color: theme.colors.text,
     lineHeight: 22,
+  },
+  linkText: {
+    fontSize: theme.typography.base,
+    color: theme.colors.primary,
+    lineHeight: 22,
+    textDecorationLine: 'underline',
+    flexShrink: 1,
+    flexWrap: 'wrap',
+  },
+  attributionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.sm,
+    marginTop: theme.spacing.xs,
+  },
+  attributionIcon: {
+    width: 24,
+    height: 24,
   },
   versionText: {
     fontSize: theme.typography.sm,
