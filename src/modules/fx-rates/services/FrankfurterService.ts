@@ -202,41 +202,50 @@ export const fetchRate = async (
 export const checkAvailability = async (timeout = 5000): Promise<boolean> => {
   fxLogger.debug('Checking Frankfurter availability');
 
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), timeout);
+  const headController = new AbortController();
+  const headTimeoutId = setTimeout(() => headController.abort(), timeout);
 
   try {
     // Minimal request to /latest (defaults to EUR base)
     const response = await fetch(`${FRANKFURTER_BASE_URL}/latest`, {
       method: 'HEAD', // try HEAD first
-      signal: controller.signal,
+      signal: headController.signal,
     });
+
+    clearTimeout(headTimeoutId);
 
     if (response.status === 405) {
       // HEAD not supported, retry with GET
       fxLogger.debug('Frankfurter availability retrying with GET after 405 HEAD', {
         status: response.status,
       });
-      const getResponse = await fetch(`${FRANKFURTER_BASE_URL}/latest`, {
-        method: 'GET',
-        signal: controller.signal,
-      });
-      clearTimeout(timeoutId);
-      const isAvailable = getResponse.ok;
-      fxLogger.debug('Frankfurter availability check (GET fallback)', {
-        available: isAvailable,
-        status: getResponse.status,
-      });
-      return isAvailable;
-    }
 
-    clearTimeout(timeoutId);
+      const getController = new AbortController();
+      const getTimeoutId = setTimeout(() => getController.abort(), timeout);
+      try {
+        const getResponse = await fetch(`${FRANKFURTER_BASE_URL}/latest`, {
+          method: 'GET',
+          signal: getController.signal,
+        });
+        clearTimeout(getTimeoutId);
+        const isAvailable = getResponse.ok;
+        fxLogger.debug('Frankfurter availability check (GET fallback)', {
+          available: isAvailable,
+          status: getResponse.status,
+        });
+        return isAvailable;
+      } catch (error) {
+        clearTimeout(getTimeoutId);
+        fxLogger.warn('Frankfurter availability check failed (GET fallback)', error);
+        return false;
+      }
+    }
 
     const isAvailable = response.ok;
     fxLogger.debug('Frankfurter availability check', { available: isAvailable, status: response.status });
     return isAvailable;
   } catch (error) {
-    clearTimeout(timeoutId);
+    clearTimeout(headTimeoutId);
     fxLogger.warn('Frankfurter availability check failed', error);
     return false;
   }

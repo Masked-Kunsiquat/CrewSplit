@@ -180,6 +180,13 @@ export class CachedFxRateProvider implements FxRateProvider {
     toCurrency: string,
     rate: number
   ): Promise<void> {
+    if (typeof rate !== 'number' || !Number.isFinite(rate) || rate <= 0) {
+      const error = new Error('Manual FX rate must be a positive finite number') as Error & { code: string };
+      error.code = 'INVALID_FX_RATE';
+      fxLogger.error('Invalid manual FX rate', { fromCurrency, toCurrency, rate, code: error.code });
+      throw error;
+    }
+
     fxLogger.debug('Setting manual FX rate', { fromCurrency, toCurrency, rate });
 
     await FxRateRepository.setRate({
