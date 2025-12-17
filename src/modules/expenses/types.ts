@@ -59,12 +59,12 @@ export interface CreateExpenseInput {
   category?: never; // Prevent usage in new code
   date?: string;
   convertedAmountMinor?: number;
-  splits: Array<{
+  splits: {
     participantId: string;
     share: number;
     shareType: "equal" | "percentage" | "amount" | "weight";
     amount?: number;
-  }>;
+  }[];
 }
 
 export interface UpdateExpenseInput {
@@ -77,10 +77,10 @@ export interface UpdateExpenseInput {
   categoryId?: string;
   category?: never; // Prevent usage in new code
   date?: string;
-  splits?: Array<{
+  splits?: {
     participantId: string;
     share: number;
     shareType: "equal" | "percentage" | "amount" | "weight";
     amount?: number;
-  }>;
+  }[];
 }

@@ -211,7 +211,6 @@ function ExpenseDetailsContent({
   }
 
   const paidByName = participantMap.get(expense.paidBy) || "Unknown";
-  const category = categories.find((c) => c.id === expense.categoryId);
   const showCurrencyConversion = expense.originalCurrency !== expense.currency;
   const showDisplayCurrency = !!displayAmounts;
 
@@ -229,7 +228,7 @@ function ExpenseDetailsContent({
             try {
               await deleteExpense(expenseId);
               router.back();
-            } catch (error) {
+            } catch {
               Alert.alert("Error", "Failed to delete expense");
               setIsDeleting(false);
             }

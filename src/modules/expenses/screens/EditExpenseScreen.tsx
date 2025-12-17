@@ -484,7 +484,7 @@ function EditExpenseScreenContent({
         // Navigate back to expense details
         router.back();
       }
-    } catch (err) {
+    } catch {
       Alert.alert("Error", "Failed to update expense");
     }
   };

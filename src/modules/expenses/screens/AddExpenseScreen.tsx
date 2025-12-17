@@ -421,7 +421,7 @@ function AddExpenseScreenContent({ tripId }: { tripId: string }) {
       });
 
       router.back();
-    } catch (err) {
+    } catch {
       Alert.alert("Error", "Failed to add expense");
     } finally {
       setIsCreating(false);

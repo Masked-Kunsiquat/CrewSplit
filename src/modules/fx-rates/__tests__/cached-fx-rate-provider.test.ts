@@ -3,21 +3,20 @@
  * LOCAL DATA ENGINEER: Cache correctness and synchronous access
  */
 
-import { mockDb, createRateRow } from "../test-utils/mock-db";
+import {
+  mockDb,
+  createRateRow,
+  mockFxRatesTable,
+  drizzleOrmMock as mockDrizzleOrm,
+} from "../test-utils/mock-db";
 
 jest.mock("@db/client", () => ({
   db: mockDb,
 }));
 
-jest.mock("@db/schema/fx-rates", () => {
-  const { mockFxRatesTable } = require("../test-utils/mock-db");
-  return { fxRates: mockFxRatesTable };
-});
+jest.mock("@db/schema/fx-rates", () => ({ fxRates: mockFxRatesTable }));
 
-jest.mock("drizzle-orm", () => {
-  const { drizzleOrmMock: mockDrizzleOrm } = require("../test-utils/mock-db");
-  return mockDrizzleOrm;
-});
+jest.mock("drizzle-orm", () => mockDrizzleOrm);
 
 jest.mock("expo-crypto", () => ({
   randomUUID: jest.fn(() => "manual-uuid"),
