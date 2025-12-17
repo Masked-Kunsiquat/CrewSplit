@@ -5,6 +5,23 @@
 
 (global as any).__DEV__ = false;
 
+import { computeSettlement } from "../service/SettlementService";
+import {
+  getExpensesForTrip,
+  getExpenseSplits,
+} from "../../expenses/repository";
+import { getParticipantsForTrip } from "../../participants/repository";
+
+jest.mock("@utils/logger", () => {
+  const logger = {
+    debug: jest.fn(),
+    info: jest.fn(),
+    warn: jest.fn(),
+    error: jest.fn(),
+  };
+  return { settlementLogger: logger };
+});
+
 jest.mock("../../expenses/repository", () => ({
   getExpensesForTrip: jest.fn(),
   getExpenseSplits: jest.fn(),
@@ -13,13 +30,6 @@ jest.mock("../../expenses/repository", () => ({
 jest.mock("../../participants/repository", () => ({
   getParticipantsForTrip: jest.fn(),
 }));
-
-const { computeSettlement } = require("../service/SettlementService");
-const {
-  getExpensesForTrip,
-  getExpenseSplits,
-} = require("../../expenses/repository");
-const { getParticipantsForTrip } = require("../../participants/repository");
 
 describe("SettlementService", () => {
   /**
