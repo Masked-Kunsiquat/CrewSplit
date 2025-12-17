@@ -3,8 +3,6 @@
  * Settlement Integration Engineer: Verify service connects algorithms to data layer
  */
 
-(global as any).__DEV__ = false;
-
 import { computeSettlement } from "../service/SettlementService";
 import {
   getExpensesForTrip,
