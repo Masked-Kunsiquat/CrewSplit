@@ -34,38 +34,38 @@ Options for obtaining FX data
 
 The table below compares possible data sources. Caching refers to storing responses locally in SQLite so they can be used offline.
 
-Option	API key required?	Update frequency (free tier)	Key benefits	Potential issues
-Frankfurter (api.frankfurter.dev)	No
+Option API key required? Update frequency (free tier) Key benefits Potential issues
+Frankfurter (api.frankfurter.dev) No
 frankfurter.dev
-	Updates daily around 16:00 CET
+Updates daily around 16:00 CET
 frankfurter.dev
-	– Completely free and open‑source. No usage caps or API keys
+– Completely free and open‑source. No usage caps or API keys
 frankfurter.dev
 . – Allows changing the base currency and filtering to specific target currencies
 frankfurter.dev
-. – Suitable for client‑side or mobile apps; you can self‑host if desired.	– Rates are end‑of‑day reference rates (not intraday). – Only ~30 years of historical data; may not support all exotic currencies.
-ExchangeRate‑API (Open access endpoint)	No
+. – Suitable for client‑side or mobile apps; you can self‑host if desired. – Rates are end‑of‑day reference rates (not intraday). – Only ~30 years of historical data; may not support all exotic currencies.
+ExchangeRate‑API (Open access endpoint) No
 exchangerate-api.com
- (attribution required)	Once per day
+(attribution required) Once per day
 exchangerate-api.com
-	– Free to use without an API key; caching is explicitly allowed
+– Free to use without an API key; caching is explicitly allowed
 exchangerate-api.com
 . – Returns base currency rates to all supported currencies in one call
 exchangerate-api.com
-.	– Rate limited; however, one request per day or even hourly is acceptable
+. – Rate limited; however, one request per day or even hourly is acceptable
 exchangerate-api.com
 . – Requires an attribution link
 exchangerate-api.com
 . – Data cannot be redistributed; only used within the app
 exchangerate-api.com
 .
-ExchangeRate‑API (free tier with key)	Yes	Once per day
+ExchangeRate‑API (free tier with key) Yes Once per day
 exchangerate-api.com
- (1.5k requests per month)	– More generous request limit; no attribution needed.	– Requires an API key for each device or a centralised backend. – Free tier limits may still be reached if many users request individually.
-European Central Bank (ECB) Data Portal)	No	Daily	– Official reference rates. – Provides SDMX 2.1 API with time series
+(1.5k requests per month) – More generous request limit; no attribution needed. – Requires an API key for each device or a centralised backend. – Free tier limits may still be reached if many users request individually.
+European Central Bank (ECB) Data Portal) No Daily – Official reference rates. – Provides SDMX 2.1 API with time series
 data.ecb.europa.eu
-.	– API is complex; requires constructing SDMX queries. – Only returns rates against EUR; converting via other base currencies requires additional calculations.
-Manual entry (Current stub provider)	No	User-defined	– Fully offline, deterministic; no dependencies.	– Requires users to know and input rates. – Not user-friendly and error-prone.
+. – API is complex; requires constructing SDMX queries. – Only returns rates against EUR; converting via other base currencies requires additional calculations.
+Manual entry (Current stub provider) No User-defined – Fully offline, deterministic; no dependencies. – Requires users to know and input rates. – Not user-friendly and error-prone.
 Recommended architecture
 
 Implement a CachedFxRateProvider
@@ -88,7 +88,7 @@ Choose a data source
 
 Primary choice: Frankfurter – It requires no API key or usage limits
 frankfurter.dev
- and is free to use in client‑side apps. The API returns daily rates with the ability to change the base currency and filter specific symbols
+and is free to use in client‑side apps. The API returns daily rates with the ability to change the base currency and filter specific symbols
 frankfurter.dev
 . For example, a GET request to https://api.frankfurter.dev/latest?base=EUR&symbols=USD,GBP,JPY returns USD, GBP and JPY rates. Because the API is open, each device could fetch the latest rates directly once per day. You may also self‑host the service, which would allow bundling the API with the app to guarantee availability.
 

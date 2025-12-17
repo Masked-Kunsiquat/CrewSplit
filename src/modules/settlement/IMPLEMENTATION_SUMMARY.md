@@ -33,24 +33,28 @@
 Created comprehensive test suite with **4 test files**:
 
 ### 1. normalize-shares.test.ts
+
 - 8 test suites, 24+ test cases
 - Tests all 4 split types
 - Edge cases: empty splits, zero amounts, mixed types
 - Determinism verification
 
 ### 2. calculate-balances.test.ts
+
 - 5 test suites, 15+ test cases
 - Single and multiple expense scenarios
 - Missing participants, zero values
 - Conservation of money verification
 
 ### 3. optimize-settlements.test.ts
+
 - 7 test suites, 18+ test cases
 - Simple to complex scenarios (2-4 participants)
 - No circular debts verification
 - Determinism with tie-breaking
 
 ### 4. integration.test.ts
+
 - 2 test suites, 6+ test cases
 - End-to-end pipeline testing
 - Correctness properties (conservation, determinism)
@@ -90,6 +94,7 @@ src/modules/settlement/
 ## Purity Guarantees
 
 All functions are **strictly pure**:
+
 - ❌ No database access
 - ❌ No UI dependencies
 - ❌ No side effects
@@ -124,6 +129,7 @@ All algorithms are efficient and suitable for typical trip sizes (2-20 participa
 ⚠️ **Note**: Test execution currently blocked by missing `react-native-reanimated/plugin` dependency in Jest configuration. This is a test infrastructure issue, not a problem with the settlement module code.
 
 **Tests are ready to run** once the dependency is installed:
+
 ```bash
 npx expo install react-native-reanimated
 ```
@@ -131,11 +137,13 @@ npx expo install react-native-reanimated
 ## Integration Points
 
 ### Upstream Dependencies
+
 - `Expense` type from [../expenses/types.ts](../expenses/types.ts)
 - `ExpenseSplit` type from [../expenses/types.ts](../expenses/types.ts)
 - `Participant` type from [../participants/types.ts](../participants/types.ts)
 
 ### Downstream Consumers (Future)
+
 - UI components will display settlements
 - Database queries will fetch data to pass to these functions
 - Export/sharing features will format settlement results
@@ -164,7 +172,7 @@ npx expo install react-native-reanimated
 ## Example Usage
 
 ```typescript
-import { calculateBalances, optimizeSettlements } from '@modules/settlement';
+import { calculateBalances, optimizeSettlements } from "@modules/settlement";
 
 // Given: expenses, splits, participants from database
 
@@ -184,7 +192,7 @@ const settlements = optimizeSettlements(balances);
 // ]
 
 // Step 3: Display to user
-settlements.forEach(s => {
+settlements.forEach((s) => {
   console.log(`${s.fromName} pays ${s.toName} $${(s.amount / 100).toFixed(2)}`);
 });
 ```

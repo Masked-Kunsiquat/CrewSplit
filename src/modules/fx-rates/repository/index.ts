@@ -3,11 +3,15 @@
  * LOCAL DATA ENGINEER: Offline-first FX rate management with ACID-safe writes
  */
 
-import * as Crypto from 'expo-crypto';
-import { db } from '@db/client';
-import { fxRates as fxRatesTable, type FxRate as FxRateRow, type FxRateSource } from '@db/schema/fx-rates';
-import { eq, and, desc, sql, or } from 'drizzle-orm';
-import { fxLogger } from '@utils/logger';
+import * as Crypto from "expo-crypto";
+import { db } from "@db/client";
+import {
+  fxRates as fxRatesTable,
+  type FxRate as FxRateRow,
+  type FxRateSource,
+} from "@db/schema/fx-rates";
+import { eq, and, desc, sql, or } from "drizzle-orm";
+import { fxLogger } from "@utils/logger";
 
 /**
  * Domain type for FX rate
@@ -43,11 +47,11 @@ export interface SetFxRateInput {
  * Batch input for bulk updates (e.g., from API fetch)
  */
 export interface BatchFxRateInput {
-  rates: Array<{
+  rates: {
     baseCurrency: string;
     quoteCurrency: string;
     rate: number;
-  }>;
+  }[];
   source: FxRateSource;
   fetchedAt?: string; // Defaults to now
   metadata?: Record<string, unknown>;
@@ -77,7 +81,7 @@ const tryParseJSON = (jsonString: string): Record<string, unknown> | null => {
   try {
     return JSON.parse(jsonString);
   } catch {
-    fxLogger.warn('Invalid JSON in metadata', { jsonString });
+    fxLogger.warn("Invalid JSON in metadata", { jsonString });
     return null;
   }
 };
@@ -89,7 +93,7 @@ const getDefaultPriority = (source: FxRateSource): number => {
   const priorities: Record<FxRateSource, number> = {
     manual: 100,
     frankfurter: 50,
-    'exchangerate-api': 40,
+    "exchangerate-api": 40,
     sync: 30,
   };
   return priorities[source] ?? 50;
@@ -103,18 +107,18 @@ const getDefaultPriority = (source: FxRateSource): number => {
  */
 export const getRate = async (
   baseCurrency: string,
-  quoteCurrency: string
+  quoteCurrency: string,
 ): Promise<FxRate | null> => {
   // Same currency = 1.0 (no DB lookup needed)
   if (baseCurrency === quoteCurrency) {
     const now = new Date().toISOString();
-    fxLogger.debug('Same currency lookup', { baseCurrency, quoteCurrency });
+    fxLogger.debug("Same currency lookup", { baseCurrency, quoteCurrency });
     return {
-      id: 'same-currency',
+      id: "same-currency",
       baseCurrency,
       quoteCurrency,
       rate: 1.0,
-      source: 'manual',
+      source: "manual",
       fetchedAt: now,
       priority: 100,
       metadata: null,
@@ -132,18 +136,22 @@ export const getRate = async (
       and(
         eq(fxRatesTable.baseCurrency, baseCurrency),
         eq(fxRatesTable.quoteCurrency, quoteCurrency),
-        eq(fxRatesTable.isArchived, false)
-      )
+        eq(fxRatesTable.isArchived, false),
+      ),
     )
     .orderBy(desc(fxRatesTable.priority), desc(fxRatesTable.fetchedAt))
     .limit(1);
 
   if (!rows.length) {
-    fxLogger.warn('FX rate not found', { baseCurrency, quoteCurrency });
+    fxLogger.warn("FX rate not found", { baseCurrency, quoteCurrency });
     return null;
   }
 
-  fxLogger.debug('FX rate loaded', { baseCurrency, quoteCurrency, rate: rows[0].rate });
+  fxLogger.debug("FX rate loaded", {
+    baseCurrency,
+    quoteCurrency,
+    rate: rows[0].rate,
+  });
   return mapFxRate(rows[0]);
 };
 
@@ -155,12 +163,22 @@ export const getRate = async (
  * @returns Created FX rate
  */
 export const setRate = async (input: SetFxRateInput): Promise<FxRate> => {
-  const { baseCurrency, quoteCurrency, rate, source, fetchedAt, priority, metadata } = input;
+  const {
+    baseCurrency,
+    quoteCurrency,
+    rate,
+    source,
+    fetchedAt,
+    priority,
+    metadata,
+  } = input;
 
   if (rate <= 0) {
-    fxLogger.error('Invalid FX rate', { baseCurrency, quoteCurrency, rate });
-    const error = new Error('FX rate must be positive') as Error & { code: string };
-    error.code = 'INVALID_FX_RATE';
+    fxLogger.error("Invalid FX rate", { baseCurrency, quoteCurrency, rate });
+    const error = new Error("FX rate must be positive") as Error & {
+      code: string;
+    };
+    error.code = "INVALID_FX_RATE";
     throw error;
   }
 
@@ -169,7 +187,12 @@ export const setRate = async (input: SetFxRateInput): Promise<FxRate> => {
   const effectivePriority = priority ?? getDefaultPriority(source);
   const metadataJson = metadata ? JSON.stringify(metadata) : null;
 
-  fxLogger.debug('Setting FX rate', { baseCurrency, quoteCurrency, rate, source });
+  fxLogger.debug("Setting FX rate", {
+    baseCurrency,
+    quoteCurrency,
+    rate,
+    source,
+  });
 
   return db.transaction(async (tx) => {
     // Archive existing rates for this pair (if any)
@@ -180,8 +203,8 @@ export const setRate = async (input: SetFxRateInput): Promise<FxRate> => {
         and(
           eq(fxRatesTable.baseCurrency, baseCurrency),
           eq(fxRatesTable.quoteCurrency, quoteCurrency),
-          eq(fxRatesTable.isArchived, false)
-        )
+          eq(fxRatesTable.isArchived, false),
+        ),
       );
 
     // Insert new rate
@@ -202,7 +225,12 @@ export const setRate = async (input: SetFxRateInput): Promise<FxRate> => {
       })
       .returning();
 
-    fxLogger.info('FX rate created', { baseCurrency, quoteCurrency, rate, id: inserted.id });
+    fxLogger.info("FX rate created", {
+      baseCurrency,
+      quoteCurrency,
+      rate,
+      id: inserted.id,
+    });
     return mapFxRate(inserted);
   });
 };
@@ -214,7 +242,9 @@ export const setRate = async (input: SetFxRateInput): Promise<FxRate> => {
  * @param input - Batch of rates with source
  * @returns Number of rates created
  */
-export const batchUpdateRates = async (input: BatchFxRateInput): Promise<number> => {
+export const batchUpdateRates = async (
+  input: BatchFxRateInput,
+): Promise<number> => {
   const { rates, source, fetchedAt, metadata } = input;
   const now = new Date().toISOString();
   const effectiveFetchedAt = fetchedAt ?? now;
@@ -222,18 +252,22 @@ export const batchUpdateRates = async (input: BatchFxRateInput): Promise<number>
   const metadataJson = metadata ? JSON.stringify(metadata) : null;
 
   if (rates.length === 0) {
-    fxLogger.warn('Batch update called with empty rates array');
+    fxLogger.warn("Batch update called with empty rates array");
     return 0;
   }
 
-  fxLogger.debug('Batch updating FX rates', { count: rates.length, source });
+  fxLogger.debug("Batch updating FX rates", { count: rates.length, source });
 
   return db.transaction(async (tx) => {
     let created = 0;
 
     for (const { baseCurrency, quoteCurrency, rate } of rates) {
       if (rate <= 0) {
-        fxLogger.warn('Skipping invalid rate in batch', { baseCurrency, quoteCurrency, rate });
+        fxLogger.warn("Skipping invalid rate in batch", {
+          baseCurrency,
+          quoteCurrency,
+          rate,
+        });
         continue;
       }
 
@@ -245,8 +279,8 @@ export const batchUpdateRates = async (input: BatchFxRateInput): Promise<number>
           and(
             eq(fxRatesTable.baseCurrency, baseCurrency),
             eq(fxRatesTable.quoteCurrency, quoteCurrency),
-            eq(fxRatesTable.isArchived, false)
-          )
+            eq(fxRatesTable.isArchived, false),
+          ),
         );
 
       // Insert new rate
@@ -267,7 +301,7 @@ export const batchUpdateRates = async (input: BatchFxRateInput): Promise<number>
       created++;
     }
 
-    fxLogger.info('Batch FX rates updated', { count: created, source });
+    fxLogger.info("Batch FX rates updated", { count: created, source });
     return created;
   });
 };
@@ -279,19 +313,24 @@ export const batchUpdateRates = async (input: BatchFxRateInput): Promise<number>
  * @param baseCurrency - Base currency (e.g., 'USD')
  * @returns Array of FX rates from base currency
  */
-export const getRatesForBaseCurrency = async (baseCurrency: string): Promise<FxRate[]> => {
+export const getRatesForBaseCurrency = async (
+  baseCurrency: string,
+): Promise<FxRate[]> => {
   const rows = await db
     .select()
     .from(fxRatesTable)
     .where(
       and(
         eq(fxRatesTable.baseCurrency, baseCurrency),
-        eq(fxRatesTable.isArchived, false)
-      )
+        eq(fxRatesTable.isArchived, false),
+      ),
     )
     .orderBy(desc(fxRatesTable.priority), desc(fxRatesTable.fetchedAt));
 
-  fxLogger.debug('Loaded rates for base currency', { baseCurrency, count: rows.length });
+  fxLogger.debug("Loaded rates for base currency", {
+    baseCurrency,
+    count: rows.length,
+  });
   return rows.map(mapFxRate);
 };
 
@@ -306,7 +345,7 @@ export const getAllActiveRates = async (): Promise<FxRate[]> => {
     .where(eq(fxRatesTable.isArchived, false))
     .orderBy(desc(fxRatesTable.priority), desc(fxRatesTable.fetchedAt));
 
-  fxLogger.debug('Loaded all active rates', { count: rows.length });
+  fxLogger.debug("Loaded all active rates", { count: rows.length });
   return rows.map(mapFxRate);
 };
 
@@ -331,7 +370,9 @@ export const getStalenessInfo = async (): Promise<{
   const totalRates = result[0]?.totalRates ?? 0;
 
   // Count rates older than 7 days (excluding manual rates)
-  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+  const sevenDaysAgo = new Date(
+    Date.now() - 7 * 24 * 60 * 60 * 1000,
+  ).toISOString();
   const staleResult = await db
     .select({ count: sql<number>`COUNT(*)` })
     .from(fxRatesTable)
@@ -340,11 +381,11 @@ export const getStalenessInfo = async (): Promise<{
         eq(fxRatesTable.isArchived, false),
         sql`${fxRatesTable.fetchedAt} < ${sevenDaysAgo}`,
         or(
-          eq(fxRatesTable.source, 'frankfurter'),
-          eq(fxRatesTable.source, 'exchangerate-api'),
-          eq(fxRatesTable.source, 'sync')
-        )
-      )
+          eq(fxRatesTable.source, "frankfurter"),
+          eq(fxRatesTable.source, "exchangerate-api"),
+          eq(fxRatesTable.source, "sync"),
+        ),
+      ),
     );
 
   const staleRates = staleResult[0]?.count ?? 0;
@@ -361,14 +402,14 @@ export const getStalenessInfo = async (): Promise<{
  * @param id - FX rate ID
  */
 export const archiveRate = async (id: string): Promise<void> => {
-  fxLogger.info('Archiving FX rate', { id });
+  fxLogger.info("Archiving FX rate", { id });
 
   await db
     .update(fxRatesTable)
     .set({ isArchived: true, updatedAt: new Date().toISOString() })
     .where(eq(fxRatesTable.id, id));
 
-  fxLogger.info('FX rate archived', { id });
+  fxLogger.info("FX rate archived", { id });
 };
 
 /**

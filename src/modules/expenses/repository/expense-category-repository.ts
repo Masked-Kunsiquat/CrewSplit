@@ -3,17 +3,17 @@
  * LOCAL DATA ENGINEER: Category CRUD with trip-scoped categories
  */
 
-import * as Crypto from 'expo-crypto';
-import { db } from '@db/client';
-import { expenseCategories } from '@db/schema/expense-categories';
-import { eq, and, isNull, or } from 'drizzle-orm';
-import { ExpenseCategory, CreateExpenseCategoryInput } from '../types';
+import * as Crypto from "expo-crypto";
+import { db } from "@db/client";
+import { expenseCategories } from "@db/schema/expense-categories";
+import { eq, and, isNull, or } from "drizzle-orm";
+import { ExpenseCategory, CreateExpenseCategoryInput } from "../types";
 
 /**
  * Get all categories visible for a trip (global + trip-specific, non-archived)
  */
 export const getCategoriesForTrip = async (
-  tripId: string
+  tripId: string,
 ): Promise<ExpenseCategory[]> => {
   const rows = await db
     .select()
@@ -22,10 +22,10 @@ export const getCategoriesForTrip = async (
       and(
         or(
           isNull(expenseCategories.tripId), // Global categories
-          eq(expenseCategories.tripId, tripId) // Trip-specific categories
+          eq(expenseCategories.tripId, tripId), // Trip-specific categories
         ),
-        eq(expenseCategories.isArchived, false) // Non-archived
-      )
+        eq(expenseCategories.isArchived, false), // Non-archived
+      ),
     )
     .orderBy(expenseCategories.sortOrder);
 
@@ -39,7 +39,7 @@ export const getCategoriesForTrip = async (
  * Get a single category by ID
  */
 export const getCategoryById = async (
-  id: string
+  id: string,
 ): Promise<ExpenseCategory | null> => {
   const rows = await db
     .select()
@@ -61,12 +61,14 @@ export const getCategoryById = async (
  * Custom categories must be associated with a trip
  */
 export const createCategory = async (
-  input: CreateExpenseCategoryInput
+  input: CreateExpenseCategoryInput,
 ): Promise<ExpenseCategory> => {
   // Enforce trip-scoped requirement
-  if (!input.tripId || input.tripId.trim() === '') {
-    const error = new Error('Custom categories must be associated with a trip') as Error & { code: string };
-    error.code = 'TRIP_ID_REQUIRED';
+  if (!input.tripId || input.tripId.trim() === "") {
+    const error = new Error(
+      "Custom categories must be associated with a trip",
+    ) as Error & { code: string };
+    error.code = "TRIP_ID_REQUIRED";
     throw error;
   }
 
@@ -107,13 +109,17 @@ export const archiveCategory = async (id: string): Promise<void> => {
       .limit(1);
 
     if (!existing.length) {
-      const error = new Error(`Category not found: ${id}`) as Error & { code: string };
-      error.code = 'CATEGORY_NOT_FOUND';
+      const error = new Error(`Category not found: ${id}`) as Error & {
+        code: string;
+      };
+      error.code = "CATEGORY_NOT_FOUND";
       throw error;
     }
     if (existing[0].isSystem) {
-      const error = new Error('Cannot archive system categories') as Error & { code: string };
-      error.code = 'CANNOT_ARCHIVE_SYSTEM_CATEGORY';
+      const error = new Error("Cannot archive system categories") as Error & {
+        code: string;
+      };
+      error.code = "CANNOT_ARCHIVE_SYSTEM_CATEGORY";
       throw error;
     }
 

@@ -3,31 +3,42 @@
  * Shows expense details with original, converted, and display currency amounts
  */
 
-import React, { useMemo, useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Alert, TouchableOpacity } from 'react-native';
-import { useRouter, useLocalSearchParams, useNavigation } from 'expo-router';
-import { theme } from '@ui/theme';
-import { Button, Card } from '@ui/components';
-import { useExpenseWithSplits } from '../hooks/use-expenses';
-import { useExpenseCategories } from '../hooks/use-expense-categories';
-import { useParticipants } from '@modules/participants/hooks/use-participants';
-import { useDisplayCurrency } from '@hooks/use-display-currency';
-import { formatCurrency } from '@utils/currency';
-import { defaultFxRateProvider } from '@modules/settlement/service/DisplayCurrencyAdapter';
-import { deleteExpense } from '../repository';
-import { currencyLogger } from '@utils/logger';
-import { useRefreshControl } from '@hooks/use-refresh-control';
+import React, { useMemo, useEffect, useState } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  ActivityIndicator,
+  Alert,
+  TouchableOpacity,
+} from "react-native";
+import { useRouter, useLocalSearchParams, useNavigation } from "expo-router";
+import { theme } from "@ui/theme";
+import { Button, Card } from "@ui/components";
+import { useExpenseWithSplits } from "../hooks/use-expenses";
+import { useExpenseCategories } from "../hooks/use-expense-categories";
+import { useParticipants } from "@modules/participants/hooks/use-participants";
+import { useDisplayCurrency } from "@hooks/use-display-currency";
+import { formatCurrency } from "@utils/currency";
+import { defaultFxRateProvider } from "@modules/settlement/service/DisplayCurrencyAdapter";
+import { deleteExpense } from "../repository";
+import { currencyLogger } from "@utils/logger";
+import { useRefreshControl } from "@hooks/use-refresh-control";
 
 export default function ExpenseDetailsScreen() {
   const router = useRouter();
-  const params = useLocalSearchParams<{ id?: string | string[]; expenseId?: string | string[] }>();
+  const params = useLocalSearchParams<{
+    id?: string | string[];
+    expenseId?: string | string[];
+  }>();
   const tripId = normalizeRouteParam(params.id);
   const expenseId = normalizeRouteParam(params.expenseId);
 
   if (!tripId || !expenseId) {
     const message = !tripId
-      ? 'Missing trip ID. Please go back and try again.'
-      : 'Missing expense ID. Please select an expense.';
+      ? "Missing trip ID. Please go back and try again."
+      : "Missing expense ID. Please select an expense.";
 
     return (
       <View style={styles.container}>
@@ -43,27 +54,46 @@ export default function ExpenseDetailsScreen() {
   return <ExpenseDetailsContent tripId={tripId} expenseId={expenseId} />;
 }
 
-function ExpenseDetailsContent({ tripId, expenseId }: { tripId: string; expenseId: string }) {
+function ExpenseDetailsContent({
+  tripId,
+  expenseId,
+}: {
+  tripId: string;
+  expenseId: string;
+}) {
   const router = useRouter();
   const navigation = useNavigation();
   const { displayCurrency } = useDisplayCurrency();
   const [isDeleting, setIsDeleting] = useState(false);
   const [editingExpense, setEditingExpense] = useState(false);
 
-  const { expense, splits, loading: expenseLoading, error: expenseError, refetch: refetchExpense } = useExpenseWithSplits(
-    expenseId
-  );
-  const { participants, loading: participantsLoading, refetch: refetchParticipants } = useParticipants(tripId);
+  const {
+    expense,
+    splits,
+    loading: expenseLoading,
+    error: expenseError,
+    refetch: refetchExpense,
+  } = useExpenseWithSplits(expenseId);
+  const {
+    participants,
+    loading: participantsLoading,
+    refetch: refetchParticipants,
+  } = useParticipants(tripId);
   const { categories } = useExpenseCategories(tripId);
 
   // Pull-to-refresh support (note: categories hook doesn't expose refetch, uses dependency-based refresh)
-  const refreshControl = useRefreshControl([refetchExpense, refetchParticipants]);
+  const refreshControl = useRefreshControl([
+    refetchExpense,
+    refetchParticipants,
+  ]);
 
   // Update native header title with category emoji
   useEffect(() => {
     if (expense) {
-      const category = categories.find(c => c.id === expense.categoryId);
-      const title = category ? `${expense.description}  •  ${category.emoji}` : expense.description;
+      const category = categories.find((c) => c.id === expense.categoryId);
+      const title = category
+        ? `${expense.description}  •  ${category.emoji}`
+        : expense.description;
       navigation.setOptions({
         title,
       });
@@ -82,9 +112,10 @@ function ExpenseDetailsContent({ tripId, expenseId }: { tripId: string; expenseI
     if (!expense) return new Map<string, number>();
 
     const totalAmount = expense.convertedAmountMinor;
-    const equalCount = splits.filter((s) => s.shareType === 'equal').length || 1;
+    const equalCount =
+      splits.filter((s) => s.shareType === "equal").length || 1;
     const totalWeight = splits
-      .filter((s) => s.shareType === 'weight')
+      .filter((s) => s.shareType === "weight")
       .reduce((sum, s) => sum + s.share, 0);
 
     const portions = new Map<string, number>();
@@ -92,15 +123,15 @@ function ExpenseDetailsContent({ tripId, expenseId }: { tripId: string; expenseI
     splits.forEach((split) => {
       let portion: number | null = null;
 
-      if (split.shareType === 'amount' && split.amount != null) {
+      if (split.shareType === "amount" && split.amount != null) {
         portion = split.amount;
-      } else if (split.shareType === 'percentage') {
+      } else if (split.shareType === "percentage") {
         portion = Math.round((split.share / 100) * totalAmount);
-      } else if (split.shareType === 'weight') {
+      } else if (split.shareType === "weight") {
         if (totalWeight > 0) {
           portion = Math.round((split.share / totalWeight) * totalAmount);
         }
-      } else if (split.shareType === 'equal') {
+      } else if (split.shareType === "equal") {
         portion = Math.round(totalAmount / equalCount);
       }
 
@@ -120,16 +151,17 @@ function ExpenseDetailsContent({ tripId, expenseId }: { tripId: string; expenseI
       // Convert expense amounts to display currency
       const fxRate = defaultFxRateProvider.getRate(
         expense.currency,
-        displayCurrency
+        displayCurrency,
       );
 
       return {
-        originalAmount: expense.originalAmountMinor !== expense.convertedAmountMinor
-          ? {
-              amount: expense.originalAmountMinor,
-              currency: expense.originalCurrency,
-            }
-          : null,
+        originalAmount:
+          expense.originalAmountMinor !== expense.convertedAmountMinor
+            ? {
+                amount: expense.originalAmountMinor,
+                currency: expense.originalCurrency,
+              }
+            : null,
         convertedAmount: {
           amount: expense.convertedAmountMinor,
           currency: expense.currency,
@@ -141,7 +173,7 @@ function ExpenseDetailsContent({ tripId, expenseId }: { tripId: string; expenseI
         fxRate,
       };
     } catch (error) {
-      currencyLogger.warn('Failed to convert to display currency', error);
+      currencyLogger.warn("Failed to convert to display currency", error);
       return null;
     }
   }, [expense, displayCurrency]);
@@ -167,7 +199,7 @@ function ExpenseDetailsContent({ tripId, expenseId }: { tripId: string; expenseI
         <View style={styles.centerContent}>
           <Text style={styles.errorTitle}>Error Loading Expense</Text>
           <Text style={styles.errorText}>
-            {expenseError?.message || 'Expense not found'}
+            {expenseError?.message || "Expense not found"}
           </Text>
           <Button
             title="Back to list"
@@ -178,32 +210,31 @@ function ExpenseDetailsContent({ tripId, expenseId }: { tripId: string; expenseI
     );
   }
 
-  const paidByName = participantMap.get(expense.paidBy) || 'Unknown';
-  const category = categories.find(c => c.id === expense.categoryId);
+  const paidByName = participantMap.get(expense.paidBy) || "Unknown";
   const showCurrencyConversion = expense.originalCurrency !== expense.currency;
   const showDisplayCurrency = !!displayAmounts;
 
   const handleDelete = () => {
     Alert.alert(
-      'Delete Expense',
+      "Delete Expense",
       `Delete "${expense.description}"? This action cannot be undone.`,
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: "Cancel", style: "cancel" },
         {
-          text: 'Delete',
-          style: 'destructive',
+          text: "Delete",
+          style: "destructive",
           onPress: async () => {
             setIsDeleting(true);
             try {
               await deleteExpense(expenseId);
               router.back();
-            } catch (error) {
-              Alert.alert('Error', 'Failed to delete expense');
+            } catch {
+              Alert.alert("Error", "Failed to delete expense");
               setIsDeleting(false);
             }
           },
         },
-      ]
+      ],
     );
   };
 
@@ -220,7 +251,9 @@ function ExpenseDetailsContent({ tripId, expenseId }: { tripId: string; expenseI
             <Text style={styles.sectionTitle}>{expense.description}</Text>
             <View style={styles.headerButtons}>
               <TouchableOpacity
-                onPress={() => router.push(`/trips/${tripId}/expenses/${expenseId}/edit`)}
+                onPress={() =>
+                  router.push(`/trips/${tripId}/expenses/${expenseId}/edit`)
+                }
                 style={styles.editButton}
                 accessible={true}
                 accessibilityRole="button"
@@ -231,14 +264,28 @@ function ExpenseDetailsContent({ tripId, expenseId }: { tripId: string; expenseI
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={() => setEditingExpense(!editingExpense)}
-                style={[styles.editButton, editingExpense && styles.deleteButtonActive]}
+                style={[
+                  styles.editButton,
+                  editingExpense && styles.deleteButtonActive,
+                ]}
                 accessible={true}
                 accessibilityRole="button"
-                accessibilityLabel={editingExpense ? "Cancel delete" : "Delete expense"}
-                accessibilityHint={editingExpense ? "Hides the delete option" : "Shows the delete option"}
+                accessibilityLabel={
+                  editingExpense ? "Cancel delete" : "Delete expense"
+                }
+                accessibilityHint={
+                  editingExpense
+                    ? "Hides the delete option"
+                    : "Shows the delete option"
+                }
               >
-                <Text style={[styles.editButtonText, editingExpense && styles.deleteButtonTextActive]}>
-                  {editingExpense ? 'Cancel' : 'Delete'}
+                <Text
+                  style={[
+                    styles.editButtonText,
+                    editingExpense && styles.deleteButtonTextActive,
+                  ]}
+                >
+                  {editingExpense ? "Cancel" : "Delete"}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -249,7 +296,10 @@ function ExpenseDetailsContent({ tripId, expenseId }: { tripId: string; expenseI
             <View style={styles.amountRow}>
               <Text style={styles.amountLabel}>Original amount:</Text>
               <Text style={styles.amount}>
-                {formatCurrency(expense.originalAmountMinor, expense.originalCurrency)}
+                {formatCurrency(
+                  expense.originalAmountMinor,
+                  expense.originalCurrency,
+                )}
               </Text>
             </View>
           )}
@@ -257,7 +307,9 @@ function ExpenseDetailsContent({ tripId, expenseId }: { tripId: string; expenseI
           {/* Converted Amount (trip currency) */}
           <View style={styles.amountRow}>
             <Text style={styles.amountLabel}>
-              {showCurrencyConversion ? 'Converted to trip currency:' : 'Amount:'}
+              {showCurrencyConversion
+                ? "Converted to trip currency:"
+                : "Amount:"}
             </Text>
             <Text style={[styles.amount, styles.primaryAmount]}>
               {formatCurrency(expense.convertedAmountMinor, expense.currency)}
@@ -271,7 +323,7 @@ function ExpenseDetailsContent({ tripId, expenseId }: { tripId: string; expenseI
               <Text style={styles.displayAmount}>
                 {formatCurrency(
                   displayAmounts.displayAmount.amount,
-                  displayAmounts.displayAmount.currency
+                  displayAmounts.displayAmount.currency,
                 )}
               </Text>
             </View>
@@ -281,8 +333,8 @@ function ExpenseDetailsContent({ tripId, expenseId }: { tripId: string; expenseI
           {showCurrencyConversion && expense.fxRateToTrip && (
             <View style={styles.fxRateRow}>
               <Text style={styles.fxRateText}>
-                Exchange rate: 1 {expense.originalCurrency} = {expense.fxRateToTrip.toFixed(4)}{' '}
-                {expense.currency}
+                Exchange rate: 1 {expense.originalCurrency} ={" "}
+                {expense.fxRateToTrip.toFixed(4)} {expense.currency}
               </Text>
             </View>
           )}
@@ -314,17 +366,18 @@ function ExpenseDetailsContent({ tripId, expenseId }: { tripId: string; expenseI
           <Text style={styles.sectionTitle}>Split Details</Text>
           {splits.length > 0 ? (
             splits.map((split) => {
-              const participantName = participantMap.get(split.participantId) || 'Unknown';
+              const participantName =
+                participantMap.get(split.participantId) || "Unknown";
               const portion = splitPortions.get(split.participantId);
               return (
                 <View key={split.id} style={styles.splitRow}>
                   <View style={styles.splitInfo}>
                     <Text style={styles.splitName}>{participantName}</Text>
                     <Text style={styles.splitType}>
-                      {split.shareType === 'equal' && 'Equal share'}
-                      {split.shareType === 'percentage' && `${split.share}%`}
-                      {split.shareType === 'weight' && `Weight: ${split.share}`}
-                      {split.shareType === 'amount' && 'Fixed amount'}
+                      {split.shareType === "equal" && "Equal share"}
+                      {split.shareType === "percentage" && `${split.share}%`}
+                      {split.shareType === "weight" && `Weight: ${split.share}`}
+                      {split.shareType === "amount" && "Fixed amount"}
                     </Text>
                   </View>
                   <View style={styles.splitAmounts}>
@@ -337,7 +390,7 @@ function ExpenseDetailsContent({ tripId, expenseId }: { tripId: string; expenseI
                           <Text style={styles.displayAmountSmall}>
                             {formatCurrency(
                               Math.round(portion * displayAmounts.fxRate),
-                              displayAmounts.displayAmount.currency
+                              displayAmounts.displayAmount.currency,
                             )}
                           </Text>
                         )}
@@ -357,7 +410,7 @@ function ExpenseDetailsContent({ tripId, expenseId }: { tripId: string; expenseI
           <Text style={styles.infoText}>
             All amounts are stored in cents to avoid floating-point errors.
             {showCurrencyConversion &&
-              ' Currency conversions are applied at the time of expense creation.'}
+              " Currency conversions are applied at the time of expense creation."}
           </Text>
         </Card>
 
@@ -366,10 +419,11 @@ function ExpenseDetailsContent({ tripId, expenseId }: { tripId: string; expenseI
           <Card style={styles.deleteCard}>
             <Text style={styles.deleteWarning}>Danger Zone</Text>
             <Text style={styles.deleteDescription}>
-              Deleting this expense will permanently remove it and all its split data. This action cannot be undone.
+              Deleting this expense will permanently remove it and all its split
+              data. This action cannot be undone.
             </Text>
             <Button
-              title={isDeleting ? 'Deleting...' : 'Delete Expense'}
+              title={isDeleting ? "Deleting..." : "Delete Expense"}
               onPress={handleDelete}
               fullWidth
               disabled={isDeleting}
@@ -402,19 +456,19 @@ const styles = StyleSheet.create({
   },
   centerContent: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     padding: theme.spacing.lg,
     gap: theme.spacing.md,
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
     marginBottom: theme.spacing.sm,
   },
   headerButtons: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: theme.spacing.sm,
   },
   editButton: {
@@ -449,7 +503,7 @@ const styles = StyleSheet.create({
   errorText: {
     fontSize: theme.typography.base,
     color: theme.colors.text,
-    textAlign: 'center',
+    textAlign: "center",
     marginBottom: theme.spacing.lg,
   },
   section: {
@@ -463,9 +517,9 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.sm,
   },
   amountRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: theme.spacing.xs,
   },
   amountLabel: {
@@ -484,18 +538,18 @@ const styles = StyleSheet.create({
   displayLabel: {
     fontSize: theme.typography.sm,
     color: theme.colors.textMuted,
-    fontStyle: 'italic',
+    fontStyle: "italic",
   },
   displayAmount: {
     fontSize: theme.typography.base,
     color: theme.colors.textMuted,
-    fontStyle: 'italic',
+    fontStyle: "italic",
   },
   displayAmountSmall: {
     fontSize: theme.typography.xs,
     color: theme.colors.textMuted,
-    fontStyle: 'italic',
-    textAlign: 'right',
+    fontStyle: "italic",
+    textAlign: "right",
     flexShrink: 1,
   },
   fxRateRow: {
@@ -505,7 +559,7 @@ const styles = StyleSheet.create({
   fxRateText: {
     fontSize: theme.typography.xs,
     color: theme.colors.textMuted,
-    fontStyle: 'italic',
+    fontStyle: "italic",
   },
   divider: {
     height: 1,
@@ -513,9 +567,9 @@ const styles = StyleSheet.create({
     marginVertical: theme.spacing.md,
   },
   metaRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: theme.spacing.xs,
   },
   metaLabel: {
@@ -528,9 +582,9 @@ const styles = StyleSheet.create({
     fontWeight: theme.typography.medium,
   },
   splitRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingVertical: theme.spacing.sm,
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.border,
@@ -550,23 +604,23 @@ const styles = StyleSheet.create({
     color: theme.colors.textSecondary,
   },
   splitAmounts: {
-    alignItems: 'flex-end',
+    alignItems: "flex-end",
     gap: 2,
     minWidth: 120,
     flexShrink: 1,
-    flexBasis: '45%',
+    flexBasis: "45%",
   },
   splitAmount: {
     fontSize: theme.typography.base,
     fontWeight: theme.typography.semibold,
     color: theme.colors.text,
-    textAlign: 'right',
+    textAlign: "right",
     flexShrink: 1,
   },
   emptyText: {
     fontSize: theme.typography.base,
     color: theme.colors.textSecondary,
-    textAlign: 'center',
+    textAlign: "center",
     paddingVertical: theme.spacing.lg,
   },
   infoCard: {
@@ -578,7 +632,7 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   deleteCard: {
-    backgroundColor: '#1a0000',
+    backgroundColor: "#1a0000",
     borderColor: theme.colors.error,
     borderWidth: 2,
   },
@@ -587,13 +641,13 @@ const styles = StyleSheet.create({
     fontWeight: theme.typography.bold,
     color: theme.colors.error,
     marginBottom: theme.spacing.xs,
-    textAlign: 'center',
+    textAlign: "center",
   },
   deleteDescription: {
     fontSize: theme.typography.sm,
     color: theme.colors.textSecondary,
     marginBottom: theme.spacing.md,
     lineHeight: 20,
-    textAlign: 'center',
+    textAlign: "center",
   },
 });

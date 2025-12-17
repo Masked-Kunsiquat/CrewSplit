@@ -3,23 +3,30 @@
  * Main dashboard for viewing and managing a trip
  */
 
-import React, { useState, useEffect, useMemo } from 'react';
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Alert } from 'react-native';
-import { useRouter, useLocalSearchParams, useNavigation } from 'expo-router';
-import { theme } from '@ui/theme';
-import { Button, Card } from '@ui/components';
-import { useTripById } from '../hooks/use-trips';
-import { useParticipants } from '../../participants/hooks/use-participants';
-import { useExpenses } from '../../expenses/hooks/use-expenses';
-import { updateTrip, deleteTrip } from '../repository';
-import { useRefreshControl } from '@hooks/use-refresh-control';
+import React, { useState, useEffect, useMemo } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  ActivityIndicator,
+  Alert,
+} from "react-native";
+import { useRouter, useLocalSearchParams, useNavigation } from "expo-router";
+import { theme } from "@ui/theme";
+import { Button, Card } from "@ui/components";
+import { useTripById } from "../hooks/use-trips";
+import { useParticipants } from "../../participants/hooks/use-participants";
+import { useExpenses } from "../../expenses/hooks/use-expenses";
+import { updateTrip, deleteTrip } from "../repository";
+import { useRefreshControl } from "@hooks/use-refresh-control";
 import {
   TripHeader,
   TripEditForm,
   TripSummaryCard,
   TripActionCards,
   DeleteTripCard,
-} from './components';
+} from "./components";
 
 export default function TripDashboardScreen() {
   const router = useRouter();
@@ -30,8 +37,10 @@ export default function TripDashboardScreen() {
     return (
       <View style={styles.container}>
         <View style={styles.centerContent}>
-          <Text style={styles.errorText}>Invalid trip. Please select a trip again.</Text>
-          <Button title="Back to trips" onPress={() => router.replace('/')} />
+          <Text style={styles.errorText}>
+            Invalid trip. Please select a trip again.
+          </Text>
+          <Button title="Back to trips" onPress={() => router.replace("/")} />
         </View>
       </View>
     );
@@ -44,20 +53,33 @@ function TripDashboardScreenContent({ tripId }: { tripId: string }) {
   const router = useRouter();
   const navigation = useNavigation();
 
-  const { trip, loading: tripLoading, error: tripError, refetch: refetchTrip } = useTripById(tripId);
-  const { participants, loading: participantsLoading, refetch: refetchParticipants } = useParticipants(tripId);
-  const { expenses, loading: expensesLoading, refetch: refetchExpenses } = useExpenses(tripId);
+  const {
+    trip,
+    loading: tripLoading,
+    error: tripError,
+    refetch: refetchTrip,
+  } = useTripById(tripId);
+  const {
+    participants,
+    loading: participantsLoading,
+    refetch: refetchParticipants,
+  } = useParticipants(tripId);
+  const {
+    expenses,
+    loading: expensesLoading,
+    refetch: refetchExpenses,
+  } = useExpenses(tripId);
 
   const refetchFunctions = useMemo(
     () => [refetchTrip, refetchParticipants, refetchExpenses],
-    [refetchTrip, refetchParticipants, refetchExpenses]
+    [refetchTrip, refetchParticipants, refetchExpenses],
   );
 
   // Pull-to-refresh support
   const refreshControl = useRefreshControl(refetchFunctions);
 
   const [editingName, setEditingName] = useState(false);
-  const [nameInput, setNameInput] = useState('');
+  const [nameInput, setNameInput] = useState("");
   const [emojiInput, setEmojiInput] = useState<string | undefined>(undefined);
   const [emojiPickerOpen, setEmojiPickerOpen] = useState(false);
   const [endDateInput, setEndDateInput] = useState<Date | null>(null);
@@ -75,10 +97,13 @@ function TripDashboardScreenContent({ tripId }: { tripId: string }) {
   const loading = tripLoading || participantsLoading || expensesLoading;
 
   // Calculate total expenses
-  const totalExpenses = expenses.reduce((sum, expense) => sum + expense.convertedAmountMinor, 0);
+  const totalExpenses = expenses.reduce(
+    (sum, expense) => sum + expense.convertedAmountMinor,
+    0,
+  );
 
   const handleEditName = () => {
-    setNameInput(trip?.name || '');
+    setNameInput(trip?.name || "");
     setEmojiInput(trip?.emoji);
     setEndDateInput(trip?.endDate ? new Date(trip.endDate) : null);
     setEditingName(true);
@@ -86,12 +111,15 @@ function TripDashboardScreenContent({ tripId }: { tripId: string }) {
 
   const handleSaveName = async () => {
     if (!nameInput.trim()) {
-      Alert.alert('Error', 'Trip name cannot be empty');
+      Alert.alert("Error", "Trip name cannot be empty");
       return;
     }
 
     if (endDateInput && trip && endDateInput < new Date(trip.startDate)) {
-      Alert.alert('Invalid Dates', 'End date must be on or after the start date.');
+      Alert.alert(
+        "Invalid Dates",
+        "End date must be on or after the start date.",
+      );
       return;
     }
 
@@ -104,39 +132,39 @@ function TripDashboardScreenContent({ tripId }: { tripId: string }) {
       navigation.setOptions({ title: updated.name });
       refetchTrip();
       setEditingName(false);
-    } catch (error) {
-      Alert.alert('Error', 'Failed to update trip');
+    } catch {
+      Alert.alert("Error", "Failed to update trip");
     }
   };
 
   const handleCancelEdit = () => {
     setEditingName(false);
-    setNameInput('');
+    setNameInput("");
     setEmojiInput(undefined);
     setEndDateInput(null);
   };
 
   const handleDeleteTrip = () => {
     Alert.alert(
-      'Delete Trip',
+      "Delete Trip",
       `Delete "${trip?.name}"? This will permanently delete all participants, expenses, and settlements for this trip. This action cannot be undone.`,
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: "Cancel", style: "cancel" },
         {
-          text: 'Delete',
-          style: 'destructive',
+          text: "Delete",
+          style: "destructive",
           onPress: async () => {
             setIsDeleting(true);
             try {
               await deleteTrip(tripId);
-              router.replace('/');
-            } catch (error) {
-              Alert.alert('Error', 'Failed to delete trip');
+              router.replace("/");
+            } catch {
+              Alert.alert("Error", "Failed to delete trip");
               setIsDeleting(false);
             }
           },
         },
-      ]
+      ],
     );
   };
 
@@ -210,7 +238,10 @@ function TripDashboardScreenContent({ tripId }: { tripId: string }) {
         <Button
           title="Add Expense"
           onPress={() =>
-            router.push({ pathname: '/trips/[id]/expenses/add', params: { id: tripId } })
+            router.push({
+              pathname: "/trips/[id]/expenses/add",
+              params: { id: tripId },
+            })
           }
           fullWidth
         />
@@ -233,8 +264,8 @@ const styles = StyleSheet.create({
   },
   centerContent: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   errorContainer: {
     padding: theme.spacing.lg,

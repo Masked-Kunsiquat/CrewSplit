@@ -501,15 +501,16 @@ Integration points:
 
 ### Query Performance
 
-| Query Type          | Index Used           | Time Complexity | Typical Latency |
-|---------------------|----------------------|-----------------|-----------------|
-| Get single rate     | currency_pair_idx    | O(log n)        | <10ms           |
-| Batch fetch 10 pairs| currency_pair_idx    | O(k log n)      | <50ms           |
-| Find stale rates    | fetched_at_idx       | O(log n)        | <100ms          |
-| Store rate          | None (INSERT)        | O(log n)        | <20ms           |
-| Archive rate        | None (UPDATE by PK)  | O(1)            | <20ms           |
+| Query Type           | Index Used          | Time Complexity | Typical Latency |
+| -------------------- | ------------------- | --------------- | --------------- |
+| Get single rate      | currency_pair_idx   | O(log n)        | <10ms           |
+| Batch fetch 10 pairs | currency_pair_idx   | O(k log n)      | <50ms           |
+| Find stale rates     | fetched_at_idx      | O(log n)        | <100ms          |
+| Store rate           | None (INSERT)       | O(log n)        | <20ms           |
+| Archive rate         | None (UPDATE by PK) | O(1)            | <20ms           |
 
 **Where**:
+
 - n = total rates in database (~4,500 after 1 year)
 - k = number of currency pairs requested
 

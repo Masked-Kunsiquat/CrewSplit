@@ -62,7 +62,7 @@ export const CurrencyUtils = {
    * @param currencyCode - ISO 4217 currency code (default: 'USD')
    * @returns Amount in major units
    */
-  minorToMajor(minor: number, currencyCode: string = 'USD'): number {
+  minorToMajor(minor: number, currencyCode: string = "USD"): number {
     const decimals = getDecimalPlaces(currencyCode);
     const factor = Math.pow(10, decimals);
     return minor / factor;
@@ -79,7 +79,7 @@ export const CurrencyUtils = {
    * @param currencyCode - ISO 4217 currency code (default: 'USD')
    * @returns Amount in minor units (rounded to avoid floating point errors)
    */
-  majorToMinor(major: number, currencyCode: string = 'USD'): number {
+  majorToMinor(major: number, currencyCode: string = "USD"): number {
     const decimals = getDecimalPlaces(currencyCode);
     const factor = Math.pow(10, decimals);
     return Math.round(major * factor);
@@ -94,11 +94,11 @@ export const CurrencyUtils = {
   formatMinor(minor: number, currencyCode: string): string {
     const major = this.minorToMajor(minor, currencyCode);
     try {
-      return new Intl.NumberFormat('en-US', {
-        style: 'currency',
+      return new Intl.NumberFormat("en-US", {
+        style: "currency",
         currency: currencyCode,
       }).format(major);
-    } catch (error) {
+    } catch {
       // Fallback if currency code is invalid
       const decimals = getDecimalPlaces(currencyCode);
       return `${currencyCode} ${major.toFixed(decimals)}`;
@@ -113,11 +113,11 @@ export const CurrencyUtils = {
    */
   formatMajor(major: number, currencyCode: string): string {
     try {
-      return new Intl.NumberFormat('en-US', {
-        style: 'currency',
+      return new Intl.NumberFormat("en-US", {
+        style: "currency",
         currency: currencyCode,
       }).format(major);
-    } catch (error) {
+    } catch {
       // Fallback if currency code is invalid
       const decimals = getDecimalPlaces(currencyCode);
       return `${currencyCode} ${major.toFixed(decimals)}`;

@@ -13,22 +13,25 @@ This module implements the core mathematical logic for splitting expenses and ca
 Converts different split types to actual amounts in cents.
 
 **Supported split types**:
+
 - `equal`: Divide expense evenly among participants
 - `percentage`: Split by percentage (must sum to 100)
 - `weight`: Split by weighted ratio
 - `amount`: Use exact amounts (must sum to expense total)
 
 **Rounding strategy**:
+
 - Uses `Math.floor` to get base amounts
 - Distributes remainder cents to participants with largest fractional parts
 - Ensures sum exactly equals expense amount (no rounding errors)
 
 **Example**:
+
 ```typescript
 const splits: ExpenseSplit[] = [
-  { participantId: 'alice', share: 0, shareType: 'equal' },
-  { participantId: 'bob', share: 0, shareType: 'equal' },
-  { participantId: 'charlie', share: 0, shareType: 'equal' },
+  { participantId: "alice", share: 0, shareType: "equal" },
+  { participantId: "bob", share: 0, shareType: "equal" },
+  { participantId: "charlie", share: 0, shareType: "equal" },
 ];
 
 const normalized = normalizeShares(splits, 1000); // $10.00
@@ -42,6 +45,7 @@ const normalized = normalizeShares(splits, 1000); // $10.00
 Calculates net positions for all participants across all expenses.
 
 **Net position formula**:
+
 ```
 netPosition = totalPaid - totalOwed
 ```
@@ -51,6 +55,7 @@ netPosition = totalPaid - totalOwed
 - **Zero**: Participant is settled
 
 **Example**:
+
 ```typescript
 // Alice paid $30, owes $10 → net +$20 (creditor)
 // Bob paid $0, owes $10 → net -$10 (debtor)
@@ -58,6 +63,7 @@ netPosition = totalPaid - totalOwed
 ```
 
 **Properties**:
+
 - Net positions always sum to zero (conservation of money)
 - Output is sorted by `participantId` for determinism
 - Handles participants with no expenses (zero balances)
@@ -69,6 +75,7 @@ netPosition = totalPaid - totalOwed
 Minimizes transactions using a greedy algorithm.
 
 **Algorithm**:
+
 1. Separate participants into creditors (net > 0) and debtors (net < 0)
 2. Sort both by absolute value descending, then by ID
 3. Match largest creditor with largest debtor
@@ -76,6 +83,7 @@ Minimizes transactions using a greedy algorithm.
 5. Repeat until all balanced
 
 **Example**:
+
 ```typescript
 // Alice: +$20, Bob: -$10, Charlie: -$10
 // Settlements:
@@ -84,6 +92,7 @@ Minimizes transactions using a greedy algorithm.
 ```
 
 **Properties**:
+
 - Minimizes number of transactions (at most N-1 for N participants)
 - No circular payment chains
 - Deterministic ordering ensures same output for same input
@@ -93,19 +102,25 @@ Minimizes transactions using a greedy algorithm.
 ## Architecture Layers
 
 ### 1. Pure Math Layer (MODELER)
+
 Pure functions with no side effects or dependencies:
+
 - `normalizeShares()` - Convert split types to amounts
 - `calculateBalances()` - Calculate participant balances
 - `optimizeSettlements()` - Minimize transactions
 
 ### 2. Service Layer (SETTLEMENT INTEGRATION ENGINEER)
+
 Connects algorithms to the data layer:
+
 - `service/SettlementService.ts` - Loads data and calls pure functions
 - Operates exclusively on `convertedAmountMinor` (trip currency)
 - Returns complete settlement summary
 
 ### 3. Hook Layer (UI INTEGRATION)
+
 React hooks for consuming settlement data:
+
 - `hooks/use-settlement.ts` - React hook for settlement queries
 - Integrates with app's query system
 - Handles loading and error states
@@ -115,7 +130,7 @@ React hooks for consuming settlement data:
 ### Using the Hook (Recommended)
 
 ```tsx
-import { useSettlement } from '@modules/settlement';
+import { useSettlement } from "@modules/settlement";
 
 function SettlementScreen({ tripId }: { tripId: string }) {
   const { settlement, loading, error } = useSettlement(tripId);
@@ -126,8 +141,10 @@ function SettlementScreen({ tripId }: { tripId: string }) {
 
   return (
     <View>
-      <Text>Total: ${settlement.totalExpenses / 100} {settlement.currency}</Text>
-      {settlement.settlements.map(s => (
+      <Text>
+        Total: ${settlement.totalExpenses / 100} {settlement.currency}
+      </Text>
+      {settlement.settlements.map((s) => (
         <Text key={`${s.from}-${s.to}`}>
           {s.fromName} pays {s.toName} ${s.amount / 100}
         </Text>
@@ -140,13 +157,13 @@ function SettlementScreen({ tripId }: { tripId: string }) {
 ### Using the Service Directly
 
 ```typescript
-import { computeSettlement } from '@modules/settlement';
+import { computeSettlement } from "@modules/settlement";
 
 async function generateSettlementReport(tripId: string) {
   const settlement = await computeSettlement(tripId);
 
   console.log(`Settlement in ${settlement.currency}`);
-  settlement.settlements.forEach(s => {
+  settlement.settlements.forEach((s) => {
     console.log(`${s.fromName} → ${s.toName}: $${s.amount / 100}`);
   });
 }
@@ -155,7 +172,7 @@ async function generateSettlementReport(tripId: string) {
 ### Using Pure Functions
 
 ```typescript
-import { calculateBalances, optimizeSettlements } from '@modules/settlement';
+import { calculateBalances, optimizeSettlements } from "@modules/settlement";
 
 // 1. Calculate balances from expenses
 const balances = calculateBalances(expenses, splits, participants);
@@ -164,7 +181,7 @@ const balances = calculateBalances(expenses, splits, participants);
 const settlements = optimizeSettlements(balances);
 
 // 3. Display to user
-settlements.forEach(s => {
+settlements.forEach((s) => {
   console.log(`${s.fromName} pays ${s.toName} $${s.amount / 100}`);
 });
 ```
@@ -172,6 +189,7 @@ settlements.forEach(s => {
 ## Type Definitions
 
 See [types.ts](./types.ts) for complete type definitions:
+
 - `ExpenseSplit`: How an expense is divided
 - `ParticipantBalance`: Net position for a participant
 - `Settlement`: A payment transaction from one person to another
@@ -180,27 +198,32 @@ See [types.ts](./types.ts) for complete type definitions:
 ## Design Principles
 
 ### 1. **Pure Functions**
+
 - No side effects
 - No database or UI dependencies
 - Same inputs → same outputs
 - See [PURITY_VERIFICATION.md](./PURITY_VERIFICATION.md)
 
 ### 2. **Determinism**
+
 - Stable sorting with explicit tie-breaking
 - No random values
 - No dependency on system time or external state
 
 ### 3. **Integer Math (Cents)**
+
 - All amounts stored as integers (cents)
 - Avoids floating-point rounding errors
 - Explicit remainder distribution
 
 ### 4. **Traceability**
+
 - Every output value can be traced to input data
 - No magic numbers or hidden calculations
 - Fully auditable
 
 ### 5. **Conservation**
+
 - Net positions always sum to zero
 - Total paid always equals total owed
 - No money created or destroyed
@@ -215,6 +238,7 @@ Comprehensive test suite in [\_\_tests\_\_](./__tests__/):
 - **integration.test.ts**: End-to-end settlement calculation, correctness properties
 
 Run tests:
+
 ```bash
 npm test -- settlement
 ```
@@ -233,6 +257,7 @@ npm test -- settlement
 ## Future Enhancements
 
 When implementing the sync module, consider:
+
 - **Conflict resolution**: How to merge balances from different devices
 - **Partial sync**: Incremental balance updates
 - **Version tracking**: Schema versioning for migrations

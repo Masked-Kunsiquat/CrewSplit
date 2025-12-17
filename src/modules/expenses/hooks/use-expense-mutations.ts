@@ -4,10 +4,10 @@
  * The repository already handles atomic transactions for expense + splits
  */
 
-import { useState, useCallback } from 'react';
-import { addExpense, updateExpense, deleteExpense } from '../repository';
-import type { Expense, CreateExpenseInput, UpdateExpenseInput } from '../types';
-import { expenseLogger } from '@utils/logger';
+import { useState, useCallback } from "react";
+import { addExpense, updateExpense, deleteExpense } from "../repository";
+import type { Expense, CreateExpenseInput, UpdateExpenseInput } from "../types";
+import { expenseLogger } from "@utils/logger";
 
 /**
  * Hook for creating an expense with splits in a single atomic transaction
@@ -25,15 +25,16 @@ export function useAddExpense() {
         const newExpense = await addExpense(input);
         return newExpense;
       } catch (err) {
-        const error = err instanceof Error ? err : new Error('Failed to create expense');
-        expenseLogger.error('Failed to add expense', error);
+        const error =
+          err instanceof Error ? err : new Error("Failed to create expense");
+        expenseLogger.error("Failed to add expense", error);
         setError(error);
         return null;
       } finally {
         setLoading(false);
       }
     },
-    []
+    [],
   );
 
   return { add, loading, error };
@@ -48,22 +49,26 @@ export function useUpdateExpense() {
   const [error, setError] = useState<Error | null>(null);
 
   const update = useCallback(
-    async (id: string, updates: UpdateExpenseInput): Promise<Expense | null> => {
+    async (
+      id: string,
+      updates: UpdateExpenseInput,
+    ): Promise<Expense | null> => {
       try {
         setLoading(true);
         setError(null);
         const updated = await updateExpense(id, updates);
         return updated;
       } catch (err) {
-        const error = err instanceof Error ? err : new Error('Failed to update expense');
-        expenseLogger.error('Failed to update expense', error);
+        const error =
+          err instanceof Error ? err : new Error("Failed to update expense");
+        expenseLogger.error("Failed to update expense", error);
         setError(error);
         return null;
       } finally {
         setLoading(false);
       }
     },
-    []
+    [],
   );
 
   return { update, loading, error };
@@ -83,8 +88,9 @@ export function useDeleteExpense() {
       setError(null);
       await deleteExpense(id);
     } catch (err) {
-      const error = err instanceof Error ? err : new Error('Failed to delete expense');
-      expenseLogger.error('Failed to delete expense', error);
+      const error =
+        err instanceof Error ? err : new Error("Failed to delete expense");
+      expenseLogger.error("Failed to delete expense", error);
       setError(error);
     } finally {
       setLoading(false);

@@ -3,10 +3,20 @@
  * UI/UX ENGINEER: Screen for creating new expenses with advanced split interface
  */
 
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, ActivityIndicator, Alert, Pressable } from 'react-native';
-import { useRouter, useLocalSearchParams, useNavigation } from 'expo-router';
-import { theme } from '@ui/theme';
+import React, { useState, useEffect } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
+  ActivityIndicator,
+  Alert,
+  Pressable,
+} from "react-native";
+import { useRouter, useLocalSearchParams, useNavigation } from "expo-router";
+import { theme } from "@ui/theme";
 import {
   Button,
   Input,
@@ -16,15 +26,20 @@ import {
   ParticipantSplitRow,
   SplitValidationSummary,
   SplitType,
-} from '@ui/components';
-import { useTripById } from '../../trips/hooks/use-trips';
-import { useParticipants } from '../../participants/hooks/use-participants';
-import { useExpenseCategories } from '../hooks/use-expense-categories';
-import { addExpense } from '../repository';
-import { parseCurrency } from '@utils/currency';
+} from "@ui/components";
+import { useTripById } from "../../trips/hooks/use-trips";
+import { useParticipants } from "../../participants/hooks/use-participants";
+import { useExpenseCategories } from "../hooks/use-expense-categories";
+import { addExpense } from "../repository";
+import { parseCurrency } from "@utils/currency";
 
 // Checkbox component for Personal Expense toggle
-function Checkbox({ checked, onToggle, label, helperText }: {
+function Checkbox({
+  checked,
+  onToggle,
+  label,
+  helperText,
+}: {
   checked: boolean;
   onToggle: () => void;
   label: string;
@@ -42,9 +57,7 @@ function Checkbox({ checked, onToggle, label, helperText }: {
         <View style={[styles.checkbox, checked && styles.checkboxChecked]}>
           {checked && <View style={styles.checkboxInner} />}
         </View>
-        <Text style={styles.checkboxLabel}>
-          {label}
-        </Text>
+        <Text style={styles.checkboxLabel}>{label}</Text>
       </Pressable>
       {helperText && <Text style={styles.checkboxHelper}>{helperText}</Text>}
     </View>
@@ -54,7 +67,10 @@ function Checkbox({ checked, onToggle, label, helperText }: {
 export default function AddExpenseScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ id?: string | string[] }>();
-  const normalizedTripId = React.useMemo(() => normalizeTripIdParam(params.id), [params.id]);
+  const normalizedTripId = React.useMemo(
+    () => normalizeTripIdParam(params.id),
+    [params.id],
+  );
 
   if (!normalizedTripId) {
     return (
@@ -64,10 +80,7 @@ export default function AddExpenseScreen() {
           <Text style={styles.errorText}>
             No trip ID provided. Please select a trip first.
           </Text>
-          <Button
-            title="Back to trips"
-            onPress={() => router.replace('/')}
-          />
+          <Button title="Back to trips" onPress={() => router.replace("/")} />
         </View>
       </View>
     );
@@ -80,8 +93,10 @@ function AddExpenseScreenContent({ tripId }: { tripId: string }) {
   const router = useRouter();
   const navigation = useNavigation();
   const { trip, loading: tripLoading } = useTripById(tripId);
-  const { participants, loading: participantsLoading } = useParticipants(tripId);
-  const { categories, loading: categoriesLoading } = useExpenseCategories(tripId);
+  const { participants, loading: participantsLoading } =
+    useParticipants(tripId);
+  const { categories, loading: categoriesLoading } =
+    useExpenseCategories(tripId);
 
   // Update native header title
   useEffect(() => {
@@ -93,16 +108,18 @@ function AddExpenseScreenContent({ tripId }: { tripId: string }) {
   }, [trip, navigation]);
 
   // Basic expense fields
-  const [description, setDescription] = useState('');
-  const [amount, setAmount] = useState('');
+  const [description, setDescription] = useState("");
+  const [amount, setAmount] = useState("");
   const [date, setDate] = useState(new Date());
   const [paidBy, setPaidBy] = useState<string | null>(null);
-  const [categoryId, setCategoryId] = useState<string>('cat-other'); // Default to "Other"
+  const [categoryId, setCategoryId] = useState<string>("cat-other"); // Default to "Other"
 
   // Split configuration
-  const [splitType, setSplitType] = useState<SplitType>('equal');
+  const [splitType, setSplitType] = useState<SplitType>("equal");
   const [isPersonalExpense, setIsPersonalExpense] = useState(false);
-  const [selectedParticipants, setSelectedParticipants] = useState<Set<string>>(new Set());
+  const [selectedParticipants, setSelectedParticipants] = useState<Set<string>>(
+    new Set(),
+  );
   const [splitValues, setSplitValues] = useState<Record<string, string>>({});
 
   const [isCreating, setIsCreating] = useState(false);
@@ -135,12 +152,12 @@ function AddExpenseScreenContent({ tripId }: { tripId: string }) {
   const handleToggleParticipant = (participantId: string) => {
     if (isPersonalExpense) return; // Don't allow manual toggle in personal mode
 
-    setSelectedParticipants(prev => {
+    setSelectedParticipants((prev) => {
       const next = new Set(prev);
       if (next.has(participantId)) {
         next.delete(participantId);
         // Remove split value when unselecting using functional updater
-        setSplitValues(prevValues => {
+        setSplitValues((prevValues) => {
           const copy = { ...prevValues };
           delete copy[participantId];
           return copy;
@@ -153,7 +170,7 @@ function AddExpenseScreenContent({ tripId }: { tripId: string }) {
   };
 
   const handleSplitValueChange = (participantId: string, value: string) => {
-    setSplitValues(prev => ({
+    setSplitValues((prev) => ({
       ...prev,
       [participantId]: value,
     }));
@@ -174,7 +191,12 @@ function AddExpenseScreenContent({ tripId }: { tripId: string }) {
   };
 
   // Validation logic
-  const validateSplits = (): { isValid: boolean; error?: string; current?: number; target?: number } => {
+  const validateSplits = (): {
+    isValid: boolean;
+    error?: string;
+    current?: number;
+    target?: number;
+  } => {
     const selectedCount = selectedParticipants.size;
 
     if (selectedCount === 0) {
@@ -183,74 +205,76 @@ function AddExpenseScreenContent({ tripId }: { tripId: string }) {
 
     const expenseAmountMinor = parseCurrency(amount);
 
-    if (splitType === 'equal') {
+    if (splitType === "equal") {
       return { isValid: true }; // Equal splits require no validation
     }
 
-    if (splitType === 'weight') {
+    if (splitType === "weight") {
       // Validate each weight is a finite positive number
       for (const pid of selectedParticipants) {
-        const value = parseFloat(splitValues[pid] || '1');
+        const value = parseFloat(splitValues[pid] || "1");
         if (!Number.isFinite(value) || value <= 0) {
           return {
             isValid: false,
-            error: 'Weights must be positive numbers',
+            error: "Weights must be positive numbers",
           };
         }
       }
       return { isValid: true };
     }
 
-    if (splitType === 'percentage') {
+    if (splitType === "percentage") {
       // Validate each percentage is finite and within 0-100
       for (const pid of selectedParticipants) {
-        const value = parseFloat(splitValues[pid] || '0');
+        const value = parseFloat(splitValues[pid] || "0");
         if (!Number.isFinite(value) || value < 0 || value > 100) {
           return {
             isValid: false,
-            error: 'Each percentage must be between 0 and 100',
+            error: "Each percentage must be between 0 and 100",
           };
         }
       }
 
       // Check that percentages sum to 100
       const total = Array.from(selectedParticipants).reduce((sum, pid) => {
-        const value = parseFloat(splitValues[pid] || '0');
+        const value = parseFloat(splitValues[pid] || "0");
         return sum + value;
       }, 0);
 
       const isValid = Math.abs(total - 100) < 0.01; // Allow small floating point errors
       return {
         isValid,
-        error: isValid ? undefined : `Percentages must add up to 100% (currently ${total.toFixed(1)}%)`,
+        error: isValid
+          ? undefined
+          : `Percentages must add up to 100% (currently ${total.toFixed(1)}%)`,
         current: total,
         target: 100,
       };
     }
 
-    if (splitType === 'amount') {
+    if (splitType === "amount") {
       // Validate each split amount is finite and non-negative
       for (const pid of selectedParticipants) {
-        const valueStr = splitValues[pid] || '0';
+        const valueStr = splitValues[pid] || "0";
         const value = parseCurrency(valueStr);
         if (!Number.isFinite(value) || value < 0) {
           return {
             isValid: false,
-            error: 'Split amounts must be non-negative',
+            error: "Split amounts must be non-negative",
           };
         }
       }
 
       // Check that split amounts sum to expense total
       const total = Array.from(selectedParticipants).reduce((sum, pid) => {
-        const value = parseCurrency(splitValues[pid] || '0');
+        const value = parseCurrency(splitValues[pid] || "0");
         return sum + value;
       }, 0);
 
       const isValid = total === expenseAmountMinor;
       return {
         isValid,
-        error: isValid ? undefined : 'Split amounts must equal expense total',
+        error: isValid ? undefined : "Split amounts must equal expense total",
         current: total,
         target: expenseAmountMinor,
       };
@@ -264,8 +288,8 @@ function AddExpenseScreenContent({ tripId }: { tripId: string }) {
   const handleCreate = async () => {
     if (!trip || !paidBy) {
       Alert.alert(
-        'Missing Information',
-        'Trip and payer are required to create an expense.'
+        "Missing Information",
+        "Trip and payer are required to create an expense.",
       );
       return;
     }
@@ -274,63 +298,73 @@ function AddExpenseScreenContent({ tripId }: { tripId: string }) {
     try {
       const amountMinor = parseCurrency(amount);
       if (amountMinor <= 0) {
-        Alert.alert('Invalid Amount', 'Please enter a valid amount greater than zero.');
+        Alert.alert(
+          "Invalid Amount",
+          "Please enter a valid amount greater than zero.",
+        );
         setIsCreating(false);
         return;
       }
 
       if (!validation.isValid) {
-        Alert.alert('Invalid Split', validation.error || 'Please check your split configuration.');
+        Alert.alert(
+          "Invalid Split",
+          validation.error || "Please check your split configuration.",
+        );
         setIsCreating(false);
         return;
       }
 
       // Build splits based on split type with validation
-      const splits = Array.from(selectedParticipants).map(participantId => {
-        if (splitType === 'equal') {
+      const splits = Array.from(selectedParticipants).map((participantId) => {
+        if (splitType === "equal") {
           return {
             participantId,
             share: 1,
-            shareType: 'equal' as const,
+            shareType: "equal" as const,
           };
         }
 
-        if (splitType === 'percentage') {
-          const percentage = parseFloat(splitValues[participantId] || '0');
+        if (splitType === "percentage") {
+          const percentage = parseFloat(splitValues[participantId] || "0");
           // Validate percentage is finite and within bounds
-          if (!Number.isFinite(percentage) || percentage < 0 || percentage > 100) {
-            throw new Error('Each percentage must be between 0 and 100');
+          if (
+            !Number.isFinite(percentage) ||
+            percentage < 0 ||
+            percentage > 100
+          ) {
+            throw new Error("Each percentage must be between 0 and 100");
           }
           return {
             participantId,
             share: percentage,
-            shareType: 'percentage' as const,
+            shareType: "percentage" as const,
           };
         }
 
-        if (splitType === 'weight') {
-          const weight = parseFloat(splitValues[participantId] || '1');
+        if (splitType === "weight") {
+          const weight = parseFloat(splitValues[participantId] || "1");
           // Validate weight is finite and positive
           if (!Number.isFinite(weight) || weight <= 0) {
-            throw new Error('Weights must be positive numbers');
+            throw new Error("Weights must be positive numbers");
           }
           return {
             participantId,
             share: weight,
-            shareType: 'weight' as const,
+            shareType: "weight" as const,
           };
         }
 
-        if (splitType === 'amount') {
-          const splitAmount = parseCurrency(splitValues[participantId] || '0');
+        if (splitType === "amount") {
+          const splitAmount = parseCurrency(splitValues[participantId] || "0");
           // Validate amount is finite and non-negative
           if (!Number.isFinite(splitAmount) || splitAmount < 0) {
-            throw new Error('Split amounts must be non-negative');
+            throw new Error("Split amounts must be non-negative");
           }
           return {
             participantId,
             share: 0, // Not used for amount type
-            shareType: 'amount' as const,
+            shareType: "amount" as const,
             amount: splitAmount,
           };
         }
@@ -339,17 +373,20 @@ function AddExpenseScreenContent({ tripId }: { tripId: string }) {
         return {
           participantId,
           share: 1,
-          shareType: 'equal' as const,
+          shareType: "equal" as const,
         };
       });
 
       // Additional validation for percentage sum
-      if (splitType === 'percentage') {
-        const totalPercentage = splits.reduce((sum, split) => sum + split.share, 0);
+      if (splitType === "percentage") {
+        const totalPercentage = splits.reduce(
+          (sum, split) => sum + split.share,
+          0,
+        );
         if (Math.abs(totalPercentage - 100) >= 0.01) {
           Alert.alert(
-            'Invalid Split',
-            `Percentages must add up to 100% (currently ${totalPercentage.toFixed(1)}%)`
+            "Invalid Split",
+            `Percentages must add up to 100% (currently ${totalPercentage.toFixed(1)}%)`,
           );
           setIsCreating(false);
           return;
@@ -357,12 +394,15 @@ function AddExpenseScreenContent({ tripId }: { tripId: string }) {
       }
 
       // Additional validation for amount sum
-      if (splitType === 'amount') {
-        const totalAmount = splits.reduce((sum, split) => sum + (split.amount || 0), 0);
+      if (splitType === "amount") {
+        const totalAmount = splits.reduce(
+          (sum, split) => sum + (split.amount || 0),
+          0,
+        );
         if (totalAmount !== amountMinor) {
           Alert.alert(
-            'Invalid Split',
-            'Split amounts must equal expense total'
+            "Invalid Split",
+            "Split amounts must equal expense total",
           );
           setIsCreating(false);
           return;
@@ -381,8 +421,8 @@ function AddExpenseScreenContent({ tripId }: { tripId: string }) {
       });
 
       router.back();
-    } catch (err) {
-      Alert.alert('Error', 'Failed to add expense');
+    } catch {
+      Alert.alert("Error", "Failed to add expense");
     } finally {
       setIsCreating(false);
     }
@@ -412,15 +452,14 @@ function AddExpenseScreenContent({ tripId }: { tripId: string }) {
       <View style={styles.container}>
         <View style={styles.centerContent}>
           <Text style={styles.errorTitle}>
-            {!trip ? 'Trip Not Found' : 'No Participants'}
+            {!trip ? "Trip Not Found" : "No Participants"}
           </Text>
           <Text style={styles.errorText}>
-            {!trip ? 'The requested trip could not be found.' : 'Add participants to this trip before creating expenses.'}
+            {!trip
+              ? "The requested trip could not be found."
+              : "Add participants to this trip before creating expenses."}
           </Text>
-          <Button
-            title="Back to trip"
-            onPress={() => router.back()}
-          />
+          <Button title="Back to trip" onPress={() => router.back()} />
         </View>
       </View>
     );
@@ -428,27 +467,27 @@ function AddExpenseScreenContent({ tripId }: { tripId: string }) {
 
   // Prepare split type options
   const splitTypeOptions: PickerOption<SplitType>[] = [
-    { label: 'Equal', value: 'equal' },
-    { label: 'Percentage', value: 'percentage' },
-    { label: 'Weight', value: 'weight' },
-    { label: 'Amount', value: 'amount' },
+    { label: "Equal", value: "equal" },
+    { label: "Percentage", value: "percentage" },
+    { label: "Weight", value: "weight" },
+    { label: "Amount", value: "amount" },
   ];
 
   // Prepare payer options
-  const payerOptions: PickerOption<string>[] = participants.map(p => ({
+  const payerOptions: PickerOption<string>[] = participants.map((p) => ({
     label: p.name,
     value: p.id,
   }));
 
   // Sort participants alphabetically
   const sortedParticipants = [...participants].sort((a, b) =>
-    a.name.localeCompare(b.name)
+    a.name.localeCompare(b.name),
   );
 
   return (
     <KeyboardAvoidingView
       style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
       <ScrollView
         style={styles.scrollView}
@@ -491,7 +530,7 @@ function AddExpenseScreenContent({ tripId }: { tripId: string }) {
           <View style={styles.halfColumn}>
             <Picker
               label="Paid by"
-              value={paidBy || ''}
+              value={paidBy || ""}
               options={payerOptions}
               onChange={handlePaidByChange}
               placeholder="Select payer"
@@ -502,10 +541,14 @@ function AddExpenseScreenContent({ tripId }: { tripId: string }) {
             <Picker
               label="Category"
               value={categoryId}
-              options={categories.length > 0 ? categories.map((cat) => ({
-                label: `${cat.emoji} ${cat.name}`,
-                value: cat.id,
-              })) : [{ label: '📝 Other', value: 'cat-other' }]}
+              options={
+                categories.length > 0
+                  ? categories.map((cat) => ({
+                      label: `${cat.emoji} ${cat.name}`,
+                      value: cat.id,
+                    }))
+                  : [{ label: "📝 Other", value: "cat-other" }]
+              }
               onChange={setCategoryId}
               placeholder="Select category"
             />
@@ -519,7 +562,9 @@ function AddExpenseScreenContent({ tripId }: { tripId: string }) {
           helperText="This expense is just for you—no splitting needed"
         />
 
-        <View style={[styles.section, !validation.isValid && styles.sectionError]}>
+        <View
+          style={[styles.section, !validation.isValid && styles.sectionError]}
+        >
           {!validation.isValid && (
             <Text style={styles.sectionErrorText}>{validation.error}</Text>
           )}
@@ -534,13 +579,12 @@ function AddExpenseScreenContent({ tripId }: { tripId: string }) {
           <Text style={styles.sectionLabel}>Participants</Text>
           <Text style={styles.sectionHelper}>
             {isPersonalExpense
-              ? 'Only the payer is selected for personal expenses'
-              : 'Tap to select participants in this expense'
-            }
+              ? "Only the payer is selected for personal expenses"
+              : "Tap to select participants in this expense"}
           </Text>
 
           <View style={styles.participantList}>
-            {sortedParticipants.map(participant => (
+            {sortedParticipants.map((participant) => (
               <ParticipantSplitRow
                 key={participant.id}
                 id={participant.id}
@@ -548,7 +592,7 @@ function AddExpenseScreenContent({ tripId }: { tripId: string }) {
                 avatarColor={participant.avatarColor}
                 selected={selectedParticipants.has(participant.id)}
                 splitType={splitType}
-                value={splitValues[participant.id] || ''}
+                value={splitValues[participant.id] || ""}
                 currency={trip.currency}
                 onToggle={handleToggleParticipant}
                 onValueChange={handleSplitValueChange}
@@ -557,15 +601,16 @@ function AddExpenseScreenContent({ tripId }: { tripId: string }) {
             ))}
           </View>
 
-          {validation.current !== undefined && validation.target !== undefined && (
-            <SplitValidationSummary
-              splitType={splitType}
-              current={validation.current}
-              target={validation.target}
-              currency={trip.currency}
-              isValid={validation.isValid}
-            />
-          )}
+          {validation.current !== undefined &&
+            validation.target !== undefined && (
+              <SplitValidationSummary
+                splitType={splitType}
+                current={validation.current}
+                target={validation.target}
+                currency={trip.currency}
+                isValid={validation.isValid}
+              />
+            )}
         </View>
       </ScrollView>
 
@@ -579,7 +624,7 @@ function AddExpenseScreenContent({ tripId }: { tripId: string }) {
         />
         <View style={{ height: theme.spacing.md }} />
         <Button
-          title={isCreating ? 'Saving...' : 'Save Expense'}
+          title={isCreating ? "Saving..." : "Save Expense"}
           onPress={handleCreate}
           fullWidth
           disabled={!canSubmit}
@@ -609,7 +654,7 @@ const styles = StyleSheet.create({
     gap: theme.spacing.md,
   },
   row: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: theme.spacing.md,
   },
   halfColumn: {
@@ -617,8 +662,8 @@ const styles = StyleSheet.create({
   },
   centerContent: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     padding: theme.spacing.lg,
   },
   errorTitle: {
@@ -630,7 +675,7 @@ const styles = StyleSheet.create({
   errorText: {
     fontSize: theme.typography.lg,
     color: theme.colors.error,
-    textAlign: 'center',
+    textAlign: "center",
     marginBottom: theme.spacing.lg,
   },
   section: {
@@ -639,7 +684,7 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.surface,
     borderRadius: theme.borderRadius.md,
     borderWidth: 2,
-    borderColor: 'transparent',
+    borderColor: "transparent",
   },
   sectionError: {
     borderColor: theme.colors.error,
@@ -664,14 +709,14 @@ const styles = StyleSheet.create({
   participantList: {
     backgroundColor: theme.colors.background,
     borderRadius: theme.borderRadius.sm,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   checkboxContainer: {
     marginBottom: theme.spacing.md,
   },
   checkboxRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   checkbox: {
     width: 24,
@@ -679,8 +724,8 @@ const styles = StyleSheet.create({
     borderRadius: theme.borderRadius.sm,
     borderWidth: 2,
     borderColor: theme.colors.border,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     marginRight: theme.spacing.md,
   },
   checkboxChecked: {

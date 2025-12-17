@@ -3,4 +3,4 @@
  * UI/UX ENGINEER: Route for individual trip view
  */
 
-export { default } from '@modules/trips/screens/TripDashboardScreen';
+export { default } from "@modules/trips/screens/TripDashboardScreen";

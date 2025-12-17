@@ -3,12 +3,19 @@
  * UI/UX ENGINEER: Primary action button with variants
  */
 
-import React from 'react';
-import { TouchableOpacity, Text, StyleSheet, ActivityIndicator, ViewStyle, TextStyle } from 'react-native';
-import { theme } from '../theme';
+import React from "react";
+import {
+  TouchableOpacity,
+  Text,
+  StyleSheet,
+  ActivityIndicator,
+  ViewStyle,
+  TextStyle,
+} from "react-native";
+import { theme } from "../theme";
 
-export type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'ghost';
-export type ButtonSize = 'sm' | 'md' | 'lg';
+export type ButtonVariant = "primary" | "secondary" | "outline" | "ghost";
+export type ButtonSize = "sm" | "md" | "lg";
 
 interface ButtonProps {
   title: string;
@@ -26,8 +33,8 @@ interface ButtonProps {
 export const Button: React.FC<ButtonProps> = ({
   title,
   onPress,
-  variant = 'primary',
-  size = 'md',
+  variant = "primary",
+  size = "md",
   disabled = false,
   loading = false,
   fullWidth = false,
@@ -61,7 +68,11 @@ export const Button: React.FC<ButtonProps> = ({
       testID={testID}
     >
       {loading ? (
-        <ActivityIndicator color={variant === 'primary' ? theme.colors.text : theme.colors.primary} />
+        <ActivityIndicator
+          color={
+            variant === "primary" ? theme.colors.text : theme.colors.primary
+          }
+        />
       ) : (
         <Text style={textStyle}>{title}</Text>
       )}
@@ -72,12 +83,12 @@ export const Button: React.FC<ButtonProps> = ({
 const styles = StyleSheet.create({
   base: {
     borderRadius: theme.borderRadius.md,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     minHeight: theme.touchTarget.minHeight,
   },
   fullWidth: {
-    width: '100%',
+    width: "100%",
   },
 
   // Variants
@@ -88,12 +99,12 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.surface,
   },
   outline: {
-    backgroundColor: 'transparent',
+    backgroundColor: "transparent",
     borderWidth: 1,
     borderColor: theme.colors.border,
   },
   ghost: {
-    backgroundColor: 'transparent',
+    backgroundColor: "transparent",
   },
 
   // Sizes

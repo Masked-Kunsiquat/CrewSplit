@@ -3,32 +3,32 @@
  * Trip members with foreign key to trips table
  */
 
-import { sql } from 'drizzle-orm';
-import { sqliteTable, text } from 'drizzle-orm/sqlite-core';
-import { trips } from './trips';
+import { sql } from "drizzle-orm";
+import { sqliteTable, text } from "drizzle-orm/sqlite-core";
+import { trips } from "./trips";
 
 /**
  * PARTICIPANTS TABLE
  * Represents members of a trip
  */
-export const participants = sqliteTable('participants', {
+export const participants = sqliteTable("participants", {
   // UUID primary key
-  id: text('id').primaryKey(),
+  id: text("id").primaryKey(),
 
   // Foreign key to trips table (CASCADE on delete)
-  tripId: text('trip_id')
+  tripId: text("trip_id")
     .notNull()
-    .references(() => trips.id, { onDelete: 'cascade' }),
+    .references(() => trips.id, { onDelete: "cascade" }),
 
   // Participant details
-  name: text('name').notNull(),
-  avatarColor: text('avatar_color'), // Hex color for UI (#RRGGBB)
+  name: text("name").notNull(),
+  avatarColor: text("avatar_color"), // Hex color for UI (#RRGGBB)
 
   // Timestamps
-  createdAt: text('created_at')
+  createdAt: text("created_at")
     .notNull()
     .default(sql`(datetime('now'))`),
-  updatedAt: text('updated_at')
+  updatedAt: text("updated_at")
     .notNull()
     .default(sql`(datetime('now'))`),
 });

@@ -3,9 +3,15 @@
  * UI/UX ENGINEER: Tap-to-toggle participant selector chip
  */
 
-import React from 'react';
-import { TouchableOpacity, Text, StyleSheet, View, GestureResponderEvent } from 'react-native';
-import { theme } from '../theme';
+import React from "react";
+import {
+  TouchableOpacity,
+  Text,
+  StyleSheet,
+  View,
+  GestureResponderEvent,
+} from "react-native";
+import { theme } from "../theme";
 
 interface ParticipantChipProps {
   id: string;
@@ -65,8 +71,8 @@ export const ParticipantChip: React.FC<ParticipantChipProps> = ({
 
 const styles = StyleSheet.create({
   chip: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     backgroundColor: theme.colors.surface,
     borderRadius: theme.borderRadius.full,
     paddingVertical: theme.spacing.sm,
@@ -88,8 +94,8 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     marginRight: theme.spacing.sm,
   },
   avatarText: {

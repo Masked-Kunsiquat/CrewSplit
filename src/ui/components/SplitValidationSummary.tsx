@@ -3,11 +3,11 @@
  * UI/UX ENGINEER: Running total and validation feedback for split types
  */
 
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import { theme } from '@ui/theme';
-import { formatCurrency } from '@utils/currency';
-import type { SplitType } from './ParticipantSplitRow';
+import React from "react";
+import { View, Text, StyleSheet } from "react-native";
+import { theme } from "@ui/theme";
+import { formatCurrency } from "@utils/currency";
+import type { SplitType } from "./ParticipantSplitRow";
 
 interface SplitValidationSummaryProps {
   /** Split type to determine validation logic */
@@ -41,22 +41,22 @@ export function SplitValidationSummary({
   isValid,
 }: SplitValidationSummaryProps) {
   // Don't show summary for equal or weight splits
-  if (splitType === 'equal' || splitType === 'weight') {
+  if (splitType === "equal" || splitType === "weight") {
     return null;
   }
 
   const getDisplayText = () => {
-    if (splitType === 'percentage') {
+    if (splitType === "percentage") {
       return `${current.toFixed(1)}/${target}%`;
     }
-    if (splitType === 'amount' && currency) {
+    if (splitType === "amount" && currency) {
       return `${formatCurrency(current, currency)}/${formatCurrency(target, currency)}`;
     }
-    return '';
+    return "";
   };
 
   const displayText = getDisplayText();
-  const accessibilityLabel = `${displayText}, ${isValid ? 'valid' : 'invalid'}`;
+  const accessibilityLabel = `${displayText}, ${isValid ? "valid" : "invalid"}`;
 
   return (
     <View
@@ -68,7 +68,7 @@ export function SplitValidationSummary({
     >
       <Text style={[styles.text, isValid && styles.textValid]}>
         {displayText}
-        {isValid && ' ✓'}
+        {isValid && " ✓"}
       </Text>
     </View>
   );
@@ -85,7 +85,7 @@ const styles = StyleSheet.create({
   text: {
     fontSize: theme.typography.base,
     color: theme.colors.textSecondary,
-    textAlign: 'center',
+    textAlign: "center",
     fontWeight: theme.typography.medium,
   },
   textValid: {

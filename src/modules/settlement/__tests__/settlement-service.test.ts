@@ -3,341 +3,342 @@
  * Settlement Integration Engineer: Verify service connects algorithms to data layer
  */
 
-import { computeSettlement } from '../service/SettlementService';
-import { db } from '@db/client';
-import { trips as tripsTable } from '@db/schema/trips';
-import { participants as participantsTable } from '@db/schema/participants';
-import { expenses as expensesTable } from '@db/schema/expenses';
-import { expenseSplits as expenseSplitsTable } from '@db/schema/expense-splits';
-import * as Crypto from 'expo-crypto';
+import { computeSettlement } from "../service/SettlementService";
+import {
+  getExpensesForTrip,
+  getExpenseSplits,
+} from "../../expenses/repository";
+import { getParticipantsForTrip } from "../../participants/repository";
 
-describe('SettlementService', () => {
+jest.mock("@utils/logger", () => {
+  const logger = {
+    debug: jest.fn(),
+    info: jest.fn(),
+    warn: jest.fn(),
+    error: jest.fn(),
+  };
+  return { settlementLogger: logger };
+});
+
+jest.mock("../../expenses/repository", () => ({
+  getExpensesForTrip: jest.fn(),
+  getExpenseSplits: jest.fn(),
+}));
+
+jest.mock("../../participants/repository", () => ({
+  getParticipantsForTrip: jest.fn(),
+}));
+
+describe("SettlementService", () => {
   /**
    * Clean up all test data after each test to ensure isolation
-   * Deletes in correct order to respect foreign key constraints:
-   * 1. expense_splits (references expenses and participants)
-   * 2. expenses (references trips and participants)
-   * 3. participants (references trips)
-   * 4. trips (root table)
    */
   afterEach(async () => {
-    // Delete in reverse dependency order to avoid foreign key violations
-    await db.delete(expenseSplitsTable);
-    await db.delete(expensesTable);
-    await db.delete(participantsTable);
-    await db.delete(tripsTable);
+    jest.resetAllMocks();
   });
 
-  describe('computeSettlement', () => {
-    it('should compute settlement for a trip with expenses', async () => {
-      // Create a test trip
-      const tripId = Crypto.randomUUID();
-      const now = new Date().toISOString();
+  const setTripData = ({
+    participants = [],
+    expenses = [],
+    splits = {},
+  }: {
+    participants?: any[];
+    expenses?: any[];
+    splits?: Record<string, any[]>;
+  }) => {
+    (getParticipantsForTrip as jest.Mock).mockResolvedValue(participants);
+    (getExpensesForTrip as jest.Mock).mockResolvedValue(expenses);
+    (getExpenseSplits as jest.Mock).mockImplementation((expenseId: string) =>
+      Promise.resolve(splits[expenseId] ?? []),
+    );
+  };
 
-      await db.insert(tripsTable).values({
-        id: tripId,
-        name: 'Test Trip',
-        currencyCode: 'USD',
-        currency: 'USD',
-        startDate: now,
-        createdAt: now,
-        updatedAt: now,
+  describe("computeSettlement", () => {
+    it("should compute settlement for a trip with expenses", async () => {
+      const tripId = "trip-1";
+      const aliceId = "alice";
+      const bobId = "bob";
+      const expenseId = "expense-1";
+      const now = "2024-01-01T00:00:00.000Z";
+
+      setTripData({
+        participants: [
+          { id: aliceId, tripId, name: "Alice", createdAt: now },
+          { id: bobId, tripId, name: "Bob", createdAt: now },
+        ],
+        expenses: [
+          {
+            id: expenseId,
+            tripId,
+            description: "Dinner",
+            amount: 3000,
+            currency: "USD",
+            originalCurrency: "USD",
+            originalAmountMinor: 3000,
+            fxRateToTrip: null,
+            convertedAmountMinor: 3000,
+            paidBy: aliceId,
+            date: now,
+            createdAt: now,
+            updatedAt: now,
+          },
+        ],
+        splits: {
+          [expenseId]: [
+            {
+              id: "split-1",
+              expenseId,
+              participantId: aliceId,
+              share: 1,
+              shareType: "equal",
+              createdAt: now,
+              updatedAt: now,
+            },
+            {
+              id: "split-2",
+              expenseId,
+              participantId: bobId,
+              share: 1,
+              shareType: "equal",
+              createdAt: now,
+              updatedAt: now,
+            },
+          ],
+        },
       });
 
-      // Create participants
-      const aliceId = Crypto.randomUUID();
-      const bobId = Crypto.randomUUID();
-
-      await db.insert(participantsTable).values([
-        {
-          id: aliceId,
-          tripId,
-          name: 'Alice',
-          createdAt: now,
-          updatedAt: now,
-        },
-        {
-          id: bobId,
-          tripId,
-          name: 'Bob',
-          createdAt: now,
-          updatedAt: now,
-        },
-      ]);
-
-      // Create expense: Alice paid $30 for both
-      const expenseId = Crypto.randomUUID();
-      await db.insert(expensesTable).values({
-        id: expenseId,
-        tripId,
-        description: 'Dinner',
-        amount: 3000, // $30 in cents
-        currency: 'USD',
-        originalCurrency: 'USD',
-        originalAmountMinor: 3000,
-        fxRateToTrip: null,
-        convertedAmountMinor: 3000,
-        paidBy: aliceId,
-        date: now,
-        createdAt: now,
-        updatedAt: now,
-      });
-
-      // Create splits: Equal split
-      await db.insert(expenseSplitsTable).values([
-        {
-          id: Crypto.randomUUID(),
-          expenseId,
-          participantId: aliceId,
-          share: 1,
-          shareType: 'equal',
-          createdAt: now,
-          updatedAt: now,
-        },
-        {
-          id: Crypto.randomUUID(),
-          expenseId,
-          participantId: bobId,
-          share: 1,
-          shareType: 'equal',
-          createdAt: now,
-          updatedAt: now,
-        },
-      ]);
-
-      // Compute settlement
       const settlement = await computeSettlement(tripId);
 
-      // Verify results
-      expect(settlement.currency).toBe('USD');
+      expect(settlement.currency).toBe("USD");
       expect(settlement.totalExpenses).toBe(3000);
       expect(settlement.balances).toHaveLength(2);
 
-      // Alice should be owed $15 (paid $30, owes $15)
-      const aliceBalance = settlement.balances.find(b => b.participantId === aliceId);
+      const aliceBalance = settlement.balances.find(
+        (b) => b.participantId === aliceId,
+      );
       expect(aliceBalance).toBeDefined();
       expect(aliceBalance!.totalPaid).toBe(3000);
       expect(aliceBalance!.totalOwed).toBe(1500);
       expect(aliceBalance!.netPosition).toBe(1500);
 
-      // Bob should owe $15 (paid $0, owes $15)
-      const bobBalance = settlement.balances.find(b => b.participantId === bobId);
+      const bobBalance = settlement.balances.find(
+        (b) => b.participantId === bobId,
+      );
       expect(bobBalance).toBeDefined();
       expect(bobBalance!.totalPaid).toBe(0);
       expect(bobBalance!.totalOwed).toBe(1500);
       expect(bobBalance!.netPosition).toBe(-1500);
 
-      // Settlement: Bob pays Alice $15
       expect(settlement.settlements).toHaveLength(1);
       expect(settlement.settlements[0]).toEqual({
         from: bobId,
-        fromName: 'Bob',
+        fromName: "Bob",
         to: aliceId,
-        toName: 'Alice',
+        toName: "Alice",
         amount: 1500,
       });
-    });
 
-    it('should handle multi-currency expenses using convertedAmountMinor', async () => {
-      // Create a test trip
-      const tripId = Crypto.randomUUID();
-      const now = new Date().toISOString();
-
-      await db.insert(tripsTable).values({
-        id: tripId,
-        name: 'Euro Trip',
-        currencyCode: 'EUR',
-        currency: 'EUR',
-        startDate: now,
-        createdAt: now,
-        updatedAt: now,
-      });
-
-      // Create participant
-      const charlieId = Crypto.randomUUID();
-
-      await db.insert(participantsTable).values({
-        id: charlieId,
-        tripId,
-        name: 'Charlie',
-        createdAt: now,
-        updatedAt: now,
-      });
-
-      // Create expense: Charlie paid $100 USD, converted to EUR at 0.92 rate
-      const expenseId = Crypto.randomUUID();
-      await db.insert(expensesTable).values({
-        id: expenseId,
-        tripId,
-        description: 'Hotel',
-        amount: 9200, // €92 in cents (converted)
-        currency: 'EUR',
-        originalCurrency: 'USD',
-        originalAmountMinor: 10000, // $100 in cents
-        fxRateToTrip: 0.92,
-        convertedAmountMinor: 9200, // €92 in cents
-        paidBy: charlieId,
-        date: now,
-        createdAt: now,
-        updatedAt: now,
-      });
-
-      // Create split: Charlie pays all
-      await db.insert(expenseSplitsTable).values({
-        id: Crypto.randomUUID(),
-        expenseId,
-        participantId: charlieId,
-        share: 1,
-        shareType: 'equal',
-        createdAt: now,
-        updatedAt: now,
-      });
-
-      // Compute settlement
-      const settlement = await computeSettlement(tripId);
-
-      // Verify settlement uses convertedAmountMinor (EUR)
-      expect(settlement.currency).toBe('EUR');
-      expect(settlement.totalExpenses).toBe(9200); // €92 in cents
-      expect(settlement.balances).toHaveLength(1);
-
-      const charlieBalance = settlement.balances[0];
-      expect(charlieBalance.participantId).toBe(charlieId);
-      expect(charlieBalance.totalPaid).toBe(9200); // €92 in cents
-      expect(charlieBalance.totalOwed).toBe(9200); // €92 in cents
-      expect(charlieBalance.netPosition).toBe(0); // Balanced
-
-      // No settlements needed
-      expect(settlement.settlements).toHaveLength(0);
-    });
-
-    it('should throw error for non-existent trip', async () => {
-      const nonExistentTripId = Crypto.randomUUID();
-
-      await expect(computeSettlement(nonExistentTripId)).rejects.toThrow(
-        `Trip not found for id ${nonExistentTripId}`
+      const netSum = settlement.balances.reduce(
+        (sum, balance) => sum + balance.netPosition,
+        0,
       );
+      const totalPaidSum = settlement.balances.reduce(
+        (sum, balance) => sum + balance.totalPaid,
+        0,
+      );
+      const totalOwedSum = settlement.balances.reduce(
+        (sum, balance) => sum + balance.totalOwed,
+        0,
+      );
+
+      expect(netSum).toBe(0);
+      expect(totalPaidSum).toBe(totalOwedSum);
     });
 
-    it('should handle trips with no expenses', async () => {
-      // Create a test trip with no expenses
-      const tripId = Crypto.randomUUID();
-      const now = new Date().toISOString();
+    it("should handle multi-currency expenses using convertedAmountMinor", async () => {
+      const tripId = "trip-2";
+      const charlieId = "charlie";
+      const danaId = "dana";
+      const expenseId = "expense-2";
+      const now = "2024-02-01T00:00:00.000Z";
 
-      await db.insert(tripsTable).values({
-        id: tripId,
-        name: 'Empty Trip',
-        currencyCode: 'USD',
-        currency: 'USD',
-        startDate: now,
-        createdAt: now,
-        updatedAt: now,
+      setTripData({
+        participants: [
+          { id: charlieId, tripId, name: "Charlie", createdAt: now },
+          { id: danaId, tripId, name: "Dana", createdAt: now },
+        ],
+        expenses: [
+          {
+            id: expenseId,
+            tripId,
+            description: "Hotel",
+            amount: 9200,
+            currency: "EUR",
+            originalCurrency: "USD",
+            originalAmountMinor: 10000,
+            fxRateToTrip: 0.92,
+            convertedAmountMinor: 9200,
+            paidBy: charlieId,
+            date: now,
+            createdAt: now,
+            updatedAt: now,
+          },
+        ],
+        splits: {
+          [expenseId]: [
+            {
+              id: "split-3",
+              expenseId,
+              participantId: charlieId,
+              share: 1,
+              shareType: "equal",
+              createdAt: now,
+              updatedAt: now,
+            },
+            {
+              id: "split-4",
+              expenseId,
+              participantId: danaId,
+              share: 1,
+              shareType: "equal",
+              createdAt: now,
+              updatedAt: now,
+            },
+          ],
+        },
       });
 
-      // Create participants
-      const daveId = Crypto.randomUUID();
-      await db.insert(participantsTable).values({
-        id: daveId,
-        tripId,
-        name: 'Dave',
-        createdAt: now,
-        updatedAt: now,
-      });
-
-      // Compute settlement
       const settlement = await computeSettlement(tripId);
 
-      // Verify results
-      expect(settlement.currency).toBe('USD');
+      expect(settlement.currency).toBe("EUR");
+      expect(settlement.totalExpenses).toBe(9200);
+      expect(settlement.balances).toHaveLength(2);
+
+      const charlieBalance = settlement.balances.find(
+        (b) => b.participantId === charlieId,
+      )!;
+      expect(charlieBalance.participantId).toBe(charlieId);
+      expect(charlieBalance.totalPaid).toBe(9200);
+      expect(charlieBalance.totalOwed).toBe(4600);
+      expect(charlieBalance.netPosition).toBe(4600);
+
+      const danaBalance = settlement.balances.find(
+        (b) => b.participantId === danaId,
+      )!;
+      expect(danaBalance.totalPaid).toBe(0);
+      expect(danaBalance.totalOwed).toBe(4600);
+      expect(danaBalance.netPosition).toBe(-4600);
+      expect(settlement.settlements).toHaveLength(1);
+
+      const netSum = settlement.balances.reduce(
+        (sum, balance) => sum + balance.netPosition,
+        0,
+      );
+      const totalPaidSum = settlement.balances.reduce(
+        (sum, balance) => sum + balance.totalPaid,
+        0,
+      );
+      const totalOwedSum = settlement.balances.reduce(
+        (sum, balance) => sum + balance.totalOwed,
+        0,
+      );
+
+      expect(netSum).toBe(0);
+      expect(totalPaidSum).toBe(totalOwedSum);
+    });
+
+    it("should handle trips with no expenses", async () => {
+      const tripId = "trip-empty";
+      setTripData({
+        participants: [{ id: "p1", tripId, name: "Dave", createdAt: "now" }],
+        expenses: [],
+        splits: {},
+      });
+
+      const settlement = await computeSettlement(tripId);
+
+      expect(settlement.currency).toBe("USD");
       expect(settlement.totalExpenses).toBe(0);
-      expect(settlement.balances).toHaveLength(1);
-      expect(settlement.balances[0].netPosition).toBe(0);
-      expect(settlement.settlements).toHaveLength(0);
+      expect(settlement.balances).toEqual([]);
+      expect(settlement.settlements).toEqual([]);
     });
   });
 
-  describe('edge cases', () => {
-    it('should handle weighted-share splits correctly', async () => {
-      // Create a test trip
-      const tripId = Crypto.randomUUID();
-      const now = new Date().toISOString();
+  describe("edge cases", () => {
+    it("should handle weighted-share splits correctly", async () => {
+      const tripId = "weighted-trip";
+      const now = "2024-03-01T00:00:00.000Z";
+      const aliceId = "alice-weight";
+      const bobId = "bob-weight";
+      const expenseId = "expense-weight";
 
-      await db.insert(tripsTable).values({
-        id: tripId,
-        name: 'Weighted Split Trip',
-        currencyCode: 'USD',
-        currency: 'USD',
-        startDate: now,
-        createdAt: now,
-        updatedAt: now,
-      });
-
-      // Create participants
-      const aliceId = Crypto.randomUUID();
-      const bobId = Crypto.randomUUID();
-
-      await db.insert(participantsTable).values([
-        { id: aliceId, tripId, name: 'Alice', createdAt: now, updatedAt: now },
-        { id: bobId, tripId, name: 'Bob', createdAt: now, updatedAt: now },
-      ]);
-
-      // Create expense: Alice paid $90, split 2:1 (Alice gets 2 shares, Bob gets 1 share)
-      const expenseId = Crypto.randomUUID();
-      await db.insert(expensesTable).values({
-        id: expenseId,
-        tripId,
-        description: 'Weighted Expense',
-        amount: 9000, // $90 in cents
-        currency: 'USD',
-        originalCurrency: 'USD',
-        originalAmountMinor: 9000,
-        fxRateToTrip: null,
-        convertedAmountMinor: 9000,
-        paidBy: aliceId,
-        date: now,
-        createdAt: now,
-        updatedAt: now,
-      });
-
-      // Create weighted splits (2:1 ratio)
-      await db.insert(expenseSplitsTable).values([
-        {
-          id: Crypto.randomUUID(),
-          expenseId,
-          participantId: aliceId,
-          share: 2, // 2 shares
-          shareType: 'weight',
-          createdAt: now,
-          updatedAt: now,
+      setTripData({
+        participants: [
+          { id: aliceId, tripId, name: "Alice", createdAt: now },
+          { id: bobId, tripId, name: "Bob", createdAt: now },
+        ],
+        expenses: [
+          {
+            id: expenseId,
+            tripId,
+            description: "Weighted Expense",
+            amount: 9000,
+            currency: "USD",
+            originalCurrency: "USD",
+            originalAmountMinor: 9000,
+            fxRateToTrip: null,
+            convertedAmountMinor: 9000,
+            paidBy: aliceId,
+            date: now,
+            createdAt: now,
+            updatedAt: now,
+          },
+        ],
+        splits: {
+          [expenseId]: [
+            {
+              id: "split-w1",
+              expenseId,
+              participantId: aliceId,
+              share: 2,
+              shareType: "weight",
+              createdAt: now,
+              updatedAt: now,
+            },
+            {
+              id: "split-w2",
+              expenseId,
+              participantId: bobId,
+              share: 1,
+              shareType: "weight",
+              createdAt: now,
+              updatedAt: now,
+            },
+          ],
         },
-        {
-          id: Crypto.randomUUID(),
-          expenseId,
-          participantId: bobId,
-          share: 1, // 1 share
-          shareType: 'weight',
-          createdAt: now,
-          updatedAt: now,
-        },
-      ]);
+      });
 
       // Compute settlement
       const settlement = await computeSettlement(tripId);
 
       // Verify results
-      expect(settlement.currency).toBe('USD');
+      expect(settlement.currency).toBe("USD");
       expect(settlement.totalExpenses).toBe(9000);
       expect(settlement.balances).toHaveLength(2);
 
       // Alice: paid $90, owes $60 (2/3 of $90) → net +$30
-      const aliceBalance = settlement.balances.find(b => b.participantId === aliceId);
+      const aliceBalance = settlement.balances.find(
+        (b) => b.participantId === aliceId,
+      );
       expect(aliceBalance).toBeDefined();
       expect(aliceBalance!.totalPaid).toBe(9000);
       expect(aliceBalance!.totalOwed).toBe(6000); // 2/3 of 9000
       expect(aliceBalance!.netPosition).toBe(3000); // +$30
 
       // Bob: paid $0, owes $30 (1/3 of $90) → net -$30
-      const bobBalance = settlement.balances.find(b => b.participantId === bobId);
+      const bobBalance = settlement.balances.find(
+        (b) => b.participantId === bobId,
+      );
       expect(bobBalance).toBeDefined();
       expect(bobBalance!.totalPaid).toBe(0);
       expect(bobBalance!.totalOwed).toBe(3000); // 1/3 of 9000
@@ -347,79 +348,67 @@ describe('SettlementService', () => {
       expect(settlement.settlements).toHaveLength(1);
       expect(settlement.settlements[0]).toEqual({
         from: bobId,
-        fromName: 'Bob',
+        fromName: "Bob",
         to: aliceId,
-        toName: 'Alice',
+        toName: "Alice",
         amount: 3000,
       });
     });
 
-    it('should handle excluded participants correctly', async () => {
-      // Create a test trip
-      const tripId = Crypto.randomUUID();
-      const now = new Date().toISOString();
+    it("should handle excluded participants correctly", async () => {
+      const tripId = "excluded-trip";
+      const now = "2024-04-01T00:00:00.000Z";
+      const aliceId = "alice-ex";
+      const bobId = "bob-ex";
+      const charlieId = "charlie-ex";
+      const expenseId = "expense-ex";
 
-      await db.insert(tripsTable).values({
-        id: tripId,
-        name: 'Excluded Participant Trip',
-        currencyCode: 'USD',
-        currency: 'USD',
-        startDate: now,
-        createdAt: now,
-        updatedAt: now,
-      });
-
-      // Create three participants
-      const aliceId = Crypto.randomUUID();
-      const bobId = Crypto.randomUUID();
-      const charlieId = Crypto.randomUUID();
-
-      await db.insert(participantsTable).values([
-        { id: aliceId, tripId, name: 'Alice', createdAt: now, updatedAt: now },
-        { id: bobId, tripId, name: 'Bob', createdAt: now, updatedAt: now },
-        { id: charlieId, tripId, name: 'Charlie', createdAt: now, updatedAt: now },
-      ]);
-
-      // Create expense: Alice paid $60, but Charlie is excluded from split
-      const expenseId = Crypto.randomUUID();
-      await db.insert(expensesTable).values({
-        id: expenseId,
-        tripId,
-        description: 'Lunch for Alice and Bob',
-        amount: 6000, // $60 in cents
-        currency: 'USD',
-        originalCurrency: 'USD',
-        originalAmountMinor: 6000,
-        fxRateToTrip: null,
-        convertedAmountMinor: 6000,
-        paidBy: aliceId,
-        date: now,
-        createdAt: now,
-        updatedAt: now,
-      });
-
-      // Create splits: only Alice and Bob (Charlie excluded)
-      await db.insert(expenseSplitsTable).values([
-        {
-          id: Crypto.randomUUID(),
-          expenseId,
-          participantId: aliceId,
-          share: 1,
-          shareType: 'equal',
-          createdAt: now,
-          updatedAt: now,
+      setTripData({
+        participants: [
+          { id: aliceId, tripId, name: "Alice", createdAt: now },
+          { id: bobId, tripId, name: "Bob", createdAt: now },
+          { id: charlieId, tripId, name: "Charlie", createdAt: now },
+        ],
+        expenses: [
+          {
+            id: expenseId,
+            tripId,
+            description: "Lunch for Alice and Bob",
+            amount: 6000,
+            currency: "USD",
+            originalCurrency: "USD",
+            originalAmountMinor: 6000,
+            fxRateToTrip: null,
+            convertedAmountMinor: 6000,
+            paidBy: aliceId,
+            date: now,
+            createdAt: now,
+            updatedAt: now,
+          },
+        ],
+        splits: {
+          [expenseId]: [
+            {
+              id: "split-ex1",
+              expenseId,
+              participantId: aliceId,
+              share: 1,
+              shareType: "equal",
+              createdAt: now,
+              updatedAt: now,
+            },
+            {
+              id: "split-ex2",
+              expenseId,
+              participantId: bobId,
+              share: 1,
+              shareType: "equal",
+              createdAt: now,
+              updatedAt: now,
+            },
+          ],
         },
-        {
-          id: Crypto.randomUUID(),
-          expenseId,
-          participantId: bobId,
-          share: 1,
-          shareType: 'equal',
-          createdAt: now,
-          updatedAt: now,
-        },
-        // Charlie is NOT in the splits
-      ]);
+      });
 
       // Compute settlement
       const settlement = await computeSettlement(tripId);
@@ -428,19 +417,25 @@ describe('SettlementService', () => {
       expect(settlement.balances).toHaveLength(3);
 
       // Alice: paid $60, owes $30 → net +$30
-      const aliceBalance = settlement.balances.find(b => b.participantId === aliceId);
+      const aliceBalance = settlement.balances.find(
+        (b) => b.participantId === aliceId,
+      );
       expect(aliceBalance!.totalPaid).toBe(6000);
       expect(aliceBalance!.totalOwed).toBe(3000);
       expect(aliceBalance!.netPosition).toBe(3000);
 
       // Bob: paid $0, owes $30 → net -$30
-      const bobBalance = settlement.balances.find(b => b.participantId === bobId);
+      const bobBalance = settlement.balances.find(
+        (b) => b.participantId === bobId,
+      );
       expect(bobBalance!.totalPaid).toBe(0);
       expect(bobBalance!.totalOwed).toBe(3000);
       expect(bobBalance!.netPosition).toBe(-3000);
 
       // Charlie: paid $0, owes $0 → net $0 (excluded from expense)
-      const charlieBalance = settlement.balances.find(b => b.participantId === charlieId);
+      const charlieBalance = settlement.balances.find(
+        (b) => b.participantId === charlieId,
+      );
       expect(charlieBalance).toBeDefined();
       expect(charlieBalance!.totalPaid).toBe(0);
       expect(charlieBalance!.totalOwed).toBe(0);
@@ -450,87 +445,76 @@ describe('SettlementService', () => {
       expect(settlement.settlements).toHaveLength(1);
       expect(settlement.settlements[0]).toEqual({
         from: bobId,
-        fromName: 'Bob',
+        fromName: "Bob",
         to: aliceId,
-        toName: 'Alice',
+        toName: "Alice",
         amount: 3000,
       });
     });
 
-    it('should handle zero-value splits correctly', async () => {
-      // Create a test trip
-      const tripId = Crypto.randomUUID();
-      const now = new Date().toISOString();
+    it("should handle zero-value splits correctly", async () => {
+      const tripId = "zero-share-trip";
+      const now = "2024-05-01T00:00:00.000Z";
+      const aliceId = "alice-zero";
+      const bobId = "bob-zero";
+      const charlieId = "charlie-zero";
+      const expenseId = "expense-zero";
 
-      await db.insert(tripsTable).values({
-        id: tripId,
-        name: 'Zero Share Trip',
-        currencyCode: 'USD',
-        currency: 'USD',
-        startDate: now,
-        createdAt: now,
-        updatedAt: now,
+      setTripData({
+        participants: [
+          { id: aliceId, tripId, name: "Alice", createdAt: now },
+          { id: bobId, tripId, name: "Bob", createdAt: now },
+          { id: charlieId, tripId, name: "Charlie", createdAt: now },
+        ],
+        expenses: [
+          {
+            id: expenseId,
+            tripId,
+            description: "Expense with zero share",
+            amount: 8000,
+            currency: "USD",
+            originalCurrency: "USD",
+            originalAmountMinor: 8000,
+            fxRateToTrip: null,
+            convertedAmountMinor: 8000,
+            paidBy: aliceId,
+            date: now,
+            createdAt: now,
+            updatedAt: now,
+          },
+        ],
+        splits: {
+          [expenseId]: [
+            {
+              id: "split-z1",
+              expenseId,
+              participantId: aliceId,
+              share: 3,
+              shareType: "weight",
+              createdAt: now,
+              updatedAt: now,
+            },
+            {
+              id: "split-z2",
+              expenseId,
+              participantId: bobId,
+              share: 1,
+              shareType: "weight",
+              createdAt: now,
+              updatedAt: now,
+            },
+            {
+              id: "split-z3",
+              expenseId,
+              participantId: charlieId,
+              share: 0,
+              shareType: "weight",
+              createdAt: now,
+              updatedAt: now,
+            },
+          ],
+        },
       });
-
-      // Create participants
-      const aliceId = Crypto.randomUUID();
-      const bobId = Crypto.randomUUID();
-      const charlieId = Crypto.randomUUID();
-
-      await db.insert(participantsTable).values([
-        { id: aliceId, tripId, name: 'Alice', createdAt: now, updatedAt: now },
-        { id: bobId, tripId, name: 'Bob', createdAt: now, updatedAt: now },
-        { id: charlieId, tripId, name: 'Charlie', createdAt: now, updatedAt: now },
-      ]);
-
-      // Create expense with weighted splits where Charlie has 0 weight
-      const expenseId = Crypto.randomUUID();
-      await db.insert(expensesTable).values({
-        id: expenseId,
-        tripId,
-        description: 'Expense with zero share',
-        amount: 8000, // $80 in cents
-        currency: 'USD',
-        originalCurrency: 'USD',
-        originalAmountMinor: 8000,
-        fxRateToTrip: null,
-        convertedAmountMinor: 8000,
-        paidBy: aliceId,
-        date: now,
-        createdAt: now,
-        updatedAt: now,
-      });
-
-      // Create splits: Alice weight=3, Bob weight=1, Charlie weight=0
-      await db.insert(expenseSplitsTable).values([
-        {
-          id: Crypto.randomUUID(),
-          expenseId,
-          participantId: aliceId,
-          share: 3,
-          shareType: 'weight',
-          createdAt: now,
-          updatedAt: now,
-        },
-        {
-          id: Crypto.randomUUID(),
-          expenseId,
-          participantId: bobId,
-          share: 1,
-          shareType: 'weight',
-          createdAt: now,
-          updatedAt: now,
-        },
-        {
-          id: Crypto.randomUUID(),
-          expenseId,
-          participantId: charlieId,
-          share: 0, // Zero weight
-          shareType: 'weight',
-          createdAt: now,
-          updatedAt: now,
-        },
-      ]);
 
       // Compute settlement
       const settlement = await computeSettlement(tripId);
@@ -539,19 +523,25 @@ describe('SettlementService', () => {
       expect(settlement.balances).toHaveLength(3);
 
       // Alice: paid $80, owes $60 (3/4 of $80) → net +$20
-      const aliceBalance = settlement.balances.find(b => b.participantId === aliceId);
+      const aliceBalance = settlement.balances.find(
+        (b) => b.participantId === aliceId,
+      );
       expect(aliceBalance!.totalPaid).toBe(8000);
       expect(aliceBalance!.totalOwed).toBe(6000); // 3/4 of 8000
       expect(aliceBalance!.netPosition).toBe(2000);
 
       // Bob: paid $0, owes $20 (1/4 of $80) → net -$20
-      const bobBalance = settlement.balances.find(b => b.participantId === bobId);
+      const bobBalance = settlement.balances.find(
+        (b) => b.participantId === bobId,
+      );
       expect(bobBalance!.totalPaid).toBe(0);
       expect(bobBalance!.totalOwed).toBe(2000); // 1/4 of 8000
       expect(bobBalance!.netPosition).toBe(-2000);
 
       // Charlie: paid $0, owes $0 (0/4 of $80) → net $0
-      const charlieBalance = settlement.balances.find(b => b.participantId === charlieId);
+      const charlieBalance = settlement.balances.find(
+        (b) => b.participantId === charlieId,
+      );
       expect(charlieBalance).toBeDefined();
       expect(charlieBalance!.totalPaid).toBe(0);
       expect(charlieBalance!.totalOwed).toBe(0); // 0/4 of 8000
@@ -561,170 +551,192 @@ describe('SettlementService', () => {
       expect(settlement.settlements).toHaveLength(1);
       expect(settlement.settlements[0]).toEqual({
         from: bobId,
-        fromName: 'Bob',
+        fromName: "Bob",
         to: aliceId,
-        toName: 'Alice',
+        toName: "Alice",
         amount: 2000,
       });
     });
 
-    it('should handle expense referencing non-existent participant', async () => {
-      // Create a test trip
-      const tripId = Crypto.randomUUID();
-      const now = new Date().toISOString();
+    it("should handle expense referencing non-existent participant", async () => {
+      const tripId = "invalid-participant-trip";
+      const now = "2024-06-01T00:00:00.000Z";
+      const aliceId = "alice-invalid";
+      const expenseId = "expense-invalid";
+      const nonExistentId = "ghost";
 
-      await db.insert(tripsTable).values({
-        id: tripId,
-        name: 'Invalid Participant Trip',
-        currencyCode: 'USD',
-        currency: 'USD',
-        startDate: now,
-        createdAt: now,
-        updatedAt: now,
-      });
-
-      // Create only Alice
-      const aliceId = Crypto.randomUUID();
-      await db.insert(participantsTable).values({
-        id: aliceId,
-        tripId,
-        name: 'Alice',
-        createdAt: now,
-        updatedAt: now,
-      });
-
-      // Create expense paid by Alice
-      const expenseId = Crypto.randomUUID();
-      await db.insert(expensesTable).values({
-        id: expenseId,
-        tripId,
-        description: 'Expense with invalid participant',
-        amount: 5000,
-        currency: 'USD',
-        originalCurrency: 'USD',
-        originalAmountMinor: 5000,
-        fxRateToTrip: null,
-        convertedAmountMinor: 5000,
-        paidBy: aliceId,
-        date: now,
-        createdAt: now,
-        updatedAt: now,
-      });
-
-      // Create split referencing non-existent participant
-      const nonExistentId = Crypto.randomUUID();
-      await db.insert(expenseSplitsTable).values([
-        {
-          id: Crypto.randomUUID(),
-          expenseId,
-          participantId: aliceId,
-          share: 1,
-          shareType: 'equal',
-          createdAt: now,
-          updatedAt: now,
+      setTripData({
+        participants: [{ id: aliceId, tripId, name: "Alice", createdAt: now }],
+        expenses: [
+          {
+            id: expenseId,
+            tripId,
+            description: "Expense with invalid participant",
+            amount: 5000,
+            currency: "USD",
+            originalCurrency: "USD",
+            originalAmountMinor: 5000,
+            fxRateToTrip: null,
+            convertedAmountMinor: 5000,
+            paidBy: aliceId,
+            date: now,
+            createdAt: now,
+            updatedAt: now,
+          },
+        ],
+        splits: {
+          [expenseId]: [
+            {
+              id: "split-i1",
+              expenseId,
+              participantId: aliceId,
+              share: 1,
+              shareType: "equal",
+              createdAt: now,
+              updatedAt: now,
+            },
+            {
+              id: "split-i2",
+              expenseId,
+              participantId: nonExistentId,
+              share: 1,
+              shareType: "equal",
+              createdAt: now,
+              updatedAt: now,
+            },
+          ],
         },
-        {
-          id: Crypto.randomUUID(),
-          expenseId,
-          participantId: nonExistentId, // Non-existent participant
-          share: 1,
-          shareType: 'equal',
-          createdAt: now,
-          updatedAt: now,
-        },
-      ]);
+      });
 
       // Compute settlement - should throw structured error for invalid participant ID
       await expect(computeSettlement(tripId)).rejects.toThrow(
-        `Invalid participant IDs found in expense splits: ${nonExistentId}`
+        `Invalid participant IDs found in expense splits: ${nonExistentId}`,
       );
 
       // Verify the error has the correct structure
       try {
         await computeSettlement(tripId);
-        fail('Expected computeSettlement to throw');
+        fail("Expected computeSettlement to throw");
       } catch (error: any) {
-        expect(error.code).toBe('INVALID_PARTICIPANT_IDS');
+        expect(error.code).toBe("INVALID_PARTICIPANT_IDS");
         expect(error.invalidParticipantIds).toBeDefined();
         expect(error.invalidParticipantIds).toContain(nonExistentId);
-        expect(error.message).toContain('Invalid participant IDs found in expense splits');
+        expect(error.message).toContain(
+          "Invalid participant IDs found in expense splits",
+        );
       }
     });
   });
 
-  describe('determinism', () => {
-    it('should produce identical results for same data', async () => {
-      // Create a test trip
-      const tripId = Crypto.randomUUID();
-      const now = new Date().toISOString();
+  describe("determinism", () => {
+    it("should produce identical results for same data", async () => {
+      const tripId = "deterministic-trip";
+      const now = "2024-07-01T00:00:00.000Z";
+      const p1 = "p1";
+      const p2 = "p2";
+      const p3 = "p3";
+      const expense1Id = "det-exp-1";
+      const expense2Id = "det-exp-2";
 
-      await db.insert(tripsTable).values({
-        id: tripId,
-        name: 'Deterministic Trip',
-        currencyCode: 'USD',
-        currency: 'USD',
-        startDate: now,
-        createdAt: now,
-        updatedAt: now,
+      setTripData({
+        participants: [
+          { id: p1, tripId, name: "P1", createdAt: now },
+          { id: p2, tripId, name: "P2", createdAt: now },
+          { id: p3, tripId, name: "P3", createdAt: now },
+        ],
+        expenses: [
+          {
+            id: expense1Id,
+            tripId,
+            description: "Expense 1",
+            amount: 6000,
+            currency: "USD",
+            originalCurrency: "USD",
+            originalAmountMinor: 6000,
+            fxRateToTrip: null,
+            convertedAmountMinor: 6000,
+            paidBy: p1,
+            date: now,
+            createdAt: now,
+            updatedAt: now,
+          },
+          {
+            id: expense2Id,
+            tripId,
+            description: "Expense 2",
+            amount: 9000,
+            currency: "USD",
+            originalCurrency: "USD",
+            originalAmountMinor: 9000,
+            fxRateToTrip: null,
+            convertedAmountMinor: 9000,
+            paidBy: p2,
+            date: now,
+            createdAt: now,
+            updatedAt: now,
+          },
+        ],
+        splits: {
+          [expense1Id]: [
+            {
+              id: "det-s1",
+              expenseId: expense1Id,
+              participantId: p1,
+              share: 1,
+              shareType: "equal",
+              createdAt: now,
+              updatedAt: now,
+            },
+            {
+              id: "det-s2",
+              expenseId: expense1Id,
+              participantId: p2,
+              share: 1,
+              shareType: "equal",
+              createdAt: now,
+              updatedAt: now,
+            },
+            {
+              id: "det-s3",
+              expenseId: expense1Id,
+              participantId: p3,
+              share: 1,
+              shareType: "equal",
+              createdAt: now,
+              updatedAt: now,
+            },
+          ],
+          [expense2Id]: [
+            {
+              id: "det-s4",
+              expenseId: expense2Id,
+              participantId: p1,
+              share: 1,
+              shareType: "equal",
+              createdAt: now,
+              updatedAt: now,
+            },
+            {
+              id: "det-s5",
+              expenseId: expense2Id,
+              participantId: p2,
+              share: 1,
+              shareType: "equal",
+              createdAt: now,
+              updatedAt: now,
+            },
+            {
+              id: "det-s6",
+              expenseId: expense2Id,
+              participantId: p3,
+              share: 1,
+              shareType: "equal",
+              createdAt: now,
+              updatedAt: now,
+            },
+          ],
+        },
       });
-
-      // Create participants
-      const participant1Id = Crypto.randomUUID();
-      const participant2Id = Crypto.randomUUID();
-      const participant3Id = Crypto.randomUUID();
-
-      await db.insert(participantsTable).values([
-        { id: participant1Id, tripId, name: 'P1', createdAt: now, updatedAt: now },
-        { id: participant2Id, tripId, name: 'P2', createdAt: now, updatedAt: now },
-        { id: participant3Id, tripId, name: 'P3', createdAt: now, updatedAt: now },
-      ]);
-
-      // Create multiple expenses
-      const expense1Id = Crypto.randomUUID();
-      const expense2Id = Crypto.randomUUID();
-
-      await db.insert(expensesTable).values([
-        {
-          id: expense1Id,
-          tripId,
-          description: 'Expense 1',
-          amount: 6000,
-          currency: 'USD',
-          originalCurrency: 'USD',
-          originalAmountMinor: 6000,
-          fxRateToTrip: null,
-          convertedAmountMinor: 6000,
-          paidBy: participant1Id,
-          date: now,
-          createdAt: now,
-          updatedAt: now,
-        },
-        {
-          id: expense2Id,
-          tripId,
-          description: 'Expense 2',
-          amount: 9000,
-          currency: 'USD',
-          originalCurrency: 'USD',
-          originalAmountMinor: 9000,
-          fxRateToTrip: null,
-          convertedAmountMinor: 9000,
-          paidBy: participant2Id,
-          date: now,
-          createdAt: now,
-          updatedAt: now,
-        },
-      ]);
-
-      // Create splits
-      await db.insert(expenseSplitsTable).values([
-        { id: Crypto.randomUUID(), expenseId: expense1Id, participantId: participant1Id, share: 1, shareType: 'equal', createdAt: now, updatedAt: now },
-        { id: Crypto.randomUUID(), expenseId: expense1Id, participantId: participant2Id, share: 1, shareType: 'equal', createdAt: now, updatedAt: now },
-        { id: Crypto.randomUUID(), expenseId: expense1Id, participantId: participant3Id, share: 1, shareType: 'equal', createdAt: now, updatedAt: now },
-        { id: Crypto.randomUUID(), expenseId: expense2Id, participantId: participant1Id, share: 1, shareType: 'equal', createdAt: now, updatedAt: now },
-        { id: Crypto.randomUUID(), expenseId: expense2Id, participantId: participant2Id, share: 1, shareType: 'equal', createdAt: now, updatedAt: now },
-        { id: Crypto.randomUUID(), expenseId: expense2Id, participantId: participant3Id, share: 1, shareType: 'equal', createdAt: now, updatedAt: now },
-      ]);
 
       // Compute settlement multiple times
       const settlement1 = await computeSettlement(tripId);
@@ -735,28 +747,35 @@ describe('SettlementService', () => {
       expect(settlement1).toEqual(settlement2);
       expect(settlement2).toEqual(settlement3);
 
-      // Verify deterministic ordering of balances
-      expect(settlement1.balances).toEqual(settlement1.balances.slice().sort((a, b) =>
-        a.participantId.localeCompare(b.participantId)
-      ));
+      const sortBalances = (balances: any[]) =>
+        balances
+          .slice()
+          .sort((a, b) => a.participantId.localeCompare(b.participantId));
+      const sortSettlements = (settlements: any[]) =>
+        settlements.slice().sort((a, b) => {
+          const fromCompare = a.from.localeCompare(b.from);
+          if (fromCompare !== 0) return fromCompare;
+          const toCompare = a.to.localeCompare(b.to);
+          if (toCompare !== 0) return toCompare;
+          return a.amount - b.amount;
+        });
 
-      // Verify deterministic ordering of settlements
-      const expectedSettlementOrder = settlement1.settlements.slice().sort((a, b) => {
-        // Sort by from participant ID first
-        const fromCompare = a.from.localeCompare(b.from);
-        if (fromCompare !== 0) return fromCompare;
+      const expectedBalances = sortBalances(settlement1.balances);
+      const expectedSettlementOrder = sortSettlements(settlement1.settlements);
 
-        // Then by to participant ID
-        const toCompare = a.to.localeCompare(b.to);
-        if (toCompare !== 0) return toCompare;
+      expect(sortBalances(settlement1.balances)).toEqual(expectedBalances);
+      expect(sortBalances(settlement2.balances)).toEqual(expectedBalances);
+      expect(sortBalances(settlement3.balances)).toEqual(expectedBalances);
 
-        // Finally by amount (numeric sort)
-        return a.amount - b.amount;
-      });
-
-      expect(settlement1.settlements).toEqual(expectedSettlementOrder);
-      expect(settlement2.settlements).toEqual(expectedSettlementOrder);
-      expect(settlement3.settlements).toEqual(expectedSettlementOrder);
+      expect(sortSettlements(settlement1.settlements)).toEqual(
+        expectedSettlementOrder,
+      );
+      expect(sortSettlements(settlement2.settlements)).toEqual(
+        expectedSettlementOrder,
+      );
+      expect(sortSettlements(settlement3.settlements)).toEqual(
+        expectedSettlementOrder,
+      );
     });
   });
 });

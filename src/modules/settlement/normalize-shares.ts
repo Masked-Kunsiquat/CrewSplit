@@ -4,7 +4,7 @@
  * PURE FUNCTION: No side effects, deterministic
  */
 
-import { ExpenseSplit } from '../expenses/types';
+import { ExpenseSplit } from "../expenses/types";
 
 /**
  * Normalize different split types to actual amounts in cents
@@ -18,7 +18,7 @@ import { ExpenseSplit } from '../expenses/types';
  */
 export const normalizeShares = (
   splits: ExpenseSplit[],
-  expenseAmount: number
+  expenseAmount: number,
 ): number[] => {
   if (splits.length === 0) {
     return [];
@@ -32,26 +32,26 @@ export const normalizeShares = (
   const shareType = splits[0].shareType;
 
   // Validate all splits have the same type
-  if (!splits.every(s => s.shareType === shareType)) {
-    throw new Error('All splits for an expense must have the same shareType');
+  if (!splits.every((s) => s.shareType === shareType)) {
+    throw new Error("All splits for an expense must have the same shareType");
   }
 
   let normalized: number[];
 
   switch (shareType) {
-    case 'equal':
+    case "equal":
       normalized = normalizeEqual(splits.length, expenseAmount);
       break;
 
-    case 'percentage':
+    case "percentage":
       normalized = normalizePercentage(splits, expenseAmount);
       break;
 
-    case 'weight':
+    case "weight":
       normalized = normalizeWeight(splits, expenseAmount);
       break;
 
-    case 'amount':
+    case "amount":
       normalized = normalizeAmount(splits, expenseAmount);
       break;
 
@@ -67,7 +67,7 @@ export const normalizeShares = (
  */
 function normalizeEqual(count: number, total: number): number[] {
   const baseAmount = Math.floor(total / count);
-  const remainder = total - (baseAmount * count);
+  const remainder = total - baseAmount * count;
 
   const result = new Array(count).fill(baseAmount);
 
@@ -93,10 +93,10 @@ function normalizePercentage(splits: ExpenseSplit[], total: number): number[] {
   }
 
   // Calculate exact amounts (may have fractional cents)
-  const exactAmounts = splits.map(s => (s.share / 100) * total);
+  const exactAmounts = splits.map((s) => (s.share / 100) * total);
 
   // Round down to get base amounts
-  const baseAmounts = exactAmounts.map(a => Math.floor(a));
+  const baseAmounts = exactAmounts.map((a) => Math.floor(a));
   const baseTotal = baseAmounts.reduce((sum, a) => sum + a, 0);
   const remainder = total - baseTotal;
 
@@ -130,14 +130,14 @@ function normalizeWeight(splits: ExpenseSplit[], total: number): number[] {
   const totalWeight = splits.reduce((sum, s) => sum + s.share, 0);
 
   if (totalWeight <= 0) {
-    throw new Error('Total weight must be positive');
+    throw new Error("Total weight must be positive");
   }
 
   // Calculate exact amounts
-  const exactAmounts = splits.map(s => (s.share / totalWeight) * total);
+  const exactAmounts = splits.map((s) => (s.share / totalWeight) * total);
 
   // Round down to get base amounts
-  const baseAmounts = exactAmounts.map(a => Math.floor(a));
+  const baseAmounts = exactAmounts.map((a) => Math.floor(a));
   const baseTotal = baseAmounts.reduce((sum, a) => sum + a, 0);
   const remainder = total - baseTotal;
 
@@ -170,18 +170,22 @@ function normalizeWeight(splits: ExpenseSplit[], total: number): number[] {
  */
 function normalizeAmount(splits: ExpenseSplit[], total: number): number[] {
   // Validate that all splits have explicit amounts
-  const missingAmounts = splits.filter(s => s.amount === undefined || s.amount === null);
+  const missingAmounts = splits.filter(
+    (s) => s.amount === undefined || s.amount === null,
+  );
   if (missingAmounts.length > 0) {
     throw new Error(
-      `All splits must have explicit amounts; found ${missingAmounts.length} missing amount(s)`
+      `All splits must have explicit amounts; found ${missingAmounts.length} missing amount(s)`,
     );
   }
 
-  const amounts = splits.map(s => s.amount!);
+  const amounts = splits.map((s) => s.amount!);
   const sum = amounts.reduce((acc, a) => acc + a, 0);
 
   if (sum !== total) {
-    throw new Error(`Split amounts must sum to expense total. Expected ${total}, got ${sum}`);
+    throw new Error(
+      `Split amounts must sum to expense total. Expected ${total}, got ${sum}`,
+    );
   }
 
   return amounts;

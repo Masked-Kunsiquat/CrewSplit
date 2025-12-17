@@ -3,9 +3,16 @@
  * UI/UX ENGINEER: Dropdown/picker component for selecting from a list of options
  */
 
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, Pressable, Modal, FlatList } from 'react-native';
-import { theme } from '../theme';
+import React, { useState } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  Pressable,
+  Modal,
+  FlatList,
+} from "react-native";
+import { theme } from "../theme";
 
 export interface PickerOption<T = string> {
   label: string;
@@ -50,14 +57,14 @@ export function Picker<T extends string = string>({
   value,
   options,
   onChange,
-  placeholder = 'Select...',
+  placeholder = "Select...",
   disabled = false,
   error,
   helperText,
 }: PickerProps<T>) {
   const [modalVisible, setModalVisible] = useState(false);
 
-  const selectedOption = options.find(opt => opt.value === value);
+  const selectedOption = options.find((opt) => opt.value === value);
   const displayText = selectedOption?.label || placeholder;
 
   const handleSelect = (optionValue: T) => {
@@ -79,7 +86,7 @@ export function Picker<T extends string = string>({
         onPress={() => !disabled && setModalVisible(true)}
         disabled={disabled}
         accessibilityRole="button"
-        accessibilityLabel={label || 'Picker'}
+        accessibilityLabel={label || "Picker"}
         accessibilityHint={`Currently selected: ${displayText}`}
       >
         <Text
@@ -95,7 +102,9 @@ export function Picker<T extends string = string>({
       </Pressable>
 
       {error && <Text style={styles.errorText}>{error}</Text>}
-      {helperText && !error && <Text style={styles.helperText}>{helperText}</Text>}
+      {helperText && !error && (
+        <Text style={styles.helperText}>{helperText}</Text>
+      )}
 
       <Modal
         visible={modalVisible}
@@ -158,9 +167,9 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.sm,
   },
   trigger: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     backgroundColor: theme.colors.surface,
     borderWidth: 1,
     borderColor: theme.colors.border,
@@ -206,17 +215,17 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
     padding: theme.spacing.lg,
   },
   modalContent: {
     backgroundColor: theme.colors.background,
     borderRadius: theme.borderRadius.lg,
-    width: '100%',
+    width: "100%",
     maxWidth: 400,
-    maxHeight: '70%',
+    maxHeight: "70%",
     ...theme.shadows.lg,
   },
   modalHeader: {
@@ -230,9 +239,9 @@ const styles = StyleSheet.create({
     color: theme.colors.text,
   },
   option: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     padding: theme.spacing.lg,
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.border,

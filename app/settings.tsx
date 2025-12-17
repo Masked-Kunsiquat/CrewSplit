@@ -3,72 +3,87 @@
  * Global app settings including display currency preference
  */
 
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, Alert, Linking } from 'react-native';
-import { useNavigation } from 'expo-router';
-import { Image } from 'expo-image';
-import { theme } from '@ui/theme';
-import { Card, CurrencyPicker, Button, Input } from '@ui/components';
-import { useDisplayCurrency } from '@hooks/use-display-currency';
-import { useDeviceOwner } from '@hooks/use-device-owner';
+import React, { useState, useEffect } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  Alert,
+  Linking,
+} from "react-native";
+import { useNavigation } from "expo-router";
+import { Image } from "expo-image";
+import { theme } from "@ui/theme";
+import { Card, CurrencyPicker, Button, Input } from "@ui/components";
+import { useDisplayCurrency } from "@hooks/use-display-currency";
+import { useDeviceOwner } from "@hooks/use-device-owner";
 
 export default function SettingsScreen() {
   const navigation = useNavigation();
   const { displayCurrency, loading, setDisplayCurrency } = useDisplayCurrency();
-  const { deviceOwnerName, loading: ownerLoading, setDeviceOwner } = useDeviceOwner();
+  const {
+    deviceOwnerName,
+    loading: ownerLoading,
+    setDeviceOwner,
+  } = useDeviceOwner();
 
   // Set header title
   useEffect(() => {
     navigation.setOptions({
-      title: 'Settings',
+      title: "Settings",
     });
   }, [navigation]);
 
   const [editingName, setEditingName] = useState(false);
-  const [nameInput, setNameInput] = useState('');
+  const [nameInput, setNameInput] = useState("");
 
   const handleCurrencyChange = async (currency: string | null) => {
     try {
       await setDisplayCurrency(currency);
-    } catch (error) {
+    } catch {
       Alert.alert(
-        'Error',
-        'Failed to save display currency preference. Please try again.'
+        "Error",
+        "Failed to save display currency preference. Please try again.",
       );
     }
   };
 
   const handleEditName = () => {
-    setNameInput(deviceOwnerName || '');
+    setNameInput(deviceOwnerName || "");
     setEditingName(true);
   };
 
   const handleSaveName = async () => {
     if (!nameInput.trim()) {
-      Alert.alert('Error', 'Please enter your name');
+      Alert.alert("Error", "Please enter your name");
       return;
     }
 
     try {
       await setDeviceOwner(nameInput.trim());
       setEditingName(false);
-    } catch (error) {
-      Alert.alert('Error', 'Failed to save your name. Please try again.');
+    } catch {
+      Alert.alert("Error", "Failed to save your name. Please try again.");
     }
   };
 
   const handleCancelEdit = () => {
     setEditingName(false);
-    setNameInput('');
+    setNameInput("");
   };
 
   return (
     <View style={styles.container}>
-      <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.content}
+      >
         <Card style={styles.section}>
           <Text style={styles.sectionTitle}>Your Name</Text>
           <Text style={styles.sectionDescription}>
-            This identifies you as the device owner. You'll be automatically added to new trips.
+            This identifies you as the device owner. You'll be automatically
+            added to new trips.
           </Text>
 
           {!ownerLoading && (
@@ -92,11 +107,7 @@ export default function SettingsScreen() {
                       />
                     </View>
                     <View style={styles.buttonHalf}>
-                      <Button
-                        title="Save"
-                        onPress={handleSaveName}
-                        fullWidth
-                      />
+                      <Button title="Save" onPress={handleSaveName} fullWidth />
                     </View>
                   </View>
                 </>
@@ -104,7 +115,9 @@ export default function SettingsScreen() {
                 <>
                   {deviceOwnerName ? (
                     <>
-                      <Text style={styles.deviceOwnerName}>{deviceOwnerName}</Text>
+                      <Text style={styles.deviceOwnerName}>
+                        {deviceOwnerName}
+                      </Text>
                       <Button
                         title="Change Name"
                         variant="outline"
@@ -128,8 +141,8 @@ export default function SettingsScreen() {
         <Card style={styles.section}>
           <Text style={styles.sectionTitle}>Display Currency</Text>
           <Text style={styles.sectionDescription}>
-            Choose a currency to display amounts alongside the trip currency. This is for
-            reference only and does not affect calculations.
+            Choose a currency to display amounts alongside the trip currency.
+            This is for reference only and does not affect calculations.
           </Text>
 
           {!loading && (
@@ -143,8 +156,8 @@ export default function SettingsScreen() {
           {displayCurrency && (
             <Card style={styles.infoCard}>
               <Text style={styles.infoText}>
-                💡 Display currency conversions are shown in italics as a visual reference.
-                All settlement calculations use the trip currency.
+                💡 Display currency conversions are shown in italics as a visual
+                reference. All settlement calculations use the trip currency.
               </Text>
             </Card>
           )}
@@ -156,7 +169,8 @@ export default function SettingsScreen() {
             A deterministic, family-focused trip expense-splitting app.
           </Text>
           <Text style={styles.aboutText}>
-            All calculations are auditable and reproducible, with no hidden business logic.
+            All calculations are auditable and reproducible, with no hidden
+            business logic.
           </Text>
           <Text style={styles.versionText}>Version 1.0.0</Text>
         </Card>
@@ -168,28 +182,28 @@ export default function SettingsScreen() {
           </Text>
           {[
             {
-              name: 'Drizzle ORM + SQLite',
-              url: 'https://orm.drizzle.team',
-              icon: require('../assets/attribution/drizzle-orm.svg'),
-              description: 'Drizzle ORM + SQLite (offline-first)',
+              name: "Drizzle ORM + SQLite",
+              url: "https://orm.drizzle.team",
+              icon: require("../assets/attribution/drizzle-orm.svg"),
+              description: "Drizzle ORM + SQLite (offline-first)",
             },
             {
-              name: 'ExchangeRate-API',
-              url: 'https://www.exchangerate-api.com',
-              icon: require('../assets/attribution/exchangerate-api.svg'),
-              description: 'Exchange rates by ExchangeRate-API',
+              name: "ExchangeRate-API",
+              url: "https://www.exchangerate-api.com",
+              icon: require("../assets/attribution/exchangerate-api.svg"),
+              description: "Exchange rates by ExchangeRate-API",
             },
             {
-              name: 'Expo & React Native',
-              url: 'https://expo.dev',
-              icon: require('../assets/attribution/expo-go-app.svg'),
-              description: 'Expo & React Native',
+              name: "Expo & React Native",
+              url: "https://expo.dev",
+              icon: require("../assets/attribution/expo-go-app.svg"),
+              description: "Expo & React Native",
             },
             {
-              name: 'Frankfurter API',
-              url: 'https://www.frankfurter.app',
-              icon: require('../assets/attribution/frankfurter-api.svg'),
-              description: 'Frankfurter API (ECB reference rates)',
+              name: "Frankfurter API",
+              url: "https://www.frankfurter.app",
+              icon: require("../assets/attribution/frankfurter-api.svg"),
+              description: "Frankfurter API (ECB reference rates)",
             },
           ].map((item) => (
             <View key={item.name} style={styles.attributionRow}>
@@ -252,11 +266,11 @@ const styles = StyleSheet.create({
     fontSize: theme.typography.xl,
     fontWeight: theme.typography.bold,
     color: theme.colors.text,
-    textAlign: 'center',
+    textAlign: "center",
     paddingVertical: theme.spacing.md,
   },
   buttonRow: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: theme.spacing.md,
   },
   buttonHalf: {
@@ -279,13 +293,13 @@ const styles = StyleSheet.create({
     fontSize: theme.typography.base,
     color: theme.colors.primary,
     lineHeight: 22,
-    textDecorationLine: 'underline',
+    textDecorationLine: "underline",
     flexShrink: 1,
-    flexWrap: 'wrap',
+    flexWrap: "wrap",
   },
   attributionRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: theme.spacing.sm,
     marginTop: theme.spacing.xs,
   },

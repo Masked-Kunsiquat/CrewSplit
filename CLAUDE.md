@@ -9,6 +9,7 @@ A deterministic, family-focused trip expense-splitting app built with Expo (Reac
 ## Essential Commands
 
 ### Development
+
 ```bash
 npm start                 # Start Expo development server
 npm run android           # Run on Android
@@ -16,6 +17,7 @@ npm run ios              # Run on iOS
 ```
 
 ### Testing
+
 ```bash
 npm test                 # Run all tests
 npm test -- <pattern>    # Run tests matching pattern (e.g., "settlement")
@@ -23,12 +25,14 @@ npm test -- --watch      # Run tests in watch mode
 ```
 
 ### Type Checking & Linting
+
 ```bash
 npm run type-check       # TypeScript compilation check (tsc --noEmit)
 npm run lint             # ESLint
 ```
 
 ### Database Migrations
+
 ```bash
 npx drizzle-kit generate # Generate migration files from schema changes
 # Migrations auto-apply at app startup via useDbMigrations() hook
@@ -72,21 +76,25 @@ src/modules/expenses/
 The settlement module has strict layer separation:
 
 **Layer 1 - Pure Math (MODELER)**
+
 - `normalize-shares.ts`, `calculate-balances.ts`, `optimize-settlements.ts`
 - Pure functions with **zero dependencies**
 - Same inputs → same outputs (deterministic)
 - All amounts in cents (integer math)
 
 **Layer 2 - Service (SETTLEMENT INTEGRATION ENGINEER)**
+
 - `service/SettlementService.ts` - Loads data and calls pure functions
 - `service/DisplayCurrencyAdapter.ts` - Purely visual currency conversion
 - **Operates exclusively on `convertedAmountMinor` (trip currency)**
 
 **Layer 3 - Hooks (UI INTEGRATION)**
+
 - `hooks/use-settlement.ts` - Basic settlement data
 - `hooks/use-settlement-with-display.ts` - With display currency
 
 **Critical Rules**:
+
 - Display currency conversions are **purely visual** - never modify underlying data
 - All calculations derive from source data; no "magical totals"
 - Settlement math must remain auditable and reproducible
@@ -94,6 +102,7 @@ The settlement module has strict layer separation:
 ### 4. Multi-Currency Data Model
 
 **Schema structure**:
+
 - **Trip**: Has single `currency` (trip currency)
 - **Expense**: Stores both original and converted amounts:
   - `originalCurrency` + `originalAmountMinor` (as entered)
@@ -102,26 +111,29 @@ The settlement module has strict layer separation:
   - `amount` (legacy, equals `convertedAmountMinor`)
 
 **Repository rules**:
+
 - Repositories enforce currency conversion on write
 - If expense currency matches trip currency: `fxRateToTrip = null`, `convertedAmountMinor = originalAmountMinor`
 - If different: `fxRateToTrip` required, `convertedAmountMinor = round(originalAmountMinor * fxRateToTrip)`
 
 **Settlement rules**:
+
 - Settlement engine **only uses** `convertedAmountMinor`
 - Display currency is applied **after** settlement calculation
 
 ## TypeScript Path Aliases
 
 ```typescript
-import { useTrips } from '@modules/trips';           // src/modules/trips
-import { Button } from '@ui/components';             // src/ui/components
-import { db } from '@db/client';                     // src/db/client
-import { formatCents } from '@utils/currency';       // src/utils/currency
+import { useTrips } from "@modules/trips"; // src/modules/trips
+import { Button } from "@ui/components"; // src/ui/components
+import { db } from "@db/client"; // src/db/client
+import { formatCents } from "@utils/currency"; // src/utils/currency
 ```
 
 ## Testing Strategy
 
 ### Test Organization
+
 ```
 src/modules/settlement/__tests__/
 ├── normalize-shares.test.ts       # Unit: split type conversions
@@ -132,6 +144,7 @@ src/modules/settlement/__tests__/
 ```
 
 ### Key Testing Principles
+
 1. **Determinism**: Same data must always produce same output
 2. **Edge cases**: Zero amounts, missing participants, single-participant trips
 3. **Conservation**: Net positions sum to zero, total paid equals total owed
@@ -139,6 +152,7 @@ src/modules/settlement/__tests__/
 5. **Integer math**: All amounts in cents (avoid floating-point errors)
 
 ### Running Specific Tests
+
 ```bash
 npm test -- settlement              # All settlement tests
 npm test -- normalize-shares        # Specific test file
@@ -148,11 +162,14 @@ npm test -- --testNamePattern="should handle equal splits"  # Specific test
 ## Database & Migrations
 
 ### Schema Location
+
 All schemas in `src/db/schema/`:
+
 - `trips.ts`, `participants.ts`, `expenses.ts`, `expense-splits.ts`
 - Export from `src/db/schema/index.ts`
 
 ### Migration Workflow
+
 1. Modify schema files in `src/db/schema/`
 2. Generate migration: `npx drizzle-kit generate`
 3. Review generated SQL in `src/db/migrations/NNNN_*.sql`
@@ -162,6 +179,7 @@ All schemas in `src/db/schema/`:
 7. Migrations run automatically on app startup via `useDbMigrations()` hook
 
 **Critical Rules:**
+
 - NEVER wipe database in production code
 - Prefer additive changes (new nullable columns, new tables)
 - Avoid dropping columns with user data
@@ -169,7 +187,9 @@ All schemas in `src/db/schema/`:
 - See `src/db/migrations/README.md` for safe patterns
 
 ### Repository Pattern
+
 Each module has a repository under `src/modules/<domain>/repository/`:
+
 - Use Drizzle ORM for queries
 - Wrap multi-step operations in `db.transaction()`
 - Use mappers (`src/db/mappers/`) to convert DB rows to domain types
@@ -177,7 +197,9 @@ Each module has a repository under `src/modules/<domain>/repository/`:
 ## UI Components & Theming
 
 ### Theme Tokens
+
 Located in `src/ui/tokens/`:
+
 - `colors.ts` - Dark-mode-first color palette
 - `spacing.ts` - Consistent spacing scale
 - `typography.ts` - Font sizes and weights
@@ -185,6 +207,7 @@ Located in `src/ui/tokens/`:
 Import via: `import { theme } from '@ui/theme';`
 
 ### Component Structure
+
 ```typescript
 // Example component structure
 import { View, Text, StyleSheet } from 'react-native';
@@ -213,25 +236,32 @@ const styles = StyleSheet.create({
 ## Common Gotchas
 
 ### 1. Edge Case: No Participants
+
 When `participants.length === 0` but expenses exist, `SettlementService` must:
+
 - Return actual `totalExpenses` (not zero)
 - Skip settlements (return empty arrays)
 - Preserve data for auditing
 
 ### 2. Performance: Avoid Unnecessary Queries
+
 Check for missing participants **before** loading expense splits to avoid wasted database queries on low-end devices.
 
 ### 3. Deterministic Sorting
+
 Always sort by ID for determinism:
+
 ```typescript
 balances.sort((a, b) => a.participantId.localeCompare(b.participantId));
 ```
 
 ### 4. Cent Rounding
+
 Use largest remainder method to distribute remainder cents:
+
 ```typescript
 // Floor all amounts first
-const baseAmounts = shares.map(share => Math.floor(share * total));
+const baseAmounts = shares.map((share) => Math.floor(share * total));
 const remainder = total - baseAmounts.reduce((sum, amt) => sum + amt, 0);
 
 // Distribute remainder to participants with largest fractional parts
@@ -239,10 +269,12 @@ const remainder = total - baseAmounts.reduce((sum, amt) => sum + amt, 0);
 ```
 
 ### 5. Never Silently Fail
+
 Always throw structured errors with codes:
+
 ```typescript
-const error = new Error('Invalid participant IDs') as Error & { code: string };
-error.code = 'INVALID_PARTICIPANT_IDS';
+const error = new Error("Invalid participant IDs") as Error & { code: string };
+error.code = "INVALID_PARTICIPANT_IDS";
 throw error;
 ```
 
@@ -255,6 +287,7 @@ throw error;
 ## Project Roadmap
 
 See [NEXT_UP.md](NEXT_UP.md) for implementation steps. Current status:
+
 - ✅ Steps 1-4: Project structure, schema, math engine, UI scaffolding
 - ✅ Step 5: Migration infrastructure
 - ✅ Step 6: Repositories and hooks

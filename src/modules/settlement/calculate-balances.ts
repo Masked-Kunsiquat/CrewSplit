@@ -4,10 +4,10 @@
  * PURE FUNCTION: No side effects, same inputs → same outputs
  */
 
-import { Expense, ExpenseSplit } from '../expenses/types';
-import { Participant } from '../participants/types';
-import { ParticipantBalance } from './types';
-import { normalizeShares } from './normalize-shares';
+import { Expense, ExpenseSplit } from "../expenses/types";
+import { Participant } from "../participants/types";
+import { ParticipantBalance } from "./types";
+import { normalizeShares } from "./normalize-shares";
 
 /**
  * Calculate net positions for all participants in a trip
@@ -25,20 +25,23 @@ import { normalizeShares } from './normalize-shares';
 export const calculateBalances = (
   expenses: Expense[],
   splits: ExpenseSplit[],
-  participants: Participant[]
+  participants: Participant[],
 ): ParticipantBalance[] => {
   // Initialize balance map for all participants
-  const balanceMap = new Map<string, { totalPaid: number; totalOwed: number }>();
+  const balanceMap = new Map<
+    string,
+    { totalPaid: number; totalOwed: number }
+  >();
   const validParticipantIds = new Set<string>();
 
-  participants.forEach(p => {
+  participants.forEach((p) => {
     balanceMap.set(p.id, { totalPaid: 0, totalOwed: 0 });
     validParticipantIds.add(p.id);
   });
 
   // Validate all splits reference valid participants
   const invalidParticipantIds = new Set<string>();
-  splits.forEach(split => {
+  splits.forEach((split) => {
     if (!validParticipantIds.has(split.participantId)) {
       invalidParticipantIds.add(split.participantId);
     }
@@ -46,16 +49,16 @@ export const calculateBalances = (
 
   if (invalidParticipantIds.size > 0) {
     const error = new Error(
-      `Invalid participant IDs found in expense splits: ${Array.from(invalidParticipantIds).join(', ')}`
+      `Invalid participant IDs found in expense splits: ${Array.from(invalidParticipantIds).join(", ")}`,
     ) as Error & { code: string; invalidParticipantIds: string[] };
-    error.code = 'INVALID_PARTICIPANT_IDS';
+    error.code = "INVALID_PARTICIPANT_IDS";
     error.invalidParticipantIds = Array.from(invalidParticipantIds);
     throw error;
   }
 
   // Validate all payers exist
   const invalidPayerIds = new Set<string>();
-  expenses.forEach(expense => {
+  expenses.forEach((expense) => {
     if (!validParticipantIds.has(expense.paidBy)) {
       invalidPayerIds.add(expense.paidBy);
     }
@@ -63,16 +66,16 @@ export const calculateBalances = (
 
   if (invalidPayerIds.size > 0) {
     const error = new Error(
-      `Invalid payer IDs found in expenses: ${Array.from(invalidPayerIds).join(', ')}`
+      `Invalid payer IDs found in expenses: ${Array.from(invalidPayerIds).join(", ")}`,
     ) as Error & { code: string; invalidParticipantIds: string[] };
-    error.code = 'INVALID_PARTICIPANT_IDS';
+    error.code = "INVALID_PARTICIPANT_IDS";
     error.invalidParticipantIds = Array.from(invalidPayerIds);
     throw error;
   }
 
   // Group splits by expense
   const splitsByExpense = new Map<string, ExpenseSplit[]>();
-  splits.forEach(split => {
+  splits.forEach((split) => {
     if (!splitsByExpense.has(split.expenseId)) {
       splitsByExpense.set(split.expenseId, []);
     }
@@ -80,7 +83,7 @@ export const calculateBalances = (
   });
 
   // Process each expense
-  expenses.forEach(expense => {
+  expenses.forEach((expense) => {
     const expenseSplits = splitsByExpense.get(expense.id) || [];
 
     if (expenseSplits.length === 0) {
@@ -109,7 +112,7 @@ export const calculateBalances = (
   // Convert to ParticipantBalance array
   const balances: ParticipantBalance[] = [];
 
-  participants.forEach(p => {
+  participants.forEach((p) => {
     const balance = balanceMap.get(p.id);
     if (balance) {
       balances.push({

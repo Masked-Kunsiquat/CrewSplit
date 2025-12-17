@@ -4,11 +4,11 @@
  * This identifies who owns this device and auto-adds them to new trips
  */
 
-import { useState, useEffect, useCallback } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { storageLogger } from '@utils/logger';
+import { useState, useEffect, useCallback } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { storageLogger } from "@utils/logger";
 
-const DEVICE_OWNER_KEY = '@crewsplit_device_owner';
+const DEVICE_OWNER_KEY = "@crewsplit_device_owner";
 
 export function useDeviceOwner() {
   const [deviceOwnerName, setDeviceOwnerName] = useState<string | null>(null);
@@ -25,7 +25,7 @@ export function useDeviceOwner() {
           setDeviceOwnerName(name);
         }
       } catch (error) {
-        storageLogger.error('Failed to load device owner', error);
+        storageLogger.error("Failed to load device owner", error);
       } finally {
         if (isMounted) {
           setLoading(false);
@@ -45,14 +45,14 @@ export function useDeviceOwner() {
       if (name) {
         await AsyncStorage.setItem(DEVICE_OWNER_KEY, name.trim());
         setDeviceOwnerName(name.trim());
-        storageLogger.info('Saved device owner', { name: name.trim() });
+        storageLogger.info("Saved device owner", { name: name.trim() });
       } else {
         await AsyncStorage.removeItem(DEVICE_OWNER_KEY);
         setDeviceOwnerName(null);
-        storageLogger.info('Cleared device owner');
+        storageLogger.info("Cleared device owner");
       }
     } catch (error) {
-      storageLogger.error('Failed to save device owner', error);
+      storageLogger.error("Failed to save device owner", error);
       throw error;
     }
   }, []);

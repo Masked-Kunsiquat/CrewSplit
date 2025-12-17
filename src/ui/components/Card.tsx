@@ -3,16 +3,16 @@
  * UI/UX ENGINEER: Container card with elevation
  */
 
-import React from 'react';
-import { View, StyleSheet, ViewStyle, TouchableOpacity } from 'react-native';
-import { theme } from '../theme';
+import React from "react";
+import { View, StyleSheet, ViewStyle, TouchableOpacity } from "react-native";
+import { theme } from "../theme";
 
 interface CardProps {
   children: React.ReactNode;
   onPress?: () => void;
   style?: ViewStyle;
   elevated?: boolean;
-   /**
+  /**
    * Optional label for accessibility; falls back to child text when absent
    */
   label?: string;
@@ -20,18 +20,20 @@ interface CardProps {
   accessibilityHint?: string;
   disabled?: boolean;
   testID?: string;
-  importantForAccessibility?: 'auto' | 'yes' | 'no' | 'no-hide-descendants';
+  importantForAccessibility?: "auto" | "yes" | "no" | "no-hide-descendants";
 }
 
-const deriveLabelFromChildren = (children: React.ReactNode): string | undefined => {
-  const firstChild = React.Children.toArray(children).find(child => {
+const deriveLabelFromChildren = (
+  children: React.ReactNode,
+): string | undefined => {
+  const firstChild = React.Children.toArray(children).find((child) => {
     const type = typeof child;
-    return type === 'string' || type === 'number';
+    return type === "string" || type === "number";
   });
 
   if (firstChild === undefined) return undefined;
 
-  if (typeof firstChild === 'string' || typeof firstChild === 'number') {
+  if (typeof firstChild === "string" || typeof firstChild === "number") {
     const value = String(firstChild).trim();
     return value.length ? value : undefined;
   }
@@ -51,13 +53,10 @@ export const Card: React.FC<CardProps> = ({
   testID,
   importantForAccessibility,
 }) => {
-  const cardStyle = [
-    styles.card,
-    elevated && styles.elevated,
-    style,
-  ];
+  const cardStyle = [styles.card, elevated && styles.elevated, style];
 
-  const computedLabel = accessibilityLabel ?? label ?? deriveLabelFromChildren(children);
+  const computedLabel =
+    accessibilityLabel ?? label ?? deriveLabelFromChildren(children);
 
   if (onPress) {
     return (

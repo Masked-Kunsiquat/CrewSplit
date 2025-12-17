@@ -3,10 +3,10 @@
  * React hooks for creating/updating/deleting trips
  */
 
-import { useState, useCallback } from 'react';
-import { createTrip, updateTrip, deleteTrip } from '../repository';
-import type { Trip, CreateTripInput, UpdateTripInput } from '../types';
-import { tripLogger } from '@utils/logger';
+import { useState, useCallback } from "react";
+import { createTrip, updateTrip, deleteTrip } from "../repository";
+import type { Trip, CreateTripInput, UpdateTripInput } from "../types";
+import { tripLogger } from "@utils/logger";
 
 /**
  * Hook for creating a new trip
@@ -23,15 +23,16 @@ export function useCreateTrip() {
         const newTrip = await createTrip(trip);
         return newTrip;
       } catch (err) {
-        const error = err instanceof Error ? err : new Error('Failed to create trip');
-        tripLogger.error('Failed to create trip', error);
+        const error =
+          err instanceof Error ? err : new Error("Failed to create trip");
+        tripLogger.error("Failed to create trip", error);
         setError(error);
         return null;
       } finally {
         setLoading(false);
       }
     },
-    []
+    [],
   );
 
   return { create, loading, error };
@@ -45,25 +46,23 @@ export function useUpdateTrip() {
   const [error, setError] = useState<Error | null>(null);
 
   const update = useCallback(
-    async (
-      id: string,
-      updates: UpdateTripInput
-    ): Promise<Trip | null> => {
+    async (id: string, updates: UpdateTripInput): Promise<Trip | null> => {
       try {
         setLoading(true);
         setError(null);
         const updated = await updateTrip(id, updates);
         return updated;
       } catch (err) {
-        const error = err instanceof Error ? err : new Error('Failed to update trip');
-        tripLogger.error('Failed to update trip', error);
+        const error =
+          err instanceof Error ? err : new Error("Failed to update trip");
+        tripLogger.error("Failed to update trip", error);
         setError(error);
         return null;
       } finally {
         setLoading(false);
       }
     },
-    []
+    [],
   );
 
   return { update, loading, error };
@@ -82,8 +81,9 @@ export function useDeleteTrip() {
       setError(null);
       await deleteTrip(id);
     } catch (err) {
-      const error = err instanceof Error ? err : new Error('Failed to delete trip');
-      tripLogger.error('Failed to delete trip', error);
+      const error =
+        err instanceof Error ? err : new Error("Failed to delete trip");
+      tripLogger.error("Failed to delete trip", error);
       setError(error);
     } finally {
       setLoading(false);

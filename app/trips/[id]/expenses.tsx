@@ -3,4 +3,4 @@
  * UI/UX ENGINEER: Route for expenses list
  */
 
-export { default } from '@modules/expenses/screens/ExpensesListScreen';
+export { default } from "@modules/expenses/screens/ExpensesListScreen";

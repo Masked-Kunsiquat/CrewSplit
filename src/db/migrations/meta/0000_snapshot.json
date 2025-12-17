@@ -135,12 +135,8 @@
           "name": "participants_trip_id_trips_id_fk",
           "tableFrom": "participants",
           "tableTo": "trips",
-          "columnsFrom": [
-            "trip_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["trip_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -259,12 +255,8 @@
           "name": "expenses_trip_id_trips_id_fk",
           "tableFrom": "expenses",
           "tableTo": "trips",
-          "columnsFrom": [
-            "trip_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["trip_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -272,12 +264,8 @@
           "name": "expenses_paid_by_participants_id_fk",
           "tableFrom": "expenses",
           "tableTo": "participants",
-          "columnsFrom": [
-            "paid_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["paid_by"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -354,12 +342,8 @@
           "name": "expense_splits_expense_id_expenses_id_fk",
           "tableFrom": "expense_splits",
           "tableTo": "expenses",
-          "columnsFrom": [
-            "expense_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["expense_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -367,12 +351,8 @@
           "name": "expense_splits_participant_id_participants_id_fk",
           "tableFrom": "expense_splits",
           "tableTo": "participants",
-          "columnsFrom": [
-            "participant_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["participant_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }

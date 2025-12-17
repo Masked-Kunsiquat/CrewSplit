@@ -3,19 +3,19 @@
  * LOCAL DATA ENGINEER: Database connection and migrations bootstrap
  */
 
-import { drizzle } from 'drizzle-orm/expo-sqlite';
-import { useMigrations } from 'drizzle-orm/expo-sqlite/migrator';
-import { openDatabaseSync } from 'expo-sqlite';
-import migrations from './migrations/migrations';
-import * as schema from './schema';
-import { migrationLogger } from '@utils/logger';
+import { drizzle } from "drizzle-orm/expo-sqlite";
+import { useMigrations } from "drizzle-orm/expo-sqlite/migrator";
+import { openDatabaseSync } from "expo-sqlite";
+import migrations from "./migrations/migrations";
+import * as schema from "./schema";
+import { migrationLogger } from "@utils/logger";
 
 // Open SQLite database
-const expoDb = openDatabaseSync('crewsplit.db');
+const expoDb = openDatabaseSync("crewsplit.db");
 
 // CRITICAL: Enable foreign keys immediately after opening connection
 // This must happen before any queries to ensure FK constraints are enforced
-expoDb.execSync('PRAGMA foreign_keys = ON');
+expoDb.execSync("PRAGMA foreign_keys = ON");
 
 // Create Drizzle instance with schema
 export const db = drizzle(expoDb, { schema });
@@ -35,9 +35,9 @@ export const useDbMigrations = () => {
 
   // Log migration status for debugging
   if (success) {
-    migrationLogger.info('Database migrations applied successfully');
+    migrationLogger.info("Database migrations applied successfully");
   } else if (error) {
-    migrationLogger.error('Migration failed', error);
+    migrationLogger.error("Migration failed", error);
   }
 
   return { success, error };

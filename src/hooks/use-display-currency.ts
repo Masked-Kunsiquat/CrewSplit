@@ -3,20 +3,22 @@
  * React hook for managing user's display currency preference
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from "react";
 import {
   loadDisplayCurrency,
   saveDisplayCurrency,
   clearDisplayCurrency,
-} from '@utils/display-currency-storage';
-import { currencyLogger } from '@utils/logger';
+} from "@utils/display-currency-storage";
+import { currencyLogger } from "@utils/logger";
 
 /**
  * Hook to manage display currency preference
  * @returns Object with displayCurrency, loading state, and setter functions
  */
 export function useDisplayCurrency() {
-  const [displayCurrency, setDisplayCurrencyState] = useState<string | null>(null);
+  const [displayCurrency, setDisplayCurrencyState] = useState<string | null>(
+    null,
+  );
   const [loading, setLoading] = useState(true);
 
   // Load preference on mount
@@ -30,7 +32,7 @@ export function useDisplayCurrency() {
           setDisplayCurrencyState(currency);
         }
       } catch (error) {
-        currencyLogger.error('Failed to load display currency in hook', error);
+        currencyLogger.error("Failed to load display currency in hook", error);
       } finally {
         if (mounted) {
           setLoading(false);
@@ -51,7 +53,7 @@ export function useDisplayCurrency() {
       await saveDisplayCurrency(currency);
       setDisplayCurrencyState(currency);
     } catch (error) {
-      currencyLogger.error('Failed to save display currency in hook', error);
+      currencyLogger.error("Failed to save display currency in hook", error);
       throw error;
     }
   }, []);
@@ -62,7 +64,7 @@ export function useDisplayCurrency() {
       await clearDisplayCurrency();
       setDisplayCurrencyState(null);
     } catch (error) {
-      currencyLogger.error('Failed to clear display currency in hook', error);
+      currencyLogger.error("Failed to clear display currency in hook", error);
       throw error;
     }
   }, []);

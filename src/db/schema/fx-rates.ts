@@ -15,9 +15,15 @@
  * - Trips can optionally snapshot rates for audit trail (via fx_rate_snapshots)
  */
 
-import { sql } from 'drizzle-orm';
-import { sqliteTable, text, integer, real, index } from 'drizzle-orm/sqlite-core';
-import { trips } from './trips';
+import { sql } from "drizzle-orm";
+import {
+  sqliteTable,
+  text,
+  integer,
+  real,
+  index,
+} from "drizzle-orm/sqlite-core";
+import { trips } from "./trips";
 
 /**
  * FX_RATES TABLE
@@ -46,15 +52,15 @@ import { trips } from './trips';
  * - Manual rates never expire
  */
 export const fxRates = sqliteTable(
-  'fx_rates',
+  "fx_rates",
   {
     // Composite primary key: (baseCurrency, quoteCurrency, fetchedAt)
     // This allows multiple versions of the same pair for audit trail
-    id: text('id').primaryKey(), // UUID for easy reference
+    id: text("id").primaryKey(), // UUID for easy reference
 
     // Currency pair (ISO 4217 codes)
-    baseCurrency: text('base_currency').notNull(), // e.g., "USD"
-    quoteCurrency: text('quote_currency').notNull(), // e.g., "EUR"
+    baseCurrency: text("base_currency").notNull(), // e.g., "USD"
+    quoteCurrency: text("quote_currency").notNull(), // e.g., "EUR"
 
     /**
      * Exchange rate: baseCurrency → quoteCurrency
@@ -66,7 +72,7 @@ export const fxRates = sqliteTable(
      *
      * Provider should store both directions to avoid division
      */
-    rate: real('rate').notNull(),
+    rate: real("rate").notNull(),
 
     /**
      * Data source identifier
@@ -75,7 +81,7 @@ export const fxRates = sqliteTable(
      * - 'manual': User-entered rate
      * - 'sync': Rate synced from another device
      */
-    source: text('source').notNull(), // 'frankfurter' | 'exchangerate-api' | 'manual' | 'sync'
+    source: text("source").notNull(), // 'frankfurter' | 'exchangerate-api' | 'manual' | 'sync'
 
     /**
      * When this rate was fetched/entered (ISO 8601)
@@ -83,7 +89,7 @@ export const fxRates = sqliteTable(
      * - For manual: Entry time
      * - For sync: Original fetchedAt (preserved across devices)
      */
-    fetchedAt: text('fetched_at').notNull(),
+    fetchedAt: text("fetched_at").notNull(),
 
     /**
      * Priority for rate selection (higher = preferred)
@@ -94,7 +100,7 @@ export const fxRates = sqliteTable(
      *
      * When multiple rates exist for same pair, use highest priority + most recent
      */
-    priority: integer('priority').notNull().default(50),
+    priority: integer("priority").notNull().default(50),
 
     /**
      * Optional metadata (JSON string)
@@ -102,35 +108,37 @@ export const fxRates = sqliteTable(
      * - Manual entry notes (e.g., {"note": "ECB reference rate"})
      * - Sync origin (e.g., {"deviceId": "abc123"})
      */
-    metadata: text('metadata'), // JSON string
+    metadata: text("metadata"), // JSON string
 
     /**
      * Soft delete flag
      * - Allows archiving outdated rates without breaking audit trail
      * - Provider ignores archived rates unless explicitly requested
      */
-    isArchived: integer('is_archived', { mode: 'boolean' }).notNull().default(false),
+    isArchived: integer("is_archived", { mode: "boolean" })
+      .notNull()
+      .default(false),
 
     // Timestamps
-    createdAt: text('created_at')
+    createdAt: text("created_at")
       .notNull()
       .default(sql`(datetime('now'))`),
-    updatedAt: text('updated_at')
+    updatedAt: text("updated_at")
       .notNull()
       .default(sql`(datetime('now'))`),
   },
   (table) => ({
     // Index for fast lookups: (baseCurrency, quoteCurrency) → most recent rate
-    currencyPairIdx: index('fx_rates_currency_pair_idx').on(
+    currencyPairIdx: index("fx_rates_currency_pair_idx").on(
       table.baseCurrency,
       table.quoteCurrency,
-      table.isArchived
+      table.isArchived,
     ),
     // Index for staleness checks: fetchedAt DESC
-    fetchedAtIdx: index('fx_rates_fetched_at_idx').on(table.fetchedAt),
+    fetchedAtIdx: index("fx_rates_fetched_at_idx").on(table.fetchedAt),
     // Index for source-based queries
-    sourceIdx: index('fx_rates_source_idx').on(table.source),
-  })
+    sourceIdx: index("fx_rates_source_idx").on(table.source),
+  }),
 );
 
 /**
@@ -150,19 +158,19 @@ export const fxRates = sqliteTable(
  * NOTE: This is OPTIONAL - implement after core fx_rates table works
  */
 export const fxRateSnapshots = sqliteTable(
-  'fx_rate_snapshots',
+  "fx_rate_snapshots",
   {
-    id: text('id').primaryKey(), // UUID
+    id: text("id").primaryKey(), // UUID
 
     // Foreign key to trips table (CASCADE on delete)
-    tripId: text('trip_id')
+    tripId: text("trip_id")
       .notNull()
-      .references(() => trips.id, { onDelete: 'cascade' }),
+      .references(() => trips.id, { onDelete: "cascade" }),
 
     // Foreign key to fx_rates table (RESTRICT on delete - preserve audit trail)
-    fxRateId: text('fx_rate_id')
+    fxRateId: text("fx_rate_id")
       .notNull()
-      .references(() => fxRates.id, { onDelete: 'restrict' }),
+      .references(() => fxRates.id, { onDelete: "restrict" }),
 
     /**
      * Snapshot purpose/context
@@ -170,27 +178,27 @@ export const fxRateSnapshots = sqliteTable(
      * - 'settlement': Rates used for specific settlement calculation
      * - 'export': Rates bundled with trip export
      */
-    snapshotType: text('snapshot_type').notNull(), // 'trip_close' | 'settlement' | 'export'
+    snapshotType: text("snapshot_type").notNull(), // 'trip_close' | 'settlement' | 'export'
 
     /**
      * When this snapshot was created (ISO 8601)
      * - Allows tracking which rates were active at different points
      */
-    snapshotAt: text('snapshot_at')
+    snapshotAt: text("snapshot_at")
       .notNull()
       .default(sql`(datetime('now'))`),
 
     // Timestamps
-    createdAt: text('created_at')
+    createdAt: text("created_at")
       .notNull()
       .default(sql`(datetime('now'))`),
   },
   (table) => ({
     // Index for trip-based lookups
-    tripIdIdx: index('fx_rate_snapshots_trip_id_idx').on(table.tripId),
+    tripIdIdx: index("fx_rate_snapshots_trip_id_idx").on(table.tripId),
     // Index for rate-based lookups (find which trips used this rate)
-    fxRateIdIdx: index('fx_rate_snapshots_fx_rate_id_idx').on(table.fxRateId),
-  })
+    fxRateIdIdx: index("fx_rate_snapshots_fx_rate_id_idx").on(table.fxRateId),
+  }),
 );
 
 // Export type inference for TypeScript
@@ -204,7 +212,11 @@ export type NewFxRateSnapshot = typeof fxRateSnapshots.$inferInsert;
  */
 
 /** Supported FX rate data sources */
-export type FxRateSource = 'frankfurter' | 'exchangerate-api' | 'manual' | 'sync';
+export type FxRateSource =
+  | "frankfurter"
+  | "exchangerate-api"
+  | "manual"
+  | "sync";
 
 /** Currency pair identifier */
 export interface CurrencyPair {

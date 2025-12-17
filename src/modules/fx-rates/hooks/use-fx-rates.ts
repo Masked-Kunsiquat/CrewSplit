@@ -3,12 +3,12 @@
  * UI integration for FX rate management
  */
 
-import { useState, useCallback, useEffect } from 'react';
-import { FxRateRepository } from '../repository';
-import { FxRateService } from '../services';
-import { cachedFxRateProvider } from '../provider';
-import type { StalenessInfo } from '../types';
-import { fxLogger } from '@utils/logger';
+import { useState, useCallback, useEffect } from "react";
+import { FxRateRepository } from "../repository";
+import { FxRateService } from "../services";
+import { cachedFxRateProvider } from "../provider";
+import type { StalenessInfo } from "../types";
+import { fxLogger } from "@utils/logger";
 
 /**
  * Hook for managing FX rates in UI
@@ -49,7 +49,7 @@ export function useFxRates() {
         isStale: info.staleRates > 0,
       });
     } catch (err) {
-      fxLogger.error('Failed to load staleness info', err);
+      fxLogger.error("Failed to load staleness info", err);
     }
   }, []);
 
@@ -61,7 +61,7 @@ export function useFxRates() {
     setError(null);
 
     try {
-      fxLogger.info('Refreshing FX rates from API');
+      fxLogger.info("Refreshing FX rates from API");
 
       // Fetch and persist rates
       const result = await FxRateService.updateCommonRates();
@@ -72,14 +72,15 @@ export function useFxRates() {
       // Reload staleness info
       await loadStalenessInfo();
 
-      fxLogger.info('FX rates refreshed successfully', {
+      fxLogger.info("FX rates refreshed successfully", {
         source: result.source,
         count: result.persistedCount,
       });
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to refresh rates';
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to refresh rates";
       setError(errorMessage);
-      fxLogger.error('Failed to refresh FX rates', err);
+      fxLogger.error("Failed to refresh FX rates", err);
       throw err; // Re-throw so caller can handle
     } finally {
       setRefreshing(false);

@@ -3,9 +3,15 @@
  * UI/UX ENGINEER: Text input with label and error states
  */
 
-import React from 'react';
-import { View, TextInput, Text, StyleSheet, TextInputProps } from 'react-native';
-import { theme } from '../theme';
+import React from "react";
+import {
+  View,
+  TextInput,
+  Text,
+  StyleSheet,
+  TextInputProps,
+} from "react-native";
+import { theme } from "../theme";
 
 interface InputProps extends TextInputProps {
   label?: string;
@@ -29,7 +35,9 @@ export const Input: React.FC<InputProps> = ({
         {...textInputProps}
       />
       {error && <Text style={styles.errorText}>{error}</Text>}
-      {helperText && !error && <Text style={styles.helperText}>{helperText}</Text>}
+      {helperText && !error && (
+        <Text style={styles.helperText}>{helperText}</Text>
+      )}
     </View>
   );
 };

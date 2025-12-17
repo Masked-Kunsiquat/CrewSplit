@@ -4,5 +4,5 @@
  * SYNC IMPLEMENTOR: Only activated if backend syncing requested
  */
 
-export * from './types';
-export * from './adapter';
+export * from "./types";
+// Adapter exports will be added when sync implementations are provided

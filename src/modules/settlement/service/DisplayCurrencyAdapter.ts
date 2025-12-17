@@ -10,7 +10,7 @@ import type {
   DisplayAmount,
   ParticipantBalanceWithDisplay,
   SettlementWithDisplay,
-} from '../types';
+} from "../types";
 
 /**
  * FX rate provider interface
@@ -51,7 +51,7 @@ export class StubFxRateProvider implements FxRateProvider {
     if (rate === undefined) {
       throw new Error(
         `No exchange rate available for ${fromCurrency} to ${toCurrency}. ` +
-          `Please set a manual rate using setRate() or implement a live FX provider.`
+          `Please set a manual rate using setRate() or implement a live FX provider.`,
       );
     }
 
@@ -76,7 +76,7 @@ export class DisplayCurrencyAdapter {
   private convertAmount(
     tripCurrency: string,
     tripAmount: number,
-    displayCurrency: string
+    displayCurrency: string,
   ): DisplayAmount {
     const fxRate = this.fxRateProvider.getRate(tripCurrency, displayCurrency);
 
@@ -100,7 +100,7 @@ export class DisplayCurrencyAdapter {
    */
   enrichSettlement(
     settlement: SettlementSummary,
-    displayCurrency?: string
+    displayCurrency?: string,
   ): SettlementSummaryWithDisplay {
     // If no display currency or same as trip currency, return as-is
     if (!displayCurrency || displayCurrency === settlement.currency) {
@@ -117,7 +117,7 @@ export class DisplayCurrencyAdapter {
     const displayTotalExpenses = this.convertAmount(
       tripCurrency,
       settlement.totalExpenses,
-      displayCurrency
+      displayCurrency,
     );
 
     // Convert balances
@@ -127,27 +127,31 @@ export class DisplayCurrencyAdapter {
         displayNetPosition: this.convertAmount(
           tripCurrency,
           balance.netPosition,
-          displayCurrency
+          displayCurrency,
         ),
         displayTotalPaid: this.convertAmount(
           tripCurrency,
           balance.totalPaid,
-          displayCurrency
+          displayCurrency,
         ),
         displayTotalOwed: this.convertAmount(
           tripCurrency,
           balance.totalOwed,
-          displayCurrency
+          displayCurrency,
         ),
-      })
+      }),
     );
 
     // Convert settlements
     const settlements: SettlementWithDisplay[] = settlement.settlements.map(
       (s) => ({
         ...s,
-        displayAmount: this.convertAmount(tripCurrency, s.amount, displayCurrency),
-      })
+        displayAmount: this.convertAmount(
+          tripCurrency,
+          s.amount,
+          displayCurrency,
+        ),
+      }),
     );
 
     return {
@@ -171,5 +175,5 @@ export const defaultFxRateProvider = new StubFxRateProvider();
  * Can be replaced with custom provider in production
  */
 export const defaultDisplayCurrencyAdapter = new DisplayCurrencyAdapter(
-  defaultFxRateProvider
+  defaultFxRateProvider,
 );

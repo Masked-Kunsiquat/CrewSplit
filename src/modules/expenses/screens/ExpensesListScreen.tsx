@@ -1,54 +1,73 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Pressable } from 'react-native';
-import { useRouter, useLocalSearchParams, useNavigation } from 'expo-router';
-import { theme } from '@ui/theme';
-import { Button, Card } from '@ui/components';
-import { useExpenses } from '../hooks/use-expenses';
-import { useExpenseCategories } from '../hooks/use-expense-categories';
-import { useTripById } from '../../trips/hooks/use-trips';
-import { formatCurrency } from '@utils/currency';
-import { useRefreshControl } from '@hooks/use-refresh-control';
+import React, { useEffect, useState } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  ActivityIndicator,
+  Pressable,
+} from "react-native";
+import { useRouter, useLocalSearchParams, useNavigation } from "expo-router";
+import { theme } from "@ui/theme";
+import { Button, Card } from "@ui/components";
+import { useExpenses } from "../hooks/use-expenses";
+import { useExpenseCategories } from "../hooks/use-expense-categories";
+import { useTripById } from "../../trips/hooks/use-trips";
+import { formatCurrency } from "@utils/currency";
+import { useRefreshControl } from "@hooks/use-refresh-control";
 
 export default function ExpensesListScreen() {
   const router = useRouter();
   const navigation = useNavigation();
-  const { id: tripId, filter, ids } = useLocalSearchParams<{
+  const {
+    id: tripId,
+    filter,
+    ids,
+  } = useLocalSearchParams<{
     id: string;
     filter?: string;
     ids?: string;
   }>();
 
   const { trip, refetch: refetchTrip } = useTripById(tripId);
-  const { expenses, loading, error, refetch: refetchExpenses } = useExpenses(tripId);
+  const {
+    expenses,
+    loading,
+    error,
+    refetch: refetchExpenses,
+  } = useExpenses(tripId);
   const { categories } = useExpenseCategories(tripId);
 
   // Pull-to-refresh support (note: categories hook doesn't expose refetch, uses dependency-based refresh)
   const refreshControl = useRefreshControl([refetchTrip, refetchExpenses]);
 
   // Category filter state - null means "All"
-  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(
+    null,
+  );
 
   // Parse filter IDs if provided
-  const filterIds = ids ? ids.split(',').map(id => id.trim()) : null;
+  const filterIds = ids ? ids.split(",").map((id) => id.trim()) : null;
 
   // Filter expenses by IDs first, then by category
   let displayedExpenses = filterIds
-    ? expenses.filter(expense => filterIds.includes(expense.id))
+    ? expenses.filter((expense) => filterIds.includes(expense.id))
     : expenses;
 
   // Apply category filter if selected
   if (selectedCategoryId) {
     displayedExpenses = displayedExpenses.filter(
-      expense => expense.categoryId === selectedCategoryId
+      (expense) => expense.categoryId === selectedCategoryId,
     );
   }
 
   // Determine header title based on filter
-  const headerTitle = filter === 'unsplit'
-    ? 'Unsplit Expenses'
-    : trip
-      ? `${trip.name} - Expenses`
-      : 'Expenses';
+  const headerTitle =
+    filter === "unsplit"
+      ? "Unsplit Expenses"
+      : trip
+        ? `${trip.name} - Expenses`
+        : "Expenses";
 
   // Update native header title
   useEffect(() => {
@@ -132,35 +151,46 @@ export default function ExpensesListScreen() {
         {displayedExpenses.length === 0 ? (
           <Card style={styles.emptyCard}>
             <Text style={styles.emptyTitle}>
-              {filterIds ? 'No matching expenses' : 'No expenses yet'}
+              {filterIds ? "No matching expenses" : "No expenses yet"}
             </Text>
             <Text style={styles.emptyText}>
               {filterIds
-                ? 'The filtered expenses are not available.'
-                : 'Add your first expense to start tracking shared costs.'}
+                ? "The filtered expenses are not available."
+                : "Add your first expense to start tracking shared costs."}
             </Text>
           </Card>
         ) : (
           displayedExpenses.map((expense) => {
-            const category = categories.find(c => c.id === expense.categoryId);
+            const category = categories.find(
+              (c) => c.id === expense.categoryId,
+            );
             return (
               <Card
                 key={expense.id}
                 style={styles.expenseCard}
-                onPress={() => router.push(`/trips/${tripId}/expenses/${expense.id}`)}
+                onPress={() =>
+                  router.push(`/trips/${tripId}/expenses/${expense.id}`)
+                }
               >
                 <View style={styles.expenseHeader}>
                   <View style={styles.expenseTitleRow}>
-                    {category && <Text style={styles.categoryEmoji}>{category.emoji}</Text>}
-                    <Text style={styles.expenseTitle}>{expense.description}</Text>
+                    {category && (
+                      <Text style={styles.categoryEmoji}>{category.emoji}</Text>
+                    )}
+                    <Text style={styles.expenseTitle}>
+                      {expense.description}
+                    </Text>
                   </View>
                   <Text style={styles.expenseAmount}>
-                    {formatCurrency(expense.convertedAmountMinor, trip?.currency || 'USD')}
+                    {formatCurrency(
+                      expense.convertedAmountMinor,
+                      trip?.currency || "USD",
+                    )}
                   </Text>
                 </View>
                 <Text style={styles.expenseMeta}>
                   {new Date(expense.date).toLocaleDateString()}
-                  {category ? ` • ${category.name}` : ''}
+                  {category ? ` • ${category.name}` : ""}
                 </Text>
               </Card>
             );
@@ -200,8 +230,8 @@ const styles = StyleSheet.create({
   },
   centerContent: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   errorContainer: {
     padding: theme.spacing.lg,
@@ -214,10 +244,10 @@ const styles = StyleSheet.create({
     color: theme.colors.background,
   },
   emptyCard: {
-    borderStyle: 'dashed',
+    borderStyle: "dashed",
     borderColor: theme.colors.border,
     borderWidth: 1,
-    alignItems: 'center',
+    alignItems: "center",
     padding: theme.spacing.xl,
   },
   emptyTitle: {
@@ -229,20 +259,20 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: theme.typography.base,
     color: theme.colors.textSecondary,
-    textAlign: 'center',
+    textAlign: "center",
   },
   expenseCard: {
     backgroundColor: theme.colors.surfaceElevated,
   },
   expenseHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: theme.spacing.xs,
   },
   expenseTitleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: theme.spacing.sm,
     flex: 1,
   },
@@ -281,9 +311,9 @@ const styles = StyleSheet.create({
     gap: theme.spacing.sm,
   },
   filterChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     height: 32, // Material Design 3 spec: 32px height
     paddingHorizontal: 12, // Material Design 3 spec: 12dp horizontal padding
     borderRadius: 16, // Half of height for pill shape

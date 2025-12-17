@@ -3,12 +3,12 @@
  * LOCAL DATA ENGINEER: Trip-scoped CRUD operations with currency metadata
  */
 
-import * as Crypto from 'expo-crypto';
-import { db } from '@db/client';
-import { trips as tripsTable, Trip as TripRow } from '@db/schema/trips';
-import { eq } from 'drizzle-orm';
-import { CreateTripInput, Trip, UpdateTripInput } from '../types';
-import { tripLogger } from '@utils/logger';
+import * as Crypto from "expo-crypto";
+import { db } from "@db/client";
+import { trips as tripsTable, Trip as TripRow } from "@db/schema/trips";
+import { eq } from "drizzle-orm";
+import { CreateTripInput, Trip, UpdateTripInput } from "../types";
+import { tripLogger } from "@utils/logger";
 
 const mapTrip = (row: TripRow): Trip => ({
   id: row.id,
@@ -23,12 +23,19 @@ const mapTrip = (row: TripRow): Trip => ({
   updatedAt: row.updatedAt,
 });
 
-export const createTrip = async ({ name, currencyCode, description, startDate, endDate, emoji }: CreateTripInput): Promise<Trip> => {
+export const createTrip = async ({
+  name,
+  currencyCode,
+  description,
+  startDate,
+  endDate,
+  emoji,
+}: CreateTripInput): Promise<Trip> => {
   const now = new Date().toISOString();
   const tripId = Crypto.randomUUID();
   const effectiveStartDate = startDate ?? now;
 
-  tripLogger.debug('Creating trip', { tripId, name, currencyCode, emoji });
+  tripLogger.debug("Creating trip", { tripId, name, currencyCode, emoji });
 
   const [created] = await db
     .insert(tripsTable)
@@ -46,34 +53,42 @@ export const createTrip = async ({ name, currencyCode, description, startDate, e
     })
     .returning();
 
-  tripLogger.info('Trip created', { tripId, name, currencyCode });
+  tripLogger.info("Trip created", { tripId, name, currencyCode });
   return mapTrip(created);
 };
 
 export const getTrips = async (): Promise<Trip[]> => {
   const rows = await db.select().from(tripsTable);
-  tripLogger.debug('Loaded trips', { count: rows.length });
+  tripLogger.debug("Loaded trips", { count: rows.length });
   return rows.map(mapTrip);
 };
 
 export const getTripById = async (id: string): Promise<Trip | null> => {
-  const rows = await db.select().from(tripsTable).where(eq(tripsTable.id, id)).limit(1);
+  const rows = await db
+    .select()
+    .from(tripsTable)
+    .where(eq(tripsTable.id, id))
+    .limit(1);
   if (!rows.length) {
-    tripLogger.warn('Trip not found', { tripId: id });
+    tripLogger.warn("Trip not found", { tripId: id });
     return null;
   }
-  tripLogger.debug('Loaded trip', { tripId: id, name: rows[0].name });
+  tripLogger.debug("Loaded trip", { tripId: id, name: rows[0].name });
   return mapTrip(rows[0]);
 };
 
-export const updateTrip = async (id: string, patch: UpdateTripInput): Promise<Trip> => {
+export const updateTrip = async (
+  id: string,
+  patch: UpdateTripInput,
+): Promise<Trip> => {
   const now = new Date().toISOString();
   const updatePayload: Partial<typeof tripsTable.$inferInsert> = {
     updatedAt: now,
   };
 
   if (patch.name !== undefined) updatePayload.name = patch.name;
-  if (patch.description !== undefined) updatePayload.description = patch.description;
+  if (patch.description !== undefined)
+    updatePayload.description = patch.description;
   if (patch.endDate !== undefined) updatePayload.endDate = patch.endDate;
   if (patch.emoji !== undefined) updatePayload.emoji = patch.emoji;
   if (patch.currencyCode !== undefined) {
@@ -81,23 +96,27 @@ export const updateTrip = async (id: string, patch: UpdateTripInput): Promise<Tr
     updatePayload.currency = patch.currencyCode;
   }
 
-  tripLogger.debug('Updating trip', { tripId: id });
+  tripLogger.debug("Updating trip", { tripId: id });
 
-  const updatedRows = await db.update(tripsTable).set(updatePayload).where(eq(tripsTable.id, id)).returning();
+  const updatedRows = await db
+    .update(tripsTable)
+    .set(updatePayload)
+    .where(eq(tripsTable.id, id))
+    .returning();
   const updated = updatedRows[0];
   if (!updated) {
-    tripLogger.error('Trip not found on update', { tripId: id });
+    tripLogger.error("Trip not found on update", { tripId: id });
     throw new Error(`Trip not found for id ${id}`);
   }
 
-  tripLogger.info('Trip updated', { tripId: id, name: updated.name });
+  tripLogger.info("Trip updated", { tripId: id, name: updated.name });
   return mapTrip(updated);
 };
 
 export const deleteTrip = async (id: string): Promise<void> => {
-  tripLogger.info('Deleting trip', { tripId: id });
+  tripLogger.info("Deleting trip", { tripId: id });
   await db.delete(tripsTable).where(eq(tripsTable.id, id));
-  tripLogger.info('Trip deleted', { tripId: id });
+  tripLogger.info("Trip deleted", { tripId: id });
 };
 
 export const TripRepository = {

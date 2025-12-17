@@ -3,15 +3,13 @@
  * LOCAL DATA ENGINEER: Convert between DB rows and domain models
  */
 
-import type { Trip, NewTrip } from '../schema/trips';
+import type { Trip } from "../schema/trips";
 
 /**
  * Domain model for Trip (currently identical to DB model)
  * Future: Add computed fields or denormalized data here
  */
-export interface TripDomain extends Trip {
-  // Helper methods can be added here in the future
-}
+export type TripDomain = Trip;
 
 /**
  * Map Trip database row to domain model

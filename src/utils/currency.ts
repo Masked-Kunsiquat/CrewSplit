@@ -8,10 +8,13 @@
  * @param currency - ISO 4217 currency code
  * @returns Formatted string (e.g., "$12.34")
  */
-export const formatCurrency = (cents: number, currency: string = 'USD'): string => {
+export const formatCurrency = (
+  cents: number,
+  currency: string = "USD",
+): string => {
   const amount = cents / 100;
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
     currency,
   }).format(amount);
 };
@@ -22,7 +25,7 @@ export const formatCurrency = (cents: number, currency: string = 'USD'): string 
  * @returns Amount in cents
  */
 export const parseCurrency = (input: string): number => {
-  const cleaned = input.replace(/[^0-9.]/g, '');
+  const cleaned = input.replace(/[^0-9.]/g, "");
   const amount = parseFloat(cleaned) || 0;
   return Math.round(amount * 100);
 };

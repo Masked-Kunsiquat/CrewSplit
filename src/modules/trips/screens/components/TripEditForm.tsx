@@ -3,12 +3,12 @@
  * Form for editing trip name, emoji, and end date
  */
 
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import EmojiPicker from 'rn-emoji-keyboard';
-import { theme } from '@ui/theme';
-import { Button, Card, Input, DatePicker } from '@ui/components';
-import type { Trip } from '../../types';
+import React from "react";
+import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import EmojiPicker from "rn-emoji-keyboard";
+import { theme } from "@ui/theme";
+import { Button, Card, Input, DatePicker } from "@ui/components";
+import type { Trip } from "../../types";
 
 interface TripEditFormProps {
   trip: Trip;
@@ -56,7 +56,7 @@ export function TripEditForm({
               style={styles.emojiEditButtonCompact}
               onPress={() => setEmojiPickerOpen(true)}
             >
-              <Text style={styles.emojiEditText}>{emojiInput || '➕'}</Text>
+              <Text style={styles.emojiEditText}>{emojiInput || "➕"}</Text>
             </TouchableOpacity>
             {emojiInput && (
               <TouchableOpacity
@@ -71,9 +71,7 @@ export function TripEditForm({
 
         <View style={styles.dateSection}>
           <Text style={styles.dateLabel}>Start Date (cannot be changed)</Text>
-          <Text style={styles.dateValue}>
-            {startDate.toLocaleDateString()}
-          </Text>
+          <Text style={styles.dateValue}>{startDate.toLocaleDateString()}</Text>
         </View>
 
         {endDateInput ? (
@@ -114,11 +112,7 @@ export function TripEditForm({
             />
           </View>
           <View style={styles.buttonHalf}>
-            <Button
-              title="Save"
-              onPress={onSave}
-              fullWidth
-            />
+            <Button title="Save" onPress={onSave} fullWidth />
           </View>
         </View>
       </Card>
@@ -132,7 +126,7 @@ export function TripEditForm({
         onClose={() => setEmojiPickerOpen(false)}
         enableSearchBar
         theme={{
-          backdrop: '#0a0a0a88',
+          backdrop: "#0a0a0a88",
           knob: theme.colors.primary,
           container: theme.colors.surface,
           header: theme.colors.text,
@@ -165,13 +159,13 @@ const styles = StyleSheet.create({
     color: theme.colors.text,
   },
   emojiRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
   emojiControls: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: theme.spacing.sm,
   },
   emojiEditButtonCompact: {
@@ -181,8 +175,8 @@ const styles = StyleSheet.create({
     paddingVertical: theme.spacing.xs,
     paddingHorizontal: theme.spacing.md,
     backgroundColor: theme.colors.surface,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   emojiEditText: {
     fontSize: 32,
@@ -218,9 +212,9 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     borderWidth: 1,
     borderColor: theme.colors.border,
-    borderStyle: 'dashed',
+    borderStyle: "dashed",
     backgroundColor: theme.colors.surface,
-    alignItems: 'center',
+    alignItems: "center",
   },
   addEndDateText: {
     fontSize: theme.typography.base,
@@ -228,7 +222,7 @@ const styles = StyleSheet.create({
     fontWeight: theme.typography.medium,
   },
   clearEndDateButton: {
-    alignSelf: 'flex-start',
+    alignSelf: "flex-start",
   },
   clearEndDateText: {
     fontSize: theme.typography.sm,
@@ -236,7 +230,7 @@ const styles = StyleSheet.create({
     fontWeight: theme.typography.medium,
   },
   buttonRow: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: theme.spacing.md,
     marginTop: theme.spacing.sm,
   },

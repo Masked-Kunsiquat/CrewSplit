@@ -3,37 +3,37 @@
  * Core trip entity with UUID primary key
  */
 
-import { sql } from 'drizzle-orm';
-import { sqliteTable, text, integer } from 'drizzle-orm/sqlite-core';
+import { sql } from "drizzle-orm";
+import { sqliteTable, text } from "drizzle-orm/sqlite-core";
 
 /**
  * TRIPS TABLE
  * Represents a trip or event for expense tracking
  */
-export const trips = sqliteTable('trips', {
+export const trips = sqliteTable("trips", {
   // UUID primary key
-  id: text('id').primaryKey(),
+  id: text("id").primaryKey(),
 
   // Trip details
-  name: text('name').notNull(),
-  description: text('description'),
+  name: text("name").notNull(),
+  description: text("description"),
 
   // Dates (ISO 8601 strings)
-  startDate: text('start_date').notNull(),
-  endDate: text('end_date'),
+  startDate: text("start_date").notNull(),
+  endDate: text("end_date"),
 
   // Currency (ISO 4217 code: USD, EUR, GBP, etc.)
-  currency: text('currency').notNull().default('USD'),
-  currencyCode: text('currency_code').notNull().default('USD'),
+  currency: text("currency").notNull().default("USD"),
+  currencyCode: text("currency_code").notNull().default("USD"),
 
   // Optional emoji for visual identification
-  emoji: text('emoji'),
+  emoji: text("emoji"),
 
   // Timestamps
-  createdAt: text('created_at')
+  createdAt: text("created_at")
     .notNull()
     .default(sql`(datetime('now'))`),
-  updatedAt: text('updated_at')
+  updatedAt: text("updated_at")
     .notNull()
     .default(sql`(datetime('now'))`),
 });

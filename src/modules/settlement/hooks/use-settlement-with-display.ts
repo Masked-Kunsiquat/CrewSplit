@@ -3,10 +3,10 @@
  * Extends useSettlement to optionally include display currency conversions
  */
 
-import { useMemo } from 'react';
-import { useSettlement } from './use-settlement';
-import { defaultDisplayCurrencyAdapter } from '../service/DisplayCurrencyAdapter';
-import type { SettlementSummaryWithDisplay } from '../types';
+import { useMemo } from "react";
+import { useSettlement } from "./use-settlement";
+import { defaultDisplayCurrencyAdapter } from "../service/DisplayCurrencyAdapter";
+import type { SettlementSummaryWithDisplay } from "../types";
 
 /**
  * Hook to fetch settlement summary with optional display currency conversion
@@ -16,7 +16,7 @@ import type { SettlementSummaryWithDisplay } from '../types';
  */
 export function useSettlementWithDisplay(
   tripId: string | null,
-  displayCurrency?: string
+  displayCurrency?: string,
 ) {
   const { settlement, loading, error, refetch } = useSettlement(tripId);
 
@@ -25,13 +25,13 @@ export function useSettlementWithDisplay(
     try {
       return defaultDisplayCurrencyAdapter.enrichSettlement(
         settlement,
-        displayCurrency
+        displayCurrency,
       );
     } catch (conversionError) {
       // If conversion fails, log and return original settlement
       console.warn(
         `Failed to convert settlement to display currency ${displayCurrency}:`,
-        conversionError
+        conversionError,
       );
       return {
         ...settlement,

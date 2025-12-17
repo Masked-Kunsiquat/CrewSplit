@@ -1,23 +1,39 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, Alert, TouchableOpacity } from 'react-native';
-import { useRouter, useNavigation } from 'expo-router';
-import EmojiPicker from 'rn-emoji-keyboard';
-import { theme } from '@ui/theme';
-import { Button, Input, CurrencyPicker, DateRangePicker } from '@ui/components';
-import { createTrip } from '../repository';
-import { createParticipant } from '../../participants/repository';
-import { useDeviceOwner } from '@hooks/use-device-owner';
-import { participantLogger } from '@utils/logger';
+import React, { useState, useEffect } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
+  Alert,
+  TouchableOpacity,
+} from "react-native";
+import { useRouter, useNavigation } from "expo-router";
+import EmojiPicker from "rn-emoji-keyboard";
+import { theme } from "@ui/theme";
+import { Button, Input, CurrencyPicker, DateRangePicker } from "@ui/components";
+import { createTrip } from "../repository";
+import { createParticipant } from "../../participants/repository";
+import { useDeviceOwner } from "@hooks/use-device-owner";
+import { participantLogger } from "@utils/logger";
 
-const AVATAR_COLORS = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#F7DC6F', '#BB8FCE', '#85C1E2'];
+const AVATAR_COLORS = [
+  "#FF6B6B",
+  "#4ECDC4",
+  "#45B7D1",
+  "#F7DC6F",
+  "#BB8FCE",
+  "#85C1E2",
+];
 
 export default function CreateTripScreen() {
   const router = useRouter();
   const navigation = useNavigation();
   const { deviceOwnerName } = useDeviceOwner();
-  const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
-  const [currency, setCurrency] = useState<string | null>('USD');
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const [currency, setCurrency] = useState<string | null>("USD");
   const [startDate, setStartDate] = useState(new Date());
   const [endDate, setEndDate] = useState<Date | null>(null);
   const [isCreating, setIsCreating] = useState(false);
@@ -28,7 +44,7 @@ export default function CreateTripScreen() {
   // Set dynamic header title
   useEffect(() => {
     navigation.setOptions({
-      title: 'Create Trip',
+      title: "Create Trip",
     });
   }, [navigation]);
 
@@ -48,9 +64,9 @@ export default function CreateTripScreen() {
     }
 
     if (endDate && endDate < startDate) {
-      const message = 'End date must be on or after the start date.';
+      const message = "End date must be on or after the start date.";
       setDateError(message);
-      Alert.alert('Invalid Dates', message);
+      Alert.alert("Invalid Dates", message);
       return;
     }
 
@@ -74,14 +90,17 @@ export default function CreateTripScreen() {
             avatarColor: AVATAR_COLORS[0], // First color for device owner
           });
         } catch (error) {
-          participantLogger.warn('Failed to add device owner as participant', error);
+          participantLogger.warn(
+            "Failed to add device owner as participant",
+            error,
+          );
           // Don't fail trip creation if participant add fails
         }
       }
 
       router.replace(`/trips/${trip.id}`);
-    } catch (err) {
-      Alert.alert('Error', 'Failed to create trip');
+    } catch {
+      Alert.alert("Error", "Failed to create trip");
       setIsCreating(false);
     }
   };
@@ -89,7 +108,7 @@ export default function CreateTripScreen() {
   return (
     <KeyboardAvoidingView
       style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
       <ScrollView
         style={styles.scrollView}
@@ -113,7 +132,7 @@ export default function CreateTripScreen() {
               onPress={() => setEmojiPickerOpen(true)}
               disabled={isCreating}
             >
-              <Text style={styles.emojiText}>{emoji || '➕'}</Text>
+              <Text style={styles.emojiText}>{emoji || "➕"}</Text>
             </TouchableOpacity>
             {emoji && (
               <TouchableOpacity
@@ -169,7 +188,7 @@ export default function CreateTripScreen() {
         />
         <View style={{ height: theme.spacing.md }} />
         <Button
-          title={isCreating ? 'Creating...' : 'Create Trip'}
+          title={isCreating ? "Creating..." : "Create Trip"}
           onPress={handleCreate}
           fullWidth
           disabled={!name.trim() || !currency || isCreating}
@@ -185,7 +204,7 @@ export default function CreateTripScreen() {
         onClose={() => setEmojiPickerOpen(false)}
         enableSearchBar
         theme={{
-          backdrop: '#0a0a0a88',
+          backdrop: "#0a0a0a88",
           knob: theme.colors.primary,
           container: theme.colors.surface,
           header: theme.colors.text,
@@ -237,11 +256,11 @@ const styles = StyleSheet.create({
     marginTop: theme.spacing.xs,
   },
   multiLine: {
-    textAlignVertical: 'top',
+    textAlignVertical: "top",
     minHeight: 96,
   },
   row: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: theme.spacing.md,
   },
   halfColumn: {
@@ -253,8 +272,8 @@ const styles = StyleSheet.create({
     borderRadius: theme.spacing.sm,
     padding: theme.spacing.md,
     backgroundColor: theme.colors.surface,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     minHeight: 56,
   },
   emojiText: {
@@ -263,7 +282,7 @@ const styles = StyleSheet.create({
   },
   clearEmojiButton: {
     marginTop: theme.spacing.xs,
-    alignSelf: 'flex-end',
+    alignSelf: "flex-end",
   },
   clearEmojiText: {
     fontSize: theme.typography.sm,
