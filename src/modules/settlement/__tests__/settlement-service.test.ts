@@ -137,6 +137,22 @@ describe("SettlementService", () => {
         toName: "Alice",
         amount: 1500,
       });
+
+      const netSum = settlement.balances.reduce(
+        (sum, balance) => sum + balance.netPosition,
+        0,
+      );
+      const totalPaidSum = settlement.balances.reduce(
+        (sum, balance) => sum + balance.totalPaid,
+        0,
+      );
+      const totalOwedSum = settlement.balances.reduce(
+        (sum, balance) => sum + balance.totalOwed,
+        0,
+      );
+
+      expect(netSum).toBe(0);
+      expect(totalPaidSum).toBe(totalOwedSum);
     });
 
     it("should handle multi-currency expenses using convertedAmountMinor", async () => {
