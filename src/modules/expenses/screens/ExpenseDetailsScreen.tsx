@@ -77,6 +77,41 @@ function ExpenseDetailsContent({ tripId, expenseId }: { tripId: string; expenseI
     return map;
   }, [participants]);
 
+  // Compute per-participant portions in trip currency minor units
+  const splitPortions = useMemo(() => {
+    if (!expense) return new Map<string, number>();
+
+    const totalAmount = expense.convertedAmountMinor;
+    const equalCount = splits.filter((s) => s.shareType === 'equal').length || 1;
+    const totalWeight = splits
+      .filter((s) => s.shareType === 'weight')
+      .reduce((sum, s) => sum + s.share, 0);
+
+    const portions = new Map<string, number>();
+
+    splits.forEach((split) => {
+      let portion: number | null = null;
+
+      if (split.shareType === 'amount' && split.amount != null) {
+        portion = split.amount;
+      } else if (split.shareType === 'percentage') {
+        portion = Math.round((split.share / 100) * totalAmount);
+      } else if (split.shareType === 'weight') {
+        if (totalWeight > 0) {
+          portion = Math.round((split.share / totalWeight) * totalAmount);
+        }
+      } else if (split.shareType === 'equal') {
+        portion = Math.round(totalAmount / equalCount);
+      }
+
+      if (portion != null) {
+        portions.set(split.participantId, portion);
+      }
+    });
+
+    return portions;
+  }, [expense, splits]);
+
   // Calculate display currency amounts if requested
   const displayAmounts = useMemo(() => {
     if (!expense || !displayCurrency) return null;
@@ -280,6 +315,7 @@ function ExpenseDetailsContent({ tripId, expenseId }: { tripId: string; expenseI
           {splits.length > 0 ? (
             splits.map((split) => {
               const participantName = participantMap.get(split.participantId) || 'Unknown';
+              const portion = splitPortions.get(split.participantId);
               return (
                 <View key={split.id} style={styles.splitRow}>
                   <View style={styles.splitInfo}>
@@ -292,15 +328,15 @@ function ExpenseDetailsContent({ tripId, expenseId }: { tripId: string; expenseI
                     </Text>
                   </View>
                   <View style={styles.splitAmounts}>
-                    {split.amount !== undefined && split.amount !== null && (
+                    {portion !== undefined && (
                       <>
                         <Text style={styles.splitAmount}>
-                          {formatCurrency(split.amount, expense.currency)}
+                          {formatCurrency(portion, expense.currency)}
                         </Text>
                         {showDisplayCurrency && displayAmounts && (
                           <Text style={styles.displayAmountSmall}>
                             {formatCurrency(
-                              Math.round(split.amount * displayAmounts.fxRate),
+                              Math.round(portion * displayAmounts.fxRate),
                               displayAmounts.displayAmount.currency
                             )}
                           </Text>
@@ -459,6 +495,8 @@ const styles = StyleSheet.create({
     fontSize: theme.typography.xs,
     color: theme.colors.textMuted,
     fontStyle: 'italic',
+    textAlign: 'right',
+    flexShrink: 1,
   },
   fxRateRow: {
     marginTop: theme.spacing.xs,
@@ -500,6 +538,7 @@ const styles = StyleSheet.create({
   splitInfo: {
     flex: 1,
     gap: 2,
+    marginRight: theme.spacing.md,
   },
   splitName: {
     fontSize: theme.typography.base,
@@ -513,11 +552,16 @@ const styles = StyleSheet.create({
   splitAmounts: {
     alignItems: 'flex-end',
     gap: 2,
+    minWidth: 120,
+    flexShrink: 1,
+    flexBasis: '45%',
   },
   splitAmount: {
     fontSize: theme.typography.base,
     fontWeight: theme.typography.semibold,
     color: theme.colors.text,
+    textAlign: 'right',
+    flexShrink: 1,
   },
   emptyText: {
     fontSize: theme.typography.base,
