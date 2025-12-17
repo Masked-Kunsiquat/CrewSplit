@@ -2,10 +2,6 @@
  * STORE - Type Definitions
  */
 
-import { Trip } from "../modules/trips/types";
-import { Participant } from "../modules/participants/types";
-import { Expense } from "../modules/expenses/types";
-
 export interface AppState {
   // Current trip context
   currentTripId: string | null;

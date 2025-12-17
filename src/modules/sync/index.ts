@@ -5,4 +5,4 @@
  */
 
 export * from "./types";
-export * from "./adapter";
+// Adapter exports will be added when sync implementations are provided

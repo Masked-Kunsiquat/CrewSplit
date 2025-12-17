@@ -99,7 +99,7 @@ export default function CreateTripScreen() {
       }
 
       router.replace(`/trips/${trip.id}`);
-    } catch (err) {
+    } catch {
       Alert.alert("Error", "Failed to create trip");
       setIsCreating(false);
     }

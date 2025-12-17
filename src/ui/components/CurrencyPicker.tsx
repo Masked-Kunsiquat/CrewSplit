@@ -15,7 +15,6 @@ import {
 } from "react-native";
 import { theme } from "@ui/theme";
 import { COMMON_CURRENCIES, type Currency } from "@utils/currency-constants";
-import { Card } from "./Card";
 import { Button } from "./Button";
 
 interface CurrencyPickerProps {

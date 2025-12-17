@@ -54,7 +54,7 @@ export const desc = (column: keyof MockFxRateRow) => ({
   column,
 });
 
-export const sql = <T = unknown>(
+export const sql = (
   strings: TemplateStringsArray,
   ...values: unknown[]
 ): SqlLike => {
@@ -120,7 +120,7 @@ const evaluateCondition = (
 
 const applyOrder = (
   rows: MockFxRateRow[],
-  order?: Array<{ type: "desc"; column: keyof MockFxRateRow }>,
+  order?: { type: "desc"; column: keyof MockFxRateRow }[],
 ) => {
   if (!order || order.length === 0) return rows;
 
@@ -138,7 +138,7 @@ const applyOrder = (
 
 class QueryBuilder {
   private whereCond?: Condition;
-  private order: Array<{ type: "desc"; column: keyof MockFxRateRow }> = [];
+  private order: { type: "desc"; column: keyof MockFxRateRow }[] = [];
   private limitCount?: number;
 
   constructor(
@@ -155,7 +155,7 @@ class QueryBuilder {
     return this;
   }
 
-  orderBy(...order: Array<{ type: "desc"; column: keyof MockFxRateRow }>) {
+  orderBy(...order: { type: "desc"; column: keyof MockFxRateRow }[]) {
     this.order = order;
     return this;
   }

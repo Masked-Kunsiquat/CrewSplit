@@ -180,7 +180,7 @@ class Logger {
     ) {
       try {
         return `\n${this.safeStringify(processedData, 2)}`;
-      } catch (err) {
+      } catch {
         return "\n[Error serializing data]";
       }
     }
@@ -209,7 +209,7 @@ class Logger {
     // Complex data: multi-line JSON
     try {
       return `\n${this.safeStringify(processedData, 2)}`;
-    } catch (err) {
+    } catch {
       return "\n[Error serializing data]";
     }
   }

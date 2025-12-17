@@ -5,8 +5,6 @@
 
 import { useQuery } from "../../../hooks";
 import { getTrips, getTripById } from "../repository";
-import type { Trip } from "../types";
-
 /**
  * Hook to fetch all trips
  * @returns Object with trips array, loading state, error, and refetch function

@@ -3,7 +3,6 @@
  * MODELER: Test the full settlement calculation pipeline
  */
 
-import { normalizeShares } from "../normalize-shares";
 import { calculateBalances } from "../calculate-balances";
 import { optimizeSettlements } from "../optimize-settlements";
 import { Expense, ExpenseSplit } from "../../expenses/types";

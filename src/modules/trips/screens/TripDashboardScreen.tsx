@@ -132,7 +132,7 @@ function TripDashboardScreenContent({ tripId }: { tripId: string }) {
       navigation.setOptions({ title: updated.name });
       refetchTrip();
       setEditingName(false);
-    } catch (error) {
+    } catch {
       Alert.alert("Error", "Failed to update trip");
     }
   };
@@ -158,7 +158,7 @@ function TripDashboardScreenContent({ tripId }: { tripId: string }) {
             try {
               await deleteTrip(tripId);
               router.replace("/");
-            } catch (error) {
+            } catch {
               Alert.alert("Error", "Failed to delete trip");
               setIsDeleting(false);
             }

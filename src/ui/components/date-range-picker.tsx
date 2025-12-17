@@ -42,15 +42,11 @@ export function DateRangePicker({
   const [showCalendar, setShowCalendar] = useState(false);
 
   // Let the library manage everything - completely uncontrolled
-  const {
-    calendarActiveDateRanges,
-    onCalendarDayPress,
-    dateRange,
-    onClearDateRange,
-  } = useDateRange({
-    startId: toDateId(startDate),
-    endId: endDate ? toDateId(endDate) : undefined,
-  });
+  const { calendarActiveDateRanges, onCalendarDayPress, dateRange } =
+    useDateRange({
+      startId: toDateId(startDate),
+      endId: endDate ? toDateId(endDate) : undefined,
+    });
 
   const formatDate = (date: Date | null | undefined): string => {
     if (!date) return "Not set";
