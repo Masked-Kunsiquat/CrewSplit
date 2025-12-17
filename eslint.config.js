@@ -4,12 +4,7 @@
  */
 
 const { FlatCompat } = require("@eslint/eslintrc");
-const path = require("path");
-
-const compat = new FlatCompat({
-  baseDirectory: __dirname,
-  resolvePluginsRelativeTo: __dirname,
-});
+const compat = new FlatCompat();
 
 module.exports = compat.config({
   extends: ["expo", "prettier"],
