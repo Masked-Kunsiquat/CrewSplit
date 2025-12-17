@@ -3,24 +3,24 @@
  * LOCAL DATA ENGINEER: ACID safety, versioning, priority selection
  */
 
-import { mockDb, createRateRow } from "../test-utils/mock-db";
+import {
+  mockDb,
+  createRateRow,
+  mockFxRatesTable,
+  drizzleOrmMock as mockDrizzleOrm,
+} from "../test-utils/mock-db";
+import { FxRateRepository } from "../repository";
 
 jest.mock("@db/client", () => ({
   db: mockDb,
 }));
 
-jest.mock("@db/schema/fx-rates", () => {
-  const { mockFxRatesTable } = require("../test-utils/mock-db");
-  return {
-    fxRates: mockFxRatesTable,
-    fxRateSnapshots: {},
-  };
-});
+jest.mock("@db/schema/fx-rates", () => ({
+  fxRates: mockFxRatesTable,
+  fxRateSnapshots: {},
+}));
 
-jest.mock("drizzle-orm", () => {
-  const { drizzleOrmMock: mockDrizzleOrm } = require("../test-utils/mock-db");
-  return mockDrizzleOrm;
-});
+jest.mock("drizzle-orm", () => mockDrizzleOrm);
 
 jest.mock("expo-crypto", () => {
   let counter = 0;
@@ -38,8 +38,6 @@ jest.mock("@utils/logger", () => {
   };
   return { fxLogger: logger };
 });
-
-import { FxRateRepository } from "../repository";
 
 describe("FxRateRepository", () => {
   const now = "2024-01-10T00:00:00.000Z";

@@ -3,6 +3,8 @@
  * LOCAL DATA ENGINEER: Network handling, validation, and timeouts
  */
 
+import { FrankfurterService } from "../services/frankfurter-service";
+
 jest.mock("@utils/logger", () => {
   const logger = {
     debug: jest.fn(),
@@ -12,8 +14,6 @@ jest.mock("@utils/logger", () => {
   };
   return { fxLogger: logger };
 });
-
-import { FrankfurterService } from "../services/frankfurter-service";
 
 describe("FrankfurterService", () => {
   const originalFetch = global.fetch;

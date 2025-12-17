@@ -3,21 +3,23 @@
  * LOCAL DATA ENGINEER: Repository ↔ service orchestration and fallback
  */
 
-import { mockDb } from "../test-utils/mock-db";
+import {
+  mockDb,
+  mockFxRatesTable,
+  drizzleOrmMock as mockDrizzleOrm,
+} from "../test-utils/mock-db";
+import { FxRateService } from "../services/fx-rate-service";
+import { cachedFxRateProvider } from "../provider/cached-fx-rate-provider";
 
 jest.mock("@db/client", () => ({
   db: mockDb,
 }));
 
-jest.mock("@db/schema/fx-rates", () => {
-  const { mockFxRatesTable } = require("../test-utils/mock-db");
-  return { fxRates: mockFxRatesTable };
-});
+jest.mock("@db/schema/fx-rates", () => ({
+  fxRates: mockFxRatesTable,
+}));
 
-jest.mock("drizzle-orm", () => {
-  const { drizzleOrmMock: mockDrizzleOrm } = require("../test-utils/mock-db");
-  return mockDrizzleOrm;
-});
+jest.mock("drizzle-orm", () => mockDrizzleOrm);
 
 jest.mock("@utils/logger", () => {
   const logger = {
@@ -50,9 +52,6 @@ jest.mock("../services/exchange-rate-api-service", () => ({
     checkAvailability: jest.fn(async () => true),
   },
 }));
-
-import { FxRateService } from "../services/fx-rate-service";
-import { cachedFxRateProvider } from "../provider/cached-fx-rate-provider";
 
 describe("FxRateService integration", () => {
   const now = "2024-01-10T00:00:00.000Z";

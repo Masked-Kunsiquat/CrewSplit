@@ -10,6 +10,8 @@ import {
   drizzleOrmMock as mockDrizzleOrm,
 } from "../test-utils/mock-db";
 
+import { CachedFxRateProvider } from "../provider/cached-fx-rate-provider";
+
 jest.mock("@db/client", () => ({
   db: mockDb,
 }));
@@ -31,9 +33,6 @@ jest.mock("@utils/logger", () => {
   };
   return { fxLogger: logger };
 });
-
-import { CachedFxRateProvider } from "../provider/cached-fx-rate-provider";
-import { FxRateRepository } from "../repository";
 
 describe("CachedFxRateProvider", () => {
   const now = "2024-01-10T00:00:00.000Z";

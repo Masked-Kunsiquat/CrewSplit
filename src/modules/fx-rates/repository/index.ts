@@ -47,11 +47,11 @@ export interface SetFxRateInput {
  * Batch input for bulk updates (e.g., from API fetch)
  */
 export interface BatchFxRateInput {
-  rates: Array<{
+  rates: {
     baseCurrency: string;
     quoteCurrency: string;
     rate: number;
-  }>;
+  }[];
   source: FxRateSource;
   fetchedAt?: string; // Defaults to now
   metadata?: Record<string, unknown>;

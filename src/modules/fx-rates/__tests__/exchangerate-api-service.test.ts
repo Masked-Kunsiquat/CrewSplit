@@ -3,6 +3,8 @@
  * LOCAL DATA ENGINEER: Fallback source handling and errors
  */
 
+import { ExchangeRateApiService } from "../services/exchange-rate-api-service";
+
 jest.mock("@utils/logger", () => {
   const logger = {
     debug: jest.fn(),
@@ -12,8 +14,6 @@ jest.mock("@utils/logger", () => {
   };
   return { fxLogger: logger };
 });
-
-import { ExchangeRateApiService } from "../services/exchange-rate-api-service";
 
 describe("ExchangeRateApiService", () => {
   const originalFetch = global.fetch;
