@@ -12,6 +12,7 @@
 import { FrankfurterService } from './frankfurter-service';
 import { ExchangeRateApiService } from './exchange-rate-api-service';
 import { FxRateRepository } from '../repository';
+import { cachedFxRateProvider } from '../provider';
 import type { FxRateSource } from '@db/schema/fx-rates';
 import type { RatePair } from '../types';
 import { fxLogger } from '@utils/logger';
@@ -83,6 +84,12 @@ export const updateRates = async (
         metadata: { fetchedAt },
       });
 
+      try {
+        await cachedFxRateProvider.refreshCache();
+      } catch (cacheError) {
+        fxLogger.warn('Failed to refresh FX cache after Frankfurter update', cacheError);
+      }
+
       fxLogger.info('Successfully updated rates from Frankfurter', { persistedCount });
 
       return {
@@ -122,6 +129,12 @@ export const updateRates = async (
         attribution: ExchangeRateApiService.getAttributionText(),
       },
     });
+
+    try {
+      await cachedFxRateProvider.refreshCache();
+    } catch (cacheError) {
+      fxLogger.warn('Failed to refresh FX cache after ExchangeRate-API update', cacheError);
+    }
 
     fxLogger.info('Successfully updated rates from ExchangeRate-API', { persistedCount });
 
