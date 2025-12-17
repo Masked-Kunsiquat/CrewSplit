@@ -41,7 +41,7 @@ export default function SettingsScreen() {
   const handleCurrencyChange = async (currency: string | null) => {
     try {
       await setDisplayCurrency(currency);
-    } catch (error) {
+    } catch {
       Alert.alert(
         "Error",
         "Failed to save display currency preference. Please try again.",
@@ -63,7 +63,7 @@ export default function SettingsScreen() {
     try {
       await setDeviceOwner(nameInput.trim());
       setEditingName(false);
-    } catch (error) {
+    } catch {
       Alert.alert("Error", "Failed to save your name. Please try again.");
     }
   };

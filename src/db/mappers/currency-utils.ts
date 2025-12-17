@@ -98,7 +98,7 @@ export const CurrencyUtils = {
         style: "currency",
         currency: currencyCode,
       }).format(major);
-    } catch (error) {
+    } catch {
       // Fallback if currency code is invalid
       const decimals = getDecimalPlaces(currencyCode);
       return `${currencyCode} ${major.toFixed(decimals)}`;
@@ -117,7 +117,7 @@ export const CurrencyUtils = {
         style: "currency",
         currency: currencyCode,
       }).format(major);
-    } catch (error) {
+    } catch {
       // Fallback if currency code is invalid
       const decimals = getDecimalPlaces(currencyCode);
       return `${currencyCode} ${major.toFixed(decimals)}`;

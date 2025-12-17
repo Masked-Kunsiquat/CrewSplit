@@ -5,7 +5,7 @@
  */
 
 import { sql } from "drizzle-orm";
-import { sqliteTable, text, real, integer } from "drizzle-orm/sqlite-core";
+import { sqliteTable } from "drizzle-orm/sqlite-core";
 import { expenses } from "./expenses";
 import { participants } from "./participants";
 

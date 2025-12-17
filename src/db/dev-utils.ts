@@ -35,7 +35,7 @@ export function resetDatabase(): void {
     console.warn(
       "🗑️  DEV: Database deleted - app will recreate on next launch",
     );
-  } catch (error) {
+  } catch {
     console.log("No existing database to delete");
   }
 }

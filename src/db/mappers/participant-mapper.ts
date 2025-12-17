@@ -3,15 +3,13 @@
  * LOCAL DATA ENGINEER: Convert between DB rows and domain models
  */
 
-import type { Participant, NewParticipant } from "../schema/participants";
+import type { Participant } from "../schema/participants";
 
 /**
  * Domain model for Participant (currently identical to DB model)
  * Future: Add computed fields or balance information here
  */
-export interface ParticipantDomain extends Participant {
-  // Helper methods can be added here in the future
-}
+export type ParticipantDomain = Participant;
 
 /**
  * Map Participant database row to domain model

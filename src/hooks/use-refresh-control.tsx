@@ -42,7 +42,7 @@ import { theme } from "@ui/theme";
  * ```
  */
 export function useRefreshControl(
-  refetchFunctions: Array<(() => void | Promise<void>) | undefined>,
+  refetchFunctions: (((() => void) | (() => Promise<void>)) | undefined)[],
 ) {
   const [refreshing, setRefreshing] = useState(false);
 

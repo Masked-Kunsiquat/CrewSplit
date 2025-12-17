@@ -3,15 +3,13 @@
  * LOCAL DATA ENGINEER: Convert between DB rows and domain models
  */
 
-import type { ExpenseSplit, NewExpenseSplit } from "../schema/expense-splits";
+import type { ExpenseSplit } from "../schema/expense-splits";
 
 /**
  * Domain model for ExpenseSplit (currently identical to DB model)
  * Future: Add computed split amounts or normalized shares here
  */
-export interface ExpenseSplitDomain extends ExpenseSplit {
-  // Helper methods can be added here in the future
-}
+export type ExpenseSplitDomain = ExpenseSplit;
 
 /**
  * Map ExpenseSplit database row to domain model

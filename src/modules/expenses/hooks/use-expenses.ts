@@ -9,7 +9,7 @@ import {
   getExpenseById,
   getExpenseSplits,
 } from "../repository";
-import type { Expense, ExpenseSplit } from "../types";
+import type { Expense } from "../types";
 
 /**
  * Hook to fetch all expenses for a trip

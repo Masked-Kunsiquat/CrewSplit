@@ -6,5 +6,5 @@
 
 export * from "./types";
 export * from "./hooks";
-export * from "./queries";
+// TODO: Queries will be exported once implemented
 export * from "./repository";
