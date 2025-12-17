@@ -14,10 +14,10 @@ export const typography = {
   xxxl: 32,
 
   // Font weights
-  regular: '400' as const,
-  medium: '500' as const,
-  semibold: '600' as const,
-  bold: '700' as const,
+  regular: "400" as const,
+  medium: "500" as const,
+  semibold: "600" as const,
+  bold: "700" as const,
 
   // Line heights
   tight: 1.2,

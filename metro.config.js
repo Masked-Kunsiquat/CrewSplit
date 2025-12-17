@@ -1,7 +1,7 @@
 // Metro configuration for Expo
-const { getDefaultConfig } = require('expo/metro-config');
+const { getDefaultConfig } = require("expo/metro-config");
 
 const config = getDefaultConfig(__dirname);
-config.resolver.sourceExts.push('sql');
+config.resolver.sourceExts.push("sql");
 
 module.exports = config;

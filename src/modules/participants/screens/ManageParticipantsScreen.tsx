@@ -3,19 +3,33 @@
  * Manages participant list with add/remove actions and pull-to-refresh
  */
 
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Alert } from 'react-native';
-import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
-import { theme } from '@ui/theme';
-import { participantLogger } from '@utils/logger';
-import { Button, Card, Input, ParticipantListRow } from '@ui/components';
-import { useParticipants } from '../hooks/use-participants';
-import { useTripById } from '@modules/trips/hooks/use-trips';
-import { createParticipant, deleteParticipant } from '../repository';
-import { useRefreshControl } from '@hooks/use-refresh-control';
+import React, { useState, useEffect } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  ActivityIndicator,
+  Alert,
+} from "react-native";
+import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
+import { theme } from "@ui/theme";
+import { participantLogger } from "@utils/logger";
+import { Button, Card, Input, ParticipantListRow } from "@ui/components";
+import { useParticipants } from "../hooks/use-participants";
+import { useTripById } from "@modules/trips/hooks/use-trips";
+import { createParticipant, deleteParticipant } from "../repository";
+import { useRefreshControl } from "@hooks/use-refresh-control";
 
 // Predefined avatar colors for new participants
-const AVATAR_COLORS = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#F7DC6F', '#BB8FCE', '#85C1E2'];
+const AVATAR_COLORS = [
+  "#FF6B6B",
+  "#4ECDC4",
+  "#45B7D1",
+  "#F7DC6F",
+  "#BB8FCE",
+  "#85C1E2",
+];
 
 export default function ManageParticipantsScreen() {
   const router = useRouter();
@@ -29,8 +43,14 @@ export default function ManageParticipantsScreen() {
       <View style={styles.container}>
         <View style={styles.errorContainer}>
           <Card style={styles.errorCard}>
-            <Text style={styles.errorText}>Missing trip id. Please navigate back and select a trip.</Text>
-            <Button title="Back to trips" onPress={() => router.replace('/')} fullWidth />
+            <Text style={styles.errorText}>
+              Missing trip id. Please navigate back and select a trip.
+            </Text>
+            <Button
+              title="Back to trips"
+              onPress={() => router.replace("/")}
+              fullWidth
+            />
           </Card>
         </View>
       </View>
@@ -47,12 +67,17 @@ function ManageParticipantsContent({
   tripId: string;
   navigation: any;
 }) {
-  const [newParticipantName, setNewParticipantName] = useState('');
+  const [newParticipantName, setNewParticipantName] = useState("");
   const [nameError, setNameError] = useState<string | null>(null);
   const [isAdding, setIsAdding] = useState(false);
 
   const { trip, refetch: refetchTrip } = useTripById(tripId);
-  const { participants, loading, error, refetch: refetchParticipants } = useParticipants(tripId);
+  const {
+    participants,
+    loading,
+    error,
+    refetch: refetchParticipants,
+  } = useParticipants(tripId);
 
   // Pull-to-refresh support
   const refreshControl = useRefreshControl([refetchTrip, refetchParticipants]);
@@ -69,14 +94,15 @@ function ManageParticipantsContent({
   const handleAddParticipant = async () => {
     if (isAdding) return;
     if (!newParticipantName.trim()) {
-      setNameError('Name is required');
+      setNameError("Name is required");
       return;
     }
 
     setIsAdding(true);
     try {
       // Pick a random color
-      const avatarColor = AVATAR_COLORS[Math.floor(Math.random() * AVATAR_COLORS.length)];
+      const avatarColor =
+        AVATAR_COLORS[Math.floor(Math.random() * AVATAR_COLORS.length)];
 
       await createParticipant({
         tripId,
@@ -85,36 +111,42 @@ function ManageParticipantsContent({
       });
 
       refetchParticipants();
-      setNewParticipantName('');
+      setNewParticipantName("");
       setNameError(null);
     } catch (err) {
-      Alert.alert('Error', err instanceof Error ? err.message : 'Failed to add participant');
+      Alert.alert(
+        "Error",
+        err instanceof Error ? err.message : "Failed to add participant",
+      );
     } finally {
       setIsAdding(false);
     }
   };
 
-  const handleDeleteParticipant = async (participantId: string, participantName: string) => {
+  const handleDeleteParticipant = async (
+    participantId: string,
+    participantName: string,
+  ) => {
     Alert.alert(
-      'Remove Participant',
+      "Remove Participant",
       `Remove ${participantName} from this trip?`,
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: "Cancel", style: "cancel" },
         {
-          text: 'Remove',
-          style: 'destructive',
+          text: "Remove",
+          style: "destructive",
           onPress: async () => {
             try {
               await deleteParticipant(participantId);
               refetchParticipants();
             } catch (err) {
               const message = err instanceof Error ? err.message : String(err);
-              participantLogger.error('Failed to delete participant', err);
-              Alert.alert('Error', `Failed to remove participant: ${message}`);
+              participantLogger.error("Failed to delete participant", err);
+              Alert.alert("Error", `Failed to remove participant: ${message}`);
             }
           },
         },
-      ]
+      ],
     );
   };
 
@@ -134,7 +166,9 @@ function ManageParticipantsContent({
         <View style={styles.errorContainer}>
           <Card style={styles.errorCard}>
             <Text style={styles.errorText}>
-              {typeof error === 'string' ? error : error?.message ?? String(error)}
+              {typeof error === "string"
+                ? error
+                : (error?.message ?? String(error))}
             </Text>
           </Card>
         </View>
@@ -163,7 +197,7 @@ function ManageParticipantsContent({
           editable={!isAdding}
         />
         <Button
-          title={isAdding ? 'Adding...' : 'Add Participant'}
+          title={isAdding ? "Adding..." : "Add Participant"}
           onPress={handleAddParticipant}
           fullWidth
           disabled={isAdding || !newParticipantName.trim()}
@@ -178,7 +212,9 @@ function ManageParticipantsContent({
           </Card>
         ) : (
           <Card style={styles.participantCard}>
-            <Text style={styles.sectionTitle}>Participants ({participants.length})</Text>
+            <Text style={styles.sectionTitle}>
+              Participants ({participants.length})
+            </Text>
             <View style={styles.participantList}>
               {[...participants]
                 .sort((a, b) => a.name.localeCompare(b.name))
@@ -192,7 +228,9 @@ function ManageParticipantsContent({
                   />
                 ))}
             </View>
-            <Text style={styles.hintText}>Long-press to remove a participant</Text>
+            <Text style={styles.hintText}>
+              Long-press to remove a participant
+            </Text>
           </Card>
         )}
       </ScrollView>
@@ -219,8 +257,8 @@ const styles = StyleSheet.create({
   },
   centerContent: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   errorContainer: {
     padding: theme.spacing.lg,
@@ -233,10 +271,10 @@ const styles = StyleSheet.create({
     color: theme.colors.background,
   },
   emptyCard: {
-    borderStyle: 'dashed',
+    borderStyle: "dashed",
     borderColor: theme.colors.border,
     borderWidth: 1,
-    alignItems: 'center',
+    alignItems: "center",
     padding: theme.spacing.xl,
   },
   emptyTitle: {
@@ -248,7 +286,7 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: theme.typography.base,
     color: theme.colors.textSecondary,
-    textAlign: 'center',
+    textAlign: "center",
   },
   participantCard: {
     gap: theme.spacing.sm,
@@ -264,13 +302,13 @@ const styles = StyleSheet.create({
   participantList: {
     backgroundColor: theme.colors.background,
     borderRadius: theme.borderRadius.sm,
-    overflow: 'hidden',
+    overflow: "hidden",
     marginTop: theme.spacing.xs,
   },
   hintText: {
     fontSize: theme.typography.sm,
     color: theme.colors.textSecondary,
-    fontStyle: 'italic',
+    fontStyle: "italic",
     marginTop: theme.spacing.sm,
     paddingHorizontal: theme.spacing.md,
   },

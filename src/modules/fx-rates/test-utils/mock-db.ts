@@ -4,7 +4,7 @@
  * Provides minimal query builders used by the repository.
  */
 
-import type { FxRateSource } from '@db/schema/fx-rates';
+import type { FxRateSource } from "@db/schema/fx-rates";
 
 export type MockFxRateRow = {
   id: string;
@@ -21,92 +21,107 @@ export type MockFxRateRow = {
 };
 
 type Condition =
-  | { type: 'eq'; column: keyof MockFxRateRow; value: unknown }
-  | { type: 'and'; clauses: Condition[] }
-  | { type: 'or'; clauses: Condition[] }
-  | { type: 'lt'; column: keyof MockFxRateRow; value: unknown };
+  | { type: "eq"; column: keyof MockFxRateRow; value: unknown }
+  | { type: "and"; clauses: Condition[] }
+  | { type: "or"; clauses: Condition[] }
+  | { type: "lt"; column: keyof MockFxRateRow; value: unknown };
 
 type SqlDescriptor =
-  | { sqlType: 'min'; column: keyof MockFxRateRow }
-  | { sqlType: 'count' }
-  | { sqlType: 'raw' };
+  | { sqlType: "min"; column: keyof MockFxRateRow }
+  | { sqlType: "count" }
+  | { sqlType: "raw" };
 
 type SqlLike = SqlDescriptor | Condition;
 
 export const eq = (column: keyof MockFxRateRow, value: unknown): Condition => ({
-  type: 'eq',
+  type: "eq",
   column,
   value,
 });
 
 export const and = (...clauses: Condition[]): Condition => ({
-  type: 'and',
+  type: "and",
   clauses,
 });
 
 export const or = (...clauses: Condition[]): Condition => ({
-  type: 'or',
+  type: "or",
   clauses,
 });
 
 export const desc = (column: keyof MockFxRateRow) => ({
-  type: 'desc' as const,
+  type: "desc" as const,
   column,
 });
 
-export const sql = <T = unknown>(strings: TemplateStringsArray, ...values: unknown[]): SqlLike => {
-  const raw = strings.join('');
+export const sql = <T = unknown>(
+  strings: TemplateStringsArray,
+  ...values: unknown[]
+): SqlLike => {
+  const raw = strings.join("");
 
-  if (raw.includes('MIN')) {
-    return { sqlType: 'min', column: values[0] as keyof MockFxRateRow };
+  if (raw.includes("MIN")) {
+    return { sqlType: "min", column: values[0] as keyof MockFxRateRow };
   }
 
-  if (raw.includes('COUNT')) {
-    return { sqlType: 'count' };
+  if (raw.includes("COUNT")) {
+    return { sqlType: "count" };
   }
 
-  if (raw.includes('<')) {
+  if (raw.includes("<")) {
     return {
-      type: 'lt',
+      type: "lt",
       column: values[0] as keyof MockFxRateRow,
       value: values[1],
     };
   }
 
-  return { sqlType: 'raw' };
+  return { sqlType: "raw" };
 };
 
-const evaluateCondition = (row: MockFxRateRow, condition?: Condition): boolean => {
+const evaluateCondition = (
+  row: MockFxRateRow,
+  condition?: Condition,
+): boolean => {
   if (!condition) return true;
 
   switch (condition.type) {
-    case 'eq':
+    case "eq":
       return row[condition.column] === condition.value;
-    case 'lt':
-      {
-        const left = row[condition.column];
-        const right = condition.value;
+    case "lt": {
+      const left = row[condition.column];
+      const right = condition.value;
 
-        if (left === null || left === undefined || right === null || right === undefined) {
-          return false;
-        }
-
-        if (typeof left === 'number' && typeof right === 'number') {
-          return left < right;
-        }
-
-        return String(left) < String(right);
+      if (
+        left === null ||
+        left === undefined ||
+        right === null ||
+        right === undefined
+      ) {
+        return false;
       }
-    case 'and':
-      return condition.clauses.every((clause) => evaluateCondition(row, clause));
-    case 'or':
+
+      if (typeof left === "number" && typeof right === "number") {
+        return left < right;
+      }
+
+      return String(left) < String(right);
+    }
+    case "and":
+      return condition.clauses.every((clause) =>
+        evaluateCondition(row, clause),
+      );
+    case "or":
       return condition.clauses.some((clause) => evaluateCondition(row, clause));
     default:
       return true;
   }
 };
 
-const applyOrder = (rows: MockFxRateRow[], order?: Array<{ type: 'desc'; column: keyof MockFxRateRow }>) => {
+const applyOrder = (
+  rows: MockFxRateRow[],
+  order?: Array<{ type: "desc"; column: keyof MockFxRateRow }>,
+) => {
   if (!order || order.length === 0) return rows;
 
   return [...rows].sort((a, b) => {
@@ -123,12 +138,12 @@ const applyOrder = (rows: MockFxRateRow[], order?: Array<{ type: 'desc'; column:
 
 class QueryBuilder {
   private whereCond?: Condition;
-  private order: Array<{ type: 'desc'; column: keyof MockFxRateRow }> = [];
+  private order: Array<{ type: "desc"; column: keyof MockFxRateRow }> = [];
   private limitCount?: number;
 
   constructor(
     private readonly db: InMemoryDb,
-    private readonly selection?: Record<string, SqlDescriptor>
+    private readonly selection?: Record<string, SqlDescriptor>,
   ) {}
 
   from() {
@@ -140,7 +155,7 @@ class QueryBuilder {
     return this;
   }
 
-  orderBy(...order: Array<{ type: 'desc'; column: keyof MockFxRateRow }>) {
+  orderBy(...order: Array<{ type: "desc"; column: keyof MockFxRateRow }>) {
     this.order = order;
     return this;
   }
@@ -151,9 +166,11 @@ class QueryBuilder {
   }
 
   private buildResult(): any[] {
-    let rows = this.db.rows.filter((row) => evaluateCondition(row, this.whereCond));
+    let rows = this.db.rows.filter((row) =>
+      evaluateCondition(row, this.whereCond),
+    );
     rows = applyOrder(rows, this.order);
-    if (typeof this.limitCount === 'number') {
+    if (typeof this.limitCount === "number") {
       rows = rows.slice(0, this.limitCount);
     }
 
@@ -163,11 +180,11 @@ class QueryBuilder {
 
     const result: Record<string, unknown> = {};
     for (const [key, descriptor] of Object.entries(this.selection)) {
-      if ((descriptor as any).sqlType === 'min') {
+      if ((descriptor as any).sqlType === "min") {
         const column = (descriptor as any).column as keyof MockFxRateRow;
         const values = rows.map((r) => r[column]).filter(Boolean) as string[];
         result[key] = values.length ? values.sort()[0] : null;
-      } else if ((descriptor as any).sqlType === 'count') {
+      } else if ((descriptor as any).sqlType === "count") {
         result[key] = rows.length;
       }
     }
@@ -175,8 +192,14 @@ class QueryBuilder {
   }
 
   then<TResult1 = any, TResult2 = never>(
-    onfulfilled?: ((value: any[]) => TResult1 | PromiseLike<TResult1>) | undefined | null,
-    onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null
+    onfulfilled?:
+      | ((value: any[]) => TResult1 | PromiseLike<TResult1>)
+      | undefined
+      | null,
+    onrejected?:
+      | ((reason: any) => TResult2 | PromiseLike<TResult2>)
+      | undefined
+      | null,
   ) {
     return Promise.resolve(this.buildResult()).then(onfulfilled, onrejected);
   }
@@ -218,7 +241,11 @@ class InsertBuilder {
 
   private ensureInserted(): MockFxRateRow[] {
     if (this.inserted || !this.record) {
-      return Array.isArray(this.record) ? this.record : this.record ? [this.record] : [];
+      return Array.isArray(this.record)
+        ? this.record
+        : this.record
+          ? [this.record]
+          : [];
     }
     const records = Array.isArray(this.record) ? this.record : [this.record];
     this.db.rows = [...this.db.rows, ...records.map((r) => ({ ...r }))];
@@ -232,8 +259,14 @@ class InsertBuilder {
   }
 
   then<TResult1 = any, TResult2 = never>(
-    onfulfilled?: ((value: any) => TResult1 | PromiseLike<TResult1>) | undefined | null,
-    onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null
+    onfulfilled?:
+      | ((value: any) => TResult1 | PromiseLike<TResult1>)
+      | undefined
+      | null,
+    onrejected?:
+      | ((reason: any) => TResult2 | PromiseLike<TResult2>)
+      | undefined
+      | null,
   ) {
     const result = this.ensureInserted();
     return Promise.resolve(result).then(onfulfilled, onrejected);
@@ -275,31 +308,33 @@ export class InMemoryDb {
 export const mockDb = new InMemoryDb();
 
 export const mockFxRatesTable = {
-  id: 'id',
-  baseCurrency: 'baseCurrency',
-  quoteCurrency: 'quoteCurrency',
-  rate: 'rate',
-  source: 'source',
-  fetchedAt: 'fetchedAt',
-  priority: 'priority',
-  metadata: 'metadata',
-  isArchived: 'isArchived',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt',
+  id: "id",
+  baseCurrency: "baseCurrency",
+  quoteCurrency: "quoteCurrency",
+  rate: "rate",
+  source: "source",
+  fetchedAt: "fetchedAt",
+  priority: "priority",
+  metadata: "metadata",
+  isArchived: "isArchived",
+  createdAt: "createdAt",
+  updatedAt: "updatedAt",
 } as const;
 
-export const createRateRow = (overrides: Partial<MockFxRateRow>): MockFxRateRow => ({
-  id: overrides.id ?? 'rate-id',
-  baseCurrency: overrides.baseCurrency ?? 'USD',
-  quoteCurrency: overrides.quoteCurrency ?? 'EUR',
+export const createRateRow = (
+  overrides: Partial<MockFxRateRow>,
+): MockFxRateRow => ({
+  id: overrides.id ?? "rate-id",
+  baseCurrency: overrides.baseCurrency ?? "USD",
+  quoteCurrency: overrides.quoteCurrency ?? "EUR",
   rate: overrides.rate ?? 0.9,
-  source: overrides.source ?? 'frankfurter',
-  fetchedAt: overrides.fetchedAt ?? '2024-01-01T00:00:00.000Z',
+  source: overrides.source ?? "frankfurter",
+  fetchedAt: overrides.fetchedAt ?? "2024-01-01T00:00:00.000Z",
   priority: overrides.priority ?? 50,
   metadata: overrides.metadata ?? null,
   isArchived: overrides.isArchived ?? false,
-  createdAt: overrides.createdAt ?? '2024-01-01T00:00:00.000Z',
-  updatedAt: overrides.updatedAt ?? '2024-01-01T00:00:00.000Z',
+  createdAt: overrides.createdAt ?? "2024-01-01T00:00:00.000Z",
+  updatedAt: overrides.updatedAt ?? "2024-01-01T00:00:00.000Z",
 });
 
 export const drizzleOrmMock = { eq, and, or, desc, sql };

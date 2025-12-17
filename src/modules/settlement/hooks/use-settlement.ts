@@ -3,9 +3,9 @@
  * React hook for accessing settlement data with state management
  */
 
-import { useQuery } from '../../../hooks';
-import { computeSettlement } from '../service/SettlementService';
-import type { SettlementSummary } from '../types';
+import { useQuery } from "../../../hooks";
+import { computeSettlement } from "../service/SettlementService";
+import type { SettlementSummary } from "../types";
 
 /**
  * Hook to fetch settlement summary for a trip
@@ -17,7 +17,7 @@ export function useSettlement(tripId: string | null) {
     balances: [],
     settlements: [],
     totalExpenses: 0,
-    currency: 'USD',
+    currency: "USD",
     splitExpensesTotal: 0,
     personalExpensesTotal: 0,
     unsplitExpensesTotal: 0,
@@ -25,11 +25,17 @@ export function useSettlement(tripId: string | null) {
     unsplitExpenseIds: [],
   };
 
-  const { data: settlement, loading, error, refetch } = useQuery(
-    () => (tripId ? computeSettlement(tripId) : Promise.resolve(emptySettlement)),
+  const {
+    data: settlement,
+    loading,
+    error,
+    refetch,
+  } = useQuery(
+    () =>
+      tripId ? computeSettlement(tripId) : Promise.resolve(emptySettlement),
     [tripId],
     emptySettlement,
-    'Failed to load settlement data'
+    "Failed to load settlement data",
   );
 
   return { settlement, loading, error, refetch };

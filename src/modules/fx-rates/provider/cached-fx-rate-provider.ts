@@ -6,10 +6,10 @@
  * Maintains synchronous interface for compatibility with DisplayCurrencyAdapter
  */
 
-import type { FxRateProvider } from '@modules/settlement/service/DisplayCurrencyAdapter';
-import { FxRateRepository } from '../repository';
-import type { FxRateSource } from '@db/schema/fx-rates';
-import { fxLogger } from '@utils/logger';
+import type { FxRateProvider } from "@modules/settlement/service/DisplayCurrencyAdapter";
+import { FxRateRepository } from "../repository";
+import type { FxRateSource } from "@db/schema/fx-rates";
+import { fxLogger } from "@utils/logger";
 
 /**
  * Cached FX Rate Provider
@@ -34,7 +34,10 @@ import { fxLogger } from '@utils/logger';
  * ```
  */
 export class CachedFxRateProvider implements FxRateProvider {
-  private cache: Map<string, { rate: number; fetchedAt: string; source: FxRateSource }> = new Map();
+  private cache: Map<
+    string,
+    { rate: number; fetchedAt: string; source: FxRateSource }
+  > = new Map();
   private initialized = false;
 
   /**
@@ -43,11 +46,11 @@ export class CachedFxRateProvider implements FxRateProvider {
    */
   async initialize(): Promise<void> {
     if (this.initialized) {
-      fxLogger.warn('CachedFxRateProvider already initialized');
+      fxLogger.warn("CachedFxRateProvider already initialized");
       return;
     }
 
-    fxLogger.debug('Initializing CachedFxRateProvider');
+    fxLogger.debug("Initializing CachedFxRateProvider");
 
     try {
       // Load all active rates from database
@@ -65,13 +68,15 @@ export class CachedFxRateProvider implements FxRateProvider {
       }
 
       this.initialized = true;
-      fxLogger.info('CachedFxRateProvider initialized', { cachedRates: this.cache.size });
+      fxLogger.info("CachedFxRateProvider initialized", {
+        cachedRates: this.cache.size,
+      });
     } catch (error) {
-      fxLogger.error('Failed to initialize CachedFxRateProvider', error);
+      fxLogger.error("Failed to initialize CachedFxRateProvider", error);
       // Initialize as empty cache rather than failing
       this.cache.clear();
       this.initialized = true;
-      fxLogger.warn('Initialized with empty cache due to error');
+      fxLogger.warn("Initialized with empty cache due to error");
     }
   }
 
@@ -93,10 +98,10 @@ export class CachedFxRateProvider implements FxRateProvider {
   getRate(fromCurrency: string, toCurrency: string): number {
     if (!this.initialized) {
       const error = new Error(
-        'CachedFxRateProvider not initialized. Call initialize() at app startup.'
+        "CachedFxRateProvider not initialized. Call initialize() at app startup.",
       ) as Error & { code: string };
-      error.code = 'FX_CACHE_NOT_INITIALIZED';
-      fxLogger.error('FX rate cache not initialized', {
+      error.code = "FX_CACHE_NOT_INITIALIZED";
+      fxLogger.error("FX rate cache not initialized", {
         fromCurrency,
         toCurrency,
         code: error.code,
@@ -114,15 +119,19 @@ export class CachedFxRateProvider implements FxRateProvider {
 
     if (!cached) {
       const error = new Error(
-        `No exchange rate available for ${fromCurrency} to ${toCurrency}. Please update rates or set a manual rate.`
+        `No exchange rate available for ${fromCurrency} to ${toCurrency}. Please update rates or set a manual rate.`,
       ) as Error & { code: string };
-      error.code = 'FX_RATE_NOT_FOUND';
+      error.code = "FX_RATE_NOT_FOUND";
 
-      fxLogger.error('FX rate not found in cache', { fromCurrency, toCurrency, code: error.code });
+      fxLogger.error("FX rate not found in cache", {
+        fromCurrency,
+        toCurrency,
+        code: error.code,
+      });
       throw error;
     }
 
-    fxLogger.debug('FX rate retrieved from cache', {
+    fxLogger.debug("FX rate retrieved from cache", {
       fromCurrency,
       toCurrency,
       rate: cached.rate,
@@ -164,7 +173,11 @@ export class CachedFxRateProvider implements FxRateProvider {
         fetchedAt: rate.fetchedAt,
         source: rate.source,
       });
-      fxLogger.debug('Rate loaded into cache', { fromCurrency, toCurrency, rate: rate.rate });
+      fxLogger.debug("Rate loaded into cache", {
+        fromCurrency,
+        toCurrency,
+        rate: rate.rate,
+      });
     }
   }
 
@@ -178,22 +191,33 @@ export class CachedFxRateProvider implements FxRateProvider {
   async setManualRate(
     fromCurrency: string,
     toCurrency: string,
-    rate: number
+    rate: number,
   ): Promise<void> {
-    if (typeof rate !== 'number' || !Number.isFinite(rate) || rate <= 0) {
-      const error = new Error('Manual FX rate must be a positive finite number') as Error & { code: string };
-      error.code = 'INVALID_FX_RATE';
-      fxLogger.error('Invalid manual FX rate', { fromCurrency, toCurrency, rate, code: error.code });
+    if (typeof rate !== "number" || !Number.isFinite(rate) || rate <= 0) {
+      const error = new Error(
+        "Manual FX rate must be a positive finite number",
+      ) as Error & { code: string };
+      error.code = "INVALID_FX_RATE";
+      fxLogger.error("Invalid manual FX rate", {
+        fromCurrency,
+        toCurrency,
+        rate,
+        code: error.code,
+      });
       throw error;
     }
 
-    fxLogger.debug('Setting manual FX rate', { fromCurrency, toCurrency, rate });
+    fxLogger.debug("Setting manual FX rate", {
+      fromCurrency,
+      toCurrency,
+      rate,
+    });
 
     await FxRateRepository.setRate({
       baseCurrency: fromCurrency,
       quoteCurrency: toCurrency,
       rate,
-      source: 'manual',
+      source: "manual",
     });
 
     // Update cache immediately
@@ -201,10 +225,10 @@ export class CachedFxRateProvider implements FxRateProvider {
     this.cache.set(key, {
       rate,
       fetchedAt: new Date().toISOString(),
-      source: 'manual',
+      source: "manual",
     });
 
-    fxLogger.info('Manual FX rate set', { fromCurrency, toCurrency, rate });
+    fxLogger.info("Manual FX rate set", { fromCurrency, toCurrency, rate });
   }
 
   /**
@@ -212,7 +236,7 @@ export class CachedFxRateProvider implements FxRateProvider {
    * Call after batch updates from API
    */
   async refreshCache(): Promise<void> {
-    fxLogger.debug('Refreshing FX rate cache');
+    fxLogger.debug("Refreshing FX rate cache");
 
     try {
       // Reload all active rates
@@ -229,9 +253,11 @@ export class CachedFxRateProvider implements FxRateProvider {
         });
       }
 
-      fxLogger.info('FX rate cache refreshed', { cachedRates: this.cache.size });
+      fxLogger.info("FX rate cache refreshed", {
+        cachedRates: this.cache.size,
+      });
     } catch (error) {
-      fxLogger.error('Failed to refresh FX rate cache', error);
+      fxLogger.error("Failed to refresh FX rate cache", error);
       throw error;
     }
   }
@@ -261,7 +287,7 @@ export class CachedFxRateProvider implements FxRateProvider {
    */
   getSource(fromCurrency: string, toCurrency: string): FxRateSource | null {
     if (fromCurrency === toCurrency) {
-      return 'manual';
+      return "manual";
     }
 
     const key = this.makeKey(fromCurrency, toCurrency);
@@ -286,7 +312,7 @@ export class CachedFxRateProvider implements FxRateProvider {
    * Clear the cache (for testing)
    */
   clearCache(): void {
-    fxLogger.debug('Clearing FX rate cache');
+    fxLogger.debug("Clearing FX rate cache");
     this.cache.clear();
   }
 }

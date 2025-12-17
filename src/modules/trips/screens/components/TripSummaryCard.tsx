@@ -3,11 +3,11 @@
  * Displays summary statistics: participants count, expenses count, and total
  */
 
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import { theme } from '@ui/theme';
-import { Card } from '@ui/components';
-import { formatCurrency } from '@utils/currency';
+import React from "react";
+import { View, Text, StyleSheet } from "react-native";
+import { theme } from "@ui/theme";
+import { Card } from "@ui/components";
+import { formatCurrency } from "@utils/currency";
 
 interface TripSummaryCardProps {
   participantCount: number;
@@ -34,7 +34,9 @@ export function TripSummaryCard({
       </View>
       <View style={styles.summaryRow}>
         <Text style={styles.summaryLabel}>Total</Text>
-        <Text style={styles.summaryValue}>{formatCurrency(totalExpenses, currency)}</Text>
+        <Text style={styles.summaryValue}>
+          {formatCurrency(totalExpenses, currency)}
+        </Text>
       </View>
     </Card>
   );
@@ -45,9 +47,9 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.surfaceElevated,
   },
   summaryRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingVertical: theme.spacing.xs,
   },
   summaryLabel: {

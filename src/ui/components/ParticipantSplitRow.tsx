@@ -3,11 +3,11 @@
  * UI/UX ENGINEER: Row-based participant selector with conditional input field
  */
 
-import React from 'react';
-import { View, Text, StyleSheet, Pressable, TextInput } from 'react-native';
-import { theme } from '@ui/theme';
+import React from "react";
+import { View, Text, StyleSheet, Pressable, TextInput } from "react-native";
+import { theme } from "@ui/theme";
 
-export type SplitType = 'equal' | 'percentage' | 'amount' | 'weight';
+export type SplitType = "equal" | "percentage" | "amount" | "weight";
 
 interface ParticipantSplitRowProps {
   /** Participant ID */
@@ -53,38 +53,49 @@ export function ParticipantSplitRow({
   avatarColor,
   selected,
   splitType,
-  value = '',
+  value = "",
   currency,
   onToggle,
   onValueChange,
   disabled = false,
 }: ParticipantSplitRowProps) {
-  const showInput = splitType !== 'equal' && selected;
+  const showInput = splitType !== "equal" && selected;
   const avatarBgColor = avatarColor || theme.colors.primary;
 
   // Get placeholder and suffix based on split type
   const getInputConfig = () => {
     switch (splitType) {
-      case 'percentage':
-        return { placeholder: '0', suffix: '%', keyboardType: 'decimal-pad' as const };
-      case 'weight':
-        return { placeholder: '1', suffix: '', keyboardType: 'decimal-pad' as const };
-      case 'amount':
-        return { placeholder: '0.00', suffix: currency || '', keyboardType: 'decimal-pad' as const };
+      case "percentage":
+        return {
+          placeholder: "0",
+          suffix: "%",
+          keyboardType: "decimal-pad" as const,
+        };
+      case "weight":
+        return {
+          placeholder: "1",
+          suffix: "",
+          keyboardType: "decimal-pad" as const,
+        };
+      case "amount":
+        return {
+          placeholder: "0.00",
+          suffix: currency || "",
+          keyboardType: "decimal-pad" as const,
+        };
       default:
-        return { placeholder: '', suffix: '', keyboardType: 'default' as const };
+        return {
+          placeholder: "",
+          suffix: "",
+          keyboardType: "default" as const,
+        };
     }
   };
 
   const inputConfig = getInputConfig();
 
   return (
-    <View
-      style={[
-        styles.row,
-        !selected && styles.rowUnselected,
-      ]}
-    >
+    <View style={[styles.row, !selected && styles.rowUnselected]}>
       {/* Pressable area for checkbox + avatar + name */}
       <Pressable
         style={({ pressed }) => [
@@ -95,7 +106,7 @@ export function ParticipantSplitRow({
         disabled={disabled}
         accessibilityRole="checkbox"
         accessibilityState={{ checked: selected, disabled }}
-        accessibilityLabel={`${name}, ${selected ? 'selected' : 'not selected'}`}
+        accessibilityLabel={`${name}, ${selected ? "selected" : "not selected"}`}
       >
         {/* Checkbox */}
         <View style={[styles.checkbox, selected && styles.checkboxSelected]}>
@@ -109,10 +120,7 @@ export function ParticipantSplitRow({
 
         {/* Name */}
         <Text
-          style={[
-            styles.name,
-            !selected && styles.nameUnselected,
-          ]}
+          style={[styles.name, !selected && styles.nameUnselected]}
           numberOfLines={1}
         >
           {name}
@@ -143,8 +151,8 @@ export function ParticipantSplitRow({
 
 const styles = StyleSheet.create({
   row: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     minHeight: theme.touchTarget.minHeight,
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.border,
@@ -154,8 +162,8 @@ const styles = StyleSheet.create({
   },
   toggleArea: {
     flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     paddingVertical: theme.spacing.sm,
     paddingLeft: theme.spacing.md,
     paddingRight: theme.spacing.sm,
@@ -169,8 +177,8 @@ const styles = StyleSheet.create({
     borderRadius: theme.borderRadius.sm,
     borderWidth: 2,
     borderColor: theme.colors.border,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     marginRight: theme.spacing.md,
   },
   checkboxSelected: {
@@ -187,8 +195,8 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     marginRight: theme.spacing.md,
   },
   avatarText: {
@@ -206,8 +214,8 @@ const styles = StyleSheet.create({
     color: theme.colors.textMuted,
   },
   inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     backgroundColor: theme.colors.surface,
     borderWidth: 1,
     borderColor: theme.colors.border,
@@ -221,7 +229,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: theme.typography.base,
     color: theme.colors.text,
-    textAlign: 'right',
+    textAlign: "right",
     padding: 0,
   },
   suffix: {

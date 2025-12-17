@@ -3,7 +3,7 @@
  * Shared type definitions for foreign exchange functionality
  */
 
-import type { FxRateSource } from '@db/schema/fx-rates';
+import type { FxRateSource } from "@db/schema/fx-rates";
 
 /**
  * Domain type for FX rate (repository layer)

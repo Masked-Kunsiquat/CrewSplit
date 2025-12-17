@@ -1,10 +1,17 @@
-import React, { useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
-import { useRouter, useNavigation } from 'expo-router';
-import { theme } from '@ui/theme';
-import { Button, Card } from '@ui/components';
-import { useTrips } from '../hooks/use-trips';
-import { useRefreshControl } from '@hooks/use-refresh-control';
+import React, { useEffect } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  ActivityIndicator,
+} from "react-native";
+import { useRouter, useNavigation } from "expo-router";
+import { theme } from "@ui/theme";
+import { Button, Card } from "@ui/components";
+import { useTrips } from "../hooks/use-trips";
+import { useRefreshControl } from "@hooks/use-refresh-control";
 
 export default function TripsListScreen() {
   const router = useRouter();
@@ -17,11 +24,11 @@ export default function TripsListScreen() {
   // Set header title for home screen
   useEffect(() => {
     navigation.setOptions({
-      title: 'Trips',
+      title: "Trips",
       headerRight: () => (
         <TouchableOpacity
           style={styles.headerButton}
-          onPress={() => router.push('/settings')}
+          onPress={() => router.push("/settings")}
           activeOpacity={0.7}
           accessibilityLabel="Open settings"
           accessibilityRole="button"
@@ -40,7 +47,6 @@ export default function TripsListScreen() {
         contentContainerStyle={styles.content}
         refreshControl={refreshControl}
       >
-
         {loading && (
           <View style={styles.centerContent}>
             <ActivityIndicator size="large" color={theme.colors.primary} />
@@ -57,32 +63,40 @@ export default function TripsListScreen() {
           <Card style={styles.emptyCard}>
             <Text style={styles.emptyTitle}>No trips yet</Text>
             <Text style={styles.emptyText}>
-              Create your first trip to start tracking shared expenses with your crew.
+              Create your first trip to start tracking shared expenses with your
+              crew.
             </Text>
           </Card>
         )}
 
-        {!loading && !error && trips.map((trip) => (
-          <Card
-            key={trip.id}
-            style={styles.tripCard}
-            onPress={() => router.push(`/trips/${trip.id}`)}
-          >
-            <View style={styles.tripHeader}>
-              {trip.emoji && <Text style={styles.tripEmoji}>{trip.emoji}</Text>}
-              <View style={styles.tripInfo}>
-                <Text style={styles.tripName}>{trip.name}</Text>
-                <Text style={styles.tripMeta}>{trip.currency} • {new Date(trip.startDate).toLocaleDateString()}</Text>
+        {!loading &&
+          !error &&
+          trips.map((trip) => (
+            <Card
+              key={trip.id}
+              style={styles.tripCard}
+              onPress={() => router.push(`/trips/${trip.id}`)}
+            >
+              <View style={styles.tripHeader}>
+                {trip.emoji && (
+                  <Text style={styles.tripEmoji}>{trip.emoji}</Text>
+                )}
+                <View style={styles.tripInfo}>
+                  <Text style={styles.tripName}>{trip.name}</Text>
+                  <Text style={styles.tripMeta}>
+                    {trip.currency} •{" "}
+                    {new Date(trip.startDate).toLocaleDateString()}
+                  </Text>
+                </View>
               </View>
-            </View>
-          </Card>
-        ))}
+            </Card>
+          ))}
       </ScrollView>
 
       <View style={styles.footer}>
         <Button
           title="Create Trip"
-          onPress={() => router.push('/trips/create')}
+          onPress={() => router.push("/trips/create")}
           fullWidth
         />
       </View>
@@ -111,7 +125,7 @@ const styles = StyleSheet.create({
     color: theme.colors.textSecondary,
   },
   centerContent: {
-    alignItems: 'center',
+    alignItems: "center",
     padding: theme.spacing.xl,
   },
   errorCard: {
@@ -122,10 +136,10 @@ const styles = StyleSheet.create({
     color: theme.colors.background,
   },
   emptyCard: {
-    borderStyle: 'dashed',
+    borderStyle: "dashed",
     borderColor: theme.colors.border,
     borderWidth: 1,
-    alignItems: 'center',
+    alignItems: "center",
     padding: theme.spacing.xl,
   },
   emptyTitle: {
@@ -137,14 +151,14 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: theme.typography.base,
     color: theme.colors.textSecondary,
-    textAlign: 'center',
+    textAlign: "center",
   },
   tripCard: {
     backgroundColor: theme.colors.surfaceElevated,
   },
   tripHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: theme.spacing.md,
   },
   tripEmoji: {

@@ -3,9 +3,9 @@
  * UI/UX ENGINEER: React hook for expense categories with trip scope
  */
 
-import { useEffect, useState } from 'react';
-import { ExpenseCategory } from '../types';
-import { ExpenseCategoryRepository } from '../repository/expense-category-repository';
+import { useEffect, useState } from "react";
+import { ExpenseCategory } from "../types";
+import { ExpenseCategoryRepository } from "../repository/expense-category-repository";
 
 export const useExpenseCategories = (tripId: string) => {
   const [categories, setCategories] = useState<ExpenseCategory[]>([]);
@@ -19,7 +19,8 @@ export const useExpenseCategories = (tripId: string) => {
       try {
         setLoading(true);
         setError(null);
-        const data = await ExpenseCategoryRepository.getCategoriesForTrip(tripId);
+        const data =
+          await ExpenseCategoryRepository.getCategoriesForTrip(tripId);
 
         if (!cancelled) {
           setCategories(data);

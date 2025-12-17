@@ -3,9 +3,13 @@
  * React hooks for accessing expense data with proper state management
  */
 
-import { useQuery } from '../../../hooks';
-import { getExpensesForTrip, getExpenseById, getExpenseSplits } from '../repository';
-import type { Expense, ExpenseSplit } from '../types';
+import { useQuery } from "../../../hooks";
+import {
+  getExpensesForTrip,
+  getExpenseById,
+  getExpenseSplits,
+} from "../repository";
+import type { Expense, ExpenseSplit } from "../types";
 
 /**
  * Hook to fetch all expenses for a trip
@@ -13,12 +17,18 @@ import type { Expense, ExpenseSplit } from '../types';
  * @returns Object with expenses array, loading state, error, and refetch function
  */
 export function useExpenses(tripId: string | null) {
-  const { data: expenses, loading, error, refetch } = useQuery(
-    () => (tripId ? getExpensesForTrip(tripId) : Promise.resolve<Expense[]>([])),
+  const {
+    data: expenses,
+    loading,
+    error,
+    refetch,
+  } = useQuery(
+    () =>
+      tripId ? getExpensesForTrip(tripId) : Promise.resolve<Expense[]>([]),
     [tripId],
     [],
-    'Failed to load expenses',
-    true // Enable refetch on focus to reflect create/edit changes
+    "Failed to load expenses",
+    true, // Enable refetch on focus to reflect create/edit changes
   );
 
   return { expenses, loading, error, refetch };
@@ -30,12 +40,7 @@ export function useExpenses(tripId: string | null) {
  * @returns Object with expense, splits, loading state, error, and refetch function
  */
 export function useExpenseWithSplits(expenseId: string) {
-  const {
-    data,
-    loading,
-    error,
-    refetch,
-  } = useQuery(
+  const { data, loading, error, refetch } = useQuery(
     async () => {
       // Fetch expense and splits in parallel
       const [expenseData, splitsData] = await Promise.all([
@@ -47,8 +52,14 @@ export function useExpenseWithSplits(expenseId: string) {
     },
     [expenseId],
     { expense: null, splits: [] },
-    'Failed to load expense'
+    "Failed to load expense",
   );
 
-  return { expense: data.expense, splits: data.splits, loading, error, refetch };
+  return {
+    expense: data.expense,
+    splits: data.splits,
+    loading,
+    error,
+    refetch,
+  };
 }

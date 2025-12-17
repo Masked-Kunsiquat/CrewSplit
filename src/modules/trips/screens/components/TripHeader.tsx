@@ -3,10 +3,10 @@
  * Displays trip emoji, name, currency, dates, and edit button
  */
 
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { theme } from '@ui/theme';
-import type { Trip } from '../../types';
+import React from "react";
+import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import { theme } from "@ui/theme";
+import type { Trip } from "../../types";
 
 interface TripHeaderProps {
   trip: Trip;
@@ -15,8 +15,12 @@ interface TripHeaderProps {
 
 export function TripHeader({ trip, onEdit }: TripHeaderProps) {
   const startDateLabel = new Date(trip.startDate).toLocaleDateString();
-  const endDateLabel = trip.endDate ? new Date(trip.endDate).toLocaleDateString() : null;
-  const dateRangeLabel = endDateLabel ? `${startDateLabel} - ${endDateLabel}` : startDateLabel;
+  const endDateLabel = trip.endDate
+    ? new Date(trip.endDate).toLocaleDateString()
+    : null;
+  const dateRangeLabel = endDateLabel
+    ? `${startDateLabel} - ${endDateLabel}`
+    : startDateLabel;
 
   return (
     <View style={styles.header}>
@@ -25,7 +29,9 @@ export function TripHeader({ trip, onEdit }: TripHeaderProps) {
         <View style={styles.titleContainer}>
           <Text style={styles.title}>{trip.name}</Text>
           <Text style={styles.subtitle}>{trip.currency}</Text>
-          <Text style={[styles.subtitle, styles.dateLine]}>{dateRangeLabel}</Text>
+          <Text style={[styles.subtitle, styles.dateLine]}>
+            {dateRangeLabel}
+          </Text>
         </View>
       </View>
       <TouchableOpacity
@@ -44,14 +50,14 @@ export function TripHeader({ trip, onEdit }: TripHeaderProps) {
 
 const styles = StyleSheet.create({
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
     gap: theme.spacing.md,
   },
   headerMain: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
+    flexDirection: "row",
+    alignItems: "flex-start",
     gap: theme.spacing.md,
     flex: 1,
   },
@@ -80,7 +86,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     borderWidth: 1,
     borderColor: theme.colors.border,
-    alignSelf: 'flex-start',
+    alignSelf: "flex-start",
   },
   editButtonText: {
     fontSize: theme.typography.sm,

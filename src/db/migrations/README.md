@@ -5,6 +5,7 @@ CrewSplit uses Drizzle Kit migrations (Expo-compatible) to evolve the SQLite sch
 ## Migration Philosophy
 
 **NEVER wipe user data.** All schema changes must be:
+
 1. **Backward compatible** when possible
 2. **Additive** (new columns/tables) rather than destructive
 3. **Tested** with existing data before shipping
@@ -18,6 +19,7 @@ npx drizzle-kit generate --config drizzle.config.ts
 ```
 
 Outputs live in `src/db/migrations/`:
+
 - `meta/_journal.json` - Migration tracking
 - `migrations.js` - Inlined SQL for React Native
 - `NNNN_*.sql` - Human-readable SQL files
@@ -35,48 +37,55 @@ Outputs live in `src/db/migrations/`:
 ## Safe Schema Change Patterns
 
 ### ✅ SAFE: Adding nullable columns
+
 ```typescript
 // schema/trips.ts
-export const trips = sqliteTable('trips', {
+export const trips = sqliteTable("trips", {
   // ... existing columns
-  notes: text('notes'), // NULL by default - safe for existing rows
+  notes: text("notes"), // NULL by default - safe for existing rows
 });
 ```
 
 ### ✅ SAFE: Adding columns with defaults
+
 ```typescript
-export const trips = sqliteTable('trips', {
+export const trips = sqliteTable("trips", {
   // ... existing columns
-  status: text('status').default('active').notNull(), // Default applies to existing rows
+  status: text("status").default("active").notNull(), // Default applies to existing rows
 });
 ```
 
 ### ✅ SAFE: Adding new tables
+
 ```typescript
-export const tripTags = sqliteTable('trip_tags', {
-  id: text('id').primaryKey(),
-  tripId: text('trip_id').notNull().references(() => trips.id),
-  tag: text('tag').notNull(),
+export const tripTags = sqliteTable("trip_tags", {
+  id: text("id").primaryKey(),
+  tripId: text("trip_id")
+    .notNull()
+    .references(() => trips.id),
+  tag: text("tag").notNull(),
 });
 ```
 
 ### ⚠️ REQUIRES DATA MIGRATION: Adding NOT NULL columns
+
 ```typescript
 // ❌ BAD: Will fail if table has existing rows
-export const trips = sqliteTable('trips', {
-  category: text('category').notNull(), // No default - breaks existing data!
+export const trips = sqliteTable("trips", {
+  category: text("category").notNull(), // No default - breaks existing data!
 });
 
 // ✅ GOOD: Multi-step migration
 // Step 1: Add nullable column
-export const trips = sqliteTable('trips', {
-  category: text('category'),
+export const trips = sqliteTable("trips", {
+  category: text("category"),
 });
 // Step 2: Write data migration to populate values
 // Step 3: Add NOT NULL constraint in follow-up migration
 ```
 
 ### ⚠️ REQUIRES CAREFUL TESTING: Renaming columns
+
 ```sql
 -- SQLite doesn't support RENAME COLUMN in older versions
 -- Drizzle generates ALTER TABLE RENAME COLUMN (works on modern SQLite)
@@ -84,6 +93,7 @@ export const trips = sqliteTable('trips', {
 ```
 
 ### 🚫 AVOID: Dropping columns with data
+
 ```sql
 -- Only drop columns if:
 -- 1. Column was just added and no production data exists
@@ -121,8 +131,8 @@ If a migration fails in production:
 
 ```typescript
 // src/db/client.ts (temporary, never commit)
-import { deleteDatabaseSync } from 'expo-sqlite';
-deleteDatabaseSync('crewsplit.db');
+import { deleteDatabaseSync } from "expo-sqlite";
+deleteDatabaseSync("crewsplit.db");
 ```
 
 Remove immediately after testing. **Never ship this code.**

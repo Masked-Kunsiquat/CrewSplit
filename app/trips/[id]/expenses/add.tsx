@@ -3,4 +3,4 @@
  * UI/UX ENGINEER: Route for adding an expense
  */
 
-export { default } from '@modules/expenses/screens/AddExpenseScreen';
+export { default } from "@modules/expenses/screens/AddExpenseScreen";

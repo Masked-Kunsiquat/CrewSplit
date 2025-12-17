@@ -3,7 +3,7 @@
  * LOCAL DATA ENGINEER: Convert between DB rows and domain models
  */
 
-import type { Trip, NewTrip } from '../schema/trips';
+import type { Trip, NewTrip } from "../schema/trips";
 
 /**
  * Domain model for Trip (currently identical to DB model)

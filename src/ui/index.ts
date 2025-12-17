@@ -3,5 +3,5 @@
  * UI/UX ENGINEER: React Native components
  */
 
-export * from './components';
-export * from './tokens';
+export * from "./components";
+export * from "./tokens";

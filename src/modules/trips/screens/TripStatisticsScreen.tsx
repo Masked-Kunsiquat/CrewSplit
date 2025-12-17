@@ -8,12 +8,18 @@
  * - Currency breakdown
  */
 
-import React, { useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
-import { useLocalSearchParams, useNavigation } from 'expo-router';
-import { theme } from '@ui/theme';
-import { Card, Button } from '@ui/components';
-import { useTripById } from '../hooks/use-trips';
+import React, { useEffect } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  ActivityIndicator,
+} from "react-native";
+import { useLocalSearchParams, useNavigation } from "expo-router";
+import { theme } from "@ui/theme";
+import { Card, Button } from "@ui/components";
+import { useTripById } from "../hooks/use-trips";
 
 export default function TripStatisticsScreen() {
   const navigation = useNavigation();
@@ -59,7 +65,9 @@ export default function TripStatisticsScreen() {
           <Card style={styles.errorCard}>
             <Text style={styles.errorTitle}>Unable to load trip</Text>
             <Text style={styles.errorText}>
-              {typeof error === 'string' ? error : (error as { message?: unknown }).message ?? 'Unknown error'}
+              {typeof error === "string"
+                ? error
+                : ((error as { message?: unknown }).message ?? "Unknown error")}
             </Text>
             <Button title="Retry" onPress={refetch} fullWidth />
           </Card>
@@ -78,12 +86,17 @@ export default function TripStatisticsScreen() {
           <Text style={styles.comingSoonIcon}>📊</Text>
           <Text style={styles.comingSoonTitle}>Statistics Coming Soon</Text>
           <Text style={styles.comingSoonBody}>
-            This feature will be added in a future release. You'll be able to view:
+            This feature will be added in a future release. You'll be able to
+            view:
           </Text>
           <View style={styles.featureList}>
-            <Text style={styles.featureItem}>• Spending breakdown by category</Text>
+            <Text style={styles.featureItem}>
+              • Spending breakdown by category
+            </Text>
             <Text style={styles.featureItem}>• Expense trends over time</Text>
-            <Text style={styles.featureItem}>• Per-participant spending insights</Text>
+            <Text style={styles.featureItem}>
+              • Per-participant spending insights
+            </Text>
             <Text style={styles.featureItem}>• Currency distribution</Text>
             <Text style={styles.featureItem}>• Export and sharing options</Text>
           </View>
@@ -106,8 +119,8 @@ const styles = StyleSheet.create({
   },
   centerContent: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     padding: theme.spacing.lg,
   },
   loadingText: {
@@ -117,7 +130,7 @@ const styles = StyleSheet.create({
   },
   errorCard: {
     gap: theme.spacing.sm,
-    alignItems: 'center',
+    alignItems: "center",
     padding: theme.spacing.lg,
     backgroundColor: theme.colors.surfaceElevated,
   },
@@ -129,11 +142,11 @@ const styles = StyleSheet.create({
   errorText: {
     fontSize: theme.typography.base,
     color: theme.colors.textSecondary,
-    textAlign: 'center',
+    textAlign: "center",
   },
   comingSoonCard: {
     backgroundColor: theme.colors.surfaceElevated,
-    alignItems: 'center',
+    alignItems: "center",
     padding: theme.spacing.xl,
   },
   comingSoonIcon: {
@@ -145,17 +158,17 @@ const styles = StyleSheet.create({
     fontWeight: theme.typography.bold,
     color: theme.colors.text,
     marginBottom: theme.spacing.sm,
-    textAlign: 'center',
+    textAlign: "center",
   },
   comingSoonBody: {
     fontSize: theme.typography.base,
     color: theme.colors.textSecondary,
     marginBottom: theme.spacing.lg,
-    textAlign: 'center',
+    textAlign: "center",
     lineHeight: 22,
   },
   featureList: {
-    alignSelf: 'stretch',
+    alignSelf: "stretch",
     gap: theme.spacing.sm,
   },
   featureItem: {

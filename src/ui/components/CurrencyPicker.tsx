@@ -3,7 +3,7 @@
  * Select currency from a list of common currencies
  */
 
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -12,11 +12,11 @@ import {
   Modal,
   FlatList,
   TextInput,
-} from 'react-native';
-import { theme } from '@ui/theme';
-import { COMMON_CURRENCIES, type Currency } from '@utils/currency-constants';
-import { Card } from './Card';
-import { Button } from './Button';
+} from "react-native";
+import { theme } from "@ui/theme";
+import { COMMON_CURRENCIES, type Currency } from "@utils/currency-constants";
+import { Card } from "./Card";
+import { Button } from "./Button";
 
 interface CurrencyPickerProps {
   value: string | null;
@@ -29,10 +29,10 @@ export function CurrencyPicker({
   value,
   onChange,
   label,
-  placeholder = 'Select currency',
+  placeholder = "Select currency",
 }: CurrencyPickerProps) {
   const [isVisible, setIsVisible] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
 
   const selectedCurrency = COMMON_CURRENCIES.find((c) => c.code === value);
   const hasUnknownSelection = !!value && !selectedCurrency;
@@ -41,20 +41,20 @@ export function CurrencyPicker({
     ? COMMON_CURRENCIES.filter(
         (c) =>
           c.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          c.name.toLowerCase().includes(searchQuery.toLowerCase())
+          c.name.toLowerCase().includes(searchQuery.toLowerCase()),
       )
     : COMMON_CURRENCIES;
 
   const handleSelect = (currency: Currency) => {
     onChange(currency.code);
     setIsVisible(false);
-    setSearchQuery('');
+    setSearchQuery("");
   };
 
   const handleClear = () => {
     onChange(null);
     setIsVisible(false);
-    setSearchQuery('');
+    setSearchQuery("");
   };
 
   return (
@@ -181,9 +181,9 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.xs,
   },
   selector: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     backgroundColor: theme.colors.surface,
     borderWidth: 1,
     borderColor: theme.colors.border,
@@ -192,8 +192,8 @@ const styles = StyleSheet.create({
     minHeight: 56,
   },
   selectedContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: theme.spacing.md,
     flex: 1,
   },
@@ -224,21 +224,21 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'flex-end',
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "flex-end",
   },
   modalContent: {
     backgroundColor: theme.colors.background,
     borderTopLeftRadius: 16,
     borderTopRightRadius: 16,
-    maxHeight: '80%',
+    maxHeight: "80%",
     padding: theme.spacing.lg,
     gap: theme.spacing.md,
   },
   modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: theme.spacing.sm,
   },
   modalTitle: {
@@ -261,8 +261,8 @@ const styles = StyleSheet.create({
     color: theme.colors.text,
   },
   currencyItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     padding: theme.spacing.md,
     gap: theme.spacing.md,
   },

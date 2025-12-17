@@ -3,18 +3,28 @@
  * LOCAL DATA ENGINEER: Multi-currency aware expense CRUD with ACID-safe writes
  */
 
-import * as Crypto from 'expo-crypto';
-import { db } from '@db/client';
-import { expenseSplits as expenseSplitsTable } from '@db/schema/expense-splits';
-import { expenses as expensesTable, Expense as ExpenseRow } from '@db/schema/expenses';
-import { expenseCategories } from '@db/schema/expense-categories';
-import { trips as tripsTable } from '@db/schema/trips';
-import { mapExpenseFromDb } from '@db/mappers';
-import { eq } from 'drizzle-orm';
-import { CreateExpenseInput, Expense, ExpenseSplit, UpdateExpenseInput } from '../types';
-import { expenseLogger } from '@utils/logger';
+import * as Crypto from "expo-crypto";
+import { db } from "@db/client";
+import { expenseSplits as expenseSplitsTable } from "@db/schema/expense-splits";
+import {
+  expenses as expensesTable,
+  Expense as ExpenseRow,
+} from "@db/schema/expenses";
+import { expenseCategories } from "@db/schema/expense-categories";
+import { trips as tripsTable } from "@db/schema/trips";
+import { mapExpenseFromDb } from "@db/mappers";
+import { eq } from "drizzle-orm";
+import {
+  CreateExpenseInput,
+  Expense,
+  ExpenseSplit,
+  UpdateExpenseInput,
+} from "../types";
+import { expenseLogger } from "@utils/logger";
 
-const mapSplit = (row: typeof expenseSplitsTable.$inferSelect): ExpenseSplit => ({
+const mapSplit = (
+  row: typeof expenseSplitsTable.$inferSelect,
+): ExpenseSplit => ({
   id: row.id,
   expenseId: row.expenseId,
   participantId: row.participantId,
@@ -24,9 +34,13 @@ const mapSplit = (row: typeof expenseSplitsTable.$inferSelect): ExpenseSplit => 
 });
 
 const getTripCurrency = async (tripId: string): Promise<string> => {
-  const rows = await db.select({ currencyCode: tripsTable.currencyCode }).from(tripsTable).where(eq(tripsTable.id, tripId)).limit(1);
+  const rows = await db
+    .select({ currencyCode: tripsTable.currencyCode })
+    .from(tripsTable)
+    .where(eq(tripsTable.id, tripId))
+    .limit(1);
   if (!rows.length) {
-    expenseLogger.error('Trip not found for currency lookup', { tripId });
+    expenseLogger.error("Trip not found for currency lookup", { tripId });
     throw new Error(`Trip not found for id ${tripId}`);
   }
   return rows[0].currencyCode;
@@ -40,33 +54,51 @@ const computeConversion = (
   providedConverted?: number,
 ): { convertedAmountMinor: number; fxRateToTrip: number | null } => {
   if (originalCurrency === tripCurrencyCode) {
-    expenseLogger.debug('No currency conversion needed', { originalCurrency, tripCurrency: tripCurrencyCode });
+    expenseLogger.debug("No currency conversion needed", {
+      originalCurrency,
+      tripCurrency: tripCurrencyCode,
+    });
     return { convertedAmountMinor: originalAmountMinor, fxRateToTrip: null };
   }
 
   if (providedRate === undefined || providedRate === null) {
-    expenseLogger.error('Missing FX rate for currency conversion', { originalCurrency, tripCurrency: tripCurrencyCode });
-    throw new Error('fxRateToTrip is required when expense currency differs from trip currency');
+    expenseLogger.error("Missing FX rate for currency conversion", {
+      originalCurrency,
+      tripCurrency: tripCurrencyCode,
+    });
+    throw new Error(
+      "fxRateToTrip is required when expense currency differs from trip currency",
+    );
   }
   if (providedRate <= 0) {
-    expenseLogger.error('Invalid FX rate', { fxRate: providedRate });
-    throw new Error('fxRateToTrip must be positive');
+    expenseLogger.error("Invalid FX rate", { fxRate: providedRate });
+    throw new Error("fxRateToTrip must be positive");
   }
 
-  const converted = providedConverted ?? Math.round(originalAmountMinor * providedRate);
-  expenseLogger.debug('Currency converted', { originalCurrency, tripCurrency: tripCurrencyCode, fxRate: providedRate });
+  const converted =
+    providedConverted ?? Math.round(originalAmountMinor * providedRate);
+  expenseLogger.debug("Currency converted", {
+    originalCurrency,
+    tripCurrency: tripCurrencyCode,
+    fxRate: providedRate,
+  });
   return { convertedAmountMinor: converted, fxRateToTrip: providedRate };
 };
 
 const mapExpenseRow = (row: ExpenseRow): Expense => mapExpenseFromDb(row);
 
-const normalizeSplitAmount = (amount: number | undefined | null, fxRateToTrip: number | null): number | null => {
+const normalizeSplitAmount = (
+  amount: number | undefined | null,
+  fxRateToTrip: number | null,
+): number | null => {
   if (amount === undefined || amount === null) return null;
   if (!fxRateToTrip || fxRateToTrip === 1) return amount;
   return Math.round(amount * fxRateToTrip);
 };
 
-export const addExpense = async (expenseData: CreateExpenseInput): Promise<Expense> => {
+export const addExpense = async (
+  expenseData: CreateExpenseInput,
+): Promise<Expense> => {
   const tripCurrencyCode = await getTripCurrency(expenseData.tripId);
   const { convertedAmountMinor, fxRateToTrip } = computeConversion(
     expenseData.originalAmountMinor,
@@ -77,11 +109,16 @@ export const addExpense = async (expenseData: CreateExpenseInput): Promise<Expen
   );
 
   // Default to "Other" category if not provided
-  const categoryId = expenseData.categoryId ?? 'cat-other';
+  const categoryId = expenseData.categoryId ?? "cat-other";
   const now = new Date().toISOString();
   const expenseId = Crypto.randomUUID();
 
-  expenseLogger.debug('Creating expense', { expenseId, tripId: expenseData.tripId, amountMinor: convertedAmountMinor, categoryId });
+  expenseLogger.debug("Creating expense", {
+    expenseId,
+    tripId: expenseData.tripId,
+    amountMinor: convertedAmountMinor,
+    categoryId,
+  });
 
   return db.transaction(async (tx) => {
     // Validate categoryId exists
@@ -92,9 +129,11 @@ export const addExpense = async (expenseData: CreateExpenseInput): Promise<Expen
       .limit(1);
 
     if (!categoryExists.length) {
-      expenseLogger.error('Invalid category ID', { categoryId });
-      const error = new Error(`Category not found: ${categoryId}`) as Error & { code: string };
-      error.code = 'CATEGORY_NOT_FOUND';
+      expenseLogger.error("Invalid category ID", { categoryId });
+      const error = new Error(`Category not found: ${categoryId}`) as Error & {
+        code: string;
+      };
+      error.code = "CATEGORY_NOT_FOUND";
       throw error;
     }
     const [insertedExpense] = await tx
@@ -119,7 +158,10 @@ export const addExpense = async (expenseData: CreateExpenseInput): Promise<Expen
       .returning();
 
     if (expenseData.splits?.length) {
-      expenseLogger.debug('Adding expense splits', { expenseId, splitCount: expenseData.splits.length });
+      expenseLogger.debug("Adding expense splits", {
+        expenseId,
+        splitCount: expenseData.splits.length,
+      });
       const splitRows = expenseData.splits.map((split) => ({
         id: Crypto.randomUUID(),
         expenseId,
@@ -134,38 +176,65 @@ export const addExpense = async (expenseData: CreateExpenseInput): Promise<Expen
       await tx.insert(expenseSplitsTable).values(splitRows);
     }
 
-    expenseLogger.info('Expense created', { expenseId, tripId: expenseData.tripId, amountMinor: convertedAmountMinor });
+    expenseLogger.info("Expense created", {
+      expenseId,
+      tripId: expenseData.tripId,
+      amountMinor: convertedAmountMinor,
+    });
     return mapExpenseRow(insertedExpense);
   });
 };
 
-export const getExpensesForTrip = async (tripId: string): Promise<Expense[]> => {
-  const rows = await db.select().from(expensesTable).where(eq(expensesTable.tripId, tripId));
-  expenseLogger.debug('Loaded expenses for trip', { tripId, count: rows.length });
+export const getExpensesForTrip = async (
+  tripId: string,
+): Promise<Expense[]> => {
+  const rows = await db
+    .select()
+    .from(expensesTable)
+    .where(eq(expensesTable.tripId, tripId));
+  expenseLogger.debug("Loaded expenses for trip", {
+    tripId,
+    count: rows.length,
+  });
   return rows.map(mapExpenseRow);
 };
 
 export const getExpenseById = async (id: string): Promise<Expense | null> => {
-  const rows = await db.select().from(expensesTable).where(eq(expensesTable.id, id)).limit(1);
+  const rows = await db
+    .select()
+    .from(expensesTable)
+    .where(eq(expensesTable.id, id))
+    .limit(1);
   if (!rows.length) {
-    expenseLogger.warn('Expense not found', { expenseId: id });
+    expenseLogger.warn("Expense not found", { expenseId: id });
     return null;
   }
-  expenseLogger.debug('Loaded expense', { expenseId: id, tripId: rows[0].tripId });
+  expenseLogger.debug("Loaded expense", {
+    expenseId: id,
+    tripId: rows[0].tripId,
+  });
   return mapExpenseRow(rows[0]);
 };
 
-export const updateExpense = async (id: string, patch: UpdateExpenseInput): Promise<Expense> => {
-  const existingRows = await db.select().from(expensesTable).where(eq(expensesTable.id, id)).limit(1);
+export const updateExpense = async (
+  id: string,
+  patch: UpdateExpenseInput,
+): Promise<Expense> => {
+  const existingRows = await db
+    .select()
+    .from(expensesTable)
+    .where(eq(expensesTable.id, id))
+    .limit(1);
   if (!existingRows.length) {
-    expenseLogger.error('Expense not found on update', { expenseId: id });
+    expenseLogger.error("Expense not found on update", { expenseId: id });
     throw new Error(`Expense not found for id ${id}`);
   }
   const existing = existingRows[0];
   const tripCurrencyCode = await getTripCurrency(existing.tripId);
 
   const originalCurrency = patch.originalCurrency ?? existing.originalCurrency;
-  const originalAmountMinor = patch.originalAmountMinor ?? existing.originalAmountMinor;
+  const originalAmountMinor =
+    patch.originalAmountMinor ?? existing.originalAmountMinor;
   const { convertedAmountMinor, fxRateToTrip } = computeConversion(
     originalAmountMinor,
     originalCurrency,
@@ -191,7 +260,10 @@ export const updateExpense = async (id: string, patch: UpdateExpenseInput): Prom
     updatedAt: now,
   };
 
-  expenseLogger.debug('Updating expense', { expenseId: id, tripId: existing.tripId });
+  expenseLogger.debug("Updating expense", {
+    expenseId: id,
+    tripId: existing.tripId,
+  });
 
   return db.transaction(async (tx) => {
     // If categoryId is being updated, validate it exists
@@ -203,18 +275,31 @@ export const updateExpense = async (id: string, patch: UpdateExpenseInput): Prom
         .limit(1);
 
       if (!categoryExists.length) {
-        expenseLogger.error('Invalid category ID', { categoryId: patch.categoryId });
-        const error = new Error(`Category not found: ${patch.categoryId}`) as Error & { code: string };
-        error.code = 'CATEGORY_NOT_FOUND';
+        expenseLogger.error("Invalid category ID", {
+          categoryId: patch.categoryId,
+        });
+        const error = new Error(
+          `Category not found: ${patch.categoryId}`,
+        ) as Error & { code: string };
+        error.code = "CATEGORY_NOT_FOUND";
         throw error;
       }
     }
 
-    const [updated] = await tx.update(expensesTable).set(updatePayload).where(eq(expensesTable.id, id)).returning();
+    const [updated] = await tx
+      .update(expensesTable)
+      .set(updatePayload)
+      .where(eq(expensesTable.id, id))
+      .returning();
 
     if (patch.splits) {
-      expenseLogger.debug('Updating expense splits', { expenseId: id, splitCount: patch.splits.length });
-      await tx.delete(expenseSplitsTable).where(eq(expenseSplitsTable.expenseId, id));
+      expenseLogger.debug("Updating expense splits", {
+        expenseId: id,
+        splitCount: patch.splits.length,
+      });
+      await tx
+        .delete(expenseSplitsTable)
+        .where(eq(expenseSplitsTable.expenseId, id));
       if (patch.splits.length) {
         const splitRows = patch.splits.map((split) => ({
           id: Crypto.randomUUID(),
@@ -230,27 +315,45 @@ export const updateExpense = async (id: string, patch: UpdateExpenseInput): Prom
       }
     }
 
-    expenseLogger.info('Expense updated', { expenseId: id, tripId: existing.tripId });
+    expenseLogger.info("Expense updated", {
+      expenseId: id,
+      tripId: existing.tripId,
+    });
     return mapExpenseRow(updated);
   });
 };
 
 export const deleteExpense = async (id: string): Promise<void> => {
   await db.transaction(async (tx) => {
-    const existingRows = await tx.select().from(expensesTable).where(eq(expensesTable.id, id)).limit(1);
+    const existingRows = await tx
+      .select()
+      .from(expensesTable)
+      .where(eq(expensesTable.id, id))
+      .limit(1);
     if (!existingRows.length) {
-      expenseLogger.error('Expense not found on delete', { expenseId: id });
+      expenseLogger.error("Expense not found on delete", { expenseId: id });
       throw new Error(`Expense not found for id ${id}`);
     }
-    expenseLogger.info('Deleting expense', { expenseId: id, tripId: existingRows[0].tripId });
+    expenseLogger.info("Deleting expense", {
+      expenseId: id,
+      tripId: existingRows[0].tripId,
+    });
     await tx.delete(expensesTable).where(eq(expensesTable.id, id));
-    expenseLogger.info('Expense deleted', { expenseId: id });
+    expenseLogger.info("Expense deleted", { expenseId: id });
   });
 };
 
-export const getExpenseSplits = async (expenseId: string): Promise<ExpenseSplit[]> => {
-  const rows = await db.select().from(expenseSplitsTable).where(eq(expenseSplitsTable.expenseId, expenseId));
-  expenseLogger.debug('Loaded expense splits', { expenseId, count: rows.length });
+export const getExpenseSplits = async (
+  expenseId: string,
+): Promise<ExpenseSplit[]> => {
+  const rows = await db
+    .select()
+    .from(expenseSplitsTable)
+    .where(eq(expenseSplitsTable.expenseId, expenseId));
+  expenseLogger.debug("Loaded expense splits", {
+    expenseId,
+    count: rows.length,
+  });
   return rows.map(mapSplit);
 };
 

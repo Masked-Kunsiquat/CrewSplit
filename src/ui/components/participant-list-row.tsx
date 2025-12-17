@@ -3,9 +3,9 @@
  * UI/UX ENGINEER: Simple list row for displaying participants with delete action
  */
 
-import React from 'react';
-import { View, Text, StyleSheet, Pressable } from 'react-native';
-import { theme } from '@ui/theme';
+import React from "react";
+import { View, Text, StyleSheet, Pressable } from "react-native";
+import { theme } from "@ui/theme";
 
 /**
  * Calculate relative luminance of an RGB color (WCAG 2.0)
@@ -42,7 +42,7 @@ function getAccessibleTextColor(backgroundColor: string): string {
 
   if (!match) {
     // Invalid format - fall back to white for safety
-    return '#FFFFFF';
+    return "#FFFFFF";
   }
 
   // Parse hex color
@@ -53,7 +53,7 @@ function getAccessibleTextColor(backgroundColor: string): string {
 
   // Additional validation: ensure parsed values are valid numbers
   if (isNaN(r) || isNaN(g) || isNaN(b)) {
-    return '#FFFFFF';
+    return "#FFFFFF";
   }
 
   const bgLuminance = getLuminance(r, g, b);
@@ -64,7 +64,7 @@ function getAccessibleTextColor(backgroundColor: string): string {
   const blackContrast = getContrastRatio(blackLuminance, bgLuminance);
 
   // Choose the color with better contrast
-  return whiteContrast > blackContrast ? '#FFFFFF' : '#000000';
+  return whiteContrast > blackContrast ? "#FFFFFF" : "#000000";
 }
 
 interface ParticipantListRowProps {
@@ -101,10 +101,7 @@ export function ParticipantListRow({
 
   return (
     <Pressable
-      style={({ pressed }) => [
-        styles.row,
-        pressed && styles.rowPressed,
-      ]}
+      style={({ pressed }) => [styles.row, pressed && styles.rowPressed]}
       onLongPress={() => onLongPress(id, name)}
       accessibilityRole="button"
       accessibilityLabel={`${name}, long press to remove`}
@@ -127,8 +124,8 @@ export function ParticipantListRow({
 
 const styles = StyleSheet.create({
   row: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     minHeight: theme.touchTarget.minHeight,
     paddingVertical: theme.spacing.sm,
     paddingHorizontal: theme.spacing.md,
@@ -142,8 +139,8 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     marginRight: theme.spacing.md,
   },
   avatarText: {

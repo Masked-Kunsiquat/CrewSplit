@@ -9,20 +9,20 @@
  * - Contextual loggers to reduce boilerplate
  */
 
-export type LogLevel = 'debug' | 'info' | 'warn' | 'error';
+export type LogLevel = "debug" | "info" | "warn" | "error";
 
 export type LogContext =
-  | 'db'
-  | 'migration'
-  | 'storage'
-  | 'settlement'
-  | 'expense'
-  | 'trip'
-  | 'participant'
-  | 'currency'
-  | 'fx'
-  | 'ui'
-  | 'dev';
+  | "db"
+  | "migration"
+  | "storage"
+  | "settlement"
+  | "expense"
+  | "trip"
+  | "participant"
+  | "currency"
+  | "fx"
+  | "ui"
+  | "dev";
 
 interface LoggerConfig {
   /** Show debug logs in development */
@@ -35,7 +35,7 @@ interface LoggerConfig {
 
 const defaultConfig: LoggerConfig = {
   enableDebug: __DEV__,
-  minProductionLevel: 'warn',
+  minProductionLevel: "warn",
   redactPII: !__DEV__, // Only show full data in development
 };
 
@@ -47,17 +47,17 @@ const LOG_LEVEL_PRIORITY: Record<LogLevel, number> = {
 };
 
 const CONTEXT_EMOJI: Record<LogContext, string> = {
-  db: '💾',
-  migration: '🔄',
-  storage: '📦',
-  settlement: '💰',
-  expense: '💸',
-  trip: '✈️',
-  participant: '👤',
-  currency: '💱',
-  fx: '💹',
-  ui: '🎨',
-  dev: '🔧',
+  db: "💾",
+  migration: "🔄",
+  storage: "📦",
+  settlement: "💰",
+  expense: "💸",
+  trip: "✈️",
+  participant: "👤",
+  currency: "💱",
+  fx: "💹",
+  ui: "🎨",
+  dev: "🔧",
 };
 
 class Logger {
@@ -70,19 +70,22 @@ class Logger {
   private shouldLog(level: LogLevel): boolean {
     if (__DEV__) {
       // In development, show all logs (unless debug is disabled)
-      if (level === 'debug' && !this.config.enableDebug) return false;
+      if (level === "debug" && !this.config.enableDebug) return false;
       return true;
     }
 
     // In production, filter by minimum level
-    return LOG_LEVEL_PRIORITY[level] >= LOG_LEVEL_PRIORITY[this.config.minProductionLevel];
+    return (
+      LOG_LEVEL_PRIORITY[level] >=
+      LOG_LEVEL_PRIORITY[this.config.minProductionLevel]
+    );
   }
 
   private formatMessage(
     level: LogLevel,
     context: LogContext,
     message: string,
-    data?: unknown
+    data?: unknown,
   ): string {
     const emoji = CONTEXT_EMOJI[context];
     const prefix = `${emoji} [${context.toUpperCase()}]`;
@@ -124,16 +127,16 @@ class Logger {
         }
 
         // Handle circular references
-        if (typeof value === 'object' && value !== null) {
+        if (typeof value === "object" && value !== null) {
           if (seen.has(value)) {
-            return '[Circular]';
+            return "[Circular]";
           }
           seen.add(value);
         }
 
         return value;
       },
-      indent
+      indent,
     );
   }
 
@@ -159,7 +162,7 @@ class Logger {
    */
   private formatData(data: unknown, level: LogLevel): string {
     if (data === null || data === undefined) {
-      return '';
+      return "";
     }
 
     // Convert Error instances to plain objects
@@ -169,16 +172,21 @@ class Logger {
     }
 
     // For errors, always use multi-line for readability
-    if (level === 'error' || (typeof processedData === 'object' && processedData !== null && 'stack' in processedData)) {
+    if (
+      level === "error" ||
+      (typeof processedData === "object" &&
+        processedData !== null &&
+        "stack" in processedData)
+    ) {
       try {
         return `\n${this.safeStringify(processedData, 2)}`;
       } catch (err) {
-        return '\n[Error serializing data]';
+        return "\n[Error serializing data]";
       }
     }
 
     // For simple objects, format inline
-    if (typeof processedData === 'object' && !Array.isArray(processedData)) {
+    if (typeof processedData === "object" && !Array.isArray(processedData)) {
       const entries = Object.entries(processedData as Record<string, unknown>);
 
       // Simple object: format inline (key: value, key: value)
@@ -186,13 +194,14 @@ class Logger {
         const formatted = entries
           .map(([key, value]) => {
             try {
-              const valStr = typeof value === 'string' ? value : this.safeStringify(value);
+              const valStr =
+                typeof value === "string" ? value : this.safeStringify(value);
               return `${key}: ${valStr}`;
             } catch {
               return `${key}: [Error]`;
             }
           })
-          .join(', ');
+          .join(", ");
         return `(${formatted})`;
       }
     }
@@ -201,7 +210,7 @@ class Logger {
     try {
       return `\n${this.safeStringify(processedData, 2)}`;
     } catch (err) {
-      return '\n[Error serializing data]';
+      return "\n[Error serializing data]";
     }
   }
 
@@ -215,12 +224,12 @@ class Logger {
    * - Recursively process nested objects and arrays
    */
   private redactData(data: unknown): unknown {
-    if (typeof data !== 'object' || data === null) {
+    if (typeof data !== "object" || data === null) {
       return data;
     }
 
     if (Array.isArray(data)) {
-      return data.map(item => this.redactData(item));
+      return data.map((item) => this.redactData(item));
     }
 
     const redacted: Record<string, unknown> = {};
@@ -229,38 +238,46 @@ class Logger {
     for (const [key, value] of Object.entries(obj)) {
       const lowerKey = key.toLowerCase();
       // Normalize key by removing separators for ID pattern matching
-      const normalizedKey = lowerKey.replace(/[-_]/g, '');
+      const normalizedKey = lowerKey.replace(/[-_]/g, "");
 
       // Keep IDs for debugging (truncated)
       // Matches: id, userId, user_id, user-id, userID, etc.
-      if (normalizedKey === 'id' || normalizedKey.endsWith('id')) {
-        redacted[key] = typeof value === 'string' ? `${value.slice(0, 8)}...` : value;
+      if (normalizedKey === "id" || normalizedKey.endsWith("id")) {
+        redacted[key] =
+          typeof value === "string" ? `${value.slice(0, 8)}...` : value;
       }
       // Truncate names (first 8 chars for debugging)
-      else if (lowerKey.includes('name') || lowerKey === 'name') {
-        redacted[key] = typeof value === 'string' ? `${value.slice(0, 8)}...` : value;
+      else if (lowerKey.includes("name") || lowerKey === "name") {
+        redacted[key] =
+          typeof value === "string" ? `${value.slice(0, 8)}...` : value;
       }
       // Fully redact PII
-      else if (lowerKey.includes('email') || lowerKey.includes('phone') || lowerKey.includes('address')) {
-        redacted[key] = '[REDACTED]';
+      else if (
+        lowerKey.includes("email") ||
+        lowerKey.includes("phone") ||
+        lowerKey.includes("address")
+      ) {
+        redacted[key] = "[REDACTED]";
       }
       // Truncate secrets/tokens (first 8 chars for debugging)
       else if (
-        lowerKey.includes('token') ||
-        lowerKey.includes('secret') ||
-        lowerKey.includes('password') ||
-        lowerKey.includes('authorization') ||
-        lowerKey.includes('cookie')
+        lowerKey.includes("token") ||
+        lowerKey.includes("secret") ||
+        lowerKey.includes("password") ||
+        lowerKey.includes("authorization") ||
+        lowerKey.includes("cookie")
       ) {
-        redacted[key] = typeof value === 'string' ? `${value.slice(0, 8)}...` : '[REDACTED]';
+        redacted[key] =
+          typeof value === "string" ? `${value.slice(0, 8)}...` : "[REDACTED]";
       }
       // Fully redact descriptions
-      else if (lowerKey.includes('description')) {
-        redacted[key] = '[REDACTED]';
+      else if (lowerKey.includes("description")) {
+        redacted[key] = "[REDACTED]";
       }
       // Recursively process nested objects, keep primitives
       else {
-        redacted[key] = typeof value === 'object' ? this.redactData(value) : value;
+        redacted[key] =
+          typeof value === "object" ? this.redactData(value) : value;
       }
     }
 
@@ -268,29 +285,28 @@ class Logger {
   }
 
   debug(context: LogContext, message: string, data?: unknown): void {
-    if (this.shouldLog('debug')) {
-      console.debug(this.formatMessage('debug', context, message, data));
+    if (this.shouldLog("debug")) {
+      console.debug(this.formatMessage("debug", context, message, data));
     }
   }
 
   info(context: LogContext, message: string, data?: unknown): void {
-    if (this.shouldLog('info')) {
-      console.info(this.formatMessage('info', context, message, data));
+    if (this.shouldLog("info")) {
+      console.info(this.formatMessage("info", context, message, data));
     }
   }
 
   warn(context: LogContext, message: string, data?: unknown): void {
-    if (this.shouldLog('warn')) {
-      console.warn(this.formatMessage('warn', context, message, data));
+    if (this.shouldLog("warn")) {
+      console.warn(this.formatMessage("warn", context, message, data));
     }
   }
 
   error(context: LogContext, message: string, error?: unknown): void {
-    if (this.shouldLog('error')) {
-      const errorData = error instanceof Error
-        ? this.errorToObject(error)
-        : error;
-      console.error(this.formatMessage('error', context, message, errorData));
+    if (this.shouldLog("error")) {
+      const errorData =
+        error instanceof Error ? this.errorToObject(error) : error;
+      console.error(this.formatMessage("error", context, message, errorData));
     }
   }
 
@@ -300,10 +316,14 @@ class Logger {
    */
   createContextLogger(context: LogContext) {
     return {
-      debug: (message: string, data?: unknown) => this.debug(context, message, data),
-      info: (message: string, data?: unknown) => this.info(context, message, data),
-      warn: (message: string, data?: unknown) => this.warn(context, message, data),
-      error: (message: string, error?: unknown) => this.error(context, message, error),
+      debug: (message: string, data?: unknown) =>
+        this.debug(context, message, data),
+      info: (message: string, data?: unknown) =>
+        this.info(context, message, data),
+      warn: (message: string, data?: unknown) =>
+        this.warn(context, message, data),
+      error: (message: string, error?: unknown) =>
+        this.error(context, message, error),
     };
   }
 }
@@ -312,14 +332,14 @@ class Logger {
 export const logger = new Logger();
 
 // Convenience exports for common contexts
-export const dbLogger = logger.createContextLogger('db');
-export const migrationLogger = logger.createContextLogger('migration');
-export const storageLogger = logger.createContextLogger('storage');
-export const settlementLogger = logger.createContextLogger('settlement');
-export const expenseLogger = logger.createContextLogger('expense');
-export const tripLogger = logger.createContextLogger('trip');
-export const participantLogger = logger.createContextLogger('participant');
-export const currencyLogger = logger.createContextLogger('currency');
-export const fxLogger = logger.createContextLogger('fx');
-export const uiLogger = logger.createContextLogger('ui');
-export const devLogger = logger.createContextLogger('dev');
+export const dbLogger = logger.createContextLogger("db");
+export const migrationLogger = logger.createContextLogger("migration");
+export const storageLogger = logger.createContextLogger("storage");
+export const settlementLogger = logger.createContextLogger("settlement");
+export const expenseLogger = logger.createContextLogger("expense");
+export const tripLogger = logger.createContextLogger("trip");
+export const participantLogger = logger.createContextLogger("participant");
+export const currencyLogger = logger.createContextLogger("currency");
+export const fxLogger = logger.createContextLogger("fx");
+export const uiLogger = logger.createContextLogger("ui");
+export const devLogger = logger.createContextLogger("dev");

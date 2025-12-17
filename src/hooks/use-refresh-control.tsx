@@ -3,9 +3,9 @@
  * Provides RefreshControl component for ScrollView with multi-source refetch support
  */
 
-import { useState, useCallback, useMemo } from 'react';
-import { RefreshControl } from 'react-native';
-import { theme } from '@ui/theme';
+import { useState, useCallback, useMemo } from "react";
+import { RefreshControl } from "react-native";
+import { theme } from "@ui/theme";
 
 /**
  * Hook to create a RefreshControl component for pull-to-refresh functionality
@@ -42,7 +42,7 @@ import { theme } from '@ui/theme';
  * ```
  */
 export function useRefreshControl(
-  refetchFunctions: Array<(() => void | Promise<void>) | undefined>
+  refetchFunctions: Array<(() => void | Promise<void>) | undefined>,
 ) {
   const [refreshing, setRefreshing] = useState(false);
 
@@ -52,7 +52,7 @@ export function useRefreshControl(
     try {
       // Filter out undefined refetch functions and call all in parallel
       const validRefetchFns = refetchFunctions.filter(
-        (fn): fn is () => void => fn !== undefined
+        (fn): fn is () => void => fn !== undefined,
       );
 
       // Call all refetch functions simultaneously
@@ -61,14 +61,17 @@ export function useRefreshControl(
       await Promise.all(
         validRefetchFns.map(async (fn) => {
           const result = fn();
-          if (result && typeof (result as Promise<unknown>).then === 'function') {
+          if (
+            result &&
+            typeof (result as Promise<unknown>).then === "function"
+          ) {
             await result;
           }
-        })
+        }),
       );
     } catch (error) {
       // Refetch errors are already handled by individual hooks
-      console.warn('Error during refresh:', error);
+      console.warn("Error during refresh:", error);
     } finally {
       // Ensure refreshing state is cleared even if errors occur
       setRefreshing(false);
@@ -85,6 +88,6 @@ export function useRefreshControl(
         tintColor={theme.colors.primary} // iOS
       />
     ),
-    [refreshing, onRefresh]
+    [refreshing, onRefresh],
   );
 }

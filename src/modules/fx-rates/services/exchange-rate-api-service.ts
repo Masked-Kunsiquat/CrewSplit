@@ -16,10 +16,10 @@
  * (typically in Settings > FX Rates screen)
  */
 
-import { fxLogger } from '@utils/logger';
-import type { RatePair } from '../types';
+import { fxLogger } from "@utils/logger";
+import type { RatePair } from "../types";
 
-const EXCHANGERATE_API_BASE_URL = 'https://open.er-api.com/v6';
+const EXCHANGERATE_API_BASE_URL = "https://open.er-api.com/v6";
 
 /**
  * Response from ExchangeRate-API /latest endpoint
@@ -44,8 +44,8 @@ const EXCHANGERATE_API_BASE_URL = 'https://open.er-api.com/v6';
  * }
  */
 interface ExchangeRateApiResponse {
-  result: 'success' | 'error';
-  'error-type'?: string;
+  result: "success" | "error";
+  "error-type"?: string;
   provider?: string;
   documentation?: string;
   terms_of_use?: string;
@@ -77,17 +77,13 @@ export interface FetchRatesOptions {
  * @throws Error if network request fails or API returns error
  */
 export const fetchLatestRates = async (
-  options: FetchRatesOptions = {}
+  options: FetchRatesOptions = {},
 ): Promise<RatePair[]> => {
-  const {
-    baseCurrency = 'USD',
-    targetCurrencies,
-    timeout = 10000,
-  } = options;
+  const { baseCurrency = "USD", targetCurrencies, timeout = 10000 } = options;
 
-  fxLogger.debug('Fetching rates from ExchangeRate-API', {
+  fxLogger.debug("Fetching rates from ExchangeRate-API", {
     baseCurrency,
-    targetCurrencies: targetCurrencies?.join(',') ?? 'all',
+    targetCurrencies: targetCurrencies?.join(",") ?? "all",
   });
 
   // Build URL (no query params, currency in path)
@@ -98,10 +94,10 @@ export const fetchLatestRates = async (
 
   try {
     const response = await fetch(url, {
-      method: 'GET',
+      method: "GET",
       headers: {
-        'Accept': 'application/json',
-        'User-Agent': 'CrewSplit/1.0',
+        Accept: "application/json",
+        "User-Agent": "CrewSplit/1.0",
       },
       signal: controller.signal,
     });
@@ -109,28 +105,36 @@ export const fetchLatestRates = async (
     clearTimeout(timeoutId);
 
     if (!response.ok) {
-      fxLogger.error('ExchangeRate-API HTTP error', { status: response.status });
-      const error = new Error(`HTTP ${response.status}: ${response.statusText}`) as Error & { code: string };
-      error.code = 'EXCHANGERATE_API_ERROR';
+      fxLogger.error("ExchangeRate-API HTTP error", {
+        status: response.status,
+      });
+      const error = new Error(
+        `HTTP ${response.status}: ${response.statusText}`,
+      ) as Error & { code: string };
+      error.code = "EXCHANGERATE_API_ERROR";
       throw error;
     }
 
     const data: ExchangeRateApiResponse = await response.json();
 
     // Check for API error
-    if (data.result === 'error') {
-      const errorType = data['error-type'] || 'unknown';
-      fxLogger.error('ExchangeRate-API returned error', { errorType });
-      const error = new Error(`ExchangeRate-API error: ${errorType}`) as Error & { code: string };
-      error.code = 'EXCHANGERATE_API_ERROR';
+    if (data.result === "error") {
+      const errorType = data["error-type"] || "unknown";
+      fxLogger.error("ExchangeRate-API returned error", { errorType });
+      const error = new Error(
+        `ExchangeRate-API error: ${errorType}`,
+      ) as Error & { code: string };
+      error.code = "EXCHANGERATE_API_ERROR";
       throw error;
     }
 
     // Validate response
-    if (!data.rates || typeof data.rates !== 'object') {
-      fxLogger.error('Invalid ExchangeRate-API response', { data });
-      const error = new Error('Invalid response from ExchangeRate-API') as Error & { code: string };
-      error.code = 'INVALID_RESPONSE';
+    if (!data.rates || typeof data.rates !== "object") {
+      fxLogger.error("Invalid ExchangeRate-API response", { data });
+      const error = new Error(
+        "Invalid response from ExchangeRate-API",
+      ) as Error & { code: string };
+      error.code = "INVALID_RESPONSE";
       throw error;
     }
 
@@ -141,8 +145,8 @@ export const fetchLatestRates = async (
     if (targetCurrencies && targetCurrencies.length > 0) {
       rates = Object.fromEntries(
         Object.entries(data.rates).filter(([currency]) =>
-          targetCurrencies.includes(currency)
-        )
+          targetCurrencies.includes(currency),
+        ),
       );
     }
 
@@ -155,7 +159,7 @@ export const fetchLatestRates = async (
         rate,
       }));
 
-    fxLogger.info('Fetched rates from ExchangeRate-API', {
+    fxLogger.info("Fetched rates from ExchangeRate-API", {
       baseCurrency: base,
       lastUpdate: data.time_last_update_utc,
       rateCount: ratePairs.length,
@@ -166,23 +170,27 @@ export const fetchLatestRates = async (
     clearTimeout(timeoutId);
 
     if (error instanceof Error) {
-      if (error.name === 'AbortError') {
-        fxLogger.error('ExchangeRate-API request timeout', { timeout });
-        const timeoutError = new Error(`Request timeout after ${timeout}ms`) as Error & { code: string };
-        timeoutError.code = 'TIMEOUT';
+      if (error.name === "AbortError") {
+        fxLogger.error("ExchangeRate-API request timeout", { timeout });
+        const timeoutError = new Error(
+          `Request timeout after ${timeout}ms`,
+        ) as Error & { code: string };
+        timeoutError.code = "TIMEOUT";
         throw timeoutError;
       }
 
-      if ('code' in error && error.code) {
+      if ("code" in error && error.code) {
         // Already has error code, re-throw
         throw error;
       }
     }
 
     // Network or other error
-    fxLogger.error('Failed to fetch from ExchangeRate-API', error);
-    const networkError = new Error('Network error when fetching rates') as Error & { code: string };
-    networkError.code = 'NETWORK_ERROR';
+    fxLogger.error("Failed to fetch from ExchangeRate-API", error);
+    const networkError = new Error(
+      "Network error when fetching rates",
+    ) as Error & { code: string };
+    networkError.code = "NETWORK_ERROR";
     throw networkError;
   }
 };
@@ -197,7 +205,7 @@ export const fetchLatestRates = async (
  */
 export const fetchRate = async (
   fromCurrency: string,
-  toCurrency: string
+  toCurrency: string,
 ): Promise<RatePair> => {
   const rates = await fetchLatestRates({
     baseCurrency: fromCurrency,
@@ -205,9 +213,14 @@ export const fetchRate = async (
   });
 
   if (rates.length === 0) {
-    fxLogger.error('Rate not found in ExchangeRate-API response', { fromCurrency, toCurrency });
-    const error = new Error(`Rate not found for ${fromCurrency} to ${toCurrency}`) as Error & { code: string };
-    error.code = 'RATE_NOT_FOUND';
+    fxLogger.error("Rate not found in ExchangeRate-API response", {
+      fromCurrency,
+      toCurrency,
+    });
+    const error = new Error(
+      `Rate not found for ${fromCurrency} to ${toCurrency}`,
+    ) as Error & { code: string };
+    error.code = "RATE_NOT_FOUND";
     throw error;
   }
 
@@ -222,7 +235,7 @@ export const fetchRate = async (
  * @returns true if API is reachable
  */
 export const checkAvailability = async (timeout = 5000): Promise<boolean> => {
-  fxLogger.debug('Checking ExchangeRate-API availability');
+  fxLogger.debug("Checking ExchangeRate-API availability");
 
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeout);
@@ -230,18 +243,20 @@ export const checkAvailability = async (timeout = 5000): Promise<boolean> => {
   try {
     // Minimal GET request to /latest/USD (HEAD not supported)
     const response = await fetch(`${EXCHANGERATE_API_BASE_URL}/latest/USD`, {
-      method: 'GET',
+      method: "GET",
       signal: controller.signal,
     });
 
     clearTimeout(timeoutId);
 
     const isAvailable = response.ok;
-    fxLogger.debug('ExchangeRate-API availability check', { available: isAvailable });
+    fxLogger.debug("ExchangeRate-API availability check", {
+      available: isAvailable,
+    });
     return isAvailable;
   } catch (error) {
     clearTimeout(timeoutId);
-    fxLogger.warn('ExchangeRate-API availability check failed', error);
+    fxLogger.warn("ExchangeRate-API availability check failed", error);
     return false;
   }
 };
@@ -251,7 +266,7 @@ export const checkAvailability = async (timeout = 5000): Promise<boolean> => {
  * REQUIRED by ExchangeRate-API terms of use
  */
 export const getAttributionText = (): string => {
-  return 'Exchange rates by ExchangeRate-API';
+  return "Exchange rates by ExchangeRate-API";
 };
 
 /**
@@ -259,7 +274,7 @@ export const getAttributionText = (): string => {
  * REQUIRED by ExchangeRate-API terms of use
  */
 export const getAttributionLink = (): string => {
-  return 'https://www.exchangerate-api.com';
+  return "https://www.exchangerate-api.com";
 };
 
 /**

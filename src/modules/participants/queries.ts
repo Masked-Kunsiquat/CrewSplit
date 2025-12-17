@@ -2,7 +2,11 @@
  * PARTICIPANTS MODULE - Database Queries
  */
 
-import { Participant, CreateParticipantInput, UpdateParticipantInput } from './types';
+import {
+  Participant,
+  CreateParticipantInput,
+  UpdateParticipantInput,
+} from "./types";
 
 // TODO: Implement after Drizzle ORM is configured
 // export const getParticipantsByTripId = async (tripId: string): Promise<Participant[]> => { ... }

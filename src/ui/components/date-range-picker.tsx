@@ -3,10 +3,15 @@
  * Beautiful calendar view with visual range selection using flash-calendar
  */
 
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Modal } from 'react-native';
-import { Calendar, toDateId, fromDateId, useDateRange } from '@marceloterreiro/flash-calendar';
-import { theme } from '@ui/theme';
+import React, { useState } from "react";
+import { View, Text, StyleSheet, TouchableOpacity, Modal } from "react-native";
+import {
+  Calendar,
+  toDateId,
+  fromDateId,
+  useDateRange,
+} from "@marceloterreiro/flash-calendar";
+import { theme } from "@ui/theme";
 
 interface DateRangePickerProps {
   startLabel?: string;
@@ -25,8 +30,8 @@ interface DateRangePickerProps {
  * Uses flash-calendar's useDateRange hook for proper date range handling
  */
 export function DateRangePicker({
-  startLabel = 'Start Date',
-  endLabel = 'End Date',
+  startLabel = "Start Date",
+  endLabel = "End Date",
   startDate,
   endDate,
   onStartChange,
@@ -48,11 +53,11 @@ export function DateRangePicker({
   });
 
   const formatDate = (date: Date | null | undefined): string => {
-    if (!date) return 'Not set';
+    if (!date) return "Not set";
     return date.toLocaleDateString(undefined, {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
+      month: "short",
+      day: "numeric",
+      year: "numeric",
     });
   };
 
@@ -137,19 +142,23 @@ export function DateRangePicker({
               </View>
 
               <View style={styles.calendarContainer}>
-              <Calendar.List
-                calendarActiveDateRanges={calendarActiveDateRanges}
-                calendarInitialMonthId={toDateId(startDate)}
-                onCalendarDayPress={onCalendarDayPress}
-                calendarMinDateId={minimumDate ? toDateId(minimumDate) : undefined}
-                calendarMaxDateId={maximumDate ? toDateId(maximumDate) : undefined}
-                calendarMonthHeaderHeight={40}
-                calendarRowVerticalSpacing={8}
-                theme={{
+                <Calendar.List
+                  calendarActiveDateRanges={calendarActiveDateRanges}
+                  calendarInitialMonthId={toDateId(startDate)}
+                  onCalendarDayPress={onCalendarDayPress}
+                  calendarMinDateId={
+                    minimumDate ? toDateId(minimumDate) : undefined
+                  }
+                  calendarMaxDateId={
+                    maximumDate ? toDateId(maximumDate) : undefined
+                  }
+                  calendarMonthHeaderHeight={40}
+                  calendarRowVerticalSpacing={8}
+                  theme={{
                     rowMonth: {
                       content: {
                         color: theme.colors.text,
-                        fontWeight: '600',
+                        fontWeight: "600",
                       },
                     },
                     rowWeek: {
@@ -217,9 +226,9 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.surface,
   },
   dateDisplay: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     gap: theme.spacing.md,
   },
   dateSection: {
@@ -235,7 +244,7 @@ const styles = StyleSheet.create({
     fontSize: theme.typography.xs,
     fontWeight: theme.typography.semibold,
     color: theme.colors.textSecondary,
-    textTransform: 'uppercase',
+    textTransform: "uppercase",
   },
   dateText: {
     fontSize: theme.typography.base,
@@ -246,7 +255,7 @@ const styles = StyleSheet.create({
     color: theme.colors.textMuted,
   },
   clearButtonContainer: {
-    alignSelf: 'flex-start',
+    alignSelf: "flex-start",
   },
   clearButton: {
     fontSize: theme.typography.sm,
@@ -255,8 +264,8 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    justifyContent: 'flex-end',
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    justifyContent: "flex-end",
+    backgroundColor: "rgba(0, 0, 0, 0.7)",
   },
   modalContent: {
     flex: 1,
@@ -264,12 +273,12 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     paddingBottom: 34,
-    maxHeight: '80%',
+    maxHeight: "80%",
   },
   modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     padding: theme.spacing.lg,
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.border,
@@ -296,6 +305,6 @@ const styles = StyleSheet.create({
   helperText: {
     fontSize: theme.typography.sm,
     color: theme.colors.textSecondary,
-    textAlign: 'center',
+    textAlign: "center",
   },
 });

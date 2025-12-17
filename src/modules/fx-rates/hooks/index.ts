@@ -3,4 +3,4 @@
  * FX RATES HOOKS EXPORTS
  */
 
-export { useFxRates } from './use-fx-rates';
+export { useFxRates } from "./use-fx-rates";

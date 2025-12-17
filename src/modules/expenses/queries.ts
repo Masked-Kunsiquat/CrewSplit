@@ -2,7 +2,12 @@
  * EXPENSES MODULE - Database Queries
  */
 
-import { Expense, ExpenseSplit, CreateExpenseInput, UpdateExpenseInput } from './types';
+import {
+  Expense,
+  ExpenseSplit,
+  CreateExpenseInput,
+  UpdateExpenseInput,
+} from "./types";
 
 // TODO: Implement after Drizzle ORM is configured
 // export const getExpensesByTripId = async (tripId: string): Promise<Expense[]> => { ... }

@@ -3,7 +3,7 @@
  * LOCAL DATA ENGINEER: Convert between DB rows and domain models
  */
 
-import type { ExpenseSplit, NewExpenseSplit } from '../schema/expense-splits';
+import type { ExpenseSplit, NewExpenseSplit } from "../schema/expense-splits";
 
 /**
  * Domain model for ExpenseSplit (currently identical to DB model)
@@ -16,7 +16,9 @@ export interface ExpenseSplitDomain extends ExpenseSplit {
 /**
  * Map ExpenseSplit database row to domain model
  */
-export function mapExpenseSplitFromDb(record: ExpenseSplit): ExpenseSplitDomain {
+export function mapExpenseSplitFromDb(
+  record: ExpenseSplit,
+): ExpenseSplitDomain {
   return {
     ...record,
   };
@@ -25,6 +27,8 @@ export function mapExpenseSplitFromDb(record: ExpenseSplit): ExpenseSplitDomain 
 /**
  * Map array of ExpenseSplits from DB
  */
-export function mapExpenseSplitsFromDb(records: ExpenseSplit[]): ExpenseSplitDomain[] {
+export function mapExpenseSplitsFromDb(
+  records: ExpenseSplit[],
+): ExpenseSplitDomain[] {
   return records.map(mapExpenseSplitFromDb);
 }

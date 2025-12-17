@@ -44,7 +44,7 @@ export interface ExpenseSplit {
   expenseId: string;
   participantId: string;
   share: number; // Weight or percentage (will be normalized)
-  shareType: 'equal' | 'percentage' | 'amount' | 'weight';
+  shareType: "equal" | "percentage" | "amount" | "weight";
   amount?: number; // For 'amount' type splits (in trip currency minor units)
 }
 
@@ -62,7 +62,7 @@ export interface CreateExpenseInput {
   splits: Array<{
     participantId: string;
     share: number;
-    shareType: 'equal' | 'percentage' | 'amount' | 'weight';
+    shareType: "equal" | "percentage" | "amount" | "weight";
     amount?: number;
   }>;
 }
@@ -80,7 +80,7 @@ export interface UpdateExpenseInput {
   splits?: Array<{
     participantId: string;
     share: number;
-    shareType: 'equal' | 'percentage' | 'amount' | 'weight';
+    shareType: "equal" | "percentage" | "amount" | "weight";
     amount?: number;
   }>;
 }

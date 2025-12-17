@@ -2,9 +2,21 @@
  * EXPENSES MODULE - React Hooks
  */
 
-import { useCallback, useEffect, useState } from 'react';
-import { addExpense, deleteExpense, getExpenseById, getExpensesForTrip, getExpenseSplits, updateExpense } from './repository';
-import { CreateExpenseInput, Expense, ExpenseSplit, UpdateExpenseInput } from './types';
+import { useCallback, useEffect, useState } from "react";
+import {
+  addExpense,
+  deleteExpense,
+  getExpenseById,
+  getExpensesForTrip,
+  getExpenseSplits,
+  updateExpense,
+} from "./repository";
+import {
+  CreateExpenseInput,
+  Expense,
+  ExpenseSplit,
+  UpdateExpenseInput,
+} from "./types";
 
 export const useExpenses = (tripId: string) => {
   const [expenses, setExpenses] = useState<Expense[]>([]);

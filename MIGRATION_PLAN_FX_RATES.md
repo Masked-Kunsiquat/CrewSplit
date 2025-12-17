@@ -26,6 +26,7 @@ This migration adds two new tables to support cached foreign exchange rates for 
 **Purpose**: Cache exchange rates locally for offline-first currency conversions
 
 **Columns**:
+
 - `id` (TEXT, PRIMARY KEY): UUID identifier
 - `base_currency` (TEXT, NOT NULL): Source currency (ISO 4217 code)
 - `quote_currency` (TEXT, NOT NULL): Target currency (ISO 4217 code)
@@ -39,11 +40,13 @@ This migration adds two new tables to support cached foreign exchange rates for 
 - `updated_at` (TEXT, NOT NULL, DEFAULT current timestamp)
 
 **Indexes**:
+
 1. `fx_rates_currency_pair_idx`: (base_currency, quote_currency, is_archived) - Fast rate lookups
 2. `fx_rates_fetched_at_idx`: (fetched_at) - Staleness detection
 3. `fx_rates_source_idx`: (source) - Source-based filtering
 
 **Design Rationale**:
+
 - **Composite natural key** (baseCurrency, quoteCurrency, fetchedAt) allows versioning
 - **UUID id** simplifies references and sync operations
 - **Priority field** resolves conflicts when multiple sources provide same pair
@@ -55,6 +58,7 @@ This migration adds two new tables to support cached foreign exchange rates for 
 **Purpose**: Link trips to specific FX rates used for conversions (audit trail)
 
 **Columns**:
+
 - `id` (TEXT, PRIMARY KEY): UUID identifier
 - `trip_id` (TEXT, NOT NULL, FK → trips.id, CASCADE): Associated trip
 - `fx_rate_id` (TEXT, NOT NULL, FK → fx_rates.id, RESTRICT): Rate used
@@ -63,10 +67,12 @@ This migration adds two new tables to support cached foreign exchange rates for 
 - `created_at` (TEXT, NOT NULL, DEFAULT current timestamp)
 
 **Indexes**:
+
 1. `fx_rate_snapshots_trip_id_idx`: (trip_id) - Find rates used by trip
 2. `fx_rate_snapshots_fx_rate_id_idx`: (fx_rate_id) - Find trips using specific rate
 
 **Design Rationale**:
+
 - **OPTIONAL TABLE**: Can be implemented after core `fx_rates` works
 - **RESTRICT on delete**: Prevents accidental rate deletion if trips reference it
 - **Snapshot type**: Allows different rate capture moments (close, settlement, export)
@@ -84,11 +90,13 @@ npx drizzle-kit generate --config drizzle.config.ts
 ```
 
 **Expected Output**:
+
 - `src/db/migrations/NNNN_add_fx_rates_tables.sql`: Human-readable SQL
 - `src/db/migrations/meta/_journal.json`: Updated migration tracking
 - `src/db/migrations/migrations.js`: Inlined SQL for React Native bundle
 
 **Review Checklist**:
+
 - [ ] Verify CREATE TABLE statements for both tables
 - [ ] Confirm all indexes are created
 - [ ] Check foreign key constraints (CASCADE for snapshots→trips, RESTRICT for snapshots→rates)
@@ -102,13 +110,14 @@ npx drizzle-kit generate --config drizzle.config.ts
    ```javascript
    export default {
      // ... existing migrations
-     '0004_add_fx_rates_tables': m0004,
+     "0004_add_fx_rates_tables": m0004,
    };
    ```
 
 ### Phase 3: Test Locally
 
 1. **Install fresh on test device/emulator**:
+
    ```bash
    npm run android  # or npm run ios
    ```
@@ -119,6 +128,7 @@ npx drizzle-kit generate --config drizzle.config.ts
    - No foreign key constraint failures
 
 3. **Inspect database** (via Expo DevTools or adb):
+
    ```sql
    -- Verify tables exist
    SELECT name FROM sqlite_master WHERE type='table';
@@ -138,6 +148,7 @@ npx drizzle-kit generate --config drizzle.config.ts
 ### Phase 4: Commit Migration
 
 **Files to commit together**:
+
 ```
 src/db/schema/fx-rates.ts           # New schema definition
 src/db/schema/index.ts              # Export fx-rates
@@ -148,6 +159,7 @@ MIGRATION_PLAN_FX_RATES.md          # This document
 ```
 
 **Commit Message**:
+
 ```
 Add FX rates caching schema
 
@@ -176,6 +188,7 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>
 - **Graceful degradation**: If no rates exist, app falls back to manual entry (existing behavior)
 
 **Users with existing data**:
+
 - Migration runs automatically on app startup
 - All trips, participants, expenses, and settlements preserved
 - New FX provider can gradually populate rates table
@@ -188,9 +201,11 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>
 After migration is applied, implement in this order:
 
 ### 1. FX Rate Repository
+
 **Owner**: LOCAL DATA ENGINEER
 
 Create `src/modules/fx/repository/FxRateRepository.ts`:
+
 - `getRate(base, quote)`: Lookup rate, prioritize by priority+recency
 - `storeRate(base, quote, rate, source, metadata)`: Insert/update rate
 - `getRatesForCurrencies(currencies[])`: Batch fetch for multi-currency trips
@@ -198,45 +213,55 @@ Create `src/modules/fx/repository/FxRateRepository.ts`:
 - `archiveRate(id)`: Soft delete outdated rate
 
 ### 2. Cached FX Rate Provider
+
 **Owner**: DISPLAY INTEGRATION ENGINEER
 
 Create `src/modules/fx/providers/CachedFxRateProvider.ts`:
+
 - Implement `FxRateProvider` interface
 - Query `FxRateRepository` for conversions
 - Fall back to manual rate if no cached rate exists
 - Expose `lastUpdated` timestamp for UI staleness warnings
 
 ### 3. API Fetchers (Frankfurter & ExchangeRate-API)
+
 **Owner**: LOCAL DATA ENGINEER
 
 Create `src/modules/fx/fetchers/`:
+
 - `FrankfurterFetcher.ts`: Fetch from api.frankfurter.dev
 - `ExchangeRateApiFetcher.ts`: Fallback to open.er-api.com
 - Batch fetch for multiple currency pairs
 - Handle network errors gracefully (offline-first)
 
 ### 4. Background Sync Hook
+
 **Owner**: LOCAL DATA ENGINEER
 
 Create `src/modules/fx/hooks/use-fx-sync.ts`:
+
 - Check rate staleness on app startup
 - Trigger background refresh if online and rates >7 days old
 - Update repository with new rates
 - Respect rate limits (max 1 fetch/day per source)
 
 ### 5. Manual Rate Entry UI
+
 **Owner**: UI/UX ENGINEER
 
 Create `src/modules/fx/screens/ManualRateScreen.tsx`:
+
 - Input: Base currency, quote currency, rate
 - Validation: Rate > 0, valid ISO 4217 codes
 - Store as source='manual' with priority=100
 - Show list of existing manual rates with edit/delete
 
 ### 6. Rate Snapshots (Optional)
+
 **Owner**: SETTLEMENT INTEGRATION ENGINEER
 
 Extend `SettlementService`:
+
 - On trip close: Create snapshots for all used FX rates
 - Store with `snapshot_type='trip_close'`
 - On export: Include snapshots in export bundle
@@ -247,9 +272,11 @@ Extend `SettlementService`:
 ## Testing Strategy
 
 ### Unit Tests
+
 **File**: `src/modules/fx/repository/__tests__/FxRateRepository.test.ts`
 
 Test cases:
+
 - `should store and retrieve rate by currency pair`
 - `should prioritize manual rates over API rates`
 - `should return most recent rate when multiple exist`
@@ -258,15 +285,18 @@ Test cases:
 - `should batch fetch rates for multiple currencies`
 
 ### Integration Tests
+
 **File**: `src/modules/fx/__tests__/integration.test.ts`
 
 Scenarios:
+
 - Fetch rates from Frankfurter API → store in DB → retrieve for conversion
 - Offline conversion uses cached rate
 - Manual rate overrides stale API rate
 - Snapshot preserves trip-specific rates across export/import
 
 ### Edge Cases
+
 - **No cached rate**: Falls back to manual entry prompt
 - **Stale rate (>7 days)**: Shows warning, allows usage
 - **Conflicting sources**: Highest priority + most recent wins
@@ -280,23 +310,27 @@ Scenarios:
 If migration causes issues in production:
 
 ### Option 1: Forward Fix (Preferred)
+
 1. Identify bug in provider/repository logic
 2. Fix bug in new code
 3. Ship hotfix update
 4. Migration tables remain (no data loss)
 
 ### Option 2: Temporary Disable
+
 1. Revert to `StubFxRateProvider` in app code
 2. New tables remain but unused
 3. Fix issues in separate branch
 4. Re-enable when stable
 
 ### Option 3: Data Wipe (LAST RESORT - Dev Only)
+
 **NEVER in production** - destroys all user data:
+
 ```typescript
 // For development only
-import { deleteDatabaseSync } from 'expo-sqlite';
-deleteDatabaseSync('crewsplit.db');
+import { deleteDatabaseSync } from "expo-sqlite";
+deleteDatabaseSync("crewsplit.db");
 ```
 
 ---
@@ -304,11 +338,13 @@ deleteDatabaseSync('crewsplit.db');
 ## Performance Considerations
 
 ### Query Optimization
+
 - **Indexed lookups**: Currency pair index ensures O(log n) lookups
 - **Batch queries**: `WHERE (base, quote) IN (...)` for multi-currency trips
 - **Result caching**: Provider can memoize rates for single request lifecycle
 
 ### Storage Impact
+
 - **Rate size**: ~200 bytes/rate (with metadata)
 - **Expected volume**:
   - 30 currencies × 30 currencies = 900 pairs (worst case)
@@ -317,6 +353,7 @@ deleteDatabaseSync('crewsplit.db');
 - **Snapshots**: ~100 bytes/snapshot × 100 trips × 5 rates/trip = 50 KB
 
 ### Network Impact
+
 - **Batch API calls**: Single request fetches all needed pairs
 - **Rate limiting**: Max 1 fetch/day respects free tier limits
 - **Conditional updates**: Only fetch if >24 hours since last update
@@ -326,11 +363,13 @@ deleteDatabaseSync('crewsplit.db');
 ## Compliance & Attribution
 
 ### Frankfurter (api.frankfurter.dev)
+
 - **License**: Open-source, no restrictions
 - **Attribution**: Not required, but recommended in About screen
 - **Terms**: Free for unlimited client-side usage
 
 ### ExchangeRate-API (open.er-api.com)
+
 - **License**: Free tier with attribution
 - **Attribution**: Required - add to About/Settings screen:
   ```

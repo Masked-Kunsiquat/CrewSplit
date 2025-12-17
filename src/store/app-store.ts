@@ -3,8 +3,8 @@
  * Global application state
  */
 
-import { create } from 'zustand';
-import { AppState } from './types';
+import { create } from "zustand";
+import { AppState } from "./types";
 
 export const useAppStore = create<AppState>((set) => ({
   // Current trip

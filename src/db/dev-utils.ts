@@ -6,7 +6,7 @@
  * Only use during local development when you need to reset your database.
  */
 
-import { deleteDatabaseSync } from 'expo-sqlite';
+import { deleteDatabaseSync } from "expo-sqlite";
 
 /**
  * DEVELOPMENT ONLY: Deletes the entire database
@@ -27,14 +27,16 @@ import { deleteDatabaseSync } from 'expo-sqlite';
  */
 export function resetDatabase(): void {
   if (!__DEV__) {
-    throw new Error('resetDatabase() can only be called in development mode');
+    throw new Error("resetDatabase() can only be called in development mode");
   }
 
   try {
-    deleteDatabaseSync('crewsplit.db');
-    console.warn('🗑️  DEV: Database deleted - app will recreate on next launch');
+    deleteDatabaseSync("crewsplit.db");
+    console.warn(
+      "🗑️  DEV: Database deleted - app will recreate on next launch",
+    );
   } catch (error) {
-    console.log('No existing database to delete');
+    console.log("No existing database to delete");
   }
 }
 
@@ -45,21 +47,25 @@ export function resetDatabase(): void {
  */
 export function logMigrationInfo(db: any): void {
   if (!__DEV__) {
-    throw new Error('logMigrationInfo() can only be called in development mode');
+    throw new Error(
+      "logMigrationInfo() can only be called in development mode",
+    );
   }
 
   try {
     const result = db.get(
-      `SELECT name FROM sqlite_master WHERE type='table' AND name='__drizzle_migrations'`
+      `SELECT name FROM sqlite_master WHERE type='table' AND name='__drizzle_migrations'`,
     );
 
     if (result) {
-      const migrations = db.all(`SELECT * FROM __drizzle_migrations ORDER BY created_at`);
-      console.log('📊 Applied migrations:', migrations);
+      const migrations = db.all(
+        `SELECT * FROM __drizzle_migrations ORDER BY created_at`,
+      );
+      console.log("📊 Applied migrations:", migrations);
     } else {
-      console.log('📊 No migrations table found - database is fresh');
+      console.log("📊 No migrations table found - database is fresh");
     }
   } catch (error) {
-    console.error('Failed to read migration info:', error);
+    console.error("Failed to read migration info:", error);
   }
 }

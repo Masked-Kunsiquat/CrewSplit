@@ -3,8 +3,8 @@
  * LOCAL DATA ENGINEER: Convert between DB rows and domain models
  */
 
-import { Expense as DbExpense, NewExpense } from '../schema/expenses';
-import type { Expense } from '@modules/expenses';
+import { Expense as DbExpense, NewExpense } from "../schema/expenses";
+import type { Expense } from "@modules/expenses";
 
 export const mapExpenseFromDb = (record: DbExpense): Expense => ({
   id: record.id,

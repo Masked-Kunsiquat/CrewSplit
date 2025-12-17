@@ -5,6 +5,7 @@
 ## Definition of Pure Function
 
 A pure function must satisfy:
+
 1. **Deterministic**: Same inputs always produce same outputs
 2. **No side effects**: Does not modify external state or perform I/O
 3. **No external dependencies**: Only depends on input parameters
@@ -17,6 +18,7 @@ A pure function must satisfy:
 **Location**: [normalize-shares.ts](./normalize-shares.ts)
 
 **Purity Checklist**:
+
 - ✅ **No mutations**: Creates new arrays, never modifies input parameters
 - ✅ **No side effects**: No console.log, no I/O, no external state changes
 - ✅ **No external dependencies**: Only imports types (no DB, no UI, no globals)
@@ -26,6 +28,7 @@ A pure function must satisfy:
 - ✅ **Throws for invalid input**: Validation errors are deterministic
 
 **Helper functions** (normalizeEqual, normalizePercentage, normalizeWeight, normalizeAmount):
+
 - All are pure
 - All use deterministic algorithms
 - No external dependencies
@@ -39,6 +42,7 @@ A pure function must satisfy:
 **Location**: [calculate-balances.ts](./calculate-balances.ts)
 
 **Purity Checklist**:
+
 - ✅ **No mutations**: Creates new data structures, never modifies inputs
 - ✅ **No side effects**: No external state changes
 - ✅ **No external dependencies**: Only imports types and `normalizeShares` (which is pure)
@@ -47,6 +51,7 @@ A pure function must satisfy:
 - ✅ **No I/O**: No database calls, no file system, no network
 
 **Data structures used**:
+
 - `Map<string, ...>`: Used only for local grouping, not mutated after construction
 - Arrays: Created fresh, not modified after construction
 
@@ -59,6 +64,7 @@ A pure function must satisfy:
 **Location**: [optimize-settlements.ts](./optimize-settlements.ts)
 
 **Purity Checklist**:
+
 - ✅ **No mutations**: Creates new arrays for creditors/debtors, never modifies input
 - ✅ **No side effects**: No external state changes
 - ✅ **No external dependencies**: Only imports types
@@ -67,6 +73,7 @@ A pure function must satisfy:
 - ✅ **No random values**: No randomness in matching logic
 
 **Algorithm properties**:
+
 - Greedy matching is deterministic given sorted inputs
 - Sorting uses explicit comparator with tie-breaking
 - Working copies (`creditor.amount`, `debtor.amount`) are local variables
@@ -80,6 +87,7 @@ A pure function must satisfy:
 **Full pipeline**: `normalizeShares` → `calculateBalances` → `optimizeSettlements`
 
 Since all three functions are pure, their composition is also pure:
+
 - Given the same `expenses`, `splits`, and `participants`
 - The pipeline will always produce the same `settlements`
 - No side effects occur at any stage
@@ -109,6 +117,7 @@ See test files in [\_\_tests\_\_](./__tests__/):
 ## Traceability
 
 Every number in the output can be traced back to source data:
+
 - Normalized amounts derive from `expense.amount` and `split.share`
 - Net positions derive from summing normalized amounts
 - Settlements derive from greedy matching of net positions
@@ -120,6 +129,7 @@ No magic numbers, no hidden state, no external configuration.
 ✅ **ALL FUNCTIONS ARE PURE**
 
 The settlement module contains only pure functions with:
+
 - No side effects
 - No external dependencies (DB, UI, globals)
 - Deterministic behavior

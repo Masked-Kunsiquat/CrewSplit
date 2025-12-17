@@ -3,10 +3,14 @@
  * Vanilla flash-calendar single-date selector (no custom calendar logic)
  */
 
-import React, { useEffect, useMemo, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Modal } from 'react-native';
-import { Calendar, fromDateId, toDateId } from '@marceloterreiro/flash-calendar';
-import { theme } from '@ui/theme';
+import React, { useEffect, useMemo, useState } from "react";
+import { View, Text, StyleSheet, TouchableOpacity, Modal } from "react-native";
+import {
+  Calendar,
+  fromDateId,
+  toDateId,
+} from "@marceloterreiro/flash-calendar";
+import { theme } from "@ui/theme";
 
 interface DatePickerProps {
   label?: string;
@@ -23,9 +27,9 @@ interface DatePickerProps {
 
 const formatDate = (date: Date) =>
   date.toLocaleDateString(undefined, {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
+    month: "short",
+    day: "numeric",
+    year: "numeric",
   });
 
 export function DatePicker({
@@ -41,7 +45,7 @@ export function DatePicker({
   const [pendingDateId, setPendingDateId] = useState(selectedDateId);
   const initialMonthId = useMemo(
     () => toDateId(initialDate ?? value),
-    [initialDate, value]
+    [initialDate, value],
   );
 
   useEffect(() => {
@@ -96,8 +100,12 @@ export function DatePicker({
                     { startId: pendingDateId, endId: pendingDateId },
                   ]}
                   calendarInitialMonthId={initialMonthId}
-                  calendarMinDateId={minimumDate ? toDateId(minimumDate) : undefined}
-                  calendarMaxDateId={maximumDate ? toDateId(maximumDate) : undefined}
+                  calendarMinDateId={
+                    minimumDate ? toDateId(minimumDate) : undefined
+                  }
+                  calendarMaxDateId={
+                    maximumDate ? toDateId(maximumDate) : undefined
+                  }
                   onCalendarDayPress={setPendingDateId}
                 />
               </View>
@@ -106,7 +114,10 @@ export function DatePicker({
                 <Text style={styles.helperText}>
                   Tap a day to pick it, then press Done
                 </Text>
-                <TouchableOpacity onPress={handleClose} style={styles.cancelButton}>
+                <TouchableOpacity
+                  onPress={handleClose}
+                  style={styles.cancelButton}
+                >
                   <Text style={styles.cancelButtonText}>Cancel</Text>
                 </TouchableOpacity>
               </View>
@@ -135,7 +146,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: theme.spacing.md,
     minHeight: 48,
-    justifyContent: 'center',
+    justifyContent: "center",
   },
   buttonText: {
     fontSize: theme.typography.base,
@@ -143,8 +154,8 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    justifyContent: 'flex-end',
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    justifyContent: "flex-end",
+    backgroundColor: "rgba(0, 0, 0, 0.7)",
   },
   modalContent: {
     flex: 1,
@@ -152,12 +163,12 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     paddingBottom: 34,
-    maxHeight: '80%',
+    maxHeight: "80%",
   },
   modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     padding: theme.spacing.lg,
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.border,
@@ -184,10 +195,10 @@ const styles = StyleSheet.create({
   helperText: {
     fontSize: theme.typography.sm,
     color: theme.colors.textSecondary,
-    textAlign: 'center',
+    textAlign: "center",
   },
   cancelButton: {
-    alignSelf: 'center',
+    alignSelf: "center",
     paddingVertical: theme.spacing.xs,
     paddingHorizontal: theme.spacing.sm,
   },

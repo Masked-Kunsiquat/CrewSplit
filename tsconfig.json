@@ -3,36 +3,15 @@
   "compilerOptions": {
     "strict": true,
     "paths": {
-      "@/*": [
-        "./src/*"
-      ],
-      "@modules/*": [
-        "./src/modules/*"
-      ],
-      "@ui/*": [
-        "./src/ui/*"
-      ],
-      "@store/*": [
-        "./src/store/*"
-      ],
-      "@db/*": [
-        "./src/db/*"
-      ],
-      "@utils/*": [
-        "./src/utils/*"
-      ],
-      "@hooks/*": [
-        "./src/hooks/*"
-      ]
+      "@/*": ["./src/*"],
+      "@modules/*": ["./src/modules/*"],
+      "@ui/*": ["./src/ui/*"],
+      "@store/*": ["./src/store/*"],
+      "@db/*": ["./src/db/*"],
+      "@utils/*": ["./src/utils/*"],
+      "@hooks/*": ["./src/hooks/*"]
     }
   },
-  "include": [
-    "**/*.ts",
-    "**/*.tsx",
-    ".expo/types/**/*.ts",
-    "expo-env.d.ts"
-  ],
-  "exclude": [
-    "node_modules"
-  ]
+  "include": ["**/*.ts", "**/*.tsx", ".expo/types/**/*.ts", "expo-env.d.ts"],
+  "exclude": ["node_modules"]
 }

@@ -3,9 +3,15 @@
  * Lightweight data-fetching hooks (no business logic)
  */
 
-import { useCallback, useEffect, useState } from 'react';
-import { createTrip, getTripById, getTrips, updateTrip, deleteTrip } from './repository';
-import { CreateTripInput, Trip, UpdateTripInput } from './types';
+import { useCallback, useEffect, useState } from "react";
+import {
+  createTrip,
+  getTripById,
+  getTrips,
+  updateTrip,
+  deleteTrip,
+} from "./repository";
+import { CreateTripInput, Trip, UpdateTripInput } from "./types";
 
 export const useTrips = () => {
   const [trips, setTrips] = useState<Trip[]>([]);

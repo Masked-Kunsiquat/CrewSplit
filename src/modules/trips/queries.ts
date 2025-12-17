@@ -3,7 +3,7 @@
  * Pure query functions for trip data access
  */
 
-import { Trip, CreateTripInput, UpdateTripInput } from './types';
+import { Trip, CreateTripInput, UpdateTripInput } from "./types";
 
 // TODO: Implement after Drizzle ORM is configured
 // export const getAllTrips = async (): Promise<Trip[]> => { ... }

@@ -3,6 +3,7 @@
 ## Schema at a Glance
 
 ### `fx_rates` Table
+
 ```sql
 CREATE TABLE fx_rates (
   id TEXT PRIMARY KEY,                    -- UUID
@@ -25,6 +26,7 @@ CREATE INDEX fx_rates_source_idx ON fx_rates(source);
 ```
 
 ### `fx_rate_snapshots` Table (Optional)
+
 ```sql
 CREATE TABLE fx_rate_snapshots (
   id TEXT PRIMARY KEY,                    -- UUID
@@ -44,12 +46,12 @@ CREATE INDEX fx_rate_snapshots_fx_rate_id_idx ON fx_rate_snapshots(fx_rate_id);
 
 ## Priority System
 
-| Source              | Priority | When to Use                           |
-|---------------------|----------|---------------------------------------|
-| `manual`            | 100      | User explicitly sets rate (overrides) |
-| `frankfurter`       | 50       | Primary API (no key required)         |
-| `exchangerate-api`  | 40       | Fallback API (no key required)        |
-| `sync`              | 30       | Synced from another device            |
+| Source             | Priority | When to Use                           |
+| ------------------ | -------- | ------------------------------------- |
+| `manual`           | 100      | User explicitly sets rate (overrides) |
+| `frankfurter`      | 50       | Primary API (no key required)         |
+| `exchangerate-api` | 40       | Fallback API (no key required)        |
+| `sync`             | 30       | Synced from another device            |
 
 **Resolution**: Highest priority + most recent `fetched_at` wins
 
@@ -58,6 +60,7 @@ CREATE INDEX fx_rate_snapshots_fx_rate_id_idx ON fx_rate_snapshots(fx_rate_id);
 ## Common Queries
 
 ### 1. Get Latest Rate
+
 ```typescript
 // TypeScript
 const rate = await db
@@ -65,10 +68,10 @@ const rate = await db
   .from(fxRates)
   .where(
     and(
-      eq(fxRates.baseCurrency, 'USD'),
-      eq(fxRates.quoteCurrency, 'EUR'),
-      eq(fxRates.isArchived, false)
-    )
+      eq(fxRates.baseCurrency, "USD"),
+      eq(fxRates.quoteCurrency, "EUR"),
+      eq(fxRates.isArchived, false),
+    ),
   )
   .orderBy(desc(fxRates.priority), desc(fxRates.fetchedAt))
   .limit(1);
@@ -85,12 +88,13 @@ LIMIT 1;
 ```
 
 ### 2. Batch Fetch for Multi-Currency Trip
+
 ```typescript
 // TypeScript
 const pairs = [
-  ['USD', 'EUR'],
-  ['USD', 'GBP'],
-  ['EUR', 'USD'],
+  ["USD", "EUR"],
+  ["USD", "GBP"],
+  ["EUR", "USD"],
 ];
 
 const rates = await db
@@ -98,20 +102,20 @@ const rates = await db
   .from(fxRates)
   .where(
     and(
-      inArray(
-        sql`(${fxRates.baseCurrency}, ${fxRates.quoteCurrency})`,
-        pairs
-      ),
-      eq(fxRates.isArchived, false)
-    )
+      inArray(sql`(${fxRates.baseCurrency}, ${fxRates.quoteCurrency})`, pairs),
+      eq(fxRates.isArchived, false),
+    ),
   )
   .orderBy(desc(fxRates.priority), desc(fxRates.fetchedAt));
 ```
 
 ### 3. Find Stale Rates
+
 ```typescript
 // TypeScript
-const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+const sevenDaysAgo = new Date(
+  Date.now() - 7 * 24 * 60 * 60 * 1000,
+).toISOString();
 
 const staleRates = await db
   .select({
@@ -123,29 +127,31 @@ const staleRates = await db
     and(
       lt(fxRates.fetchedAt, sevenDaysAgo),
       eq(fxRates.isArchived, false),
-      inArray(fxRates.source, ['frankfurter', 'exchangerate-api'])
-    )
+      inArray(fxRates.source, ["frankfurter", "exchangerate-api"]),
+    ),
   )
   .groupBy(fxRates.baseCurrency, fxRates.quoteCurrency);
 ```
 
 ### 4. Store New Rate
+
 ```typescript
 // TypeScript
 await db.insert(fxRates).values({
   id: crypto.randomUUID(),
-  baseCurrency: 'USD',
-  quoteCurrency: 'EUR',
+  baseCurrency: "USD",
+  quoteCurrency: "EUR",
   rate: 0.92,
-  source: 'frankfurter',
+  source: "frankfurter",
   fetchedAt: new Date().toISOString(),
   priority: 50,
-  metadata: JSON.stringify({ api_version: '2024-01-15' }),
+  metadata: JSON.stringify({ api_version: "2024-01-15" }),
   isArchived: false,
 });
 ```
 
 ### 5. Archive Outdated Rate
+
 ```typescript
 // TypeScript
 await db
@@ -163,11 +169,13 @@ await db
 **Endpoint**: `https://api.frankfurter.dev/latest`
 
 **Example Request**:
+
 ```bash
 curl "https://api.frankfurter.dev/latest?base=USD&symbols=EUR,GBP,JPY"
 ```
 
 **Example Response**:
+
 ```json
 {
   "amount": 1.0,
@@ -182,6 +190,7 @@ curl "https://api.frankfurter.dev/latest?base=USD&symbols=EUR,GBP,JPY"
 ```
 
 **Processing**:
+
 ```typescript
 async function storeFrankfurterRates(base: string, data: FrankfurterResponse) {
   const rates = Object.entries(data.rates).map(([quote, rate]) => ({
@@ -189,7 +198,7 @@ async function storeFrankfurterRates(base: string, data: FrankfurterResponse) {
     baseCurrency: base,
     quoteCurrency: quote,
     rate,
-    source: 'frankfurter' as const,
+    source: "frankfurter" as const,
     fetchedAt: data.date,
     priority: 50,
     metadata: JSON.stringify({ api_date: data.date }),
@@ -205,11 +214,13 @@ async function storeFrankfurterRates(base: string, data: FrankfurterResponse) {
 **Endpoint**: `https://open.er-api.com/v6/latest/{base}`
 
 **Example Request**:
+
 ```bash
 curl "https://open.er-api.com/v6/latest/USD"
 ```
 
 **Example Response**:
+
 ```json
 {
   "result": "success",
@@ -217,13 +228,14 @@ curl "https://open.er-api.com/v6/latest/USD"
   "time_last_updated": 1705334400,
   "rates": {
     "EUR": 0.92,
-    "GBP": 0.79,
+    "GBP": 0.79
     // ... 160+ currencies
   }
 }
 ```
 
 **Processing**:
+
 ```typescript
 async function storeExchangeRateApiRates(data: ExchangeRateApiResponse) {
   const rates = Object.entries(data.rates).map(([quote, rate]) => ({
@@ -231,7 +243,7 @@ async function storeExchangeRateApiRates(data: ExchangeRateApiResponse) {
     baseCurrency: data.base_code,
     quoteCurrency: quote,
     rate,
-    source: 'exchangerate-api' as const,
+    source: "exchangerate-api" as const,
     fetchedAt: new Date(data.time_last_updated * 1000).toISOString(),
     priority: 40,
     metadata: JSON.stringify({
@@ -251,7 +263,11 @@ async function storeExchangeRateApiRates(data: ExchangeRateApiResponse) {
 ```typescript
 interface FxRateProvider {
   getRate(fromCurrency: string, toCurrency: string): Promise<number>;
-  setRate(fromCurrency: string, toCurrency: string, rate: number): Promise<void>;
+  setRate(
+    fromCurrency: string,
+    toCurrency: string,
+    rate: number,
+  ): Promise<void>;
 }
 
 class CachedFxRateProvider implements FxRateProvider {
@@ -273,14 +289,18 @@ class CachedFxRateProvider implements FxRateProvider {
     throw new NoRateAvailableError(fromCurrency, toCurrency);
   }
 
-  async setRate(fromCurrency: string, toCurrency: string, rate: number): Promise<void> {
+  async setRate(
+    fromCurrency: string,
+    toCurrency: string,
+    rate: number,
+  ): Promise<void> {
     await this.repository.storeRate({
       baseCurrency: fromCurrency,
       quoteCurrency: toCurrency,
       rate,
-      source: 'manual',
+      source: "manual",
       priority: 100, // Overrides API rates
-      metadata: JSON.stringify({ note: 'Manually entered' }),
+      metadata: JSON.stringify({ note: "Manually entered" }),
     });
   }
 }
@@ -293,7 +313,7 @@ class CachedFxRateProvider implements FxRateProvider {
 ```typescript
 // Input: $12.34 USD → EUR
 const amountUSD = 1234; // cents
-const rate = await provider.getRate('USD', 'EUR'); // 0.92
+const rate = await provider.getRate("USD", "EUR"); // 0.92
 
 // Convert with rounding
 const amountEUR = Math.round(amountUSD * rate); // 1135 cents (€11.35)
@@ -310,16 +330,16 @@ const amountEUR = Math.round(amountUSD * rate); // 1135 cents (€11.35)
 class NoRateAvailableError extends Error {
   constructor(
     public fromCurrency: string,
-    public toCurrency: string
+    public toCurrency: string,
   ) {
     super(`No exchange rate available for ${fromCurrency}→${toCurrency}`);
-    this.name = 'NoRateAvailableError';
+    this.name = "NoRateAvailableError";
   }
 }
 
 // Usage
 try {
-  const rate = await provider.getRate('USD', 'JPY');
+  const rate = await provider.getRate("USD", "JPY");
 } catch (error) {
   if (error instanceof NoRateAvailableError) {
     // Show manual entry prompt
@@ -335,6 +355,7 @@ try {
 ## Migration Steps
 
 1. **Generate**:
+
    ```bash
    npx drizzle-kit generate --config drizzle.config.ts
    ```
@@ -342,9 +363,10 @@ try {
 2. **Review** generated SQL in `src/db/migrations/NNNN_*.sql`
 
 3. **Update** `src/db/migrations/migrations.js`:
+
    ```javascript
    const m0004 = "CREATE TABLE fx_rates ...";
-   export default { '0004_add_fx_rates': m0004 };
+   export default { "0004_add_fx_rates": m0004 };
    ```
 
 4. **Test** locally: `npm run android`
@@ -355,33 +377,34 @@ try {
 
 ## Implementation Phases
 
-| Phase | Owner                        | Deliverable                         | ETA    |
-|-------|------------------------------|-------------------------------------|--------|
-| 0     | SYSTEM ARCHITECT             | Schema design (✅ DONE)             | Done   |
-| 1     | LOCAL DATA ENGINEER          | FxRateRepository                    | Week 1 |
-| 2     | DISPLAY INTEGRATION ENGINEER | CachedFxRateProvider                | Week 2 |
+| Phase | Owner                        | Deliverable                        | ETA    |
+| ----- | ---------------------------- | ---------------------------------- | ------ |
+| 0     | SYSTEM ARCHITECT             | Schema design (✅ DONE)            | Done   |
+| 1     | LOCAL DATA ENGINEER          | FxRateRepository                   | Week 1 |
+| 2     | DISPLAY INTEGRATION ENGINEER | CachedFxRateProvider               | Week 2 |
 | 3     | LOCAL DATA ENGINEER          | API Fetchers (Frankfurter, ExchRt) | Week 3 |
-| 4     | LOCAL DATA ENGINEER          | Background sync hook                | Week 4 |
-| 5     | UI/UX ENGINEER               | Manual rate entry UI                | Week 5 |
-| 6     | SETTLEMENT INTEGRATION ENG   | Trip snapshots (optional)           | Week 6 |
+| 4     | LOCAL DATA ENGINEER          | Background sync hook               | Week 4 |
+| 5     | UI/UX ENGINEER               | Manual rate entry UI               | Week 5 |
+| 6     | SETTLEMENT INTEGRATION ENG   | Trip snapshots (optional)          | Week 6 |
 
 ---
 
 ## Key Files
 
-| File                                    | Purpose                          |
-|-----------------------------------------|----------------------------------|
-| `src/db/schema/fx-rates.ts`             | Schema definition                |
-| `MIGRATION_PLAN_FX_RATES.md`            | Migration step-by-step guide     |
-| `FX_SCHEMA_DESIGN.md`                   | Architecture deep-dive (25 pgs)  |
-| `FX_IMPLEMENTATION_SUMMARY.md`          | Implementation roadmap           |
-| `FX_SCHEMA_QUICK_REFERENCE.md`          | This file (quick lookup)         |
+| File                           | Purpose                         |
+| ------------------------------ | ------------------------------- |
+| `src/db/schema/fx-rates.ts`    | Schema definition               |
+| `MIGRATION_PLAN_FX_RATES.md`   | Migration step-by-step guide    |
+| `FX_SCHEMA_DESIGN.md`          | Architecture deep-dive (25 pgs) |
+| `FX_IMPLEMENTATION_SUMMARY.md` | Implementation roadmap          |
+| `FX_SCHEMA_QUICK_REFERENCE.md` | This file (quick lookup)        |
 
 ---
 
 ## Testing Checklist
 
 ### Unit Tests
+
 - [ ] Store rate and retrieve by currency pair
 - [ ] Priority system (manual > frankfurter > exchangerate-api > sync)
 - [ ] Most recent rate wins when priorities equal
@@ -391,6 +414,7 @@ try {
 - [ ] Batch fetch returns correct rates
 
 ### Integration Tests
+
 - [ ] Fetch from Frankfurter → store → retrieve
 - [ ] Fetch from ExchangeRate-API → store → retrieve
 - [ ] Offline conversion uses cached rate
@@ -399,6 +423,7 @@ try {
 - [ ] Snapshot preserves trip rates
 
 ### Edge Cases
+
 - [ ] No rate available → error thrown
 - [ ] Stale rate (>7 days) → warning shown
 - [ ] Conflicting sources → highest priority wins
@@ -410,13 +435,13 @@ try {
 
 ## Performance Targets
 
-| Operation                   | Target        | Index Used                  |
-|-----------------------------|---------------|-----------------------------|
-| Get single rate             | <10ms         | `currency_pair_idx`         |
-| Batch fetch (10 pairs)      | <50ms         | `currency_pair_idx`         |
-| Find stale rates            | <100ms        | `fetched_at_idx`            |
-| Store rate                  | <20ms         | N/A (INSERT)                |
-| Archive rate                | <20ms         | N/A (UPDATE)                |
+| Operation              | Target | Index Used          |
+| ---------------------- | ------ | ------------------- |
+| Get single rate        | <10ms  | `currency_pair_idx` |
+| Batch fetch (10 pairs) | <50ms  | `currency_pair_idx` |
+| Find stale rates       | <100ms | `fetched_at_idx`    |
+| Store rate             | <20ms  | N/A (INSERT)        |
+| Archive rate           | <20ms  | N/A (UPDATE)        |
 
 **Storage estimate**: ~900 KB for 4,500 versioned rates (1 year usage)
 
@@ -425,11 +450,13 @@ try {
 ## Compliance
 
 ### Frankfurter
+
 - No API key required
 - No usage limits
 - Attribution: Optional but recommended
 
 ### ExchangeRate-API
+
 - No API key required (open endpoint)
 - Rate limit: Lenient (1/day acceptable)
 - Attribution: **REQUIRED** - Add to About screen:
@@ -443,12 +470,14 @@ try {
 ## Support
 
 **Questions?** Refer to:
+
 - **Schema questions**: `FX_SCHEMA_DESIGN.md`
 - **Migration questions**: `MIGRATION_PLAN_FX_RATES.md`
 - **Implementation questions**: `FX_IMPLEMENTATION_SUMMARY.md`
 - **Quick lookup**: This file
 
 **Ready to start?** Run:
+
 ```bash
 npx drizzle-kit generate --config drizzle.config.ts
 ```

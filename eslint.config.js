@@ -3,8 +3,8 @@
  * Keeps behaviour consistent with the prior .eslintrc.js while satisfying ESLint 9.
  */
 
-const { FlatCompat } = require('@eslint/eslintrc');
-const path = require('path');
+const { FlatCompat } = require("@eslint/eslintrc");
+const path = require("path");
 
 const compat = new FlatCompat({
   baseDirectory: __dirname,
@@ -12,9 +12,9 @@ const compat = new FlatCompat({
 });
 
 module.exports = compat.config({
-  extends: ['expo', 'prettier'],
-  plugins: ['prettier'],
+  extends: ["expo", "prettier"],
+  plugins: ["prettier"],
   rules: {
-    'prettier/prettier': 'warn',
+    "prettier/prettier": "warn",
   },
 });

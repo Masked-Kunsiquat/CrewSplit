@@ -2,15 +2,19 @@
  * PARTICIPANTS MODULE - React Hooks
  */
 
-import { useCallback, useEffect, useState } from 'react';
-import { CreateParticipantInput, Participant, UpdateParticipantInput } from './types';
+import { useCallback, useEffect, useState } from "react";
+import {
+  CreateParticipantInput,
+  Participant,
+  UpdateParticipantInput,
+} from "./types";
 import {
   createParticipant,
   deleteParticipant,
   getParticipantById,
   getParticipantsForTrip,
   updateParticipant,
-} from './repository';
+} from "./repository";
 
 export const useParticipants = (tripId: string) => {
   const [participants, setParticipants] = useState<Participant[]>([]);
@@ -88,18 +92,21 @@ export const useUpdateParticipant = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<unknown>(null);
 
-  const update = useCallback(async (id: string, patch: UpdateParticipantInput) => {
-    setIsSaving(true);
-    setError(null);
-    try {
-      return await updateParticipant(id, patch);
-    } catch (err) {
-      setError(err);
-      throw err;
-    } finally {
-      setIsSaving(false);
-    }
-  }, []);
+  const update = useCallback(
+    async (id: string, patch: UpdateParticipantInput) => {
+      setIsSaving(true);
+      setError(null);
+      try {
+        return await updateParticipant(id, patch);
+      } catch (err) {
+        setError(err);
+        throw err;
+      } finally {
+        setIsSaving(false);
+      }
+    },
+    [],
+  );
 
   return { updateParticipant: update, isSaving, error };
 };

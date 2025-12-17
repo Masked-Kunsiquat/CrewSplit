@@ -9,13 +9,13 @@
  * 4. Refresh CachedFxRateProvider cache after successful update
  */
 
-import { FrankfurterService } from './frankfurter-service';
-import { ExchangeRateApiService } from './exchange-rate-api-service';
-import { FxRateRepository } from '../repository';
-import { cachedFxRateProvider } from '../provider';
-import type { FxRateSource } from '@db/schema/fx-rates';
-import type { RatePair } from '../types';
-import { fxLogger } from '@utils/logger';
+import { FrankfurterService } from "./frankfurter-service";
+import { ExchangeRateApiService } from "./exchange-rate-api-service";
+import { FxRateRepository } from "../repository";
+import { cachedFxRateProvider } from "../provider";
+import type { FxRateSource } from "@db/schema/fx-rates";
+import type { RatePair } from "../types";
+import { fxLogger } from "@utils/logger";
 
 /**
  * Result of rate fetch operation
@@ -40,7 +40,7 @@ export interface UpdateRatesOptions {
   /** Target currencies (optional, fetches all if not specified) */
   targetCurrencies?: string[];
   /** Force use of specific source (skip fallback) */
-  forceSource?: 'frankfurter' | 'exchangerate-api';
+  forceSource?: "frankfurter" | "exchangerate-api";
   /** Timeout per API call in milliseconds (default: 10000) */
   timeout?: number;
 }
@@ -54,7 +54,7 @@ export interface UpdateRatesOptions {
  * @throws Error if all sources fail
  */
 export const updateRates = async (
-  options: UpdateRatesOptions = {}
+  options: UpdateRatesOptions = {},
 ): Promise<FetchResult> => {
   const {
     baseCurrency,
@@ -66,12 +66,12 @@ export const updateRates = async (
   const fetchedAt = new Date().toISOString();
 
   // Try Frankfurter first (unless forced to use ExchangeRate-API)
-  if (!forceSource || forceSource === 'frankfurter') {
+  if (!forceSource || forceSource === "frankfurter") {
     try {
-      fxLogger.info('Attempting to fetch rates from Frankfurter');
+      fxLogger.info("Attempting to fetch rates from Frankfurter");
 
       const rates = await FrankfurterService.fetchLatestRates({
-        baseCurrency: baseCurrency || 'EUR', // Frankfurter defaults to EUR
+        baseCurrency: baseCurrency || "EUR", // Frankfurter defaults to EUR
         targetCurrencies,
         timeout,
       });
@@ -79,7 +79,7 @@ export const updateRates = async (
       // Persist to database
       const persistedCount = await FxRateRepository.batchUpdateRates({
         rates,
-        source: 'frankfurter',
+        source: "frankfurter",
         fetchedAt,
         metadata: { fetchedAt },
       });
@@ -87,22 +87,27 @@ export const updateRates = async (
       try {
         await cachedFxRateProvider.refreshCache();
       } catch (cacheError) {
-        fxLogger.warn('Failed to refresh FX cache after Frankfurter update', cacheError);
+        fxLogger.warn(
+          "Failed to refresh FX cache after Frankfurter update",
+          cacheError,
+        );
       }
 
-      fxLogger.info('Successfully updated rates from Frankfurter', { persistedCount });
+      fxLogger.info("Successfully updated rates from Frankfurter", {
+        persistedCount,
+      });
 
       return {
-        source: 'frankfurter',
+        source: "frankfurter",
         rates,
         fetchedAt,
         persistedCount,
       };
     } catch (error) {
-      fxLogger.warn('Frankfurter fetch failed, trying fallback', error);
+      fxLogger.warn("Frankfurter fetch failed, trying fallback", error);
 
       // If forced to use Frankfurter, re-throw
-      if (forceSource === 'frankfurter') {
+      if (forceSource === "frankfurter") {
         throw error;
       }
       // Otherwise, continue to fallback
@@ -111,10 +116,10 @@ export const updateRates = async (
 
   // Try ExchangeRate-API as fallback (or if forced)
   try {
-    fxLogger.info('Attempting to fetch rates from ExchangeRate-API');
+    fxLogger.info("Attempting to fetch rates from ExchangeRate-API");
 
     const rates = await ExchangeRateApiService.fetchLatestRates({
-      baseCurrency: baseCurrency || 'USD', // ExchangeRate-API defaults to USD
+      baseCurrency: baseCurrency || "USD", // ExchangeRate-API defaults to USD
       targetCurrencies,
       timeout,
     });
@@ -122,7 +127,7 @@ export const updateRates = async (
     // Persist to database
     const persistedCount = await FxRateRepository.batchUpdateRates({
       rates,
-      source: 'exchangerate-api',
+      source: "exchangerate-api",
       fetchedAt,
       metadata: {
         fetchedAt,
@@ -133,21 +138,28 @@ export const updateRates = async (
     try {
       await cachedFxRateProvider.refreshCache();
     } catch (cacheError) {
-      fxLogger.warn('Failed to refresh FX cache after ExchangeRate-API update', cacheError);
+      fxLogger.warn(
+        "Failed to refresh FX cache after ExchangeRate-API update",
+        cacheError,
+      );
     }
 
-    fxLogger.info('Successfully updated rates from ExchangeRate-API', { persistedCount });
+    fxLogger.info("Successfully updated rates from ExchangeRate-API", {
+      persistedCount,
+    });
 
     return {
-      source: 'exchangerate-api',
+      source: "exchangerate-api",
       rates,
       fetchedAt,
       persistedCount,
     };
   } catch (error) {
-    fxLogger.error('All FX rate sources failed', error);
-    const allFailedError = new Error('Failed to fetch rates from all sources') as Error & { code: string };
-    allFailedError.code = 'ALL_SOURCES_FAILED';
+    fxLogger.error("All FX rate sources failed", error);
+    const allFailedError = new Error(
+      "Failed to fetch rates from all sources",
+    ) as Error & { code: string };
+    allFailedError.code = "ALL_SOURCES_FAILED";
     throw allFailedError;
   }
 };
@@ -164,33 +176,33 @@ export const updateRates = async (
  * @returns Fetch result
  */
 export const updateCommonRates = async (): Promise<FetchResult> => {
-  fxLogger.info('Updating common currency pairs');
+  fxLogger.info("Updating common currency pairs");
 
   // Fetch USD-based rates first (most common base)
   const usdResult = await updateRates({
-    baseCurrency: 'USD',
-    targetCurrencies: ['EUR', 'GBP', 'JPY', 'CAD', 'AUD', 'CHF', 'CNY', 'INR'],
+    baseCurrency: "USD",
+    targetCurrencies: ["EUR", "GBP", "JPY", "CAD", "AUD", "CHF", "CNY", "INR"],
   });
 
   // Fetch EUR-based rates (second most common)
   try {
     await updateRates({
-      baseCurrency: 'EUR',
-      targetCurrencies: ['USD', 'GBP', 'JPY', 'CAD', 'AUD'],
+      baseCurrency: "EUR",
+      targetCurrencies: ["USD", "GBP", "JPY", "CAD", "AUD"],
     });
   } catch (error) {
-    fxLogger.warn('Failed to fetch EUR-based rates', error);
+    fxLogger.warn("Failed to fetch EUR-based rates", error);
     // Don't fail if EUR fetch fails, USD rates are more important
   }
 
   // Fetch GBP-based rates
   try {
     await updateRates({
-      baseCurrency: 'GBP',
-      targetCurrencies: ['USD', 'EUR', 'JPY'],
+      baseCurrency: "GBP",
+      targetCurrencies: ["USD", "EUR", "JPY"],
     });
   } catch (error) {
-    fxLogger.warn('Failed to fetch GBP-based rates', error);
+    fxLogger.warn("Failed to fetch GBP-based rates", error);
   }
 
   return usdResult;
@@ -207,7 +219,7 @@ export const checkSourceAvailability = async (): Promise<{
   exchangeRateApi: boolean;
   anyAvailable: boolean;
 }> => {
-  fxLogger.debug('Checking FX rate source availability');
+  fxLogger.debug("Checking FX rate source availability");
 
   const [frankfurterAvailable, exchangeRateApiAvailable] = await Promise.all([
     FrankfurterService.checkAvailability(),
@@ -220,7 +232,7 @@ export const checkSourceAvailability = async (): Promise<{
     anyAvailable: frankfurterAvailable || exchangeRateApiAvailable,
   };
 
-  fxLogger.debug('Source availability check result', result);
+  fxLogger.debug("Source availability check result", result);
   return result;
 };
 

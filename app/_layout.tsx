@@ -3,10 +3,10 @@
  * Expo Router entry point
  */
 
-import { Stack } from 'expo-router';
-import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
-import { useDbMigrations } from '@db/client';
-import { colors, spacing, typography } from '@ui/tokens';
+import { Stack } from "expo-router";
+import { View, Text, ActivityIndicator, StyleSheet } from "react-native";
+import { useDbMigrations } from "@db/client";
+import { colors, spacing, typography } from "@ui/tokens";
 
 export default function RootLayout() {
   const { success, error } = useDbMigrations();
@@ -33,14 +33,14 @@ export default function RootLayout() {
     <Stack
       screenOptions={{
         headerStyle: {
-          backgroundColor: '#1a1a1a',
+          backgroundColor: "#1a1a1a",
         },
-        headerTintColor: '#ffffff',
+        headerTintColor: "#ffffff",
         headerTitleStyle: {
-          fontWeight: '600',
+          fontWeight: "600",
         },
         contentStyle: {
-          backgroundColor: '#0a0a0a',
+          backgroundColor: "#0a0a0a",
         },
       }}
     />
@@ -50,8 +50,8 @@ export default function RootLayout() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     backgroundColor: colors.background,
     padding: spacing.lg,
   },
@@ -69,6 +69,6 @@ const styles = StyleSheet.create({
   errorMessage: {
     fontSize: typography.base,
     color: colors.textSecondary,
-    textAlign: 'center',
+    textAlign: "center",
   },
 });

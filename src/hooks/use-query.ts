@@ -3,8 +3,8 @@
  * Reusable pattern for data fetching with loading/error states
  */
 
-import { useEffect, useState, useCallback } from 'react';
-import { useFocusEffect } from 'expo-router';
+import { useEffect, useState, useCallback } from "react";
+import { useFocusEffect } from "expo-router";
 
 /**
  * Generic hook for fetching data with consistent loading/error handling
@@ -33,8 +33,8 @@ export function useQuery<T>(
   queryFn: () => Promise<T>,
   deps: React.DependencyList,
   initialValue: T,
-  errorMessage: string = 'Failed to load data',
-  enableFocusRefetch: boolean = false
+  errorMessage: string = "Failed to load data",
+  enableFocusRefetch: boolean = false,
 ) {
   const [data, setData] = useState<T>(initialValue);
   const [loading, setLoading] = useState(true);
@@ -81,7 +81,7 @@ export function useQuery<T>(
       if (enableFocusRefetch) {
         refetch();
       }
-    }, [refetch, enableFocusRefetch])
+    }, [refetch, enableFocusRefetch]),
   );
 
   return { data, loading, error, refetch };

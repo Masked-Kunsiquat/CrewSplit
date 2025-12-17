@@ -3,16 +3,23 @@
  * Displays participant balances and suggested payment transactions
  */
 
-import React, { useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity } from 'react-native';
-import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
-import { theme } from '@ui/theme';
-import { Card, Button } from '@ui/components';
-import { useSettlementWithDisplay } from '../hooks/use-settlement-with-display';
-import { useTripById } from '@modules/trips/hooks/use-trips';
-import { useDisplayCurrency } from '@hooks/use-display-currency';
-import { formatCurrency } from '@utils/currency';
-import { useRefreshControl } from '@hooks/use-refresh-control';
+import React, { useEffect } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  ActivityIndicator,
+  TouchableOpacity,
+} from "react-native";
+import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
+import { theme } from "@ui/theme";
+import { Card, Button } from "@ui/components";
+import { useSettlementWithDisplay } from "../hooks/use-settlement-with-display";
+import { useTripById } from "@modules/trips/hooks/use-trips";
+import { useDisplayCurrency } from "@hooks/use-display-currency";
+import { formatCurrency } from "@utils/currency";
+import { useRefreshControl } from "@hooks/use-refresh-control";
 
 export default function SettlementSummaryScreen() {
   const navigation = useNavigation();
@@ -22,10 +29,12 @@ export default function SettlementSummaryScreen() {
   const { displayCurrency } = useDisplayCurrency();
 
   const { trip, refetch: refetchTrip } = useTripById(tripId);
-  const { settlement, loading, error, refetch: refetchSettlement } = useSettlementWithDisplay(
-    tripId ?? null,
-    displayCurrency ?? undefined
-  );
+  const {
+    settlement,
+    loading,
+    error,
+    refetch: refetchSettlement,
+  } = useSettlementWithDisplay(tripId ?? null, displayCurrency ?? undefined);
 
   // Pull-to-refresh support
   const refreshControl = useRefreshControl([refetchTrip, refetchSettlement]);
@@ -44,8 +53,10 @@ export default function SettlementSummaryScreen() {
       <View style={styles.container}>
         <View style={styles.centerContent}>
           <Text style={styles.errorTitle}>Invalid Trip</Text>
-          <Text style={styles.errorText}>Missing trip id. Please select a trip.</Text>
-          <Button title="Back to trips" onPress={() => router.replace('/')} />
+          <Text style={styles.errorText}>
+            Missing trip id. Please select a trip.
+          </Text>
+          <Button title="Back to trips" onPress={() => router.replace("/")} />
         </View>
       </View>
     );
@@ -98,13 +109,14 @@ export default function SettlementSummaryScreen() {
         {/* Expense Breakdown */}
         <View style={styles.headerRow}>
           <Text style={styles.subtitle}>
-            Total: {formatCurrency(settlement.totalExpenses, settlement.currency)}
+            Total:{" "}
+            {formatCurrency(settlement.totalExpenses, settlement.currency)}
           </Text>
           {showDisplayCurrency && settlement.displayTotalExpenses && (
             <Text style={styles.displayAmount}>
               {formatCurrency(
                 settlement.displayTotalExpenses.displayAmount,
-                settlement.displayTotalExpenses.displayCurrency
+                settlement.displayTotalExpenses.displayCurrency,
               )}
             </Text>
           )}
@@ -117,7 +129,10 @@ export default function SettlementSummaryScreen() {
               <View style={styles.breakdownRow}>
                 <Text style={styles.breakdownLabel}>Split Expenses:</Text>
                 <Text style={styles.breakdownAmount}>
-                  {formatCurrency(settlement.splitExpensesTotal ?? 0, settlement.currency)}
+                  {formatCurrency(
+                    settlement.splitExpensesTotal ?? 0,
+                    settlement.currency,
+                  )}
                 </Text>
               </View>
             )}
@@ -125,7 +140,10 @@ export default function SettlementSummaryScreen() {
               <View style={styles.breakdownRow}>
                 <Text style={styles.breakdownLabel}>Personal Expenses:</Text>
                 <Text style={styles.breakdownAmount}>
-                  {formatCurrency(settlement.personalExpensesTotal ?? 0, settlement.currency)}
+                  {formatCurrency(
+                    settlement.personalExpensesTotal ?? 0,
+                    settlement.currency,
+                  )}
                 </Text>
               </View>
             )}
@@ -133,7 +151,10 @@ export default function SettlementSummaryScreen() {
               <View style={[styles.breakdownRow, styles.warningRow]}>
                 <Text style={styles.warningLabel}>⚠️ Unallocated:</Text>
                 <Text style={styles.warningAmount}>
-                  {formatCurrency(settlement.unsplitExpensesTotal ?? 0, settlement.currency)}
+                  {formatCurrency(
+                    settlement.unsplitExpensesTotal ?? 0,
+                    settlement.currency,
+                  )}
                 </Text>
               </View>
             )}
@@ -144,20 +165,30 @@ export default function SettlementSummaryScreen() {
         {hasUnsplitExpenses && (
           <Card style={styles.warningBanner}>
             <Text style={styles.warningTitle}>
-              ⚠️ {settlement.unsplitExpensesCount} {settlement.unsplitExpensesCount === 1 ? 'expense needs' : 'expenses need'} splitting
+              ⚠️ {settlement.unsplitExpensesCount}{" "}
+              {settlement.unsplitExpensesCount === 1
+                ? "expense needs"
+                : "expenses need"}{" "}
+              splitting
             </Text>
             <Text style={styles.warningText}>
-              Some expenses don't have participants assigned. These are excluded from settlement calculations.
+              Some expenses don't have participants assigned. These are excluded
+              from settlement calculations.
             </Text>
             <TouchableOpacity
               style={styles.reviewButton}
               onPress={() => {
                 // Navigate to expenses with filter parameter for unsplit expenses
-                const expenseIds = settlement.unsplitExpenseIds?.join(',') || '';
-                router.push(`/trips/${tripId}/expenses?filter=unsplit&ids=${expenseIds}`);
+                const expenseIds =
+                  settlement.unsplitExpenseIds?.join(",") || "";
+                router.push(
+                  `/trips/${tripId}/expenses?filter=unsplit&ids=${expenseIds}`,
+                );
               }}
             >
-              <Text style={styles.reviewButtonText}>Review Unsplit Expenses</Text>
+              <Text style={styles.reviewButtonText}>
+                Review Unsplit Expenses
+              </Text>
             </TouchableOpacity>
           </Card>
         )}
@@ -168,7 +199,9 @@ export default function SettlementSummaryScreen() {
             <Text style={styles.sectionTitle}>Balances</Text>
             {settlement.balances.map((balance) => (
               <View key={balance.participantId} style={styles.balanceCard}>
-                <Text style={styles.participantName}>{balance.participantName}</Text>
+                <Text style={styles.participantName}>
+                  {balance.participantName}
+                </Text>
 
                 <View style={styles.balanceRow}>
                   <Text style={styles.balanceLabel}>Paid:</Text>
@@ -180,7 +213,7 @@ export default function SettlementSummaryScreen() {
                       <Text style={styles.displayAmountSmall}>
                         {formatCurrency(
                           balance.displayTotalPaid.displayAmount,
-                          balance.displayTotalPaid.displayCurrency
+                          balance.displayTotalPaid.displayCurrency,
                         )}
                       </Text>
                     )}
@@ -197,7 +230,7 @@ export default function SettlementSummaryScreen() {
                       <Text style={styles.displayAmountSmall}>
                         {formatCurrency(
                           balance.displayTotalOwed.displayAmount,
-                          balance.displayTotalOwed.displayCurrency
+                          balance.displayTotalOwed.displayCurrency,
                         )}
                       </Text>
                     )}
@@ -214,15 +247,17 @@ export default function SettlementSummaryScreen() {
                         balance.netPosition < 0 && styles.negativeAmount,
                       ]}
                     >
-                      {balance.netPosition > 0 ? '+' : ''}
+                      {balance.netPosition > 0 ? "+" : ""}
                       {formatCurrency(balance.netPosition, settlement.currency)}
                     </Text>
                     {showDisplayCurrency && balance.displayNetPosition && (
                       <Text style={styles.displayAmountSmall}>
-                        {balance.displayNetPosition.displayAmount > 0 ? '+' : ''}
+                        {balance.displayNetPosition.displayAmount > 0
+                          ? "+"
+                          : ""}
                         {formatCurrency(
                           balance.displayNetPosition.displayAmount,
-                          balance.displayNetPosition.displayCurrency
+                          balance.displayNetPosition.displayCurrency,
                         )}
                       </Text>
                     )}
@@ -238,7 +273,10 @@ export default function SettlementSummaryScreen() {
           <Text style={styles.sectionTitle}>Suggested Payments</Text>
           {hasSettlements ? (
             settlement.settlements.map((item, index) => (
-              <View key={`${item.from}-${item.to}-${index}`} style={styles.settlementRow}>
+              <View
+                key={`${item.from}-${item.to}-${index}`}
+                style={styles.settlementRow}
+              >
                 <Text style={styles.settlementText}>
                   <Text style={styles.from}>{item.fromName}</Text>
                   <Text style={styles.arrow}> → </Text>
@@ -252,7 +290,7 @@ export default function SettlementSummaryScreen() {
                     <Text style={styles.displayAmountSmall}>
                       {formatCurrency(
                         item.displayAmount.displayAmount,
-                        item.displayAmount.displayCurrency
+                        item.displayAmount.displayCurrency,
                       )}
                     </Text>
                   )}
@@ -262,8 +300,8 @@ export default function SettlementSummaryScreen() {
           ) : (
             <Text style={styles.emptyText}>
               {hasBalances
-                ? 'No payments needed - everyone is settled up!'
-                : 'No expenses yet. Add expenses to see settlements.'}
+                ? "No payments needed - everyone is settled up!"
+                : "No expenses yet. Add expenses to see settlements."}
             </Text>
           )}
         </Card>
@@ -272,8 +310,9 @@ export default function SettlementSummaryScreen() {
         {hasBalances && (
           <Card style={styles.infoCard}>
             <Text style={styles.infoText}>
-              All amounts are calculated from expense data using deterministic math.
-              Net position shows how much each participant is owed (positive) or owes (negative).
+              All amounts are calculated from expense data using deterministic
+              math. Net position shows how much each participant is owed
+              (positive) or owes (negative).
             </Text>
           </Card>
         )}
@@ -302,12 +341,12 @@ function normalizeTripId(idParam: string | string[] | undefined) {
 }
 
 function formatErrorMessage(error: unknown) {
-  if (typeof error === 'string') return error;
-  if (error && typeof error === 'object' && 'message' in error) {
+  if (typeof error === "string") return error;
+  if (error && typeof error === "object" && "message" in error) {
     const maybeMessage = (error as { message?: unknown }).message;
-    if (typeof maybeMessage === 'string') return maybeMessage;
+    if (typeof maybeMessage === "string") return maybeMessage;
   }
-  return 'Unknown error';
+  return "Unknown error";
 }
 
 const styles = StyleSheet.create({
@@ -324,8 +363,8 @@ const styles = StyleSheet.create({
   },
   centerContent: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     padding: theme.spacing.lg,
     gap: theme.spacing.md,
   },
@@ -335,9 +374,9 @@ const styles = StyleSheet.create({
     color: theme.colors.text,
   },
   headerRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: theme.spacing.xs,
   },
   subtitle: {
@@ -347,7 +386,7 @@ const styles = StyleSheet.create({
   displayAmount: {
     fontSize: theme.typography.sm,
     color: theme.colors.textMuted,
-    fontStyle: 'italic',
+    fontStyle: "italic",
   },
   loadingText: {
     fontSize: theme.typography.base,
@@ -362,7 +401,7 @@ const styles = StyleSheet.create({
   errorText: {
     fontSize: theme.typography.base,
     color: theme.colors.text,
-    textAlign: 'center',
+    textAlign: "center",
     marginBottom: theme.spacing.lg,
   },
   section: {
@@ -388,16 +427,16 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.xs,
   },
   balanceRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
   balanceLabel: {
     fontSize: theme.typography.sm,
     color: theme.colors.textSecondary,
   },
   balanceAmounts: {
-    alignItems: 'flex-end',
+    alignItems: "flex-end",
     gap: 2,
   },
   balanceAmount: {
@@ -407,7 +446,7 @@ const styles = StyleSheet.create({
   displayAmountSmall: {
     fontSize: theme.typography.xs,
     color: theme.colors.textMuted,
-    fontStyle: 'italic',
+    fontStyle: "italic",
   },
   netRow: {
     marginTop: theme.spacing.xs,
@@ -432,9 +471,9 @@ const styles = StyleSheet.create({
     color: theme.colors.error,
   },
   settlementRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingVertical: theme.spacing.sm,
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.border,
@@ -455,7 +494,7 @@ const styles = StyleSheet.create({
     color: theme.colors.primary,
   },
   settlementAmounts: {
-    alignItems: 'flex-end',
+    alignItems: "flex-end",
     marginLeft: theme.spacing.md,
     gap: 2,
   },
@@ -467,7 +506,7 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: theme.typography.base,
     color: theme.colors.textSecondary,
-    textAlign: 'center',
+    textAlign: "center",
     paddingVertical: theme.spacing.lg,
   },
   infoCard: {
@@ -483,9 +522,9 @@ const styles = StyleSheet.create({
     padding: theme.spacing.md,
   },
   breakdownRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingVertical: theme.spacing.xs,
   },
   breakdownLabel: {
@@ -536,7 +575,7 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.primary,
     padding: theme.spacing.sm,
     borderRadius: 8,
-    alignItems: 'center',
+    alignItems: "center",
     marginTop: theme.spacing.xs,
   },
   reviewButtonText: {
