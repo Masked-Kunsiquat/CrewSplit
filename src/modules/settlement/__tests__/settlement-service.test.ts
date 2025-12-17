@@ -229,6 +229,22 @@ describe("SettlementService", () => {
       expect(danaBalance.totalOwed).toBe(4600);
       expect(danaBalance.netPosition).toBe(-4600);
       expect(settlement.settlements).toHaveLength(1);
+
+      const netSum = settlement.balances.reduce(
+        (sum, balance) => sum + balance.netPosition,
+        0,
+      );
+      const totalPaidSum = settlement.balances.reduce(
+        (sum, balance) => sum + balance.totalPaid,
+        0,
+      );
+      const totalOwedSum = settlement.balances.reduce(
+        (sum, balance) => sum + balance.totalOwed,
+        0,
+      );
+
+      expect(netSum).toBe(0);
+      expect(totalPaidSum).toBe(totalOwedSum);
     });
 
     it("should handle trips with no expenses", async () => {
