@@ -36,28 +36,47 @@ export const normalizeShares = (
     throw new Error("All splits for an expense must have the same shareType");
   }
 
-  let normalized: number[];
+  // Deterministic normalization must not depend on caller-provided split ordering
+  // (e.g., DB row order). We compute using a stable participantId ordering, then
+  // map results back to the original split order.
+  const stable = splits
+    .map((split, originalIndex) => ({ split, originalIndex }))
+    .sort((a, b) => {
+      const byParticipant = a.split.participantId.localeCompare(
+        b.split.participantId,
+      );
+      if (byParticipant !== 0) return byParticipant;
+      return a.originalIndex - b.originalIndex;
+    });
+
+  const stableSplits = stable.map((x) => x.split);
+  let stableNormalized: number[];
 
   switch (shareType) {
     case "equal":
-      normalized = normalizeEqual(splits.length, expenseAmount);
+      stableNormalized = normalizeEqual(stableSplits.length, expenseAmount);
       break;
 
     case "percentage":
-      normalized = normalizePercentage(splits, expenseAmount);
+      stableNormalized = normalizePercentage(stableSplits, expenseAmount);
       break;
 
     case "weight":
-      normalized = normalizeWeight(splits, expenseAmount);
+      stableNormalized = normalizeWeight(stableSplits, expenseAmount);
       break;
 
     case "amount":
-      normalized = normalizeAmount(splits, expenseAmount);
+      stableNormalized = normalizeAmount(stableSplits, expenseAmount);
       break;
 
     default:
       throw new Error(`Unknown share type: ${shareType}`);
   }
+
+  const normalized = new Array<number>(splits.length);
+  stableNormalized.forEach((amount, stableIndex) => {
+    normalized[stable[stableIndex].originalIndex] = amount;
+  });
 
   return normalized;
 };
