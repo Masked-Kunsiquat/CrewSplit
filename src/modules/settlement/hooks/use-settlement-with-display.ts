@@ -3,10 +3,29 @@
  * Extends useSettlement to optionally include display currency conversions
  */
 
-import { useMemo } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useSettlement } from "./use-settlement";
 import { defaultDisplayCurrencyAdapter } from "../service/DisplayCurrencyAdapter";
 import type { SettlementSummaryWithDisplay } from "../types";
+
+/**
+ * Error type for missing FX rate
+ */
+export interface NoRateAvailableError extends Error {
+  code: "FX_RATE_NOT_FOUND";
+  fromCurrency: string;
+  toCurrency: string;
+}
+
+/**
+ * Type guard for NoRateAvailableError
+ */
+function isNoRateAvailableError(error: unknown): error is NoRateAvailableError {
+  return (
+    error instanceof Error &&
+    (error as { code?: string }).code === "FX_RATE_NOT_FOUND"
+  );
+}
 
 /**
  * Hook to fetch settlement summary with optional display currency conversion
@@ -19,32 +38,63 @@ export function useSettlementWithDisplay(
   displayCurrency?: string,
 ) {
   const { settlement, loading, error, refetch } = useSettlement(tripId);
+  const [conversionError, setConversionError] =
+    useState<NoRateAvailableError | null>(null);
 
   // Convert to display currency if requested
-  const settlementWithDisplay = useMemo<SettlementSummaryWithDisplay>(() => {
+  const result = useMemo<{
+    settlement: SettlementSummaryWithDisplay;
+    error: NoRateAvailableError | null;
+  }>(() => {
     try {
-      return defaultDisplayCurrencyAdapter.enrichSettlement(
+      const enriched = defaultDisplayCurrencyAdapter.enrichSettlement(
         settlement,
         displayCurrency,
       );
-    } catch (conversionError) {
-      // If conversion fails, log and return original settlement
-      console.warn(
-        `Failed to convert settlement to display currency ${displayCurrency}:`,
-        conversionError,
-      );
-      return {
-        ...settlement,
-        displayCurrency: undefined,
-        displayTotalExpenses: undefined,
-      };
+      return { settlement: enriched, error: null };
+    } catch (error) {
+      // Check if it's a missing rate error
+      if (isNoRateAvailableError(error)) {
+        console.warn(
+          `Missing FX rate for ${error.fromCurrency} → ${error.toCurrency}`,
+          error,
+        );
+        return {
+          settlement: {
+            ...settlement,
+            displayCurrency: undefined,
+            displayTotalExpenses: undefined,
+          },
+          error,
+        };
+      } else {
+        // Log other conversion errors
+        console.warn(
+          `Failed to convert settlement to display currency ${displayCurrency}:`,
+          error,
+        );
+        return {
+          settlement: {
+            ...settlement,
+            displayCurrency: undefined,
+            displayTotalExpenses: undefined,
+          },
+          error: null,
+        };
+      }
     }
   }, [settlement, displayCurrency]);
 
+  // Update error state in useEffect to avoid state updates during render
+  useEffect(() => {
+    setConversionError(result.error);
+  }, [result.error]);
+
   return {
-    settlement: settlementWithDisplay,
+    settlement: result.settlement,
     loading,
     error,
+    conversionError,
     refetch,
   };
 }

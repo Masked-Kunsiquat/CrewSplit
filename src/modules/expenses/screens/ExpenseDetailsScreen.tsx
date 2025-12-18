@@ -15,17 +15,23 @@ import {
 } from "react-native";
 import { useRouter, useLocalSearchParams, useNavigation } from "expo-router";
 import { theme } from "@ui/theme";
-import { Button, Card } from "@ui/components";
+import {
+  Button,
+  Card,
+  NoRateAvailableModal,
+  StalenessWarningBanner,
+} from "@ui/components";
 import { useExpenseWithSplits } from "../hooks/use-expenses";
 import { useExpenseCategories } from "../hooks/use-expense-categories";
 import { useParticipants } from "@modules/participants/hooks/use-participants";
 import { useDisplayCurrency } from "@hooks/use-display-currency";
 import { formatCurrency } from "@utils/currency";
-import { defaultFxRateProvider } from "@modules/settlement/service/DisplayCurrencyAdapter";
+import { cachedFxRateProvider } from "@modules/fx-rates/provider";
 import { deleteExpense } from "../repository";
 import { currencyLogger } from "@utils/logger";
 import { useRefreshControl } from "@hooks/use-refresh-control";
 import { TripExportModal } from "@modules/trips/components/trip-export-modal";
+import { useFxSync } from "@modules/fx-rates/hooks/use-fx-sync";
 
 export default function ExpenseDetailsScreen() {
   const router = useRouter();
@@ -68,6 +74,11 @@ function ExpenseDetailsContent({
   const [isDeleting, setIsDeleting] = useState(false);
   const [editingExpense, setEditingExpense] = useState(false);
   const [exportModalVisible, setExportModalVisible] = useState(false);
+  const [rateModalVisible, setRateModalVisible] = useState(false);
+  const [conversionError, setConversionError] = useState<{
+    fromCurrency: string;
+    toCurrency: string;
+  } | null>(null);
 
   const {
     expense,
@@ -82,6 +93,14 @@ function ExpenseDetailsContent({
     refetch: refetchParticipants,
   } = useParticipants(tripId);
   const { categories } = useExpenseCategories(tripId);
+
+  // FX rate staleness detection and refresh
+  const {
+    isStale,
+    daysOld,
+    refreshing: fxRefreshing,
+    refreshNow: refreshFxRates,
+  } = useFxSync({ autoRefresh: false });
 
   // Pull-to-refresh support (note: categories hook doesn't expose refetch, uses dependency-based refresh)
   const refreshControl = useRefreshControl([
@@ -146,41 +165,98 @@ function ExpenseDetailsContent({
   }, [expense, splits]);
 
   // Calculate display currency amounts if requested
-  const displayAmounts = useMemo(() => {
-    if (!expense || !displayCurrency) return null;
+  const displayAmountsResult = useMemo(() => {
+    if (!expense || !displayCurrency) return { amounts: null, error: null };
 
     try {
       // Convert expense amounts to display currency
-      const fxRate = defaultFxRateProvider.getRate(
+      const fxRate = cachedFxRateProvider.getRate(
         expense.currency,
         displayCurrency,
       );
 
       return {
-        originalAmount:
-          expense.originalAmountMinor !== expense.convertedAmountMinor
-            ? {
-                amount: expense.originalAmountMinor,
-                currency: expense.originalCurrency,
-              }
-            : null,
-        convertedAmount: {
-          amount: expense.convertedAmountMinor,
-          currency: expense.currency,
+        amounts: {
+          originalAmount:
+            expense.originalAmountMinor !== expense.convertedAmountMinor
+              ? {
+                  amount: expense.originalAmountMinor,
+                  currency: expense.originalCurrency,
+                }
+              : null,
+          convertedAmount: {
+            amount: expense.convertedAmountMinor,
+            currency: expense.currency,
+          },
+          displayAmount: {
+            amount: Math.round(expense.convertedAmountMinor * fxRate),
+            currency: displayCurrency,
+          },
+          fxRate,
         },
-        displayAmount: {
-          amount: Math.round(expense.convertedAmountMinor * fxRate),
-          currency: displayCurrency,
-        },
-        fxRate,
+        error: null,
       };
     } catch (error) {
       currencyLogger.warn("Failed to convert to display currency", error);
-      return null;
+      // Return error for modal
+      return {
+        amounts: null,
+        error: expense
+          ? {
+              fromCurrency: expense.currency,
+              toCurrency: displayCurrency,
+            }
+          : null,
+      };
     }
   }, [expense, displayCurrency]);
 
+  const displayAmounts = displayAmountsResult.amounts;
+
+  // Update conversion error state in useEffect to avoid state updates during render
+  useEffect(() => {
+    setConversionError(displayAmountsResult.error);
+  }, [displayAmountsResult.error]);
+
   const loading = expenseLoading || participantsLoading;
+
+  // Show modal when conversion error occurs
+  useEffect(() => {
+    if (conversionError) {
+      setRateModalVisible(true);
+    }
+  }, [conversionError]);
+
+  // Handlers for FX rate recovery
+  const handleFetchOnline = async () => {
+    try {
+      await refreshFxRates();
+      setRateModalVisible(false);
+      // Trigger re-render by updating state
+      setConversionError(null);
+    } catch (error) {
+      console.error("Failed to refresh rates:", error);
+    }
+  };
+
+  const handleEnterManually = () => {
+    setRateModalVisible(false);
+    if (conversionError) {
+      router.push(
+        `/fx-rates/manual?from=${conversionError.fromCurrency}&to=${conversionError.toCurrency}`,
+      );
+    }
+  };
+
+  const handleRefreshStaleRates = async () => {
+    try {
+      await refreshFxRates();
+      // Trigger re-render
+      setConversionError(null);
+    } catch (error) {
+      console.error("Failed to refresh stale rates:", error);
+    }
+  };
 
   // Loading state
   if (loading) {
@@ -247,6 +323,16 @@ function ExpenseDetailsContent({
         contentContainerStyle={styles.content}
         refreshControl={refreshControl}
       >
+        {/* Staleness Warning Banner */}
+        {isStale && daysOld && showDisplayCurrency && expense && (
+          <StalenessWarningBanner
+            currencyPair={`${expense.currency} → ${displayCurrency}`}
+            daysOld={daysOld}
+            onRefresh={handleRefreshStaleRates}
+            refreshing={fxRefreshing}
+          />
+        )}
+
         {/* Main Expense Info */}
         <Card style={styles.section}>
           <View style={styles.header}>
@@ -448,6 +534,16 @@ function ExpenseDetailsContent({
         visible={exportModalVisible}
         tripId={tripId}
         onClose={() => setExportModalVisible(false)}
+      />
+
+      <NoRateAvailableModal
+        visible={rateModalVisible}
+        fromCurrency={conversionError?.fromCurrency ?? ""}
+        toCurrency={conversionError?.toCurrency ?? ""}
+        onFetchOnline={handleFetchOnline}
+        onEnterManually={handleEnterManually}
+        onDismiss={() => setRateModalVisible(false)}
+        fetching={fxRefreshing}
       />
     </View>
   );

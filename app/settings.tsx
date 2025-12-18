@@ -12,21 +12,43 @@ import {
   Alert,
   Linking,
 } from "react-native";
-import { useNavigation } from "expo-router";
+import { useNavigation, useRouter } from "expo-router";
 import { Image } from "expo-image";
 import { theme } from "@ui/theme";
 import { Card, CurrencyPicker, Button, Input } from "@ui/components";
 import { useDisplayCurrency } from "@hooks/use-display-currency";
 import { useDeviceOwner } from "@hooks/use-device-owner";
+import { useFxRates } from "@modules/fx-rates/hooks/use-fx-rates";
+
+/**
+ * Format timestamp as relative time (e.g., "2 days ago")
+ */
+function formatRelativeTime(timestamp: string): string {
+  const now = new Date();
+  const then = new Date(timestamp);
+  const diffMs = now.getTime() - then.getTime();
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+  const diffMinutes = Math.floor(diffMs / (1000 * 60));
+
+  if (diffMinutes < 1) return "Just now";
+  if (diffMinutes < 60) return `${diffMinutes}m ago`;
+  if (diffHours < 24) return `${diffHours}h ago`;
+  if (diffDays < 7) return `${diffDays}d ago`;
+  if (diffDays < 30) return `${Math.floor(diffDays / 7)}w ago`;
+  return `${Math.floor(diffDays / 30)}mo ago`;
+}
 
 export default function SettingsScreen() {
   const navigation = useNavigation();
+  const router = useRouter();
   const { displayCurrency, loading, setDisplayCurrency } = useDisplayCurrency();
   const {
     deviceOwnerName,
     loading: ownerLoading,
     setDeviceOwner,
   } = useDeviceOwner();
+  const { rateCount, isStale, oldestUpdate } = useFxRates();
 
   // Set header title
   useEffect(() => {
@@ -161,6 +183,42 @@ export default function SettingsScreen() {
               </Text>
             </Card>
           )}
+        </Card>
+
+        <Card style={styles.section}>
+          <Text style={styles.sectionTitle}>Exchange Rates</Text>
+          <Text style={styles.sectionDescription}>
+            Manage exchange rates for multi-currency trips. Rates are
+            automatically updated from online sources when available.
+          </Text>
+
+          <View style={styles.ratesSummary}>
+            <View style={styles.ratesSummaryRow}>
+              <Text style={styles.ratesSummaryLabel}>Stored rates:</Text>
+              <Text style={styles.ratesSummaryValue}>{rateCount}</Text>
+            </View>
+            {oldestUpdate && (
+              <View style={styles.ratesSummaryRow}>
+                <Text style={styles.ratesSummaryLabel}>Last updated:</Text>
+                <Text
+                  style={[
+                    styles.ratesSummaryValue,
+                    isStale && styles.ratesSummaryStale,
+                  ]}
+                >
+                  {formatRelativeTime(oldestUpdate)}
+                  {isStale && " ⚠️"}
+                </Text>
+              </View>
+            )}
+          </View>
+
+          <Button
+            title="Manage Exchange Rates"
+            variant="outline"
+            onPress={() => router.push({ pathname: "/fx-rates/" } as any)}
+            fullWidth
+          />
         </Card>
 
         <Card style={styles.section}>
@@ -316,5 +374,28 @@ const styles = StyleSheet.create({
     padding: theme.spacing.lg,
     borderTopWidth: 1,
     borderTopColor: theme.colors.border,
+  },
+  ratesSummary: {
+    backgroundColor: theme.colors.surface,
+    borderRadius: theme.borderRadius.md,
+    padding: theme.spacing.md,
+    gap: theme.spacing.sm,
+  },
+  ratesSummaryRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  ratesSummaryLabel: {
+    fontSize: theme.typography.sm,
+    color: theme.colors.textSecondary,
+  },
+  ratesSummaryValue: {
+    fontSize: theme.typography.base,
+    fontWeight: theme.typography.semibold,
+    color: theme.colors.text,
+  },
+  ratesSummaryStale: {
+    color: theme.colors.warning,
   },
 });

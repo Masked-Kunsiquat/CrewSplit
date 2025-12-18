@@ -5,12 +5,52 @@
 
 import { Stack } from "expo-router";
 import { View, Text, ActivityIndicator, StyleSheet } from "react-native";
+import { useEffect, useState } from "react";
 import { useDbMigrations } from "@db/client";
+import { cachedFxRateProvider } from "@modules/fx-rates/provider";
+import { useFxSync } from "@modules/fx-rates/hooks";
 import { colors, spacing, typography } from "@ui/tokens";
+import { fxLogger } from "@utils/logger";
 
 export default function RootLayout() {
   const { success, error } = useDbMigrations();
+  const [fxInitialized, setFxInitialized] = useState(false);
+  const [fxError, setFxError] = useState<Error | null>(null);
 
+  // Background sync for FX rates (must be called unconditionally)
+  // Safe to run before provider initialization: checkStaleness only queries DB,
+  // and performBackgroundRefresh is delayed (1s) to allow initialization to complete
+  useFxSync({
+    autoRefresh: true,
+    onRefreshSuccess: (count) => {
+      fxLogger.info(`Background FX sync completed: ${count} rates updated`);
+    },
+    onRefreshError: (error) => {
+      fxLogger.warn("Background FX sync failed (non-fatal)", error);
+    },
+  });
+
+  // Initialize FX rate provider after migrations complete
+  useEffect(() => {
+    if (success && !fxInitialized) {
+      fxLogger.info("Initializing FX rate provider");
+      cachedFxRateProvider
+        .initialize()
+        .then(() => {
+          setFxInitialized(true);
+          fxLogger.info("FX rate provider initialized successfully");
+        })
+        .catch((err) => {
+          // Don't block app startup on FX initialization failure
+          fxLogger.error("Failed to initialize FX rate provider", err);
+          setFxError(err);
+          // Allow app to continue even if FX init fails
+          setFxInitialized(true);
+        });
+    }
+  }, [success, fxInitialized]);
+
+  // Show migration error
   if (error) {
     return (
       <View style={styles.container}>
@@ -20,12 +60,24 @@ export default function RootLayout() {
     );
   }
 
-  if (!success) {
+  // Show loading while migrations or FX initialization in progress
+  if (!success || !fxInitialized) {
     return (
       <View style={styles.container}>
         <ActivityIndicator size="large" color={colors.primary} />
-        <Text style={styles.loadingText}>Applying database migrations...</Text>
+        <Text style={styles.loadingText}>
+          {!success
+            ? "Applying database migrations..."
+            : "Loading exchange rates..."}
+        </Text>
       </View>
+    );
+  }
+
+  // Show warning if FX failed but allow app to continue
+  if (fxError) {
+    fxLogger.warn(
+      "App started with FX rate provider initialization failure - conversions may not work",
     );
   }
 

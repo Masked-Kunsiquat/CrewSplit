@@ -14,7 +14,12 @@ import {
 } from "react-native";
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
 import { theme } from "@ui/theme";
-import { Card, Button } from "@ui/components";
+import {
+  Card,
+  Button,
+  NoRateAvailableModal,
+  StalenessWarningBanner,
+} from "@ui/components";
 import { useSettlementWithDisplay } from "../hooks/use-settlement-with-display";
 import { useTripById } from "@modules/trips/hooks/use-trips";
 import { useDisplayCurrency } from "@hooks/use-display-currency";
@@ -22,6 +27,7 @@ import { formatCurrency } from "@utils/currency";
 import { useRefreshControl } from "@hooks/use-refresh-control";
 import { TripExportModal } from "@modules/trips/components/trip-export-modal";
 import { formatErrorMessage } from "src/utils/format-error";
+import { useFxSync } from "@modules/fx-rates/hooks/use-fx-sync";
 
 export default function SettlementSummaryScreen() {
   const navigation = useNavigation();
@@ -30,17 +36,34 @@ export default function SettlementSummaryScreen() {
   const tripId = normalizeTripId(params.id);
   const { displayCurrency } = useDisplayCurrency();
   const [exportModalVisible, setExportModalVisible] = useState(false);
+  const [rateModalVisible, setRateModalVisible] = useState(false);
 
   const { trip, refetch: refetchTrip } = useTripById(tripId);
   const {
     settlement,
     loading,
     error,
+    conversionError,
     refetch: refetchSettlement,
   } = useSettlementWithDisplay(tripId ?? null, displayCurrency ?? undefined);
 
+  // FX rate staleness detection and refresh
+  const {
+    isStale,
+    daysOld,
+    refreshing: fxRefreshing,
+    refreshNow: refreshFxRates,
+  } = useFxSync({ autoRefresh: false });
+
   // Pull-to-refresh support
   const refreshControl = useRefreshControl([refetchTrip, refetchSettlement]);
+
+  // Show modal when conversion error occurs
+  useEffect(() => {
+    if (conversionError) {
+      setRateModalVisible(true);
+    }
+  }, [conversionError]);
 
   // Update native header title
   useEffect(() => {
@@ -50,6 +73,38 @@ export default function SettlementSummaryScreen() {
       });
     }
   }, [trip, navigation]);
+
+  // Handlers for FX rate recovery
+  const handleFetchOnline = async () => {
+    try {
+      await refreshFxRates();
+      setRateModalVisible(false);
+      // Refetch settlement with new rates
+      await refetchSettlement();
+    } catch (error) {
+      // Error is logged by useFxSync, keep modal open
+      console.error("Failed to refresh rates:", error);
+    }
+  };
+
+  const handleEnterManually = () => {
+    setRateModalVisible(false);
+    if (conversionError) {
+      router.push(
+        `/fx-rates/manual?from=${conversionError.fromCurrency}&to=${conversionError.toCurrency}`,
+      );
+    }
+  };
+
+  const handleRefreshStaleRates = async () => {
+    try {
+      await refreshFxRates();
+      // Refetch settlement with refreshed rates
+      await refetchSettlement();
+    } catch (error) {
+      console.error("Failed to refresh stale rates:", error);
+    }
+  };
 
   if (!tripId) {
     return (
@@ -109,6 +164,16 @@ export default function SettlementSummaryScreen() {
         contentContainerStyle={styles.content}
         refreshControl={refreshControl}
       >
+        {/* Staleness Warning Banner */}
+        {isStale && daysOld && showDisplayCurrency && (
+          <StalenessWarningBanner
+            currencyPair={`${settlement.currency} → ${displayCurrency}`}
+            daysOld={daysOld}
+            onRefresh={handleRefreshStaleRates}
+            refreshing={fxRefreshing}
+          />
+        )}
+
         {/* Expense Breakdown */}
         <View style={styles.headerRow}>
           <Text style={styles.subtitle}>
@@ -337,6 +402,16 @@ export default function SettlementSummaryScreen() {
         visible={exportModalVisible}
         tripId={tripId}
         onClose={() => setExportModalVisible(false)}
+      />
+
+      <NoRateAvailableModal
+        visible={rateModalVisible}
+        fromCurrency={conversionError?.fromCurrency ?? ""}
+        toCurrency={conversionError?.toCurrency ?? ""}
+        onFetchOnline={handleFetchOnline}
+        onEnterManually={handleEnterManually}
+        onDismiss={() => setRateModalVisible(false)}
+        fetching={fxRefreshing}
       />
     </View>
   );
