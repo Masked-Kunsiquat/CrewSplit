@@ -19,6 +19,7 @@ import {
   TripExportMetaV1,
   TripExportV1,
 } from "./types";
+import { createAppError } from "@utils/errors";
 
 export async function buildTripExportV1FromDb(
   tripId: string,
@@ -37,7 +38,12 @@ export async function buildTripExportV1FromDb(
     .limit(1);
 
   const trip = tripRows[0];
-  if (!trip) throw new Error(`Trip not found for id ${tripId}`);
+  if (!trip) {
+    throw createAppError("TRIP_NOT_FOUND", `Trip not found for id ${tripId}`, {
+      status: 404,
+      details: { tripId },
+    });
+  }
 
   const exportedAt = meta?.exportedAt ?? new Date().toISOString();
   const exportMeta: TripExportMetaV1 = {

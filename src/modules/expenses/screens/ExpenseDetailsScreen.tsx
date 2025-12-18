@@ -260,7 +260,7 @@ function ExpenseDetailsContent({
                 accessibilityLabel="Export trip"
                 accessibilityHint="Opens export options for this trip"
               >
-                <Text style={styles.editButtonText}>Export</Text>
+                <Text style={styles.editButtonText}>Export Trip</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={() =>

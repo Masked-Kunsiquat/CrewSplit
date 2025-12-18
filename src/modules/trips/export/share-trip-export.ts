@@ -20,6 +20,17 @@ function sanitizeFileComponent(input: string) {
     .slice(0, 60);
 }
 
+async function safeDeleteFile(fileUri: string) {
+  try {
+    await FileSystem.deleteAsync(fileUri, { idempotent: true });
+  } catch (error) {
+    console.warn("[trip-export] Failed to delete temp export file", {
+      fileUri,
+      error,
+    });
+  }
+}
+
 export async function exportTripJsonToFileAndShare(
   tripId: string,
   options?: Partial<TripExportOptions>,
@@ -42,18 +53,40 @@ export async function exportTripJsonToFileAndShare(
   if (!baseDir) throw new Error("No writable directory available for export");
 
   const fileUri = `${baseDir}${fileName}`;
-  await FileSystem.writeAsStringAsync(fileUri, json, {
-    encoding: FileSystem.EncodingType.UTF8,
-  });
+  const shouldCleanup =
+    typeof FileSystem.cacheDirectory === "string" &&
+    fileUri.startsWith(FileSystem.cacheDirectory);
+
+  try {
+    await FileSystem.writeAsStringAsync(fileUri, json, {
+      encoding: FileSystem.EncodingType.UTF8,
+    });
+  } catch (error) {
+    console.warn("[trip-export] Failed to write export JSON to file", {
+      fileUri,
+      error,
+    });
+    throw error;
+  }
 
   const canShare = await Sharing.isAvailableAsync();
   if (canShare) {
-    await Sharing.shareAsync(fileUri, {
-      mimeType: "application/json",
-      dialogTitle: "Export Trip",
-      UTI: "public.json",
-    });
-    return { fileUri, json };
+    try {
+      await Sharing.shareAsync(fileUri, {
+        mimeType: "application/json",
+        dialogTitle: "Export Trip",
+        UTI: "public.json",
+      });
+      return { fileUri, json };
+    } catch (error) {
+      console.warn("[trip-export] Native file share failed", {
+        fileUri,
+        error,
+      });
+      throw error;
+    } finally {
+      if (shouldCleanup) await safeDeleteFile(fileUri);
+    }
   }
 
   if (Platform.OS === "web") {
@@ -64,9 +97,17 @@ export async function exportTripJsonToFileAndShare(
     return { fileUri, json };
   }
 
-  await Share.share({
-    title: "Trip Export (JSON)",
-    message: json,
-  });
-  return { fileUri, json };
+  try {
+    await Share.share({
+      title: "Trip Export (JSON)",
+      message: "CrewLedger trip export JSON file attached.",
+      url: fileUri,
+    });
+    return { fileUri, json };
+  } catch (error) {
+    console.warn("[trip-export] Fallback share failed", { fileUri, error });
+    throw error;
+  } finally {
+    if (shouldCleanup) await safeDeleteFile(fileUri);
+  }
 }

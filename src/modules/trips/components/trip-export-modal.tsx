@@ -80,6 +80,9 @@ export function TripExportModal({
           <Text style={styles.subtitle}>
             Trip details are always included. Choose what else to include.
           </Text>
+          <Text style={styles.clarification}>
+            This will export the entire trip, not just this expense.
+          </Text>
 
           <View style={styles.options}>
             <OptionRow
@@ -188,6 +191,10 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: theme.typography.base,
     color: theme.colors.textSecondary,
+  },
+  clarification: {
+    fontSize: theme.typography.sm,
+    color: theme.colors.textMuted,
   },
   options: {
     gap: theme.spacing.sm,
