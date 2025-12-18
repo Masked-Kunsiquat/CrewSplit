@@ -21,6 +21,15 @@ import { theme } from "@ui/theme";
 import { Card, Button } from "@ui/components";
 import { useTripById } from "../hooks/use-trips";
 
+function formatErrorMessage(error: unknown) {
+  if (typeof error === "string") return error;
+  if (error && typeof error === "object" && "message" in error) {
+    const maybeMessage = (error as { message?: unknown }).message;
+    if (typeof maybeMessage === "string") return maybeMessage;
+  }
+  return "Unknown error";
+}
+
 export default function TripStatisticsScreen() {
   const navigation = useNavigation();
   const { id } = useLocalSearchParams<{ id?: string }>();
@@ -65,9 +74,7 @@ export default function TripStatisticsScreen() {
           <Card style={styles.errorCard}>
             <Text style={styles.errorTitle}>Unable to load trip</Text>
             <Text style={styles.errorText}>
-              {typeof error === "string"
-                ? error
-                : ((error as { message?: unknown }).message ?? "Unknown error")}
+              {formatErrorMessage(error)}
             </Text>
             <Button title="Retry" onPress={refetch} fullWidth />
           </Card>
