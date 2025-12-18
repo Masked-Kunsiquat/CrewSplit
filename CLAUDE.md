@@ -121,6 +121,38 @@ The settlement module has strict layer separation:
 - Settlement engine **only uses** `convertedAmountMinor`
 - Display currency is applied **after** settlement calculation
 
+### 5. FX Rates System (Exchange Rate Caching)
+
+**Architecture** (see `FX_DATA_FLOW_DIAGRAM.md` for details):
+
+- **CachedFxRateProvider**: In-memory cache of exchange rates loaded from database
+- **FxRateRepository**: Database access layer for fx_rates table
+- **FxRateService**: Fetches rates from APIs (Frankfurter, ExchangeRate-API)
+- **useFxSync**: Hook for automatic staleness checking and background refresh
+
+**Key files**:
+```
+src/modules/fx-rates/
+├── provider/cached-fx-rate-provider.ts    # In-memory rate cache
+├── repository/                             # Database queries
+├── services/fx-rate-service.ts            # API fetching
+├── hooks/use-fx-sync.ts                   # Background sync
+└── screens/                                # Manual rate entry UI
+```
+
+**Rate priority system**:
+- Manual rates (priority 100) override API rates
+- Frankfurter API (priority 50)
+- ExchangeRate-API (priority 40)
+- Rates stored bidirectionally (USD→EUR and EUR→USD)
+
+**Critical rules**:
+- Provider must be initialized at app startup via `cachedFxRateProvider.initialize()`
+- Rates are refreshed automatically when >7 days old (staleness threshold)
+- Missing rates throw `NoRateAvailableError` with fromCurrency/toCurrency
+- All conversions use `Math.round()` for determinism
+- Background sync runs non-blocking (doesn't block app startup)
+
 ## TypeScript Path Aliases
 
 ```typescript
@@ -278,22 +310,71 @@ error.code = "INVALID_PARTICIPANT_IDS";
 throw error;
 ```
 
+### 6. React Hooks: Preventing Infinite Render Loops
+
+**Critical**: NEVER call `setState` inside `useMemo` - it triggers infinite loops.
+
+**Wrong**:
+```typescript
+const result = useMemo(() => {
+  setError(null); // ❌ Causes infinite loop
+  try {
+    return doWork();
+  } catch (e) {
+    setError(e); // ❌ Causes infinite loop
+    return null;
+  }
+}, [deps]);
+```
+
+**Right**:
+```typescript
+const result = useMemo(() => {
+  try {
+    return { data: doWork(), error: null };
+  } catch (e) {
+    return { data: null, error: e };
+  }
+}, [deps]);
+
+// Update state in useEffect
+useEffect(() => {
+  setError(result.error);
+}, [result.error]);
+```
+
+**useEffect dependency arrays**:
+- Include all dependencies OR use empty array `[]` for mount-only
+- Avoid putting callback functions in deps (causes re-run every render)
+- Use `// eslint-disable-next-line react-hooks/exhaustive-deps` sparingly and document why
+
 ## File Naming Conventions
 
 - **Functions**: `verbNoun` (e.g., `calculateBalances`, `normalizeShares`)
 - **Components**: `PascalCase` (e.g., `TripCard`, `AddExpenseScreen`)
 - **Files**: `kebab-case` (e.g., `use-settlement.ts`, `expense-splits.ts`)
 
-## Project Roadmap
+## Project Status
 
-See [NEXT_UP.md](NEXT_UP.md) for implementation steps. Current status:
+See [NEXT_UP.md](NEXT_UP.md) for detailed roadmap.
 
-- ✅ Steps 1-4: Project structure, schema, math engine, UI scaffolding
-- ✅ Step 5: Migration infrastructure
-- ✅ Step 6: Repositories and hooks
-- ✅ Step 7: Settlement integration (SettlementService)
-- ✅ Step 8: Display currency adapter
-- ⏳ Step 9: Settlement UI integration (next)
+**Core Features (Complete)**:
+- ✅ Project structure, schema, math engine
+- ✅ Migration infrastructure with auto-apply
+- ✅ Repositories and hooks (trips, participants, expenses, settlements)
+- ✅ Settlement calculation engine (deterministic, three-layer architecture)
+- ✅ Display currency adapter (visual-only conversions)
+- ✅ Settlement UI integration
+
+**FX Rates System (Complete - Phase 6)**:
+- ✅ FX rates schema and migrations
+- ✅ FxRateRepository (database access)
+- ✅ CachedFxRateProvider (in-memory cache)
+- ✅ API fetchers (Frankfurter, ExchangeRate-API)
+- ✅ Background sync with staleness detection
+- ✅ Manual rate entry UI
+- ✅ Error recovery modals (NoRateAvailableModal, StalenessWarningBanner)
+- ✅ Integration with settlement and expense screens
 
 ## Key Project Goals
 
