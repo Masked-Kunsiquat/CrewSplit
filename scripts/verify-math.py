@@ -146,8 +146,9 @@ def resolve_debts(balances, participants):
             creditors.append({'id': p_id, 'amount': amount})
 
     # Sort by magnitude (largest amounts first) to simplify transactions
-    debtors.sort(key=lambda x: x['amount'])       # Ascending (most negative first)
-    creditors.sort(key=lambda x: x['amount'], reverse=True) # Descending (most positive first)
+    # Use stable tie-breaker (id) for determinism when amounts are equal
+    debtors.sort(key=lambda x: (x['amount'], x['id']))       # Ascending (most negative first), stable tie-break
+    creditors.sort(key=lambda x: (-x['amount'], x['id'])) # Descending (most positive first), stable tie-break
 
     settlements = []
 
