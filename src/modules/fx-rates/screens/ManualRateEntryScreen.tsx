@@ -19,6 +19,10 @@ import { Button, Input, Card } from "@ui/components";
 import { CurrencyPicker } from "@ui/components/CurrencyPicker";
 import { cachedFxRateProvider } from "../provider";
 
+// Configurable threshold for warning about unusually high exchange rates
+// Set high enough to accommodate currencies like KRW, VND, IDR (e.g., 1 USD = 15000+ KRW)
+const UNREALISTIC_RATE_THRESHOLD = 50000;
+
 export default function ManualRateEntryScreen() {
   const router = useRouter();
   const navigation = useNavigation();
@@ -68,8 +72,8 @@ export default function ManualRateEntryScreen() {
       return;
     }
 
-    // Warn if rate seems unrealistic
-    if (rateNum > 1000) {
+    // Warn if rate seems unrealistic (threshold accounts for high-value currencies like KRW, VND, IDR)
+    if (rateNum > UNREALISTIC_RATE_THRESHOLD) {
       Alert.alert(
         "Confirm Rate",
         `The exchange rate ${rateNum} seems unusually high. Are you sure this is correct?`,
