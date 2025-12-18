@@ -194,21 +194,30 @@ export function useFxSync(options: UseFxSyncOptions = {}) {
    * Initial staleness check on mount
    */
   useEffect(() => {
+    let mounted = true;
+
     const performInitialCheck = async () => {
       const stale = await checkStaleness();
 
       // If stale and auto-refresh enabled, trigger background refresh
-      if (stale && autoRefresh) {
+      if (mounted && stale && autoRefresh) {
         fxLogger.info("FX rates are stale - scheduling background refresh");
         // Use setTimeout to avoid blocking mount
         setTimeout(() => {
-          performBackgroundRefresh();
+          if (mounted) {
+            performBackgroundRefresh();
+          }
         }, 1000);
       }
     };
 
     performInitialCheck();
-  }, [autoRefresh, checkStaleness, performBackgroundRefresh]);
+
+    return () => {
+      mounted = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Only run on mount
 
   return {
     /**
