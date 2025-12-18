@@ -216,7 +216,7 @@ export default function SettingsScreen() {
           <Button
             title="Manage Exchange Rates"
             variant="outline"
-            onPress={() => router.push("/fx-rates/" as any)}
+            onPress={() => router.push({ pathname: "/fx-rates/" } as any)}
             fullWidth
           />
         </Card>
