@@ -3,7 +3,7 @@
  * Extends useSettlement to optionally include display currency conversions
  */
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useSettlement } from "./use-settlement";
 import { defaultDisplayCurrencyAdapter } from "../service/DisplayCurrencyAdapter";
 import type { SettlementSummaryWithDisplay } from "../types";
@@ -42,43 +42,56 @@ export function useSettlementWithDisplay(
     useState<NoRateAvailableError | null>(null);
 
   // Convert to display currency if requested
-  const settlementWithDisplay = useMemo<SettlementSummaryWithDisplay>(() => {
-    // Clear previous conversion error
-    setConversionError(null);
-
+  const result = useMemo<{
+    settlement: SettlementSummaryWithDisplay;
+    error: NoRateAvailableError | null;
+  }>(() => {
     try {
-      return defaultDisplayCurrencyAdapter.enrichSettlement(
+      const enriched = defaultDisplayCurrencyAdapter.enrichSettlement(
         settlement,
         displayCurrency,
       );
+      return { settlement: enriched, error: null };
     } catch (error) {
       // Check if it's a missing rate error
       if (isNoRateAvailableError(error)) {
-        // Expose to UI for recovery flow
-        setConversionError(error);
         console.warn(
           `Missing FX rate for ${error.fromCurrency} → ${error.toCurrency}`,
           error,
         );
+        return {
+          settlement: {
+            ...settlement,
+            displayCurrency: undefined,
+            displayTotalExpenses: undefined,
+          },
+          error,
+        };
       } else {
         // Log other conversion errors
         console.warn(
           `Failed to convert settlement to display currency ${displayCurrency}:`,
           error,
         );
+        return {
+          settlement: {
+            ...settlement,
+            displayCurrency: undefined,
+            displayTotalExpenses: undefined,
+          },
+          error: null,
+        };
       }
-
-      // Return settlement without display conversion
-      return {
-        ...settlement,
-        displayCurrency: undefined,
-        displayTotalExpenses: undefined,
-      };
     }
   }, [settlement, displayCurrency]);
 
+  // Update error state in useEffect to avoid state updates during render
+  useEffect(() => {
+    setConversionError(result.error);
+  }, [result.error]);
+
   return {
-    settlement: settlementWithDisplay,
+    settlement: result.settlement,
     loading,
     error,
     conversionError,
