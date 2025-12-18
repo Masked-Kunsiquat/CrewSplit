@@ -15,10 +15,10 @@ import type { TripExportMetaV1, TripExportV1 } from "./types";
 export type CreateTripExportInput = Readonly<{
   meta: TripExportMetaV1;
   trip: typeof trips.$inferSelect;
-  participants?: typeof participants.$inferSelect[];
-  expenses?: typeof expenses.$inferSelect[];
-  expenseSplits?: typeof expenseSplits.$inferSelect[];
-  categories?: typeof expenseCategories.$inferSelect[];
+  participants?: (typeof participants.$inferSelect)[];
+  expenses?: (typeof expenses.$inferSelect)[];
+  expenseSplits?: (typeof expenseSplits.$inferSelect)[];
+  categories?: (typeof expenseCategories.$inferSelect)[];
 }>;
 
 function compareStrings(a: string, b: string) {
@@ -31,10 +31,10 @@ export function createTripExportV1(input: CreateTripExportInput): TripExportV1 {
   const out: {
     meta: TripExportMetaV1;
     trip: typeof trips.$inferSelect;
-    participants?: typeof participants.$inferSelect[];
-    expenses?: typeof expenses.$inferSelect[];
-    expenseSplits?: typeof expenseSplits.$inferSelect[];
-    categories?: typeof expenseCategories.$inferSelect[];
+    participants?: (typeof participants.$inferSelect)[];
+    expenses?: (typeof expenses.$inferSelect)[];
+    expenseSplits?: (typeof expenseSplits.$inferSelect)[];
+    categories?: (typeof expenseCategories.$inferSelect)[];
   } = {
     meta: input.meta,
     trip: input.trip,
@@ -80,4 +80,3 @@ export function createTripExportV1(input: CreateTripExportInput): TripExportV1 {
 
   return out;
 }
-

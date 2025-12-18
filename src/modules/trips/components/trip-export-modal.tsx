@@ -4,14 +4,7 @@
  */
 
 import React, { useEffect, useMemo, useState } from "react";
-import {
-  Modal,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-  Alert,
-} from "react-native";
+import { Modal, Pressable, StyleSheet, Text, View, Alert } from "react-native";
 import { theme } from "@ui/theme";
 import { Button } from "@ui/components";
 import {

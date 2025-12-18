@@ -43,4 +43,3 @@ export type TripExportV1 = Readonly<{
   expenseSplits?: ExpenseSplitRow[];
   categories?: ExpenseCategoryRow[];
 }>;
-

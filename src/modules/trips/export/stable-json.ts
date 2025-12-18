@@ -3,13 +3,7 @@
  * Deterministic stringify by recursively sorting object keys.
  */
 
-type Json =
-  | null
-  | boolean
-  | number
-  | string
-  | Json[]
-  | { [key: string]: Json };
+type Json = null | boolean | number | string | Json[] | { [key: string]: Json };
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
   return (
@@ -53,4 +47,3 @@ function toSortedJson(value: unknown): Json {
 export function stableStringify(value: unknown, space = 2): string {
   return JSON.stringify(toSortedJson(value), null, space);
 }
-

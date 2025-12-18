@@ -73,9 +73,7 @@ export default function TripStatisticsScreen() {
         <View style={styles.centerContent}>
           <Card style={styles.errorCard}>
             <Text style={styles.errorTitle}>Unable to load trip</Text>
-            <Text style={styles.errorText}>
-              {formatErrorMessage(error)}
-            </Text>
+            <Text style={styles.errorText}>{formatErrorMessage(error)}</Text>
             <Button title="Retry" onPress={refetch} fullWidth />
           </Card>
         </View>

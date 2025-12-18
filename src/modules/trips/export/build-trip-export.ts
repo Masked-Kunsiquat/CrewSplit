@@ -87,7 +87,9 @@ export async function buildTripExportV1FromDb(
       new Set(
         (expensesRows ?? [])
           .map((e) => e.categoryId)
-          .filter((id): id is string => typeof id === "string" && id.length > 0),
+          .filter(
+            (id): id is string => typeof id === "string" && id.length > 0,
+          ),
       ),
     );
 

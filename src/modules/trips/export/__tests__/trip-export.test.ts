@@ -4,7 +4,7 @@ import { stableStringify } from "../stable-json";
 describe("trip export", () => {
   it("stableStringify sorts object keys recursively", () => {
     const json = stableStringify({ b: 1, a: { d: 2, c: 3 } }, 0);
-    expect(json).toBe("{\"a\":{\"c\":3,\"d\":2},\"b\":1}");
+    expect(json).toBe('{"a":{"c":3,"d":2},"b":1}');
   });
 
   it("createTripExportV1 sorts arrays deterministically", () => {
@@ -149,4 +149,3 @@ describe("trip export", () => {
     expect(result.categories?.map((c) => c.id)).toEqual(["cat-a", "cat-b"]);
   });
 });
-
