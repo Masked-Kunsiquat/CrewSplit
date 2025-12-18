@@ -18,7 +18,8 @@ export default function RootLayout() {
   const [fxError, setFxError] = useState<Error | null>(null);
 
   // Background sync for FX rates (must be called unconditionally)
-  // Only runs after initialization via internal check
+  // Safe to run before provider initialization: checkStaleness only queries DB,
+  // and performBackgroundRefresh is delayed (1s) to allow initialization to complete
   useFxSync({
     autoRefresh: true,
     onRefreshSuccess: (count) => {
