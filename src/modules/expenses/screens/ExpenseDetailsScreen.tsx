@@ -165,13 +165,10 @@ function ExpenseDetailsContent({
   }, [expense, splits]);
 
   // Calculate display currency amounts if requested
-  const displayAmounts = useMemo(() => {
-    if (!expense || !displayCurrency) return null;
+  const displayAmountsResult = useMemo(() => {
+    if (!expense || !displayCurrency) return { amounts: null, error: null };
 
     try {
-      // Clear previous error
-      setConversionError(null);
-
       // Convert expense amounts to display currency
       const fxRate = cachedFxRateProvider.getRate(
         expense.currency,
@@ -179,35 +176,47 @@ function ExpenseDetailsContent({
       );
 
       return {
-        originalAmount:
-          expense.originalAmountMinor !== expense.convertedAmountMinor
-            ? {
-                amount: expense.originalAmountMinor,
-                currency: expense.originalCurrency,
-              }
-            : null,
-        convertedAmount: {
-          amount: expense.convertedAmountMinor,
-          currency: expense.currency,
+        amounts: {
+          originalAmount:
+            expense.originalAmountMinor !== expense.convertedAmountMinor
+              ? {
+                  amount: expense.originalAmountMinor,
+                  currency: expense.originalCurrency,
+                }
+              : null,
+          convertedAmount: {
+            amount: expense.convertedAmountMinor,
+            currency: expense.currency,
+          },
+          displayAmount: {
+            amount: Math.round(expense.convertedAmountMinor * fxRate),
+            currency: displayCurrency,
+          },
+          fxRate,
         },
-        displayAmount: {
-          amount: Math.round(expense.convertedAmountMinor * fxRate),
-          currency: displayCurrency,
-        },
-        fxRate,
+        error: null,
       };
     } catch (error) {
       currencyLogger.warn("Failed to convert to display currency", error);
-      // Set conversion error for modal
-      if (expense) {
-        setConversionError({
-          fromCurrency: expense.currency,
-          toCurrency: displayCurrency,
-        });
-      }
-      return null;
+      // Return error for modal
+      return {
+        amounts: null,
+        error: expense
+          ? {
+              fromCurrency: expense.currency,
+              toCurrency: displayCurrency,
+            }
+          : null,
+      };
     }
   }, [expense, displayCurrency]);
+
+  const displayAmounts = displayAmountsResult.amounts;
+
+  // Update conversion error state in useEffect to avoid state updates during render
+  useEffect(() => {
+    setConversionError(displayAmountsResult.error);
+  }, [displayAmountsResult.error]);
 
   const loading = expenseLoading || participantsLoading;
 
