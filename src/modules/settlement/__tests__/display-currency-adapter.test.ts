@@ -3,11 +3,19 @@
  * Tests for currency conversion and display enrichment
  */
 
+// Mock the FX rates provider to avoid expo-crypto dependency
 import {
   DisplayCurrencyAdapter,
   StubFxRateProvider,
 } from "../service/DisplayCurrencyAdapter";
 import type { SettlementSummary } from "../types";
+
+jest.mock("@modules/fx-rates/provider", () => ({
+  cachedFxRateProvider: {
+    getRate: jest.fn(() => 1.0),
+    initialize: jest.fn(),
+  },
+}));
 
 describe("DisplayCurrencyAdapter", () => {
   describe("StubFxRateProvider", () => {

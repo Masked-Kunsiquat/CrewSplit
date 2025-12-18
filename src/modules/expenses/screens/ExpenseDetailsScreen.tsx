@@ -21,7 +21,7 @@ import { useExpenseCategories } from "../hooks/use-expense-categories";
 import { useParticipants } from "@modules/participants/hooks/use-participants";
 import { useDisplayCurrency } from "@hooks/use-display-currency";
 import { formatCurrency } from "@utils/currency";
-import { defaultFxRateProvider } from "@modules/settlement/service/DisplayCurrencyAdapter";
+import { cachedFxRateProvider } from "@modules/fx-rates/provider";
 import { deleteExpense } from "../repository";
 import { currencyLogger } from "@utils/logger";
 import { useRefreshControl } from "@hooks/use-refresh-control";
@@ -151,7 +151,7 @@ function ExpenseDetailsContent({
 
     try {
       // Convert expense amounts to display currency
-      const fxRate = defaultFxRateProvider.getRate(
+      const fxRate = cachedFxRateProvider.getRate(
         expense.currency,
         displayCurrency,
       );

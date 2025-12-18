@@ -120,8 +120,10 @@ export class CachedFxRateProvider implements FxRateProvider {
     if (!cached) {
       const error = new Error(
         `No exchange rate available for ${fromCurrency} to ${toCurrency}. Please update rates or set a manual rate.`,
-      ) as Error & { code: string };
+      ) as Error & { code: string; fromCurrency: string; toCurrency: string };
       error.code = "FX_RATE_NOT_FOUND";
+      error.fromCurrency = fromCurrency;
+      error.toCurrency = toCurrency;
 
       fxLogger.error("FX rate not found in cache", {
         fromCurrency,

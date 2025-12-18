@@ -11,6 +11,7 @@ import type {
   ParticipantBalanceWithDisplay,
   SettlementWithDisplay,
 } from "../types";
+import { cachedFxRateProvider } from "@modules/fx-rates/provider";
 
 /**
  * FX rate provider interface
@@ -166,14 +167,9 @@ export class DisplayCurrencyAdapter {
 }
 
 /**
- * Default FX rate provider instance
- */
-export const defaultFxRateProvider = new StubFxRateProvider();
-
-/**
- * Default adapter instance with stub FX provider
- * Can be replaced with custom provider in production
+ * Default adapter instance with cached FX provider
+ * Provider is initialized at app startup after migrations complete (see app/_layout.tsx)
  */
 export const defaultDisplayCurrencyAdapter = new DisplayCurrencyAdapter(
-  defaultFxRateProvider,
+  cachedFxRateProvider,
 );

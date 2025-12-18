@@ -4,3 +4,4 @@
  */
 
 export { useFxRates } from "./use-fx-rates";
+export { useFxSync } from "./use-fx-sync";
