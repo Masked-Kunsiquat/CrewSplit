@@ -12,7 +12,6 @@ import {
   ActivityIndicator,
   RefreshControl,
   Alert,
-  Pressable,
 } from "react-native";
 import { useRouter, useNavigation } from "expo-router";
 import { theme } from "@ui/theme";
@@ -20,6 +19,7 @@ import { Button, Card } from "@ui/components";
 import { useFxRates } from "../hooks/use-fx-rates";
 import { FxRateRepository } from "../repository";
 import type { FxRate } from "../types";
+import { fxLogger } from "@utils/logger";
 
 /**
  * Format timestamp as relative time (e.g., "2 days ago")
@@ -103,6 +103,7 @@ export default function RateListScreen() {
       );
       setRates(sorted);
     } catch (error) {
+      fxLogger.error("Failed to load exchange rates", error);
       Alert.alert("Error", "Failed to load exchange rates. Please try again.");
     } finally {
       setLoadingRates(false);
