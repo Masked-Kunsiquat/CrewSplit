@@ -25,6 +25,7 @@ import { defaultFxRateProvider } from "@modules/settlement/service/DisplayCurren
 import { deleteExpense } from "../repository";
 import { currencyLogger } from "@utils/logger";
 import { useRefreshControl } from "@hooks/use-refresh-control";
+import { TripExportModal } from "@modules/trips/components/trip-export-modal";
 
 export default function ExpenseDetailsScreen() {
   const router = useRouter();
@@ -66,6 +67,7 @@ function ExpenseDetailsContent({
   const { displayCurrency } = useDisplayCurrency();
   const [isDeleting, setIsDeleting] = useState(false);
   const [editingExpense, setEditingExpense] = useState(false);
+  const [exportModalVisible, setExportModalVisible] = useState(false);
 
   const {
     expense,
@@ -251,6 +253,16 @@ function ExpenseDetailsContent({
             <Text style={styles.sectionTitle}>{expense.description}</Text>
             <View style={styles.headerButtons}>
               <TouchableOpacity
+                onPress={() => setExportModalVisible(true)}
+                style={styles.editButton}
+                accessible={true}
+                accessibilityRole="button"
+                accessibilityLabel="Export trip"
+                accessibilityHint="Opens export options for this trip"
+              >
+                <Text style={styles.editButtonText}>Export Trip</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
                 onPress={() =>
                   router.push(`/trips/${tripId}/expenses/${expenseId}/edit`)
                 }
@@ -431,6 +443,12 @@ function ExpenseDetailsContent({
           </Card>
         )}
       </ScrollView>
+
+      <TripExportModal
+        visible={exportModalVisible}
+        tripId={tripId}
+        onClose={() => setExportModalVisible(false)}
+      />
     </View>
   );
 }

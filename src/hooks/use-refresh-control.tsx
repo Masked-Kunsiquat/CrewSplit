@@ -52,23 +52,10 @@ export function useRefreshControl(
     try {
       // Filter out undefined refetch functions and call all in parallel
       const validRefetchFns = refetchFunctions.filter(
-        (fn): fn is () => void => fn !== undefined,
+        (fn): fn is () => void | Promise<void> => fn !== undefined,
       );
 
-      // Call all refetch functions simultaneously
-      // Note: refetch() from useQuery is synchronous (triggers re-render via state)
-      // but we wrap in Promise to ensure proper async handling
-      await Promise.all(
-        validRefetchFns.map(async (fn) => {
-          const result = fn();
-          if (
-            result &&
-            typeof (result as Promise<unknown>).then === "function"
-          ) {
-            await result;
-          }
-        }),
-      );
+      await Promise.all(validRefetchFns.map((fn) => Promise.resolve(fn())));
     } catch (error) {
       // Refetch errors are already handled by individual hooks
       console.warn("Error during refresh:", error);

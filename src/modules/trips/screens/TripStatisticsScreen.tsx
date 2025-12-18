@@ -20,6 +20,7 @@ import { useLocalSearchParams, useNavigation } from "expo-router";
 import { theme } from "@ui/theme";
 import { Card, Button } from "@ui/components";
 import { useTripById } from "../hooks/use-trips";
+import { formatErrorMessage } from "src/utils/format-error";
 
 export default function TripStatisticsScreen() {
   const navigation = useNavigation();
@@ -64,11 +65,7 @@ export default function TripStatisticsScreen() {
         <View style={styles.centerContent}>
           <Card style={styles.errorCard}>
             <Text style={styles.errorTitle}>Unable to load trip</Text>
-            <Text style={styles.errorText}>
-              {typeof error === "string"
-                ? error
-                : ((error as { message?: unknown }).message ?? "Unknown error")}
-            </Text>
+            <Text style={styles.errorText}>{formatErrorMessage(error)}</Text>
             <Button title="Retry" onPress={refetch} fullWidth />
           </Card>
         </View>

@@ -1,4 +1,5 @@
 .claude/
+sample-data/
 
 # Dependencies
 node_modules/

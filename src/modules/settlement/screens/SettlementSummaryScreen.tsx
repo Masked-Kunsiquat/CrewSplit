@@ -3,7 +3,7 @@
  * Displays participant balances and suggested payment transactions
  */
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -20,6 +20,8 @@ import { useTripById } from "@modules/trips/hooks/use-trips";
 import { useDisplayCurrency } from "@hooks/use-display-currency";
 import { formatCurrency } from "@utils/currency";
 import { useRefreshControl } from "@hooks/use-refresh-control";
+import { TripExportModal } from "@modules/trips/components/trip-export-modal";
+import { formatErrorMessage } from "src/utils/format-error";
 
 export default function SettlementSummaryScreen() {
   const navigation = useNavigation();
@@ -27,6 +29,7 @@ export default function SettlementSummaryScreen() {
   const params = useLocalSearchParams<{ id?: string | string[] }>();
   const tripId = normalizeTripId(params.id);
   const { displayCurrency } = useDisplayCurrency();
+  const [exportModalVisible, setExportModalVisible] = useState(false);
 
   const { trip, refetch: refetchTrip } = useTripById(tripId);
   const {
@@ -320,15 +323,21 @@ export default function SettlementSummaryScreen() {
 
       <View style={styles.footer}>
         <Button
-          title="Export Trip (Coming Soon)"
+          title="Export Trip"
           variant="outline"
           fullWidth
-          disabled
-          onPress={() => {}}
-          accessibilityLabel="Export Trip coming soon"
-          testID="export-trip-disabled"
+          onPress={() => setExportModalVisible(true)}
+          accessibilityLabel="Export trip as JSON"
+          accessibilityHint="Opens export options to share a JSON file"
+          testID="export-trip"
         />
       </View>
+
+      <TripExportModal
+        visible={exportModalVisible}
+        tripId={tripId}
+        onClose={() => setExportModalVisible(false)}
+      />
     </View>
   );
 }
@@ -338,15 +347,6 @@ function normalizeTripId(idParam: string | string[] | undefined) {
   const first = Array.isArray(idParam) ? idParam[0] : idParam;
   const normalized = first.trim();
   return normalized.length > 0 ? normalized : null;
-}
-
-function formatErrorMessage(error: unknown) {
-  if (typeof error === "string") return error;
-  if (error && typeof error === "object" && "message" in error) {
-    const maybeMessage = (error as { message?: unknown }).message;
-    if (typeof maybeMessage === "string") return maybeMessage;
-  }
-  return "Unknown error";
 }
 
 const styles = StyleSheet.create({

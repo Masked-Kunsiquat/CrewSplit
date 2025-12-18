@@ -130,6 +130,8 @@ const applyOrder = (
       const right = b[ord.column];
 
       if (left === right) continue;
+      if (left === null) return 1;
+      if (right === null) return -1;
       return left < right ? 1 : -1; // desc
     }
     return 0;
