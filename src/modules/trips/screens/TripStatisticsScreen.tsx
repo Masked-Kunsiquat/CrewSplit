@@ -20,15 +20,7 @@ import { useLocalSearchParams, useNavigation } from "expo-router";
 import { theme } from "@ui/theme";
 import { Card, Button } from "@ui/components";
 import { useTripById } from "../hooks/use-trips";
-
-function formatErrorMessage(error: unknown) {
-  if (typeof error === "string") return error;
-  if (error && typeof error === "object" && "message" in error) {
-    const maybeMessage = (error as { message?: unknown }).message;
-    if (typeof maybeMessage === "string") return maybeMessage;
-  }
-  return "Unknown error";
-}
+import { formatErrorMessage } from "src/utils/format-error";
 
 export default function TripStatisticsScreen() {
   const navigation = useNavigation();

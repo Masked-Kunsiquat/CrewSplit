@@ -12,6 +12,7 @@ import {
   TripExportOptions,
   exportTripJsonToFileAndShare,
 } from "@modules/trips/export";
+import { formatErrorMessage } from "src/utils/format-error";
 
 type Props = Readonly<{
   visible: boolean;
@@ -19,15 +20,6 @@ type Props = Readonly<{
   onClose: () => void;
   initialOptions?: Partial<TripExportOptions>;
 }>;
-
-function formatErrorMessage(error: unknown) {
-  if (typeof error === "string") return error;
-  if (error && typeof error === "object" && "message" in error) {
-    const maybeMessage = (error as { message?: unknown }).message;
-    if (typeof maybeMessage === "string") return maybeMessage;
-  }
-  return "Unknown error";
-}
 
 export function TripExportModal({
   visible,

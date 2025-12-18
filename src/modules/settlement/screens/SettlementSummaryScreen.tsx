@@ -21,6 +21,7 @@ import { useDisplayCurrency } from "@hooks/use-display-currency";
 import { formatCurrency } from "@utils/currency";
 import { useRefreshControl } from "@hooks/use-refresh-control";
 import { TripExportModal } from "@modules/trips/components/trip-export-modal";
+import { formatErrorMessage } from "src/utils/format-error";
 
 export default function SettlementSummaryScreen() {
   const navigation = useNavigation();
@@ -346,15 +347,6 @@ function normalizeTripId(idParam: string | string[] | undefined) {
   const first = Array.isArray(idParam) ? idParam[0] : idParam;
   const normalized = first.trim();
   return normalized.length > 0 ? normalized : null;
-}
-
-function formatErrorMessage(error: unknown) {
-  if (typeof error === "string") return error;
-  if (error && typeof error === "object" && "message" in error) {
-    const maybeMessage = (error as { message?: unknown }).message;
-    if (typeof maybeMessage === "string") return maybeMessage;
-  }
-  return "Unknown error";
 }
 
 const styles = StyleSheet.create({
