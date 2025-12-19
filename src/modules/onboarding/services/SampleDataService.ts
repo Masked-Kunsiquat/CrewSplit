@@ -13,6 +13,7 @@ import {
   expenseSplits,
   settlements,
 } from "@/db/schema";
+import { eq } from "drizzle-orm";
 import type { SampleDataTemplateId } from "../types";
 import { OnboardingError, OnboardingErrorCode } from "../types";
 
