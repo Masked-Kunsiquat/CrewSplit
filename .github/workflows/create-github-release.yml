@@ -6,6 +6,9 @@ on:
     types:
       - completed
 
+permissions:
+  contents: write
+
 jobs:
   wait-for-eas-build:
     runs-on: ubuntu-latest
@@ -22,7 +25,11 @@ jobs:
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "tag=v$VERSION" >> $GITHUB_OUTPUT
 
+      - name: Install EAS CLI
+        run: npm install -g eas-cli
+
       - name: Wait for EAS build to complete
+        id: wait-build
         run: |
           echo "Waiting for EAS build to complete for version ${{ steps.version.outputs.version }}"
           echo "This workflow will check for the build artifact..."
@@ -34,18 +41,14 @@ jobs:
           while [ $ATTEMPT -lt $MAX_ATTEMPTS ]; do
             echo "Checking for build artifacts (attempt $((ATTEMPT + 1))/$MAX_ATTEMPTS)..."
 
-            # Install EAS CLI
-            npm install -g eas-cli
-
             # Check latest builds for this project
-            # Note: You'll need to set EXPO_TOKEN as a GitHub secret
             eas build:list --platform=android --limit=1 --json > build-list.json || true
 
             if [ -f build-list.json ]; then
               BUILD_STATUS=$(cat build-list.json | jq -r '.[0].status' 2>/dev/null || echo "unknown")
               BUILD_ID=$(cat build-list.json | jq -r '.[0].id' 2>/dev/null || echo "")
 
-              echo "Latest build status: $BUILD_STATUS"
+              echo "Latest build status: $BUILD_STATUS (ID: $BUILD_ID)"
 
               if [ "$BUILD_STATUS" = "FINISHED" ]; then
                 echo "build_id=$BUILD_ID" >> $GITHUB_OUTPUT
@@ -73,7 +76,7 @@ jobs:
         run: |
           # Get build artifact URL
           BUILD_LIST=$(eas build:list --platform=android --limit=1 --json)
-          ARTIFACT_URL=$(echo $BUILD_LIST | jq -r '.[0].artifacts.buildUrl')
+          ARTIFACT_URL=$(echo $BUILD_LIST | jq -r '.[0].artifacts.applicationArchiveUrl')
 
           if [ "$ARTIFACT_URL" = "null" ] || [ -z "$ARTIFACT_URL" ]; then
             echo "No artifact URL found"
@@ -88,7 +91,7 @@ jobs:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.version.outputs.tag }}
           name: CrewSplit ${{ steps.version.outputs.version }}
