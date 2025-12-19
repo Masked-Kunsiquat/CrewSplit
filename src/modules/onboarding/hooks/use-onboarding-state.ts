@@ -6,6 +6,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { onboardingRepository } from "../repository/OnboardingRepository";
 import type { OnboardingFlowId, OnboardingStepId } from "../types";
+import { onboardingLogger } from "@utils/logger";
 
 /**
  * Hook for managing onboarding state
@@ -41,11 +42,12 @@ export function useOnboardingState(options?: { enabled?: boolean }) {
     try {
       setLoading(true);
       setError(null);
+      onboardingLogger.info("Checking onboarding status");
       const completed =
         await onboardingRepository.isInitialOnboardingCompleted();
       setIsComplete(completed);
     } catch (err) {
-      console.error("Failed to check onboarding status:", err);
+      onboardingLogger.error("Failed to check onboarding status", err);
       setError(err as Error);
       setIsComplete(false); // Default to not complete on error
     } finally {
@@ -56,10 +58,11 @@ export function useOnboardingState(options?: { enabled?: boolean }) {
   const markComplete = useCallback(async () => {
     try {
       setError(null);
+      onboardingLogger.info("Marking onboarding complete");
       await onboardingRepository.markFlowCompleted("initial_onboarding");
       setIsComplete(true);
     } catch (err) {
-      console.error("Failed to mark onboarding complete:", err);
+      onboardingLogger.error("Failed to mark onboarding complete", err);
       setError(err as Error);
       throw err;
     }
@@ -68,12 +71,13 @@ export function useOnboardingState(options?: { enabled?: boolean }) {
   const markStep = useCallback(async (stepId: OnboardingStepId) => {
     try {
       setError(null);
+      onboardingLogger.info("Marking onboarding step complete", { stepId });
       await onboardingRepository.markStepCompleted(
         "initial_onboarding",
         stepId,
       );
     } catch (err) {
-      console.error(`Failed to mark step complete: ${stepId}`, err);
+      onboardingLogger.error(`Failed to mark step complete: ${stepId}`, err);
       setError(err as Error);
       throw err;
     }
@@ -82,10 +86,11 @@ export function useOnboardingState(options?: { enabled?: boolean }) {
   const reset = useCallback(async () => {
     try {
       setError(null);
+      onboardingLogger.warn("Resetting onboarding flow");
       await onboardingRepository.resetOnboardingFlow("initial_onboarding");
       setIsComplete(false);
     } catch (err) {
-      console.error("Failed to reset onboarding:", err);
+      onboardingLogger.error("Failed to reset onboarding", err);
       setError(err as Error);
       throw err;
     }

@@ -9,8 +9,9 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  Alert,
   Linking,
+  Modal,
+  Pressable,
 } from "react-native";
 import { useNavigation, useRouter } from "expo-router";
 import { Image } from "expo-image";
@@ -63,6 +64,8 @@ export default function SettingsScreen() {
   } = useReloadSampleData();
 
   const [actionMessage, setActionMessage] = useState<string | null>(null);
+  const [showRestartConfirm, setShowRestartConfirm] = useState(false);
+  const [showRefreshConfirm, setShowRefreshConfirm] = useState(false);
 
   // Set header title
   useEffect(() => {
@@ -110,62 +113,39 @@ export default function SettingsScreen() {
   };
 
   const handleRestartOnboarding = useCallback(() => {
-    Alert.alert(
-      "Restart onboarding?",
-      "This marks onboarding as incomplete so you can revisit the setup flow. Your trips and expenses stay intact.",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Restart",
-          style: "destructive",
-          onPress: async () => {
-            setActionMessage(null);
-            try {
-              await resetOnboarding();
-              setActionMessage(
-                "Onboarding marked incomplete. Return to home to start again.",
-              );
-            } catch {
-              Alert.alert(
-                "Error",
-                "Failed to reset onboarding. Please try again.",
-              );
-            }
-          },
-        },
-      ],
-    );
-  }, [resetOnboarding]);
+    setShowRestartConfirm(true);
+  }, []);
 
   const handleReloadSampleData = useCallback(() => {
-    Alert.alert(
-      "Refresh sample trip?",
-      "Deletes existing sample data and reloads the demo trip.",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Refresh",
-          style: "destructive",
-          onPress: async () => {
-            setActionMessage(null);
-            try {
-              const results = await reloadSampleData();
-              const tripCount = results.length;
-              setActionMessage(
-                `Sample trips refreshed (${tripCount} loaded). Check your Trips list.`,
-              );
-            } catch (err) {
-              console.error("Failed to refresh sample data", err);
-              Alert.alert(
-                "Error",
-                "Could not refresh sample data. Please try again.",
-              );
-            }
-          },
-        },
-      ],
-    );
-  }, [reloadSampleData]);
+    setShowRefreshConfirm(true);
+  }, []);
+
+  const confirmRestartOnboarding = async () => {
+    setShowRestartConfirm(false);
+    setActionMessage(null);
+    try {
+      await resetOnboarding();
+      router.replace("/onboarding/welcome");
+    } catch (err) {
+      console.error("Failed to reset onboarding", err);
+      setActionMessage("Failed to restart onboarding. Please try again.");
+    }
+  };
+
+  const confirmRefreshSamples = async () => {
+    setShowRefreshConfirm(false);
+    setActionMessage(null);
+    try {
+      const results = await reloadSampleData();
+      const tripCount = results.length;
+      setActionMessage(
+        `Sample trips refreshed (${tripCount} loaded). Check your Trips list.`,
+      );
+    } catch (err) {
+      console.error("Failed to refresh sample data", err);
+      setActionMessage("Could not refresh sample data. Please try again.");
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -332,6 +312,26 @@ export default function SettingsScreen() {
             </Text>
           )}
         </Card>
+
+        <ConfirmDialog
+          visible={showRestartConfirm}
+          title="Restart onboarding?"
+          message="This marks onboarding as incomplete so you can revisit the setup flow. Your trips and expenses stay intact."
+          confirmLabel="Restart"
+          onCancel={() => setShowRestartConfirm(false)}
+          onConfirm={confirmRestartOnboarding}
+          loading={onboardingLoading}
+        />
+
+        <ConfirmDialog
+          visible={showRefreshConfirm}
+          title="Refresh sample trips?"
+          message="Deletes existing sample trips and reloads all demo data."
+          confirmLabel="Refresh"
+          onCancel={() => setShowRefreshConfirm(false)}
+          onConfirm={confirmRefreshSamples}
+          loading={sampleDataLoading}
+        />
 
         <Card style={styles.section}>
           <Text style={styles.sectionTitle}>About CrewSplit</Text>
@@ -524,4 +524,87 @@ const styles = StyleSheet.create({
     color: theme.colors.error,
     fontSize: theme.typography.sm,
   },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.8)",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: theme.spacing.lg,
+  },
+  modalBackdrop: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  modalCard: {
+    width: "100%",
+    maxWidth: 420,
+    backgroundColor: theme.colors.surfaceElevated,
+    borderRadius: theme.borderRadius.lg,
+    padding: theme.spacing.lg,
+    gap: theme.spacing.md,
+    ...theme.shadows.lg,
+  },
+  modalTitle: {
+    fontSize: theme.typography.lg,
+    fontWeight: theme.typography.bold,
+    color: theme.colors.text,
+  },
+  modalMessage: {
+    fontSize: theme.typography.base,
+    color: theme.colors.textSecondary,
+    lineHeight: 20,
+  },
+  modalActions: {
+    gap: theme.spacing.sm,
+  },
 });
+
+interface ConfirmDialogProps {
+  visible: boolean;
+  title: string;
+  message: string;
+  confirmLabel: string;
+  onCancel: () => void;
+  onConfirm: () => void;
+  loading?: boolean;
+}
+
+function ConfirmDialog({
+  visible,
+  title,
+  message,
+  confirmLabel,
+  onCancel,
+  onConfirm,
+  loading,
+}: ConfirmDialogProps) {
+  return (
+    <Modal
+      visible={visible}
+      transparent
+      animationType="fade"
+      onRequestClose={onCancel}
+    >
+      <View style={styles.modalOverlay}>
+        <Pressable style={styles.modalBackdrop} onPress={onCancel} />
+        <View style={styles.modalCard}>
+          <Text style={styles.modalTitle}>{title}</Text>
+          <Text style={styles.modalMessage}>{message}</Text>
+          <View style={styles.modalActions}>
+            <Button
+              title="Cancel"
+              variant="ghost"
+              onPress={onCancel}
+              fullWidth
+            />
+            <Button
+              title={loading ? "Working..." : confirmLabel}
+              onPress={onConfirm}
+              fullWidth
+              disabled={loading}
+            />
+          </View>
+        </View>
+      </View>
+    </Modal>
+  );
+}
