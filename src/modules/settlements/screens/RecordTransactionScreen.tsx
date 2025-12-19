@@ -172,13 +172,12 @@ export default function RecordTransactionScreen() {
     value: p.id,
   }));
 
+  const commonCurrencies = ["USD", "EUR", "GBP", "CAD", "AUD"];
   const currencyOptions: PickerOption[] = [
     { label: `${trip.currencyCode} (Trip Currency)`, value: trip.currencyCode },
-    { label: "USD", value: "USD" },
-    { label: "EUR", value: "EUR" },
-    { label: "GBP", value: "GBP" },
-    { label: "CAD", value: "CAD" },
-    { label: "AUD", value: "AUD" },
+    ...commonCurrencies
+      .filter((code) => code !== trip.currencyCode)
+      .map((code) => ({ label: code, value: code })),
   ];
 
   const paymentMethodOptions: PickerOption[] = [
