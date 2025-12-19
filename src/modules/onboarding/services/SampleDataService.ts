@@ -1,3 +1,4 @@
+// Responsible agent: LOCAL DATA ENGINEER
 import { db } from "@db/client";
 import { trips } from "@db/schema/trips";
 import { participants } from "@db/schema/participants";
@@ -6,12 +7,22 @@ import { expenseSplits } from "@db/schema/expense-splits";
 import { settlements } from "@db/schema/settlements";
 import { eq } from "drizzle-orm";
 
-// This is a simplified way to get the sample data.
-// In a real app, you might use a different mechanism to load files.
-const sampleData = require("../../../../scripts/crewledger-summer-road-trip-2025-12-18.json");
-
 export class SampleDataService {
   async loadSampleTrip(templateId: string): Promise<string> {
+    const templateFiles: Record<string, string> = {
+      summer_road_trip: "crewledger-summer-road-trip-2025-12-18.json",
+      family_beach_vacation: "crewledger-family-beach-vacation-2025-12-19.json",
+      weekend_ski_trip: "crewledger-weekend-ski-trip-2025-12-18.json",
+      europe_backpacking: "crewledger-europe-backpacking-2025-12-18.json",
+    };
+
+    const fileName = templateFiles[templateId];
+    if (!fileName) {
+      throw new Error(`Unknown sample template: ${templateId}`);
+    }
+
+    const sampleData = require(`../../../../sample-data/${fileName}`);
+
     const {
       trip,
       participants: participantData,

@@ -37,6 +37,7 @@ export function useUserSettings() {
     } catch (e) {
       console.error("Failed to update user settings", e);
       setError(e as Error);
+      throw e;
     } finally {
       setLoading(false);
     }

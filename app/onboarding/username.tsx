@@ -10,13 +10,22 @@ export default function SetUserNameScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const [name, setName] = useState("");
-  const { updateSettings, loading } = useUserSettings();
+  const { updateSettings, loading, error } = useUserSettings();
 
   const handleNext = async () => {
-    if (name.trim()) {
-      await updateSettings({ primaryUserName: name.trim() });
+    if (!name.trim()) {
+      return;
     }
-    router.push("/onboarding/walkthrough");
+    try {
+      await updateSettings({ primaryUserName: name.trim() });
+      router.push("/onboarding/walkthrough");
+    } catch (error) {
+      console.error("Failed to update user name", error);
+      Alert.alert(
+        "Couldn't save name",
+        "Please try again. Your name was not saved.",
+      );
+    }
   };
 
   const handleSkip = () => {
@@ -58,6 +67,7 @@ export default function SetUserNameScreen() {
         autoFocus
         style={styles.input}
       />
+      {error && <Text style={styles.errorText}>{error.message}</Text>}
 
       <View style={styles.footer}>
         <Button
@@ -108,5 +118,10 @@ const styles = StyleSheet.create({
   footer: {
     paddingBottom: 0,
     gap: theme.spacing.sm,
+  },
+  errorText: {
+    fontSize: theme.typography.sm,
+    color: theme.colors.error,
+    textAlign: "center",
   },
 });

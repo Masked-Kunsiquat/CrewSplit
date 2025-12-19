@@ -12,7 +12,7 @@ export default function SetDefaultCurrencyScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const [selectedCurrency, setSelectedCurrency] = useState<string | null>(null);
-  const { updateSettings, loading } = useUserSettings();
+  const { updateSettings, loading, error } = useUserSettings();
 
   const handleNext = async () => {
     if (!selectedCurrency) {
@@ -96,6 +96,7 @@ export default function SetDefaultCurrencyScreen() {
         onChange={(currency) => setSelectedCurrency(currency)}
         placeholder="Select currency"
       />
+      {error && <Text style={styles.errorText}>{error.message}</Text>}
 
       <View style={styles.footer}>
         <Button
@@ -174,5 +175,10 @@ const styles = StyleSheet.create({
   footer: {
     paddingBottom: 0,
     gap: theme.spacing.sm,
+  },
+  errorText: {
+    fontSize: theme.typography.sm,
+    color: theme.colors.error,
+    textAlign: "center",
   },
 });
