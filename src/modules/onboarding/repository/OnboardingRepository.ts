@@ -141,30 +141,43 @@ export class OnboardingRepository {
   }
 
   async resetFlow(flowId: OnboardingFlowId): Promise<OnboardingState> {
-    const state = await this.getOnboardingState(flowId);
-    const now = new Date().toISOString();
-    if (state) {
-      await db
-        .update(onboardingState)
-        .set({
+    return db.transaction(async (tx) => {
+      const now = new Date().toISOString();
+      const state = await tx
+        .select()
+        .from(onboardingState)
+        .where(eq(onboardingState.id, flowId))
+        .get();
+
+      if (state) {
+        await tx
+          .update(onboardingState)
+          .set({
+            isCompleted: false,
+            completedSteps: [],
+            completedAt: null,
+            updatedAt: now,
+          })
+          .where(eq(onboardingState.id, flowId));
+      } else {
+        await tx.insert(onboardingState).values({
+          id: flowId,
           isCompleted: false,
           completedSteps: [],
-          completedAt: null,
+          createdAt: now,
           updatedAt: now,
-        })
-        .where(eq(onboardingState.id, flowId));
-    } else {
-      await db.insert(onboardingState).values({
-        id: flowId,
-        isCompleted: false,
-        completedSteps: [],
-        createdAt: now,
-        updatedAt: now,
-        completedAt: null,
-        metadata: {},
-      });
-    }
-    return this.getOnboardingState(flowId);
+          completedAt: null,
+          metadata: {},
+        });
+      }
+
+      const updatedState = await tx
+        .select()
+        .from(onboardingState)
+        .where(eq(onboardingState.id, flowId))
+        .get();
+      return updatedState as OnboardingState;
+    });
   }
 
   async isInitialOnboardingCompleted(): Promise<boolean> {
@@ -210,8 +223,7 @@ export class OnboardingRepository {
     const result = await db
       .select({ id: trips.id })
       .from(trips)
-      .where(eq(trips.isSampleData, true))
-      .where(eq(trips.isArchived, false))
+      .where(and(eq(trips.isSampleData, true), eq(trips.isArchived, false)))
       .limit(1)
       .get();
     return !!result;

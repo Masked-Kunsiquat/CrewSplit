@@ -12,6 +12,7 @@ import {
   Linking,
   Modal,
   Pressable,
+  Alert,
 } from "react-native";
 import { useNavigation, useRouter } from "expo-router";
 import { Image } from "expo-image";

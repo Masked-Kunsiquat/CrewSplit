@@ -1,6 +1,13 @@
 import React, { useRef, useState } from "react";
 import { useRouter } from "expo-router";
-import { View, Text, StyleSheet, ScrollView, Dimensions } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  Dimensions,
+  Alert,
+} from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Button } from "@ui/components";
 import { theme } from "@ui/theme";
@@ -60,6 +67,7 @@ export default function WalkthroughScreen() {
   const [activeIndex, setActiveIndex] = useState(0);
   const scrollViewRef = useRef<ScrollView>(null);
   const { markComplete, loading } = useOnboardingState();
+  const [isFinishing, setIsFinishing] = useState(false);
   const insets = useSafeAreaInsets();
 
   const handleScroll = (event) => {
@@ -77,15 +85,28 @@ export default function WalkthroughScreen() {
   };
 
   const handleFinish = async () => {
-    const sampleDataService = new SampleDataService();
-    await sampleDataService.loadSampleTrip("summer_road_trip");
-    await markComplete();
-    router.replace("/");
+    if (isFinishing) {
+      return;
+    }
+    setIsFinishing(true);
+    try {
+      const sampleDataService = new SampleDataService();
+      await sampleDataService.loadSampleTrip("summer_road_trip");
+      await markComplete();
+      router.replace("/");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Unknown error";
+      console.error("Failed to complete onboarding", error);
+      Alert.alert("Couldn't finish onboarding", `Please try again. ${message}`);
+    } finally {
+      setIsFinishing(false);
+    }
   };
 
   const handleSkip = handleFinish;
 
   const isLastStep = activeIndex === WALKTHROUGH_STEPS.length - 1;
+  const isBusy = loading || isFinishing;
 
   return (
     <View
@@ -102,7 +123,7 @@ export default function WalkthroughScreen() {
         onPress={handleSkip}
         variant="ghost"
         style={[styles.skipButton, { top: insets.top + theme.spacing.sm }]}
-        disabled={loading}
+        disabled={isBusy}
       />
       <ScrollView
         ref={scrollViewRef}
@@ -130,14 +151,14 @@ export default function WalkthroughScreen() {
         <Button
           title={
             isLastStep
-              ? loading
+              ? isBusy
                 ? "Getting things ready..."
                 : "Get Started"
               : "Next"
           }
           onPress={isLastStep ? handleFinish : handleNext}
           fullWidth
-          disabled={loading}
+          disabled={isBusy}
         />
       </View>
     </View>
