@@ -40,7 +40,7 @@ const WALKTHROUGH_STEPS = [
 ];
 
 type ProgressDotsProps = {
-  steps: Array<unknown>;
+  steps: unknown[];
   activeIndex: number;
 };
 
