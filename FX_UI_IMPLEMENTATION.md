@@ -11,6 +11,7 @@ This document summarizes the UI/UX implementation for the foreign exchange (FX) 
 A polished form for manually entering exchange rates when API rates are unavailable.
 
 **Features:**
+
 - Currency pair selection via CurrencyPicker components
 - Rate input with decimal keyboard
 - Real-time validation (positive numbers, realistic values)
@@ -20,10 +21,12 @@ A polished form for manually entering exchange rates when API rates are unavaila
 - Saves to database with highest priority (manual = 100)
 
 **Navigation:**
+
 - Route: `/fx-rates/manual`
 - Can be called with query params: `fromCurrency` and `toCurrency`
 
 **UX Highlights:**
+
 - Info card explains manual rates override automatic rates
 - Helper text shows conversion context: "How many EUR per 1 USD?"
 - Preview card provides immediate feedback
@@ -36,6 +39,7 @@ A polished form for manually entering exchange rates when API rates are unavaila
 A comprehensive view of all stored exchange rates with metadata and refresh functionality.
 
 **Features:**
+
 - FlatList of all active rates (sorted by most recent first)
 - Each rate shows:
   - Currency pair (USD → EUR)
@@ -55,10 +59,12 @@ A comprehensive view of all stored exchange rates with metadata and refresh func
 - Empty state with helpful guidance
 
 **Navigation:**
+
 - Route: `/fx-rates/`
 - Accessible from Settings > Manage Exchange Rates
 
 **UX Highlights:**
+
 - Relative time formatting (e.g., "2d ago", "14h ago")
 - Color-coded staleness indicators
 - Swipe down to refresh
@@ -71,6 +77,7 @@ A comprehensive view of all stored exchange rates with metadata and refresh func
 A reusable warning banner for displaying stale exchange rate alerts.
 
 **Features:**
+
 - Warning icon and title showing age (e.g., "Exchange rate is 14 days old")
 - Context-aware message with currency pair
 - Optional "Refresh" button
@@ -78,16 +85,18 @@ A reusable warning banner for displaying stale exchange rate alerts.
 - Loading state during refresh
 
 **Props:**
+
 ```typescript
 interface StalenessWarningBannerProps {
-  currencyPair?: string;        // e.g., "USD → EUR"
-  daysOld: number;              // Days since last update
-  onRefresh?: () => void;       // Callback for refresh action
-  refreshing?: boolean;         // Loading state
+  currencyPair?: string; // e.g., "USD → EUR"
+  daysOld: number; // Days since last update
+  onRefresh?: () => void; // Callback for refresh action
+  refreshing?: boolean; // Loading state
 }
 ```
 
 **Usage Example:**
+
 ```tsx
 <StalenessWarningBanner
   currencyPair="USD → EUR"
@@ -98,6 +107,7 @@ interface StalenessWarningBannerProps {
 ```
 
 **Styling:**
+
 - Uses `theme.colors.warningBg` (muted dark amber background)
 - Warning border and text in `theme.colors.warning` (amber)
 - Prominent CTA button in warning color
@@ -109,6 +119,7 @@ interface StalenessWarningBannerProps {
 A modal dialog for error recovery when exchange rates are missing.
 
 **Features:**
+
 - Full-screen modal overlay with backdrop
 - Currency pair display (large, prominent)
 - Clear explanation of the issue
@@ -120,11 +131,12 @@ A modal dialog for error recovery when exchange rates are missing.
 - Accessible with proper roles and hints
 
 **Props:**
+
 ```typescript
 interface NoRateAvailableModalProps {
   visible: boolean;
-  fromCurrency: string;         // e.g., "JPY"
-  toCurrency: string;           // e.g., "USD"
+  fromCurrency: string; // e.g., "JPY"
+  toCurrency: string; // e.g., "USD"
   onFetchOnline?: () => void;
   onEnterManually?: () => void;
   onDismiss?: () => void;
@@ -133,19 +145,23 @@ interface NoRateAvailableModalProps {
 ```
 
 **Usage Example:**
+
 ```tsx
 <NoRateAvailableModal
   visible={showModal}
   fromCurrency="JPY"
   toCurrency="USD"
   onFetchOnline={handleFetch}
-  onEnterManually={() => router.push('/fx-rates/manual?fromCurrency=JPY&toCurrency=USD')}
+  onEnterManually={() =>
+    router.push("/fx-rates/manual?fromCurrency=JPY&toCurrency=USD")
+  }
   onDismiss={handleDismiss}
   fetching={isFetching}
 />
 ```
 
 **Styling:**
+
 - Semi-transparent dark overlay (75% opacity)
 - Elevated surface card with shadow
 - Large emoji icon (🔄) for visual appeal
@@ -158,6 +174,7 @@ interface NoRateAvailableModalProps {
 Added "Exchange Rates" section to the Settings screen.
 
 **Features:**
+
 - Summary showing:
   - Number of stored rates
   - Last updated timestamp with staleness indicator
@@ -166,6 +183,7 @@ Added "Exchange Rates" section to the Settings screen.
 - Uses existing Card and Button components for consistency
 
 **Helper Function:**
+
 - `formatRelativeTime(timestamp)` - Converts ISO timestamps to human-readable format
   - "Just now", "5m ago", "2h ago", "3d ago", "2w ago", "6mo ago"
 
@@ -219,6 +237,7 @@ Manual Rate Entry Screen (/fx-rates/manual?fromCurrency=JPY&toCurrency=USD)
 ### 2. **Provider Integration**
 
 All screens use `cachedFxRateProvider` singleton:
+
 ```typescript
 import { cachedFxRateProvider } from "@modules/fx-rates/provider";
 
@@ -226,12 +245,13 @@ import { cachedFxRateProvider } from "@modules/fx-rates/provider";
 await cachedFxRateProvider.setManualRate(fromCurrency, toCurrency, rate);
 
 // Check if rate exists
-const hasRate = cachedFxRateProvider.hasRate('USD', 'EUR');
+const hasRate = cachedFxRateProvider.hasRate("USD", "EUR");
 ```
 
 ### 3. **Repository Access**
 
 RateListScreen directly uses `FxRateRepository` for fetching all rates:
+
 ```typescript
 import { FxRateRepository } from "@modules/fx-rates/repository";
 
@@ -247,6 +267,7 @@ All components strictly follow the CrewSplit design system:
 ### Theme Tokens Used
 
 **Colors:**
+
 - `theme.colors.background` - Main screen background (#0a0a0a)
 - `theme.colors.surface` - Card backgrounds (#1a1a1a)
 - `theme.colors.surfaceElevated` - Elevated cards (#2a2a2a)
@@ -259,6 +280,7 @@ All components strictly follow the CrewSplit design system:
 - `theme.colors.border` - Borders (#333333)
 
 **Spacing:**
+
 - `theme.spacing.xs` (4px) - Tight gaps
 - `theme.spacing.sm` (8px) - Small gaps
 - `theme.spacing.md` (16px) - Standard gaps
@@ -266,6 +288,7 @@ All components strictly follow the CrewSplit design system:
 - `theme.spacing.xl` (32px) - Extra large gaps
 
 **Typography:**
+
 - `theme.typography.xs` (11px) - Helper text
 - `theme.typography.sm` (13px) - Labels, metadata
 - `theme.typography.base` (15px) - Body text
@@ -275,6 +298,7 @@ All components strictly follow the CrewSplit design system:
 - Font weights: `medium`, `semibold`, `bold`
 
 **Other:**
+
 - `theme.borderRadius.sm/md/lg` - Rounded corners
 - `theme.touchTarget.minHeight` (44px) - Accessibility compliance
 - `theme.shadows.md/lg` - Elevation shadows
@@ -286,20 +310,24 @@ All components strictly follow the CrewSplit design system:
 All components include proper accessibility attributes:
 
 ### Screen Reader Support
+
 - `accessibilityRole` - Identifies element type (button, checkbox, etc.)
 - `accessibilityLabel` - Readable description
 - `accessibilityHint` - Explains action result
 - `accessibilityState` - Current state (checked, busy, etc.)
 
 ### Touch Targets
+
 - All interactive elements meet 44x44pt minimum (iOS/Android guidelines)
 - Proper padding and spacing
 
 ### Keyboard Support
+
 - `KeyboardAvoidingView` on forms
 - `keyboardShouldPersistTaps="handled"` for ScrollViews
 
 ### Visual Accessibility
+
 - WCAG AA compliant color contrast (4.5:1 minimum)
 - Clear visual hierarchy
 - Color-coded states with text labels (not color alone)
@@ -355,18 +383,21 @@ All components include proper accessibility attributes:
 ### Validation Errors
 
 **ManualRateEntryScreen:**
+
 - Rate <= 0: "Rate must be a positive number"
 - Same currency: "Source and target currencies cannot be the same"
 - Rate > 1000: Confirmation dialog ("The exchange rate 1500 seems unusually high. Are you sure?")
 - Network error: "Failed to save exchange rate. Please try again."
 
 **RateListScreen:**
+
 - Load failure: Alert with "Failed to load exchange rates. Please try again."
 - Refresh failure: Alert with error message or generic network message
 
 ### Network Errors
 
 All async operations include try/catch with user-friendly error messages:
+
 ```typescript
 try {
   await refreshRates();
@@ -395,6 +426,7 @@ try {
 ### Loading States
 
 All async operations show loading indicators:
+
 - ManualRateEntryScreen: "Saving..." button text
 - RateListScreen: Full-screen ActivityIndicator on initial load
 - NoRateAvailableModal: Spinner during fetch
@@ -442,6 +474,7 @@ All async operations show loading indicators:
 ### Automated Testing
 
 Suggested test coverage:
+
 - `ManualRateEntryScreen.test.tsx` - Form validation, save flow
 - `RateListScreen.test.tsx` - List rendering, refresh, navigation
 - `StalenessWarningBanner.test.tsx` - Rendering with different props
@@ -467,19 +500,23 @@ Potential improvements for future iterations:
 ## Files Created
 
 ### Screens
+
 - `src/modules/fx-rates/screens/ManualRateEntryScreen.tsx`
 - `src/modules/fx-rates/screens/RateListScreen.tsx`
 - `src/modules/fx-rates/screens/index.ts`
 
 ### Components
+
 - `src/ui/components/StalenessWarningBanner.tsx`
 - `src/ui/components/NoRateAvailableModal.tsx`
 
 ### Routes
+
 - `app/fx-rates/index.tsx`
 - `app/fx-rates/manual.tsx`
 
 ### Modified Files
+
 - `app/settings.tsx` - Added Exchange Rates section
 - `src/ui/components/index.ts` - Exported new components
 

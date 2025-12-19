@@ -40,24 +40,26 @@
 
 ## Document Purpose Matrix
 
-| Document | Purpose | Audience | Read Time |
-|----------|---------|----------|-----------|
-| **SETTLEMENTS_SUMMARY.md** | Quick reference, Q&A | All developers | 10 min |
-| **SETTLEMENTS_IMPLEMENTATION_GUIDE.md** | Hands-on coding guide | Backend/Full-stack devs | 30 min |
-| **SETTLEMENTS_ARCHITECTURE.md** | Design decisions, rationale | Architects, senior devs | 45 min |
-| **SETTLEMENTS_DATA_FLOW.md** | Visual understanding | All developers, QA | 20 min |
-| **SETTLEMENTS_EXAMPLE.md** | Practical demonstration | All team members | 15 min |
+| Document                                | Purpose                     | Audience                | Read Time |
+| --------------------------------------- | --------------------------- | ----------------------- | --------- |
+| **SETTLEMENTS_SUMMARY.md**              | Quick reference, Q&A        | All developers          | 10 min    |
+| **SETTLEMENTS_IMPLEMENTATION_GUIDE.md** | Hands-on coding guide       | Backend/Full-stack devs | 30 min    |
+| **SETTLEMENTS_ARCHITECTURE.md**         | Design decisions, rationale | Architects, senior devs | 45 min    |
+| **SETTLEMENTS_DATA_FLOW.md**            | Visual understanding        | All developers, QA      | 20 min    |
+| **SETTLEMENTS_EXAMPLE.md**              | Practical demonstration     | All team members        | 15 min    |
 
 ---
 
 ## Reading Paths
 
 ### Path 1: "I need to understand the feature quickly"
+
 1. **SETTLEMENTS_SUMMARY.md** - Read "Quick Answers" section
 2. **SETTLEMENTS_EXAMPLE.md** - Skim Phase 1-3
 3. Done! (20 minutes total)
 
 ### Path 2: "I'm implementing this feature"
+
 1. **SETTLEMENTS_SUMMARY.md** - Full read
 2. **SETTLEMENTS_IMPLEMENTATION_GUIDE.md** - Follow step-by-step
 3. **SETTLEMENTS_DATA_FLOW.md** - Reference as needed
@@ -65,11 +67,13 @@
 5. **SETTLEMENTS_ARCHITECTURE.md** - Consult for edge cases
 
 ### Path 3: "I need to review the architecture"
+
 1. **SETTLEMENTS_ARCHITECTURE.md** - Full read
 2. **SETTLEMENTS_DATA_FLOW.md** - Review diagrams
 3. **SETTLEMENTS_SUMMARY.md** - Quick reference
 
 ### Path 4: "I'm writing tests"
+
 1. **SETTLEMENTS_EXAMPLE.md** - Use as test scenarios
 2. **SETTLEMENTS_IMPLEMENTATION_GUIDE.md** - Testing section
 3. **SETTLEMENTS_DATA_FLOW.md** - Verify data flow correctness
@@ -163,6 +167,7 @@ src/modules/settlement/service/SettlementService.ts
 ## Implementation Status
 
 ### Completed ✅
+
 - [x] Schema design (`settlements.ts`)
 - [x] Migration generation (`0005_wealthy_cammi.sql`)
 - [x] Type definitions (`types.ts`)
@@ -170,12 +175,14 @@ src/modules/settlement/service/SettlementService.ts
 - [x] TypeScript compilation verified
 
 ### In Progress 🚧
+
 - [ ] Repository implementation
 - [ ] Settlement engine integration
 - [ ] React hooks
 - [ ] UI screens
 
 ### Not Started ⏳
+
 - [ ] Testing (unit, integration, UI)
 - [ ] Settlement export features
 - [ ] Payment method integrations
@@ -193,6 +200,7 @@ From **SETTLEMENTS_EXAMPLE.md**:
 5. **Overpayment**: Charlie overpays by $1, balance flips
 
 Use these scenarios for:
+
 - Unit tests (pure math)
 - Integration tests (database + service)
 - UI tests (user flows)
@@ -204,7 +212,7 @@ Use these scenarios for:
 
 ### Q: Do settlements replace the existing settlement calculation engine?
 
-**A**: No. Settlements are an *input* to the existing engine, not a replacement. The pure math functions (`calculateBalances`, `optimizeSettlements`) continue to work as before, but now accept an optional `settlements` parameter.
+**A**: No. Settlements are an _input_ to the existing engine, not a replacement. The pure math functions (`calculateBalances`, `optimizeSettlements`) continue to work as before, but now accept an optional `settlements` parameter.
 
 ### Q: What happens if a user deletes an expense that has settlements linked to it?
 
@@ -257,22 +265,26 @@ Before applying migration in production:
 ## Support & Resources
 
 ### Internal Documentation
+
 - **Project README**: `README.md`
 - **Agent Roles**: `AGENTS.md`
 - **Architecture Principles**: `CLAUDE.md`
 - **Settlement Module Docs**: `docs/SETTLEMENTS_*.md`
 
 ### Database Schema
+
 - **All Schemas**: `src/db/schema/`
 - **Migrations**: `src/db/migrations/`
 - **Mappers**: `src/db/mappers/`
 
 ### Existing Settlement Engine
+
 - **Pure Math**: `src/modules/settlement/calculate-balances.ts`
 - **Service**: `src/modules/settlement/service/SettlementService.ts`
 - **Hooks**: `src/modules/settlement/hooks/`
 
 ### FX Rates System
+
 - **Provider**: `src/modules/fx-rates/provider/cached-fx-rate-provider.ts`
 - **Repository**: `src/modules/fx-rates/repository/`
 - **Docs**: `docs/FX_DATA_FLOW_DIAGRAM.md`
@@ -281,9 +293,9 @@ Before applying migration in production:
 
 ## Version History
 
-| Version | Date | Changes |
-|---------|------|---------|
-| 1.0 | 2025-12-18 | Initial design and documentation |
+| Version | Date       | Changes                          |
+| ------- | ---------- | -------------------------------- |
+| 1.0     | 2025-12-18 | Initial design and documentation |
 
 ---
 

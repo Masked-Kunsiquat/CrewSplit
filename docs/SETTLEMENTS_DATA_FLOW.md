@@ -58,6 +58,7 @@ This document provides visual diagrams to understand how settlements integrate w
 ```
 
 **Key Points**:
+
 1. **settlements** is a new table with NO changes to existing tables
 2. Settlements link to participants (from/to) and optionally to expense splits
 3. Foreign key constraints preserve data integrity
@@ -273,11 +274,13 @@ This document provides visual diagrams to understand how settlements integrate w
 ```
 
 **Key Insight**: Settlements are modeled as "phantom expenses" where:
+
 - Payer's `totalPaid` increases (as if they paid an expense)
 - Receiver's `totalOwed` increases (as if they owe more)
 - This mathematically reduces the net debt between them
 
 **Why this works**:
+
 ```
 Original formula:
   netPosition = totalPaid - totalOwed
@@ -382,6 +385,7 @@ Verification:
 ```
 
 **Pattern Consistency**:
+
 - Settlements use the **exact same multi-currency pattern** as expenses
 - Repository handles conversion on write (deterministic)
 - Calculations always use `convertedAmountMinor` (trip currency)
@@ -611,6 +615,7 @@ GROUP BY es.id
 ```
 
 **Time Complexity**:
+
 - User sees loading state immediately (optimistic UI)
 - Database write: ~5-10ms
 - Recalculation: ~20-50ms (for typical trip with 50 expenses)
@@ -688,6 +693,7 @@ GROUP BY es.id
 ```
 
 **Key Points**:
+
 1. General payments (not linked to specific expenses) reduce overall debt
 2. Settlement math is transparent and auditable
 3. Remaining debt is recalculated automatically

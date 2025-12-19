@@ -22,6 +22,7 @@ The FX rate UI integration provides non-blocking, user-friendly error recovery w
 **Purpose**: Shown when a required exchange rate is completely missing from the cache.
 
 **Props**:
+
 - `visible: boolean` - Whether modal is displayed
 - `fromCurrency: string` - Source currency code
 - `toCurrency: string` - Target currency code
@@ -31,6 +32,7 @@ The FX rate UI integration provides non-blocking, user-friendly error recovery w
 - `fetching?: boolean` - Show loading state during fetch
 
 **Usage Example**:
+
 ```tsx
 <NoRateAvailableModal
   visible={rateModalVisible}
@@ -50,21 +52,25 @@ The FX rate UI integration provides non-blocking, user-friendly error recovery w
 **Purpose**: Non-intrusive banner shown at top of screen when rates are >7 days old.
 
 **Props**:
+
 - `currencyPair?: string` - Display string like "USD → EUR"
 - `daysOld: number` - Age of oldest rate
 - `onRefresh?: () => void` - Handler for refresh button
 - `refreshing?: boolean` - Show loading state during refresh
 
 **Usage Example**:
+
 ```tsx
-{isStale && daysOld && (
-  <StalenessWarningBanner
-    currencyPair="USD → EUR"
-    daysOld={14}
-    onRefresh={handleRefreshStaleRates}
-    refreshing={fxRefreshing}
-  />
-)}
+{
+  isStale && daysOld && (
+    <StalenessWarningBanner
+      currencyPair="USD → EUR"
+      daysOld={14}
+      onRefresh={handleRefreshStaleRates}
+      refreshing={fxRefreshing}
+    />
+  );
+}
 ```
 
 ## Integrated Screens
@@ -76,12 +82,17 @@ The FX rate UI integration provides non-blocking, user-friendly error recovery w
 **Integration Points**:
 
 1. **Imports**:
+
    ```tsx
-   import { NoRateAvailableModal, StalenessWarningBanner } from "@ui/components";
+   import {
+     NoRateAvailableModal,
+     StalenessWarningBanner,
+   } from "@ui/components";
    import { useFxSync } from "@modules/fx-rates/hooks/use-fx-sync";
    ```
 
 2. **Hooks**:
+
    ```tsx
    const {
      settlement,
@@ -98,11 +109,13 @@ The FX rate UI integration provides non-blocking, user-friendly error recovery w
    ```
 
 3. **State**:
+
    ```tsx
    const [rateModalVisible, setRateModalVisible] = useState(false);
    ```
 
 4. **Handlers**:
+
    ```tsx
    const handleFetchOnline = async () => {
      await refreshFxRates();
@@ -134,6 +147,7 @@ The FX rate UI integration provides non-blocking, user-friendly error recovery w
 1. **Imports**: Same as SettlementSummaryScreen
 
 2. **Conversion Logic**:
+
    ```tsx
    const displayAmounts = useMemo(() => {
      try {
@@ -154,6 +168,7 @@ The FX rate UI integration provides non-blocking, user-friendly error recovery w
    ```
 
 3. **State**:
+
    ```tsx
    const [rateModalVisible, setRateModalVisible] = useState(false);
    const [conversionError, setConversionError] = useState<{
@@ -221,12 +236,14 @@ The FX rate UI integration provides non-blocking, user-friendly error recovery w
 All components follow WCAG AA standards:
 
 ### NoRateAvailableModal
+
 - `accessibilityLabel`: Describes each button action
 - `accessibilityHint`: Explains outcome of interaction
 - `accessibilityRole`: "button" for all interactive elements
 - Dismissible via backdrop tap or Cancel button
 
 ### StalenessWarningBanner
+
 - `accessibilityLabel`: "Refresh exchange rates"
 - `accessibilityHint`: "Updates exchange rates from online sources"
 - `accessibilityRole`: "button" for refresh action
@@ -257,17 +274,17 @@ All components follow WCAG AA standards:
 ### Unit Tests
 
 ```typescript
-describe('NoRateAvailableModal', () => {
-  it('shows currency pair correctly', () => {});
-  it('calls onFetchOnline when button pressed', () => {});
-  it('navigates to manual entry on button press', () => {});
-  it('shows loading state when fetching', () => {});
+describe("NoRateAvailableModal", () => {
+  it("shows currency pair correctly", () => {});
+  it("calls onFetchOnline when button pressed", () => {});
+  it("navigates to manual entry on button press", () => {});
+  it("shows loading state when fetching", () => {});
 });
 
-describe('StalenessWarningBanner', () => {
-  it('displays correct days old', () => {});
-  it('calls onRefresh when tapped', () => {});
-  it('shows refreshing state', () => {});
+describe("StalenessWarningBanner", () => {
+  it("displays correct days old", () => {});
+  it("calls onRefresh when tapped", () => {});
+  it("shows refreshing state", () => {});
 });
 ```
 

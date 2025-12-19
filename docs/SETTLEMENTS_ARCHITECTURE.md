@@ -47,6 +47,7 @@ CREATE TABLE settlements (
 ```
 
 **Indexes**:
+
 - `settlements_trip_id_idx` - Fast trip-based queries
 - `settlements_from_participant_idx` - Show payments from specific person
 - `settlements_to_participant_idx` - Show payments to specific person
@@ -54,6 +55,7 @@ CREATE TABLE settlements (
 - `settlements_date_idx` - Chronological view
 
 **Foreign Key Behavior**:
+
 - `trip_id`: CASCADE delete (when trip deleted, settlements auto-delete)
 - `from_participant_id`, `to_participant_id`: RESTRICT delete (cannot delete participant with settlements - preserves audit trail)
 - `expense_split_id`: RESTRICT delete (cannot delete split if settlement references it)
@@ -81,6 +83,7 @@ Source 2: Settlements
 ### Net Balance Calculation
 
 **Current formula (without settlements)**:
+
 ```
 netPosition = totalPaid - totalOwed
 
@@ -90,6 +93,7 @@ Where:
 ```
 
 **New formula (with settlements)**:
+
 ```
 netPosition = totalPaid - totalOwed + totalSettled
 
@@ -104,17 +108,20 @@ Where:
 ### Example Scenario
 
 **Setup**:
+
 - Alice paid $100 for dinner, split equally with Bob
 - Alice owes $50, Bob owes $50
 - Bob pays Alice $30 as partial payment
 
 **Without settlements** (current):
+
 ```
 Alice: totalPaid=$100, totalOwed=$50 → netPosition=+$50 (owed $50)
 Bob:   totalPaid=$0,   totalOwed=$50 → netPosition=-$50 (owes $50)
 ```
 
 **With settlements** (new):
+
 ```
 Settlement: from=Bob, to=Alice, amount=$30
 
@@ -163,12 +170,14 @@ For the DEBTOR (person who owes money):
 Wait, that's also wrong. Let me reconsider from first principles:
 
 **First Principles**:
+
 1. When you pay for an expense, your balance goes UP (you're owed money)
 2. When you owe a split, your balance goes DOWN (you owe money)
 3. When you PAY someone (settlement FROM you), your balance goes UP (debt reduced)
 4. When you RECEIVE payment (settlement TO you), your balance goes DOWN (credit reduced)
 
 **Correct Formula**:
+
 ```
 netPosition = totalPaid - totalOwed + settlementsPaid - settlementsReceived
 
@@ -192,16 +201,19 @@ Bob (debtor):
 ### Current Three-Layer Architecture
 
 **Layer 1 - Pure Math** (`normalize-shares.ts`, `calculate-balances.ts`, `optimize-settlements.ts`):
+
 - Pure functions with zero dependencies
 - Operate on plain data structures
 - Deterministic: same inputs → same outputs
 
 **Layer 2 - Service** (`service/SettlementService.ts`):
+
 - Loads data from database
 - Calls pure functions
 - Returns settlement summary
 
 **Layer 3 - Hooks** (`hooks/use-settlement.ts`):
+
 - React hooks for UI integration
 - Manages loading states
 - Triggers recalculations
@@ -236,24 +248,28 @@ export const calculateBalancesWithSettlements = (
 
   settlements.forEach((settlement) => {
     // Payer's debt decreases (balance goes UP)
-    const payerAdjustment = settlementAdjustments.get(settlement.fromParticipantId) || 0;
+    const payerAdjustment =
+      settlementAdjustments.get(settlement.fromParticipantId) || 0;
     settlementAdjustments.set(
       settlement.fromParticipantId,
-      payerAdjustment + settlement.convertedAmountMinor
+      payerAdjustment + settlement.convertedAmountMinor,
     );
 
     // Receiver's credit decreases (balance goes DOWN)
-    const receiverAdjustment = settlementAdjustments.get(settlement.toParticipantId) || 0;
+    const receiverAdjustment =
+      settlementAdjustments.get(settlement.toParticipantId) || 0;
     settlementAdjustments.set(
       settlement.toParticipantId,
-      receiverAdjustment - settlement.convertedAmountMinor
+      receiverAdjustment - settlement.convertedAmountMinor,
     );
   });
 
   // Step 3: Apply adjustments to base balances
   return baseBalances.map((balance) => ({
     ...balance,
-    netPosition: balance.netPosition + (settlementAdjustments.get(balance.participantId) || 0),
+    netPosition:
+      balance.netPosition +
+      (settlementAdjustments.get(balance.participantId) || 0),
   }));
 };
 ```
@@ -292,6 +308,7 @@ export const calculateBalances = (
 ```
 
 **RECOMMENDATION**: Use the **second approach** (modify existing function) because:
+
 1. Maintains single function for balance calculation
 2. Settlement adjustments are mathematically equivalent to "phantom expenses"
 3. Simpler to test and maintain
@@ -336,18 +353,21 @@ export async function computeSettlement(
 ### Use Case
 
 User wants to pay off a specific expense split directly:
+
 - "I'm paying my $50 share of the dinner bill"
 - Links settlement to `expenseSplitId`
 
 ### Database Design
 
 **settlements.expenseSplitId**:
+
 - `NULL`: General payment (not tied to specific expense)
 - `NOT NULL`: Paying off this specific expense split
 
 ### UI Implications
 
 **Expense Detail Screen**:
+
 ```
 Dinner - $100 (paid by Alice)
 Split: Alice $50, Bob $50
@@ -360,6 +380,7 @@ Bob's split: $50
 ```
 
 **Settlement Entry Form**:
+
 ```
 ┌─────────────────────────────────────┐
 │ Pay Settlement                      │
@@ -384,6 +405,7 @@ Bob's split: $50
 ### Business Logic
 
 **Validation**:
+
 1. If `expenseSplitId` is set:
    - Verify split belongs to trip
    - Verify `fromParticipantId` matches split's `participantId`
@@ -395,6 +417,7 @@ Bob's split: $50
    - Still allow (user might be paying extra or for multiple things)
 
 **Querying**:
+
 ```sql
 -- Get all settlements for a specific expense
 SELECT s.* FROM settlements s
@@ -420,12 +443,12 @@ GROUP BY es.id
 
 Settlements use the **exact same multi-currency pattern** as expenses:
 
-| Field | Description |
-|-------|-------------|
-| `originalCurrency` | Currency as entered by user (e.g., "EUR") |
-| `originalAmountMinor` | Amount in cents in original currency (e.g., 5000 = €50.00) |
-| `fxRateToTrip` | Exchange rate to trip currency (NULL if same currency) |
-| `convertedAmountMinor` | Amount in cents in trip currency (always set) |
+| Field                  | Description                                                |
+| ---------------------- | ---------------------------------------------------------- |
+| `originalCurrency`     | Currency as entered by user (e.g., "EUR")                  |
+| `originalAmountMinor`  | Amount in cents in original currency (e.g., 5000 = €50.00) |
+| `fxRateToTrip`         | Exchange rate to trip currency (NULL if same currency)     |
+| `convertedAmountMinor` | Amount in cents in trip currency (always set)              |
 
 ### Repository Responsibilities
 
@@ -498,7 +521,7 @@ const settlementWithDisplay = {
     displayCurrency: "EUR",
     displayAmount: 5000, // €50.00
     fxRate: 0.926,
-  }
+  },
 };
 ```
 
@@ -509,6 +532,7 @@ const settlementWithDisplay = {
 ### Trigger Points
 
 Settlements affect balance calculations when:
+
 1. Settlement created
 2. Settlement updated (amount, date, participants)
 3. Settlement deleted
@@ -566,11 +590,14 @@ export function useSettlement(tripId: string) {
 export function useCreateSettlement(tripId: string) {
   const { refetch } = useSettlement(tripId);
 
-  const createSettlement = useCallback(async (data: NewSettlementData) => {
-    const settlement = await createSettlement(data);
-    refetch(); // Trigger recalculation
-    return settlement;
-  }, [tripId, refetch]);
+  const createSettlement = useCallback(
+    async (data: NewSettlementData) => {
+      const settlement = await createSettlement(data);
+      refetch(); // Trigger recalculation
+      return settlement;
+    },
+    [tripId, refetch],
+  );
 
   return { createSettlement };
 }
@@ -583,6 +610,7 @@ export function useCreateSettlement(tripId: string) {
 ### Schema Changes
 
 **NO CHANGES** to existing tables:
+
 - ✅ `trips` - unchanged
 - ✅ `participants` - unchanged
 - ✅ `expenses` - unchanged
@@ -625,6 +653,7 @@ CREATE INDEX settlements_date_idx ON settlements(date);
 ### Backward Compatibility
 
 **100% backward compatible**:
+
 - No existing data affected
 - Existing settlement calculations continue to work (ignore settlements if none exist)
 - New feature is purely additive
@@ -644,15 +673,27 @@ describe("calculateBalances with settlements", () => {
       { id: "e1", amount: 10000, paidBy: "alice", currency: "USD" },
     ];
     const splits = [
-      { id: "s1", expenseId: "e1", participantId: "alice", share: 1, shareType: "equal" },
-      { id: "s2", expenseId: "e1", participantId: "bob", share: 1, shareType: "equal" },
+      {
+        id: "s1",
+        expenseId: "e1",
+        participantId: "alice",
+        share: 1,
+        shareType: "equal",
+      },
+      {
+        id: "s2",
+        expenseId: "e1",
+        participantId: "bob",
+        share: 1,
+        shareType: "equal",
+      },
     ];
     const settlements = [
       {
         id: "st1",
         fromParticipantId: "bob",
         toParticipantId: "alice",
-        convertedAmountMinor: 3000
+        convertedAmountMinor: 3000,
       },
     ];
     const participants = [
@@ -660,13 +701,22 @@ describe("calculateBalances with settlements", () => {
       { id: "bob", name: "Bob" },
     ];
 
-    const balances = calculateBalances(expenses, splits, participants, settlements);
+    const balances = calculateBalances(
+      expenses,
+      splits,
+      participants,
+      settlements,
+    );
 
     // Alice: paid $100, owed $50, received $30 → net = $100 - $50 - $30 = +$20
-    expect(balances.find(b => b.participantId === "alice").netPosition).toBe(2000);
+    expect(balances.find((b) => b.participantId === "alice").netPosition).toBe(
+      2000,
+    );
 
     // Bob: paid $0, owed $50, paid $30 → net = $0 - $50 + $30 = -$20
-    expect(balances.find(b => b.participantId === "bob").netPosition).toBe(-2000);
+    expect(balances.find((b) => b.participantId === "bob").netPosition).toBe(
+      -2000,
+    );
   });
 
   it("should handle expense-specific settlements", () => {
@@ -733,6 +783,7 @@ describe("SettlementsRepository", () => {
 ### Settlement Entry Flow
 
 **Option 1: From Settlement Screen** (general payment)
+
 ```
 1. User navigates to "Settlements" tab
 2. Taps "Record Payment"
@@ -745,6 +796,7 @@ describe("SettlementsRepository", () => {
 ```
 
 **Option 2: From Expense Detail** (expense-specific)
+
 ```
 1. User views expense detail (e.g., "Dinner $100")
 2. Sees split breakdown: "Bob owes $50"
@@ -761,6 +813,7 @@ describe("SettlementsRepository", () => {
 ### Settlement Display
 
 **Settlements List**:
+
 ```
 ┌─────────────────────────────────────────┐
 │ Settlements                             │
@@ -778,6 +831,7 @@ describe("SettlementsRepository", () => {
 ```
 
 **Settlement Summary** (integration with existing balance view):
+
 ```
 ┌─────────────────────────────────────────┐
 │ Balances                                │
@@ -799,6 +853,7 @@ describe("SettlementsRepository", () => {
 ## 10. Implementation Phases
 
 ### Phase 1: Database & Repository (Week 1)
+
 - [x] Create `settlements` schema
 - [ ] Generate migration via `npx drizzle-kit generate`
 - [ ] Create `SettlementsRepository` with CRUD operations
@@ -806,12 +861,14 @@ describe("SettlementsRepository", () => {
 - [ ] Write repository tests
 
 ### Phase 2: Settlement Engine Integration (Week 2)
+
 - [ ] Modify `calculateBalances()` to accept `settlements` parameter
 - [ ] Update `SettlementService.computeSettlement()` to load settlements
 - [ ] Write unit tests for settlement-adjusted balance calculations
 - [ ] Write integration tests for full settlement flow
 
 ### Phase 3: React Hooks (Week 3)
+
 - [ ] Create `useSettlements(tripId)` hook (list all settlements)
 - [ ] Create `useCreateSettlement()` hook
 - [ ] Create `useUpdateSettlement()` hook
@@ -819,6 +876,7 @@ describe("SettlementsRepository", () => {
 - [ ] Integrate with existing `useSettlement()` for automatic recalculation
 
 ### Phase 4: UI Screens (Week 4-5)
+
 - [ ] Settlement list screen (view all settlements for trip)
 - [ ] Settlement entry form (create/edit)
 - [ ] Expense detail integration ("Mark as Paid" button)
@@ -826,6 +884,7 @@ describe("SettlementsRepository", () => {
 - [ ] Display currency support in settlement views
 
 ### Phase 5: Polish & Edge Cases (Week 6)
+
 - [ ] Overpayment warnings
 - [ ] Settlement validation (prevent from=to, negative amounts)
 - [ ] Settlement deletion confirmation (preserve audit trail)
@@ -840,6 +899,7 @@ describe("SettlementsRepository", () => {
 ### Q1: What schema design do we need for settlements/transactions table?
 
 **Answer**: The `settlements` table schema is defined above. Key features:
+
 - Multi-currency support (original + converted amounts)
 - Optional link to specific expense splits
 - Flexible payment tracking (any amount, any participants)
@@ -850,6 +910,7 @@ describe("SettlementsRepository", () => {
 ### Q2: How do we track partial payments vs full expense payoffs?
 
 **Answer**:
+
 - **Partial payments**: Settlement amount < split amount
 - **Full payoffs**: Settlement amount = split amount
 - **Tracking**: Link settlement to `expenseSplitId` (optional)
@@ -859,6 +920,7 @@ describe("SettlementsRepository", () => {
 ### Q3: How do we integrate with existing settlement calculation engine?
 
 **Answer**:
+
 - **Minimal changes**: Modify `calculateBalances()` to accept optional `settlements[]` parameter
 - **Pure function**: Settlement adjustments are applied within existing math engine
 - **Service layer**: `SettlementService` loads settlements from DB and passes to calculator
@@ -867,6 +929,7 @@ describe("SettlementsRepository", () => {
 ### Q4: Do we need to modify existing schema (trips, expenses, expense_splits)?
 
 **Answer**: **NO**. The settlements feature is 100% additive:
+
 - ✅ New table: `settlements`
 - ✅ No changes to existing tables
 - ✅ Backward compatible (works with or without settlements)
@@ -875,6 +938,7 @@ describe("SettlementsRepository", () => {
 ### Q5: How do we handle currency conversions for transactions?
 
 **Answer**:
+
 - **Same pattern as expenses**: Store original + converted amounts
 - **Repository handles conversion**: Automatically converts to trip currency on write
 - **Uses FX rate cache**: `cachedFxRateProvider.getRate()` (already implemented)
@@ -883,6 +947,7 @@ describe("SettlementsRepository", () => {
 ### Q6: What's the data flow for recalculating "what's owed" after a transaction is recorded?
 
 **Answer**:
+
 ```
 1. User creates settlement → Repository.createSettlement()
 2. Settlement saved to DB
@@ -950,6 +1015,7 @@ The settlements/transactions feature is designed to:
 6. ✅ **Integrate seamlessly**: Existing UI components auto-update with new calculations
 
 **Next Steps**:
+
 1. Generate migration: `npx drizzle-kit generate`
 2. Review generated SQL
 3. Implement `SettlementsRepository`

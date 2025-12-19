@@ -24,17 +24,17 @@ The migration has been auto-generated. Update `src/db/migrations/migrations.js`:
 
 ```javascript
 // src/db/migrations/migrations.js
-import journal from './meta/_journal.json';
-import m0000 from './0000_initial.sql';
-import m0001 from './0001_add_fx_rates.sql';
+import journal from "./meta/_journal.json";
+import m0000 from "./0000_initial.sql";
+import m0001 from "./0001_add_fx_rates.sql";
 // ... other migrations ...
-import m0005 from './0005_wealthy_cammi.sql'; // ADD THIS
+import m0005 from "./0005_wealthy_cammi.sql"; // ADD THIS
 
 export const migrations = [
-  { id: '0000', sql: m0000 },
-  { id: '0001', sql: m0001 },
+  { id: "0000", sql: m0000 },
+  { id: "0001", sql: m0001 },
   // ... other migrations ...
-  { id: '0005', sql: m0005 }, // ADD THIS
+  { id: "0005", sql: m0005 }, // ADD THIS
 ];
 ```
 
@@ -69,7 +69,7 @@ import { getTrip } from "@modules/trips/repository";
  * Get all settlements for a trip
  */
 export async function getSettlementsForTrip(
-  tripId: string
+  tripId: string,
 ): Promise<Settlement[]> {
   return db
     .select()
@@ -82,7 +82,7 @@ export async function getSettlementsForTrip(
  * Get settlements for a specific participant (paid or received)
  */
 export async function getSettlementsForParticipant(
-  participantId: string
+  participantId: string,
 ): Promise<Settlement[]> {
   return db
     .select()
@@ -90,8 +90,8 @@ export async function getSettlementsForParticipant(
     .where(
       or(
         eq(settlements.fromParticipantId, participantId),
-        eq(settlements.toParticipantId, participantId)
-      )
+        eq(settlements.toParticipantId, participantId),
+      ),
     )
     .orderBy(desc(settlements.date));
 }
@@ -100,7 +100,7 @@ export async function getSettlementsForParticipant(
  * Get settlements linked to a specific expense split
  */
 export async function getSettlementsForExpenseSplit(
-  expenseSplitId: string
+  expenseSplitId: string,
 ): Promise<Settlement[]> {
   return db
     .select()
@@ -165,7 +165,7 @@ export async function createSettlement(data: {
     fxRateToTrip = await cachedFxRateProvider.getRate(
       data.originalCurrency,
       trip.currency,
-      data.date
+      data.date,
     );
     convertedAmountMinor = Math.round(data.originalAmountMinor * fxRateToTrip);
   }
@@ -187,10 +187,7 @@ export async function createSettlement(data: {
   };
 
   // Insert and return
-  const result = await db
-    .insert(settlements)
-    .values(newSettlement)
-    .returning();
+  const result = await db.insert(settlements).values(newSettlement).returning();
 
   return result[0];
 }
@@ -207,7 +204,7 @@ export async function updateSettlement(
     date?: string;
     description?: string;
     paymentMethod?: string;
-  }
+  },
 ): Promise<Settlement> {
   // Get existing settlement
   const existing = await getSettlement(id);
@@ -223,7 +220,8 @@ export async function updateSettlement(
 
   // Determine if currency conversion needs recalculation
   const newCurrency = data.originalCurrency || existing.originalCurrency;
-  const newAmountMinor = data.originalAmountMinor || existing.originalAmountMinor;
+  const newAmountMinor =
+    data.originalAmountMinor || existing.originalAmountMinor;
   const newDate = data.date || existing.date;
 
   let fxRateToTrip: number | null = null;
@@ -236,7 +234,7 @@ export async function updateSettlement(
     fxRateToTrip = await cachedFxRateProvider.getRate(
       newCurrency,
       trip.currency,
-      newDate
+      newDate,
     );
     convertedAmountMinor = Math.round(newAmountMinor * fxRateToTrip);
   }
@@ -250,8 +248,14 @@ export async function updateSettlement(
       fxRateToTrip,
       convertedAmountMinor,
       date: newDate,
-      description: data.description !== undefined ? data.description : existing.description,
-      paymentMethod: data.paymentMethod !== undefined ? data.paymentMethod : existing.paymentMethod,
+      description:
+        data.description !== undefined
+          ? data.description
+          : existing.description,
+      paymentMethod:
+        data.paymentMethod !== undefined
+          ? data.paymentMethod
+          : existing.paymentMethod,
       updatedAt: new Date().toISOString(),
     })
     .where(eq(settlements.id, id))
@@ -271,9 +275,10 @@ export async function deleteSettlement(id: string): Promise<void> {
  * Calculate total settlements paid by a participant
  */
 export async function getTotalSettlementsPaid(
-  participantId: string
+  participantId: string,
 ): Promise<number> {
-  const participantSettlements = await getSettlementsForParticipant(participantId);
+  const participantSettlements =
+    await getSettlementsForParticipant(participantId);
   return participantSettlements
     .filter((s) => s.fromParticipantId === participantId)
     .reduce((sum, s) => sum + s.convertedAmountMinor, 0);
@@ -283,9 +288,10 @@ export async function getTotalSettlementsPaid(
  * Calculate total settlements received by a participant
  */
 export async function getTotalSettlementsReceived(
-  participantId: string
+  participantId: string,
 ): Promise<number> {
-  const participantSettlements = await getSettlementsForParticipant(participantId);
+  const participantSettlements =
+    await getSettlementsForParticipant(participantId);
   return participantSettlements
     .filter((s) => s.toParticipantId === participantId)
     .reduce((sum, s) => sum + s.convertedAmountMinor, 0);
@@ -353,8 +359,10 @@ describe("SettlementsRepository", () => {
         originalCurrency: "USD",
         originalAmountMinor: 5000,
         date: "2025-01-15",
-      })
-    ).rejects.toThrow("Cannot create settlement from participant to themselves");
+      }),
+    ).rejects.toThrow(
+      "Cannot create settlement from participant to themselves",
+    );
   });
 
   // Add more tests...
@@ -542,7 +550,7 @@ export function useCreateSettlement(tripId: string) {
 
       return settlement;
     },
-    [tripId, refetchSettlements, refetchBalances]
+    [tripId, refetchSettlements, refetchBalances],
   );
 
   return { createSettlement };
@@ -622,7 +630,9 @@ Update `src/modules/expenses/screens/ExpenseDetailScreen.tsx`:
 ```tsx
 // Add "Mark as Paid" button for each split
 <View>
-  <Text>{participant.name}: ${split.amount / 100}</Text>
+  <Text>
+    {participant.name}: ${split.amount / 100}
+  </Text>
   {split.participantId !== expense.paidBy && (
     <Button
       title="Mark as Paid"

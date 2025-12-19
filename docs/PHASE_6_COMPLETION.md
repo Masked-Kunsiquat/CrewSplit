@@ -11,15 +11,18 @@ Phase 6 completes the final UI integration for the FX rate system, adding error 
 ## Implementation Summary
 
 ### Components Created (Phase 5)
+
 - ✅ `NoRateAvailableModal` - Modal for missing rate recovery
 - ✅ `StalenessWarningBanner` - Banner for stale rate warnings
 
 ### Screens Updated (Phase 6)
 
 #### 1. SettlementSummaryScreen
+
 **File**: `src/modules/settlement/screens/SettlementSummaryScreen.tsx`
 
 **Changes**:
+
 - Added imports for `NoRateAvailableModal`, `StalenessWarningBanner`, `useFxSync`
 - Integrated `conversionError` from `useSettlementWithDisplay` hook
 - Added `useFxSync` hook for staleness detection
@@ -30,9 +33,11 @@ Phase 6 completes the final UI integration for the FX rate system, adding error 
 - Auto-shows modal when `conversionError` detected
 
 #### 2. ExpenseDetailsScreen
+
 **File**: `src/modules/expenses/screens/ExpenseDetailsScreen.tsx`
 
 **Changes**:
+
 - Added imports for `NoRateAvailableModal`, `StalenessWarningBanner`, `useFxSync`
 - Updated `displayAmounts` useMemo to catch and set conversion errors
 - Added `useFxSync` hook for staleness detection
@@ -45,6 +50,7 @@ Phase 6 completes the final UI integration for the FX rate system, adding error 
 ## User Experience Flow
 
 ### Missing Rate Scenario
+
 ```
 User opens screen
     ↓
@@ -59,6 +65,7 @@ User chooses:
 ```
 
 ### Stale Rate Scenario
+
 ```
 User opens screen
     ↓
@@ -75,20 +82,24 @@ User can:
 ## Technical Details
 
 ### Error Detection
+
 - **SettlementSummaryScreen**: Uses `conversionError` from `useSettlementWithDisplay` hook
 - **ExpenseDetailsScreen**: Catches errors in `displayAmounts` useMemo and sets local state
 
 ### Staleness Detection
+
 - Both screens use `useFxSync({ autoRefresh: false })`
 - Returns `isStale`, `daysOld`, `refreshing`, `refreshNow`
 - Banner only shown when `isStale && daysOld && showDisplayCurrency`
 
 ### Recovery Actions
+
 1. **Fetch Online**: Calls `refreshFxRates()` → Closes modal → Refetches data
 2. **Enter Manually**: Navigates to `/fx-rates/manual?from=XXX&to=YYY`
 3. **Refresh Stale**: Calls `refreshFxRates()` → Refetches data
 
 ### State Management
+
 - Modal visibility controlled by local state
 - Auto-shows modal via `useEffect` when error detected
 - Loading states prevent duplicate operations
@@ -96,16 +107,19 @@ User can:
 ## Code Quality
 
 ### Type Safety
+
 - ✅ All components fully typed with TypeScript
 - ✅ No type errors (`npm run type-check` passes)
 - ✅ Props interfaces exported for reusability
 
 ### Code Style
+
 - ✅ ESLint passes with only 2 warnings in unrelated file
 - ✅ Follows project conventions (PascalCase components, kebab-case files)
 - ✅ Proper imports using path aliases (`@ui/components`, `@modules/...`)
 
 ### Accessibility
+
 - ✅ All interactive elements have `accessibilityLabel`
 - ✅ All buttons have `accessibilityHint`
 - ✅ Proper `accessibilityRole` on all components
@@ -115,6 +129,7 @@ User can:
 ## Testing Recommendations
 
 ### Manual Testing Checklist
+
 - [ ] Open settlement screen with missing display currency rate → Modal appears
 - [ ] Click "Fetch Online" → Modal closes, amounts appear
 - [ ] Open settlement screen with stale rate (>7 days) → Banner appears
@@ -125,28 +140,32 @@ User can:
 - [ ] Pull to refresh on settlement screen → Refreshes both data and rates
 
 ### Automated Testing (Future)
+
 ```typescript
 // Example test structure
-describe('SettlementSummaryScreen FX Integration', () => {
-  it('shows modal when rate missing', () => {});
-  it('fetches rates on button press', () => {});
-  it('navigates to manual entry', () => {});
-  it('shows staleness banner when rate old', () => {});
-  it('refreshes rates from banner', () => {});
+describe("SettlementSummaryScreen FX Integration", () => {
+  it("shows modal when rate missing", () => {});
+  it("fetches rates on button press", () => {});
+  it("navigates to manual entry", () => {});
+  it("shows staleness banner when rate old", () => {});
+  it("refreshes rates from banner", () => {});
 });
 ```
 
 ## Files Modified
 
 ### Source Files
+
 1. `src/modules/settlement/screens/SettlementSummaryScreen.tsx` - Added FX error handling
 2. `src/modules/expenses/screens/ExpenseDetailsScreen.tsx` - Added FX error handling
 
 ### Documentation
+
 1. `docs/fx-ui-integration-guide.md` - Complete integration guide
 2. `docs/PHASE_6_COMPLETION.md` - This file
 
 ### No Changes Required
+
 - ✅ Components already exported in `src/ui/components/index.ts`
 - ✅ Hooks already available from Phase 5
 - ✅ No schema or migration changes needed
@@ -168,6 +187,7 @@ describe('SettlementSummaryScreen FX Integration', () => {
 ## Next Steps (Future Phases)
 
 ### Phase 7: Polish & Enhancement
+
 - [ ] Add toast notifications for success/failure
 - [ ] Show rate age inline with amounts
 - [ ] Batch refresh multiple currency pairs
@@ -175,6 +195,7 @@ describe('SettlementSummaryScreen FX Integration', () => {
 - [ ] Offline queue for rate fetches
 
 ### Phase 8: Testing & Validation
+
 - [ ] Unit tests for modal and banner components
 - [ ] Integration tests for screen flows
 - [ ] E2E tests for complete user journeys
@@ -182,6 +203,7 @@ describe('SettlementSummaryScreen FX Integration', () => {
 - [ ] Performance testing on low-end devices
 
 ### Phase 9: User Feedback
+
 - [ ] Beta testing with real users
 - [ ] Collect feedback on error recovery flows
 - [ ] Iterate on UI/UX based on feedback
@@ -190,18 +212,21 @@ describe('SettlementSummaryScreen FX Integration', () => {
 ## Success Metrics
 
 ### User Experience
+
 - ✅ Users can recover from missing rates without leaving screen
 - ✅ Users are warned about stale rates proactively
 - ✅ Users have multiple recovery options (online/manual)
 - ✅ Users are never blocked by rate errors
 
 ### Code Quality
+
 - ✅ Type-safe implementation with no type errors
 - ✅ Clean, maintainable code following project standards
 - ✅ Proper separation of concerns (hooks, handlers, UI)
 - ✅ Comprehensive documentation for future developers
 
 ### Technical Excellence
+
 - ✅ Non-blocking error handling
 - ✅ Graceful degradation (show trip currency when display fails)
 - ✅ Proper loading states prevent duplicate operations

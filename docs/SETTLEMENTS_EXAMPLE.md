@@ -5,6 +5,7 @@
 ## Scenario: Weekend Ski Trip
 
 **Participants**:
+
 - Alice
 - Bob
 - Charlie
@@ -36,9 +37,9 @@ Expense 3: Groceries - $90
 **expenses**:
 | id | paidBy | amount | date |
 |----|--------|--------|------|
-| e1 | alice  | 30000  | Jan 15 |
-| e2 | bob    | 15000  | Jan 15 |
-| e3 | alice  | 9000   | Jan 16 |
+| e1 | alice | 30000 | Jan 15 |
+| e2 | bob | 15000 | Jan 15 |
+| e3 | alice | 9000 | Jan 16 |
 
 **expense_splits**:
 | id | expenseId | participantId | amount |
@@ -534,16 +535,19 @@ Alice → Charlie: $1 (Charlie overpaid by $1)
 ## Summary Statistics
 
 ### Total Trip Expenses
+
 ```
 $300 (Hotel) + $150 (Lift Tickets) + $90 (Groceries) = $540
 ```
 
 ### Total Settlements Recorded
+
 ```
 $20 + $100 + $10 + $81 = $211
 ```
 
 ### Remaining Debt
+
 ```
 $1 (Alice owes Charlie due to overpayment)
 ```
@@ -551,18 +555,21 @@ $1 (Alice owes Charlie due to overpayment)
 ### Settlement Breakdown by Participant
 
 **Alice**:
+
 - Paid for expenses: $390
 - Owed for splits: $180
 - Received in settlements: $211
 - Net position: -$1 (owes Charlie)
 
 **Bob**:
+
 - Paid for expenses: $150
 - Owed for splits: $180
 - Paid in settlements: $30
 - Net position: $0 (settled)
 
 **Charlie**:
+
 - Paid for expenses: $0
 - Owed for splits: $180
 - Paid in settlements: $181

@@ -142,12 +142,8 @@
           "name": "participants_trip_id_trips_id_fk",
           "tableFrom": "participants",
           "tableTo": "trips",
-          "columnsFrom": [
-            "trip_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["trip_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -273,12 +269,8 @@
           "name": "expenses_trip_id_trips_id_fk",
           "tableFrom": "expenses",
           "tableTo": "trips",
-          "columnsFrom": [
-            "trip_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["trip_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -286,12 +278,8 @@
           "name": "expenses_paid_by_participants_id_fk",
           "tableFrom": "expenses",
           "tableTo": "participants",
-          "columnsFrom": [
-            "paid_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["paid_by"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -299,12 +287,8 @@
           "name": "expenses_category_id_expense_categories_id_fk",
           "tableFrom": "expenses",
           "tableTo": "expense_categories",
-          "columnsFrom": [
-            "category_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["category_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -381,12 +365,8 @@
           "name": "expense_splits_expense_id_expenses_id_fk",
           "tableFrom": "expense_splits",
           "tableTo": "expenses",
-          "columnsFrom": [
-            "expense_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["expense_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -394,12 +374,8 @@
           "name": "expense_splits_participant_id_participants_id_fk",
           "tableFrom": "expense_splits",
           "tableTo": "participants",
-          "columnsFrom": [
-            "participant_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["participant_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -486,12 +462,8 @@
           "name": "expense_categories_trip_id_trips_id_fk",
           "tableFrom": "expense_categories",
           "tableTo": "trips",
-          "columnsFrom": [
-            "trip_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["trip_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -551,16 +523,12 @@
       "indexes": {
         "fx_rate_snapshots_trip_id_idx": {
           "name": "fx_rate_snapshots_trip_id_idx",
-          "columns": [
-            "trip_id"
-          ],
+          "columns": ["trip_id"],
           "isUnique": false
         },
         "fx_rate_snapshots_fx_rate_id_idx": {
           "name": "fx_rate_snapshots_fx_rate_id_idx",
-          "columns": [
-            "fx_rate_id"
-          ],
+          "columns": ["fx_rate_id"],
           "isUnique": false
         }
       },
@@ -569,12 +537,8 @@
           "name": "fx_rate_snapshots_trip_id_trips_id_fk",
           "tableFrom": "fx_rate_snapshots",
           "tableTo": "trips",
-          "columnsFrom": [
-            "trip_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["trip_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -582,12 +546,8 @@
           "name": "fx_rate_snapshots_fx_rate_id_fx_rates_id_fk",
           "tableFrom": "fx_rate_snapshots",
           "tableTo": "fx_rates",
-          "columnsFrom": [
-            "fx_rate_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["fx_rate_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -684,25 +644,17 @@
       "indexes": {
         "fx_rates_currency_pair_idx": {
           "name": "fx_rates_currency_pair_idx",
-          "columns": [
-            "base_currency",
-            "quote_currency",
-            "is_archived"
-          ],
+          "columns": ["base_currency", "quote_currency", "is_archived"],
           "isUnique": false
         },
         "fx_rates_fetched_at_idx": {
           "name": "fx_rates_fetched_at_idx",
-          "columns": [
-            "fetched_at"
-          ],
+          "columns": ["fetched_at"],
           "isUnique": false
         },
         "fx_rates_source_idx": {
           "name": "fx_rates_source_idx",
-          "columns": [
-            "source"
-          ],
+          "columns": ["source"],
           "isUnique": false
         }
       },
@@ -818,37 +770,27 @@
       "indexes": {
         "settlements_trip_id_idx": {
           "name": "settlements_trip_id_idx",
-          "columns": [
-            "trip_id"
-          ],
+          "columns": ["trip_id"],
           "isUnique": false
         },
         "settlements_from_participant_idx": {
           "name": "settlements_from_participant_idx",
-          "columns": [
-            "from_participant_id"
-          ],
+          "columns": ["from_participant_id"],
           "isUnique": false
         },
         "settlements_to_participant_idx": {
           "name": "settlements_to_participant_idx",
-          "columns": [
-            "to_participant_id"
-          ],
+          "columns": ["to_participant_id"],
           "isUnique": false
         },
         "settlements_expense_split_idx": {
           "name": "settlements_expense_split_idx",
-          "columns": [
-            "expense_split_id"
-          ],
+          "columns": ["expense_split_id"],
           "isUnique": false
         },
         "settlements_date_idx": {
           "name": "settlements_date_idx",
-          "columns": [
-            "date"
-          ],
+          "columns": ["date"],
           "isUnique": false
         }
       },
@@ -857,12 +799,8 @@
           "name": "settlements_trip_id_trips_id_fk",
           "tableFrom": "settlements",
           "tableTo": "trips",
-          "columnsFrom": [
-            "trip_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["trip_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -870,12 +808,8 @@
           "name": "settlements_from_participant_id_participants_id_fk",
           "tableFrom": "settlements",
           "tableTo": "participants",
-          "columnsFrom": [
-            "from_participant_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["from_participant_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -883,12 +817,8 @@
           "name": "settlements_to_participant_id_participants_id_fk",
           "tableFrom": "settlements",
           "tableTo": "participants",
-          "columnsFrom": [
-            "to_participant_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["to_participant_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -896,12 +826,8 @@
           "name": "settlements_expense_split_id_expense_splits_id_fk",
           "tableFrom": "settlements",
           "tableTo": "expense_splits",
-          "columnsFrom": [
-            "expense_split_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["expense_split_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }

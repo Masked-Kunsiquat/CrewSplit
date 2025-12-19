@@ -44,11 +44,13 @@ CREATE TABLE settlements (
 **Answer**: Two mechanisms:
 
 #### 1. General Payments (Partial or Full)
+
 - `expenseSplitId = NULL`
 - User pays ANY amount toward overall debt
 - Example: Bob owes Alice $120, pays $90 → $30 remaining
 
 #### 2. Expense-Specific Payoffs
+
 - `expenseSplitId = <split_id>`
 - Links settlement to specific expense split
 - Query to check status:
@@ -78,6 +80,7 @@ GROUP BY es.id
 **Answer**: Minimal changes to existing code:
 
 #### Modified Function: `calculateBalances()`
+
 ```typescript
 export const calculateBalances = (
   expenses: Expense[],
@@ -91,10 +94,12 @@ export const calculateBalances = (
   if (settlements) {
     settlements.forEach((settlement) => {
       // Payer's balance increases (debt reduced)
-      balanceMap.get(settlement.fromParticipantId).totalPaid += settlement.convertedAmountMinor;
+      balanceMap.get(settlement.fromParticipantId).totalPaid +=
+        settlement.convertedAmountMinor;
 
       // Receiver's balance decreases (credit reduced)
-      balanceMap.get(settlement.toParticipantId).totalOwed += settlement.convertedAmountMinor;
+      balanceMap.get(settlement.toParticipantId).totalOwed +=
+        settlement.convertedAmountMinor;
     });
   }
 
@@ -103,6 +108,7 @@ export const calculateBalances = (
 ```
 
 #### Modified Service: `SettlementService.ts`
+
 ```typescript
 export async function computeSettlement(tripId: string) {
   const [expenses, participants, settlements] = await Promise.all([
@@ -112,7 +118,10 @@ export async function computeSettlement(tripId: string) {
   ]);
 
   const balances = calculateBalances(
-    expenses, splits, participants, settlements // NEW: pass settlements
+    expenses,
+    splits,
+    participants,
+    settlements, // NEW: pass settlements
   );
 
   // ... rest unchanged ...
@@ -120,6 +129,7 @@ export async function computeSettlement(tripId: string) {
 ```
 
 **Why it works**: Settlements are modeled as "phantom expenses" where:
+
 - Payer's `totalPaid` increases (as if they paid an expense)
 - Receiver's `totalOwed` increases (as if they owe more)
 - Net effect: reduces debt between them
@@ -137,6 +147,7 @@ export async function computeSettlement(tripId: string) {
 ✅ Existing apps continue working without settlements
 
 **Migration strategy**: Purely additive
+
 - Existing data: Untouched
 - Existing queries: Continue working
 - Existing calculations: Work with or without settlements
@@ -148,6 +159,7 @@ export async function computeSettlement(tripId: string) {
 **Answer**: **Exact same pattern as expenses** (already implemented):
 
 #### On Write (Repository Layer)
+
 ```typescript
 async function createSettlement(data) {
   const trip = await getTrip(data.tripId);
@@ -163,7 +175,7 @@ async function createSettlement(data) {
     fxRateToTrip = await cachedFxRateProvider.getRate(
       data.originalCurrency,
       trip.currency,
-      data.date
+      data.date,
     );
     convertedAmountMinor = Math.round(data.originalAmountMinor * fxRateToTrip);
   }
@@ -179,14 +191,17 @@ async function createSettlement(data) {
 ```
 
 #### In Calculations (Pure Math Layer)
+
 - **Always use `convertedAmountMinor`** (trip currency)
 - Ignore original currency/amount in balance calculations
 
 #### In Display (UI Layer)
+
 - Show both: "Bob paid Alice €50.00 EUR ($54.00 USD)"
 - Use `DisplayCurrencyAdapter` for user's preferred display currency
 
 **Benefits**:
+
 - ✅ Deterministic (same conversion every time)
 - ✅ Offline-first (uses cached FX rates)
 - ✅ Auditable (FX rate stored with settlement)
@@ -224,11 +239,13 @@ UI Re-renders
 ```
 
 **Trigger points** (automatic recalculation):
+
 1. Settlement created → `refetchBalances()`
 2. Settlement updated → `refetchBalances()`
 3. Settlement deleted → `refetchBalances()`
 
 **React hook pattern**:
+
 ```typescript
 export function useCreateSettlement(tripId: string) {
   const { refetch } = useSettlement(tripId); // Existing hook
@@ -249,6 +266,7 @@ export function useCreateSettlement(tripId: string) {
 ## Implementation Phases
 
 ### Phase 1: Database & Repository (Week 1) ✅ READY
+
 - [x] Schema created
 - [x] Migration generated
 - [x] Types defined
@@ -256,23 +274,27 @@ export function useCreateSettlement(tripId: string) {
 - [ ] Repository tests
 
 ### Phase 2: Settlement Engine Integration (Week 2)
+
 - [ ] Modify `calculateBalances()` to accept settlements
 - [ ] Update `SettlementService` to load settlements
 - [ ] Write integration tests
 
 ### Phase 3: React Hooks (Week 3)
+
 - [ ] `useSettlements()` - list all settlements
 - [ ] `useCreateSettlement()` - create hook
 - [ ] `useUpdateSettlement()` - update hook
 - [ ] `useDeleteSettlement()` - delete hook
 
 ### Phase 4: UI Screens (Week 4-5)
+
 - [ ] Settlement list screen
 - [ ] Settlement entry form
 - [ ] Expense detail integration ("Mark as Paid")
 - [ ] Settlement history
 
 ### Phase 5: Polish & Testing (Week 6)
+
 - [ ] Validation (self-payment, negative amounts)
 - [ ] Overpayment warnings
 - [ ] Multi-currency display
@@ -285,6 +307,7 @@ export function useCreateSettlement(tripId: string) {
 ### Decision 1: Settlements as "Phantom Expenses"
 
 **Rationale**: Instead of creating a separate balance calculation system, we model settlements as adjustments to existing `totalPaid`/`totalOwed` fields. This:
+
 - Reuses existing pure math functions
 - Maintains determinism
 - Simplifies testing
@@ -293,6 +316,7 @@ export function useCreateSettlement(tripId: string) {
 ### Decision 2: Optional `expenseSplitId` Link
 
 **Rationale**: Allows both:
+
 - **General payments**: Reduce overall debt (flexible)
 - **Specific payoffs**: Track which expenses are settled (granular)
 
@@ -301,6 +325,7 @@ Users choose based on their preference.
 ### Decision 3: Multi-Currency Pattern Consistency
 
 **Rationale**: Settlements use the **exact same** multi-currency pattern as expenses because:
+
 - Developers already understand the pattern
 - Repository logic is reusable
 - Testing approach is proven
@@ -309,6 +334,7 @@ Users choose based on their preference.
 ### Decision 4: No Changes to Existing Tables
 
 **Rationale**: Purely additive design ensures:
+
 - Zero risk to existing data
 - Backward compatibility
 - Easy rollback if needed

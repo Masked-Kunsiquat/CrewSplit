@@ -131,6 +131,7 @@ The settlement module has strict layer separation:
 - **useFxSync**: Hook for automatic staleness checking and background refresh
 
 **Key files**:
+
 ```
 src/modules/fx-rates/
 ├── provider/cached-fx-rate-provider.ts    # In-memory rate cache
@@ -141,12 +142,14 @@ src/modules/fx-rates/
 ```
 
 **Rate priority system**:
+
 - Manual rates (priority 100) override API rates
 - Frankfurter API (priority 50)
 - ExchangeRate-API (priority 40)
 - Rates stored bidirectionally (USD→EUR and EUR→USD)
 
 **Critical rules**:
+
 - Provider must be initialized at app startup via `cachedFxRateProvider.initialize()`
 - Rates are refreshed automatically when >7 days old (staleness threshold)
 - Missing rates throw `NoRateAvailableError` with fromCurrency/toCurrency
@@ -315,6 +318,7 @@ throw error;
 **Critical**: NEVER call `setState` inside `useMemo` - it triggers infinite loops.
 
 **Wrong**:
+
 ```typescript
 const result = useMemo(() => {
   setError(null); // ❌ Causes infinite loop
@@ -328,6 +332,7 @@ const result = useMemo(() => {
 ```
 
 **Right**:
+
 ```typescript
 const result = useMemo(() => {
   try {
@@ -344,6 +349,7 @@ useEffect(() => {
 ```
 
 **useEffect dependency arrays**:
+
 - Include all dependencies OR use empty array `[]` for mount-only
 - Avoid putting callback functions in deps (causes re-run every render)
 - Use `// eslint-disable-next-line react-hooks/exhaustive-deps` sparingly and document why
@@ -359,6 +365,7 @@ useEffect(() => {
 See [NEXT_UP.md](NEXT_UP.md) for detailed roadmap.
 
 **Core Features (Complete)**:
+
 - ✅ Project structure, schema, math engine
 - ✅ Migration infrastructure with auto-apply
 - ✅ Repositories and hooks (trips, participants, expenses, settlements)
@@ -367,6 +374,7 @@ See [NEXT_UP.md](NEXT_UP.md) for detailed roadmap.
 - ✅ Settlement UI integration
 
 **FX Rates System (Complete - Phase 6)**:
+
 - ✅ FX rates schema and migrations
 - ✅ FxRateRepository (database access)
 - ✅ CachedFxRateProvider (in-memory cache)
