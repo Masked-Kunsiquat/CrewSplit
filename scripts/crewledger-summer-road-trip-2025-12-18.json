@@ -822,6 +822,33 @@
       "updatedAt": "2025-12-15T09:02:36.276Z"
     }
   ],
+  "settlements": [
+    {
+      "id": "settlement-001",
+      "tripId": "95d61d07-8581-49d1-a86b-8c7b8fcdc35f",
+      "fromParticipantId": "510b295a-f848-45bc-82a0-ea44966bd7ac",
+      "toParticipantId": "f8081ac9-f51e-4148-bda6-435c6f349f31",
+      "amountMinor": 15000,
+      "currency": "USD",
+      "status": "pending",
+      "description": "Taylor owes Jordan",
+      "createdAt": "2025-06-22T10:00:00.000Z",
+      "updatedAt": "2025-06-22T10:00:00.000Z"
+    },
+    {
+      "id": "settlement-002",
+      "tripId": "95d61d07-8581-49d1-a86b-8c7b8fcdc35f",
+      "fromParticipantId": "4bcd6d96-f450-4fc6-a2b7-921183b40361",
+      "toParticipantId": "f8081ac9-f51e-4148-bda6-435c6f349f31",
+      "amountMinor": 8500,
+      "currency": "USD",
+      "status": "completed",
+      "description": "Casey paid Jordan",
+      "createdAt": "2025-06-22T10:05:00.000Z",
+      "updatedAt": "2025-06-22T12:30:00.000Z",
+      "completedAt": "2025-06-22T12:30:00.000Z"
+    }
+  ],
   "trip": {
     "createdAt": "2025-12-15T09:02:03.870Z",
     "currency": "USD",
