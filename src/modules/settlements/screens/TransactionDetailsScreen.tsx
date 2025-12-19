@@ -16,6 +16,7 @@ import { useRouter, useLocalSearchParams, useNavigation } from "expo-router";
 import { theme } from "@ui/theme";
 import { Button } from "@ui/components";
 import { useSettlement, useDeleteSettlement } from "../hooks/use-settlements";
+import { useTripById } from "@modules/trips/hooks/use-trips";
 import { formatCurrency } from "@utils/currency";
 
 export default function TransactionDetailsScreen() {
@@ -26,6 +27,7 @@ export default function TransactionDetailsScreen() {
 
   const { settlement, loading, refetch } = useSettlement(settlementId ?? null);
   const { deleteSettlement, loading: deleting } = useDeleteSettlement();
+  const { trip } = useTripById(settlement?.tripId ?? null);
 
   useEffect(() => {
     if (settlement) {
@@ -93,8 +95,8 @@ export default function TransactionDetailsScreen() {
     );
   }
 
-  const showCurrencyConversion =
-    settlement.originalCurrency !== settlement.originalCurrency; // TODO: Get trip currency
+  // Show currency conversion if FX rate exists (indicates different currencies)
+  const showCurrencyConversion = settlement.fxRateToTrip !== null;
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
@@ -106,13 +108,10 @@ export default function TransactionDetailsScreen() {
             settlement.originalCurrency,
           )}
         </Text>
-        {showCurrencyConversion && settlement.fxRateToTrip && (
+        {showCurrencyConversion && settlement.fxRateToTrip && trip && (
           <Text style={styles.convertedText}>
             Converted:{" "}
-            {formatCurrency(
-              settlement.convertedAmountMinor,
-              settlement.originalCurrency,
-            )}{" "}
+            {formatCurrency(settlement.convertedAmountMinor, trip.currencyCode)}{" "}
             (Rate: {settlement.fxRateToTrip.toFixed(4)})
           </Text>
         )}
