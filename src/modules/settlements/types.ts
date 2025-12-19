@@ -3,30 +3,31 @@
  * Types for settlement transactions and related business logic
  */
 
+import { Settlement as DbSettlement } from "@db/schema/settlements";
+
 /**
- * Settlement transaction (from database)
+ * Settlement transaction (re-exported from database schema)
  * Represents a payment from one participant to another
+ *
+ * Note: This is the base type inferred from the database schema.
+ * Extended types (e.g., SettlementWithParticipants) build on this.
  */
-export interface Settlement {
-  id: string;
-  tripId: string;
-  fromParticipantId: string;
-  toParticipantId: string;
-  expenseSplitId: string | null;
+export type Settlement = Omit<DbSettlement, "paymentMethod"> & {
+  paymentMethod: SettlementPaymentMethod | null;
+};
 
-  // Multi-currency support
-  originalCurrency: string;
-  originalAmountMinor: number;
-  fxRateToTrip: number | null;
-  convertedAmountMinor: number;
-
-  date: string; // ISO 8601
-  description: string | null;
-  paymentMethod: string | null;
-
-  createdAt: string;
-  updatedAt: string;
-}
+/**
+ * Payment methods (optional, for user reference)
+ * Defined before Settlement so it can be used in the type override
+ */
+export type SettlementPaymentMethod =
+  | "cash"
+  | "venmo"
+  | "paypal"
+  | "zelle"
+  | "bank_transfer"
+  | "check"
+  | "other";
 
 /**
  * New settlement data (for creation)
@@ -55,18 +56,6 @@ export interface UpdateSettlementData {
   description?: string;
   paymentMethod?: SettlementPaymentMethod;
 }
-
-/**
- * Payment methods (optional, for user reference)
- */
-export type SettlementPaymentMethod =
-  | "cash"
-  | "venmo"
-  | "paypal"
-  | "zelle"
-  | "bank_transfer"
-  | "check"
-  | "other";
 
 /**
  * Settlement with participant names (for display)

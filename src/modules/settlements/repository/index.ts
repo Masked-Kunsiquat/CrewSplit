@@ -21,6 +21,7 @@ import {
   NewSettlementData,
   UpdateSettlementData,
   SettlementWithParticipants,
+  SettlementPaymentMethod,
 } from "../types";
 import { settlementLogger } from "@utils/logger";
 import { cachedFxRateProvider } from "@modules/fx-rates/provider/cached-fx-rate-provider";
@@ -40,7 +41,7 @@ const mapSettlement = (row: SettlementRow): Settlement => ({
   convertedAmountMinor: row.convertedAmountMinor,
   date: row.date,
   description: row.description ?? null,
-  paymentMethod: row.paymentMethod ?? null,
+  paymentMethod: (row.paymentMethod as SettlementPaymentMethod) ?? null,
   createdAt: row.createdAt,
   updatedAt: row.updatedAt,
 });
