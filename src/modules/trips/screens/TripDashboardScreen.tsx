@@ -16,7 +16,7 @@ import {
 } from "react-native";
 import { useRouter, useLocalSearchParams, useNavigation } from "expo-router";
 import { theme } from "@ui/theme";
-import { Button, Card } from "@ui/components";
+import { Button, Card, ConfirmDialog } from "@ui/components";
 import { useTripById } from "../hooks/use-trips";
 import { useParticipants } from "../../participants/hooks/use-participants";
 import { useExpenses } from "../../expenses/hooks/use-expenses";
@@ -87,6 +87,7 @@ function TripDashboardScreenContent({ tripId }: { tripId: string }) {
   const [endDateInput, setEndDateInput] = useState<Date | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [addMenuVisible, setAddMenuVisible] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   // Update native header title when trip loads
   useEffect(() => {
@@ -148,27 +149,19 @@ function TripDashboardScreenContent({ tripId }: { tripId: string }) {
   };
 
   const handleDeleteTrip = () => {
-    Alert.alert(
-      "Delete Trip",
-      `Delete "${trip?.name}"? This will permanently delete all participants, expenses, and settlements for this trip. This action cannot be undone.`,
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: async () => {
-            setIsDeleting(true);
-            try {
-              await deleteTrip(tripId);
-              router.replace("/");
-            } catch {
-              Alert.alert("Error", "Failed to delete trip");
-              setIsDeleting(false);
-            }
-          },
-        },
-      ],
-    );
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDeleteTrip = async () => {
+    setShowDeleteConfirm(false);
+    setIsDeleting(true);
+    try {
+      await deleteTrip(tripId);
+      router.replace("/");
+    } catch {
+      Alert.alert("Error", "Failed to delete trip");
+      setIsDeleting(false);
+    }
   };
 
   if (tripError) {
@@ -325,6 +318,17 @@ function TripDashboardScreenContent({ tripId }: { tripId: string }) {
           </Pressable>
         </Pressable>
       </Modal>
+
+      <ConfirmDialog
+        visible={showDeleteConfirm}
+        title="Delete Trip"
+        message={`Delete "${trip?.name}"? This will permanently delete all participants, expenses, and settlements for this trip. This action cannot be undone.`}
+        confirmLabel="Delete"
+        confirmVariant="danger"
+        onCancel={() => setShowDeleteConfirm(false)}
+        onConfirm={confirmDeleteTrip}
+        loading={isDeleting}
+      />
     </View>
   );
 }

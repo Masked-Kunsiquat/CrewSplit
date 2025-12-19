@@ -18,6 +18,7 @@ import { theme } from "@ui/theme";
 import {
   Button,
   Card,
+  ConfirmDialog,
   NoRateAvailableModal,
   StalenessWarningBanner,
 } from "@ui/components";
@@ -72,6 +73,7 @@ function ExpenseDetailsContent({
   const navigation = useNavigation();
   const { displayCurrency } = useDisplayCurrency();
   const [isDeleting, setIsDeleting] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [editingExpense, setEditingExpense] = useState(false);
   const [exportModalVisible, setExportModalVisible] = useState(false);
   const [rateModalVisible, setRateModalVisible] = useState(false);
@@ -293,27 +295,19 @@ function ExpenseDetailsContent({
   const showDisplayCurrency = !!displayAmounts;
 
   const handleDelete = () => {
-    Alert.alert(
-      "Delete Expense",
-      `Delete "${expense.description}"? This action cannot be undone.`,
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: async () => {
-            setIsDeleting(true);
-            try {
-              await deleteExpense(expenseId);
-              router.back();
-            } catch {
-              Alert.alert("Error", "Failed to delete expense");
-              setIsDeleting(false);
-            }
-          },
-        },
-      ],
-    );
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDelete = async () => {
+    setShowDeleteConfirm(false);
+    setIsDeleting(true);
+    try {
+      await deleteExpense(expenseId);
+      router.back();
+    } catch {
+      Alert.alert("Error", "Failed to delete expense");
+      setIsDeleting(false);
+    }
   };
 
   return (
@@ -544,6 +538,17 @@ function ExpenseDetailsContent({
         onEnterManually={handleEnterManually}
         onDismiss={() => setRateModalVisible(false)}
         fetching={fxRefreshing}
+      />
+
+      <ConfirmDialog
+        visible={showDeleteConfirm}
+        title="Delete Expense"
+        message={`Delete "${expense.description}"? This action cannot be undone.`}
+        confirmLabel="Delete"
+        confirmVariant="danger"
+        onCancel={() => setShowDeleteConfirm(false)}
+        onConfirm={confirmDelete}
+        loading={isDeleting}
       />
     </View>
   );

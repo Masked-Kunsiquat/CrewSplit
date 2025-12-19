@@ -10,6 +10,7 @@ import { theme } from "../theme";
 interface CardProps {
   children: React.ReactNode;
   onPress?: () => void;
+  onLongPress?: () => void;
   style?: ViewStyle;
   elevated?: boolean;
   /**
@@ -44,6 +45,7 @@ const deriveLabelFromChildren = (
 export const Card: React.FC<CardProps> = ({
   children,
   onPress,
+  onLongPress,
   style,
   elevated = false,
   label,
@@ -63,6 +65,7 @@ export const Card: React.FC<CardProps> = ({
       <TouchableOpacity
         style={cardStyle}
         onPress={onPress}
+        onLongPress={onLongPress}
         activeOpacity={0.8}
         accessible
         accessibilityRole="button"

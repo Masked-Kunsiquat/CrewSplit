@@ -3,19 +3,58 @@
  * Expo Router entry point
  */
 
-import { Stack } from "expo-router";
+import { Stack, Redirect, usePathname } from "expo-router";
 import { View, Text, ActivityIndicator, StyleSheet } from "react-native";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useDbMigrations } from "@db/client";
 import { cachedFxRateProvider } from "@modules/fx-rates/provider";
 import { useFxSync } from "@modules/fx-rates/hooks";
+import { useOnboardingState } from "@modules/onboarding/hooks/use-onboarding-state";
 import { colors, spacing, typography } from "@ui/tokens";
 import { fxLogger } from "@utils/logger";
 
+/**
+ * Root layout component that coordinates database migrations, FX provider initialization, background FX synchronization, onboarding state checks, and top-level navigation.
+ *
+ * This component:
+ * - Waits for database migrations to complete and shows an error view if migrations fail.
+ * - Triggers and monitors initialization of the cached FX rate provider and runs background FX sync (non-blocking on failure).
+ * - Checks onboarding completion and redirects to the onboarding welcome screen when needed.
+ * - Renders a centered loader while migrations, FX initialization, or onboarding checks are in progress.
+ * - Renders the app navigation Stack (main, settings, onboarding) once initialization and onboarding checks complete.
+ *
+ * @returns The root React element for the app: either a migration error view, a loading view, an onboarding redirect, or the main navigation stack.
+ */
 export default function RootLayout() {
+  const pathname = usePathname();
   const { success, error } = useDbMigrations();
   const [fxInitialized, setFxInitialized] = useState(false);
   const [fxError, setFxError] = useState<Error | null>(null);
+
+  // Check onboarding status (for future redirect to onboarding screens)
+  const {
+    isComplete: onboardingComplete,
+    loading: onboardingLoading,
+    error: onboardingError,
+    refresh: refreshOnboarding,
+  } = useOnboardingState({ enabled: success });
+
+  const isOnboardingRoute = pathname?.startsWith("/onboarding");
+  const previousPath = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!success) {
+      previousPath.current = pathname ?? null;
+      return;
+    }
+
+    const prior = previousPath.current;
+    previousPath.current = pathname ?? null;
+
+    if (prior?.startsWith("/onboarding") && !isOnboardingRoute) {
+      refreshOnboarding();
+    }
+  }, [pathname, success, isOnboardingRoute, refreshOnboarding]);
 
   // Background sync for FX rates (must be called unconditionally)
   // Safe to run before provider initialization: checkStaleness only queries DB,
@@ -60,16 +99,23 @@ export default function RootLayout() {
     );
   }
 
-  // Show loading while migrations or FX initialization in progress
-  if (!success || !fxInitialized) {
+  // Show loading while migrations, FX initialization, or onboarding check in progress
+  if (!success || !fxInitialized || onboardingLoading) {
     return (
       <View style={styles.container}>
         <ActivityIndicator size="large" color={colors.primary} />
         <Text style={styles.loadingText}>
           {!success
             ? "Applying database migrations..."
-            : "Loading exchange rates..."}
+            : !fxInitialized
+              ? "Loading exchange rates..."
+              : "Checking welcome status..."}
         </Text>
+        {onboardingError ? (
+          <Text style={styles.errorMessageSmall}>
+            {onboardingError.message}
+          </Text>
+        ) : null}
       </View>
     );
   }
@@ -81,21 +127,37 @@ export default function RootLayout() {
     );
   }
 
+  if (!onboardingComplete && !isOnboardingRoute) {
+    return <Redirect href="/onboarding/welcome" />;
+  }
+
   return (
     <Stack
       screenOptions={{
+        headerShown: true,
         headerStyle: {
-          backgroundColor: "#1a1a1a",
+          backgroundColor: colors.background,
         },
-        headerTintColor: "#ffffff",
+        headerTintColor: colors.text,
         headerTitleStyle: {
-          fontWeight: "600",
+          fontSize: typography.xl,
+          fontWeight: typography.semibold,
+          color: colors.text,
         },
-        contentStyle: {
-          backgroundColor: "#0a0a0a",
-        },
+        headerShadowVisible: false,
+        headerBackTitleVisible: false,
       }}
-    />
+    >
+      <Stack.Screen
+        name="index"
+        options={{
+          headerBackVisible: false,
+          headerLeft: () => null,
+        }}
+      />
+      <Stack.Screen name="settings" />
+      <Stack.Screen name="onboarding" options={{ headerShown: false }} />
+    </Stack>
   );
 }
 
@@ -120,6 +182,12 @@ const styles = StyleSheet.create({
   },
   errorMessage: {
     fontSize: typography.base,
+    color: colors.textSecondary,
+    textAlign: "center",
+  },
+  errorMessageSmall: {
+    marginTop: spacing.sm,
+    fontSize: typography.sm,
     color: colors.textSecondary,
     textAlign: "center",
   },

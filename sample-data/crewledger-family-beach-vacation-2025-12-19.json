@@ -1,0 +1,896 @@
+{
+  "categories": [
+    {
+      "createdAt": "2025-12-15 00:18:54",
+      "emoji": "✈️",
+      "id": "cat-travel",
+      "isArchived": false,
+      "isSystem": true,
+      "name": "Travel & Transportation",
+      "sortOrder": 100,
+      "tripId": null,
+      "updatedAt": "2025-12-15 00:18:54"
+    },
+    {
+      "createdAt": "2025-12-15 00:18:54",
+      "emoji": "🍔",
+      "id": "cat-food",
+      "isArchived": false,
+      "isSystem": true,
+      "name": "Food & Drinks",
+      "sortOrder": 200,
+      "tripId": null,
+      "updatedAt": "2025-12-15 00:18:54"
+    },
+    {
+      "createdAt": "2025-12-15 00:18:54",
+      "emoji": "🎭",
+      "id": "cat-leisure",
+      "isArchived": false,
+      "isSystem": true,
+      "name": "Leisure & Entertainment",
+      "sortOrder": 300,
+      "tripId": null,
+      "updatedAt": "2025-12-15 00:18:54"
+    },
+    {
+      "createdAt": "2025-12-15 00:18:54",
+      "emoji": "🏨",
+      "id": "cat-lodging",
+      "isArchived": false,
+      "isSystem": true,
+      "name": "Lodging",
+      "sortOrder": 400,
+      "tripId": null,
+      "updatedAt": "2025-12-15 00:18:54"
+    },
+    {
+      "createdAt": "2025-12-15 00:18:54",
+      "emoji": "🛒",
+      "id": "cat-groceries",
+      "isArchived": false,
+      "isSystem": true,
+      "name": "Groceries",
+      "sortOrder": 500,
+      "tripId": null,
+      "updatedAt": "2025-12-15 00:18:54"
+    }
+  ],
+  "expenseSplits": [
+    {
+      "amount": null,
+      "createdAt": "2025-12-15T09:37:49.999Z",
+      "expenseId": "2de5b54f-59ff-4a94-afb9-ab077dcc8b01",
+      "id": "d4531ed3-b99a-4f26-930d-895c45ccf8c5",
+      "participantId": "055a2262-0a90-4455-a643-25df2c7c4957",
+      "share": 1,
+      "shareType": "equal",
+      "updatedAt": "2025-12-15T09:37:49.999Z"
+    },
+    {
+      "amount": null,
+      "createdAt": "2025-12-15T09:37:49.999Z",
+      "expenseId": "2de5b54f-59ff-4a94-afb9-ab077dcc8b01",
+      "id": "2becb126-02bc-4c73-b2c7-f47f08cd8c99",
+      "participantId": "44712022-39c6-4c44-9e75-921cb570c4de",
+      "share": 1,
+      "shareType": "equal",
+      "updatedAt": "2025-12-15T09:37:49.999Z"
+    },
+    {
+      "amount": null,
+      "createdAt": "2025-12-15T09:37:49.999Z",
+      "expenseId": "2de5b54f-59ff-4a94-afb9-ab077dcc8b01",
+      "id": "46d964d3-c7af-4f22-bebc-0128a901c4c6",
+      "participantId": "44d58b55-b6d3-412a-b302-fdbca2473f74",
+      "share": 1,
+      "shareType": "equal",
+      "updatedAt": "2025-12-15T09:37:49.999Z"
+    },
+    {
+      "amount": null,
+      "createdAt": "2025-12-15T09:37:49.999Z",
+      "expenseId": "2de5b54f-59ff-4a94-afb9-ab077dcc8b01",
+      "id": "3d50c72d-5495-4687-89f8-975461e9b827",
+      "participantId": "57faca48-f392-424b-a623-d9174d7035af",
+      "share": 1,
+      "shareType": "equal",
+      "updatedAt": "2025-12-15T09:37:49.999Z"
+    },
+    {
+      "amount": null,
+      "createdAt": "2025-12-15T09:37:49.999Z",
+      "expenseId": "2de5b54f-59ff-4a94-afb9-ab077dcc8b01",
+      "id": "db53ef2d-0aee-4b30-bc1e-bb0a89f024bf",
+      "participantId": "af43d11c-a0fc-4aca-b3ad-2026bab1eb65",
+      "share": 1,
+      "shareType": "equal",
+      "updatedAt": "2025-12-15T09:37:49.999Z"
+    },
+    {
+      "amount": null,
+      "createdAt": "2025-12-15T09:37:49.999Z",
+      "expenseId": "2de5b54f-59ff-4a94-afb9-ab077dcc8b01",
+      "id": "e3c8f8ff-616f-444c-bf9c-80d773bcf3ef",
+      "participantId": "fcf77959-5737-4a2e-af38-fa722683d7b5",
+      "share": 1,
+      "shareType": "equal",
+      "updatedAt": "2025-12-15T09:37:49.999Z"
+    },
+    {
+      "amount": null,
+      "createdAt": "2025-12-15T09:32:24.371Z",
+      "expenseId": "424508ac-2d89-4317-a5cc-18a35df273fe",
+      "id": "0ffc9c28-f3f9-4c17-968a-401587d7319b",
+      "participantId": "055a2262-0a90-4455-a643-25df2c7c4957",
+      "share": 1,
+      "shareType": "weight",
+      "updatedAt": "2025-12-15T09:32:24.371Z"
+    },
+    {
+      "amount": null,
+      "createdAt": "2025-12-15T09:32:24.371Z",
+      "expenseId": "424508ac-2d89-4317-a5cc-18a35df273fe",
+      "id": "d0bcd785-0a05-4d96-8650-f803daab9e6b",
+      "participantId": "44712022-39c6-4c44-9e75-921cb570c4de",
+      "share": 1,
+      "shareType": "weight",
+      "updatedAt": "2025-12-15T09:32:24.371Z"
+    },
+    {
+      "amount": null,
+      "createdAt": "2025-12-15T09:32:24.371Z",
+      "expenseId": "424508ac-2d89-4317-a5cc-18a35df273fe",
+      "id": "ab4dff47-38fa-4787-a94f-286ca1e0677a",
+      "participantId": "44d58b55-b6d3-412a-b302-fdbca2473f74",
+      "share": 1,
+      "shareType": "weight",
+      "updatedAt": "2025-12-15T09:32:24.371Z"
+    },
+    {
+      "amount": null,
+      "createdAt": "2025-12-15T09:32:24.371Z",
+      "expenseId": "424508ac-2d89-4317-a5cc-18a35df273fe",
+      "id": "155f9aa3-4c96-430e-8154-f5f78226c8d4",
+      "participantId": "57faca48-f392-424b-a623-d9174d7035af",
+      "share": 2,
+      "shareType": "weight",
+      "updatedAt": "2025-12-15T09:32:24.371Z"
+    },
+    {
+      "amount": null,
+      "createdAt": "2025-12-15T09:32:24.371Z",
+      "expenseId": "424508ac-2d89-4317-a5cc-18a35df273fe",
+      "id": "6dc05ce8-24d1-4c28-a7e6-7938f17efe7e",
+      "participantId": "af43d11c-a0fc-4aca-b3ad-2026bab1eb65",
+      "share": 2,
+      "shareType": "weight",
+      "updatedAt": "2025-12-15T09:32:24.371Z"
+    },
+    {
+      "amount": null,
+      "createdAt": "2025-12-15T09:32:24.371Z",
+      "expenseId": "424508ac-2d89-4317-a5cc-18a35df273fe",
+      "id": "681abe8c-a897-4be8-b90d-03b88d27299d",
+      "participantId": "fcf77959-5737-4a2e-af38-fa722683d7b5",
+      "share": 1.5,
+      "shareType": "weight",
+      "updatedAt": "2025-12-15T09:32:24.371Z"
+    },
+    {
+      "amount": null,
+      "createdAt": "2025-12-15T09:36:17.373Z",
+      "expenseId": "5fc2d0de-3f20-40a8-a73f-ad3a3d760035",
+      "id": "689e5c26-07e5-47da-9ed7-75e518ce9671",
+      "participantId": "055a2262-0a90-4455-a643-25df2c7c4957",
+      "share": 1,
+      "shareType": "equal",
+      "updatedAt": "2025-12-15T09:36:17.373Z"
+    },
+    {
+      "amount": null,
+      "createdAt": "2025-12-15T09:36:17.373Z",
+      "expenseId": "5fc2d0de-3f20-40a8-a73f-ad3a3d760035",
+      "id": "802dd04c-91c2-4612-9077-0e7b42f026a7",
+      "participantId": "44712022-39c6-4c44-9e75-921cb570c4de",
+      "share": 1,
+      "shareType": "equal",
+      "updatedAt": "2025-12-15T09:36:17.373Z"
+    },
+    {
+      "amount": null,
+      "createdAt": "2025-12-15T09:36:17.373Z",
+      "expenseId": "5fc2d0de-3f20-40a8-a73f-ad3a3d760035",
+      "id": "f6a09a73-9719-4a8b-8237-e4c3239e1347",
+      "participantId": "44d58b55-b6d3-412a-b302-fdbca2473f74",
+      "share": 1,
+      "shareType": "equal",
+      "updatedAt": "2025-12-15T09:36:17.373Z"
+    },
+    {
+      "amount": null,
+      "createdAt": "2025-12-15T09:36:17.373Z",
+      "expenseId": "5fc2d0de-3f20-40a8-a73f-ad3a3d760035",
+      "id": "78684876-27d3-4dfc-83d4-b2c820ddb113",
+      "participantId": "57faca48-f392-424b-a623-d9174d7035af",
+      "share": 1,
+      "shareType": "equal",
+      "updatedAt": "2025-12-15T09:36:17.373Z"
+    },
+    {
+      "amount": null,
+      "createdAt": "2025-12-15T09:36:17.373Z",
+      "expenseId": "5fc2d0de-3f20-40a8-a73f-ad3a3d760035",
+      "id": "4cd6a2b9-12db-47b6-818c-609edc297446",
+      "participantId": "af43d11c-a0fc-4aca-b3ad-2026bab1eb65",
+      "share": 1,
+      "shareType": "equal",
+      "updatedAt": "2025-12-15T09:36:17.373Z"
+    },
+    {
+      "amount": null,
+      "createdAt": "2025-12-15T09:36:17.373Z",
+      "expenseId": "5fc2d0de-3f20-40a8-a73f-ad3a3d760035",
+      "id": "da231c61-0c71-42bb-b8d4-c23f08652273",
+      "participantId": "fcf77959-5737-4a2e-af38-fa722683d7b5",
+      "share": 1,
+      "shareType": "equal",
+      "updatedAt": "2025-12-15T09:36:17.373Z"
+    },
+    {
+      "amount": null,
+      "createdAt": "2025-12-15T09:34:53.518Z",
+      "expenseId": "7f103261-9d6b-430e-b559-03241c23dbce",
+      "id": "478dfc51-d037-4628-b842-35be146620e8",
+      "participantId": "055a2262-0a90-4455-a643-25df2c7c4957",
+      "share": 1,
+      "shareType": "equal",
+      "updatedAt": "2025-12-15T09:34:53.518Z"
+    },
+    {
+      "amount": null,
+      "createdAt": "2025-12-15T09:34:53.518Z",
+      "expenseId": "7f103261-9d6b-430e-b559-03241c23dbce",
+      "id": "b36e93ff-8c2f-4c1d-9811-a657f8c8a7b8",
+      "participantId": "44712022-39c6-4c44-9e75-921cb570c4de",
+      "share": 1,
+      "shareType": "equal",
+      "updatedAt": "2025-12-15T09:34:53.518Z"
+    },
+    {
+      "amount": null,
+      "createdAt": "2025-12-15T09:34:53.518Z",
+      "expenseId": "7f103261-9d6b-430e-b559-03241c23dbce",
+      "id": "01a0c35f-5966-400e-8cef-8e6fbfddb2af",
+      "participantId": "44d58b55-b6d3-412a-b302-fdbca2473f74",
+      "share": 1,
+      "shareType": "equal",
+      "updatedAt": "2025-12-15T09:34:53.518Z"
+    },
+    {
+      "amount": null,
+      "createdAt": "2025-12-15T09:34:53.518Z",
+      "expenseId": "7f103261-9d6b-430e-b559-03241c23dbce",
+      "id": "cac1aa70-bdd3-41ad-a239-4477bb6273c5",
+      "participantId": "57faca48-f392-424b-a623-d9174d7035af",
+      "share": 1,
+      "shareType": "equal",
+      "updatedAt": "2025-12-15T09:34:53.518Z"
+    },
+    {
+      "amount": null,
+      "createdAt": "2025-12-15T09:34:53.518Z",
+      "expenseId": "7f103261-9d6b-430e-b559-03241c23dbce",
+      "id": "d0ec37fa-1b54-4f96-a954-e415f237fb86",
+      "participantId": "af43d11c-a0fc-4aca-b3ad-2026bab1eb65",
+      "share": 1,
+      "shareType": "equal",
+      "updatedAt": "2025-12-15T09:34:53.518Z"
+    },
+    {
+      "amount": null,
+      "createdAt": "2025-12-15T09:34:53.518Z",
+      "expenseId": "7f103261-9d6b-430e-b559-03241c23dbce",
+      "id": "8ec8c411-4672-4d88-af0f-9cd81cd28f67",
+      "participantId": "fcf77959-5737-4a2e-af38-fa722683d7b5",
+      "share": 1,
+      "shareType": "equal",
+      "updatedAt": "2025-12-15T09:34:53.518Z"
+    },
+    {
+      "amount": null,
+      "createdAt": "2025-12-15T09:36:46.588Z",
+      "expenseId": "9246d18e-8d3f-4ab9-88e2-951632b1524f",
+      "id": "d8a62ed0-ee10-43ee-bbc6-44ba52ad8335",
+      "participantId": "055a2262-0a90-4455-a643-25df2c7c4957",
+      "share": 1,
+      "shareType": "equal",
+      "updatedAt": "2025-12-15T09:36:46.588Z"
+    },
+    {
+      "amount": null,
+      "createdAt": "2025-12-15T09:36:46.588Z",
+      "expenseId": "9246d18e-8d3f-4ab9-88e2-951632b1524f",
+      "id": "1a4d2872-8cb7-472f-a744-90f2f756e289",
+      "participantId": "44712022-39c6-4c44-9e75-921cb570c4de",
+      "share": 1,
+      "shareType": "equal",
+      "updatedAt": "2025-12-15T09:36:46.588Z"
+    },
+    {
+      "amount": null,
+      "createdAt": "2025-12-15T09:36:46.588Z",
+      "expenseId": "9246d18e-8d3f-4ab9-88e2-951632b1524f",
+      "id": "3d58900f-060a-423a-b0f6-5946da41a38f",
+      "participantId": "44d58b55-b6d3-412a-b302-fdbca2473f74",
+      "share": 1,
+      "shareType": "equal",
+      "updatedAt": "2025-12-15T09:36:46.588Z"
+    },
+    {
+      "amount": null,
+      "createdAt": "2025-12-15T09:36:46.588Z",
+      "expenseId": "9246d18e-8d3f-4ab9-88e2-951632b1524f",
+      "id": "db723341-3879-47f9-a7d4-8e17a4fff6dc",
+      "participantId": "57faca48-f392-424b-a623-d9174d7035af",
+      "share": 1,
+      "shareType": "equal",
+      "updatedAt": "2025-12-15T09:36:46.588Z"
+    },
+    {
+      "amount": null,
+      "createdAt": "2025-12-15T09:36:46.588Z",
+      "expenseId": "9246d18e-8d3f-4ab9-88e2-951632b1524f",
+      "id": "5d19c2dd-5306-4d92-834b-fb7a5f33f442",
+      "participantId": "af43d11c-a0fc-4aca-b3ad-2026bab1eb65",
+      "share": 1,
+      "shareType": "equal",
+      "updatedAt": "2025-12-15T09:36:46.588Z"
+    },
+    {
+      "amount": null,
+      "createdAt": "2025-12-15T09:36:46.588Z",
+      "expenseId": "9246d18e-8d3f-4ab9-88e2-951632b1524f",
+      "id": "197a5e50-bc03-4fda-bf8c-786ccc0d0f97",
+      "participantId": "fcf77959-5737-4a2e-af38-fa722683d7b5",
+      "share": 1,
+      "shareType": "equal",
+      "updatedAt": "2025-12-15T09:36:46.588Z"
+    },
+    {
+      "amount": null,
+      "createdAt": "2025-12-15T09:38:59.421Z",
+      "expenseId": "9b031eee-c22b-448d-a7d5-a90bc36dc4f3",
+      "id": "68383e76-f73e-42cb-8341-b36cac6e564e",
+      "participantId": "055a2262-0a90-4455-a643-25df2c7c4957",
+      "share": 1,
+      "shareType": "equal",
+      "updatedAt": "2025-12-15T09:38:59.421Z"
+    },
+    {
+      "amount": null,
+      "createdAt": "2025-12-15T09:38:59.421Z",
+      "expenseId": "9b031eee-c22b-448d-a7d5-a90bc36dc4f3",
+      "id": "2f6bda13-fc3c-41cd-aae7-8f0b286d99a2",
+      "participantId": "44712022-39c6-4c44-9e75-921cb570c4de",
+      "share": 1,
+      "shareType": "equal",
+      "updatedAt": "2025-12-15T09:38:59.421Z"
+    },
+    {
+      "amount": null,
+      "createdAt": "2025-12-15T09:38:59.421Z",
+      "expenseId": "9b031eee-c22b-448d-a7d5-a90bc36dc4f3",
+      "id": "2792987f-54b9-40e4-b9e9-de25dc8817ec",
+      "participantId": "44d58b55-b6d3-412a-b302-fdbca2473f74",
+      "share": 1,
+      "shareType": "equal",
+      "updatedAt": "2025-12-15T09:38:59.421Z"
+    },
+    {
+      "amount": null,
+      "createdAt": "2025-12-15T09:38:59.421Z",
+      "expenseId": "9b031eee-c22b-448d-a7d5-a90bc36dc4f3",
+      "id": "46db9686-d5d9-4662-af1c-bdd37d144427",
+      "participantId": "57faca48-f392-424b-a623-d9174d7035af",
+      "share": 1,
+      "shareType": "equal",
+      "updatedAt": "2025-12-15T09:38:59.421Z"
+    },
+    {
+      "amount": null,
+      "createdAt": "2025-12-15T09:38:59.421Z",
+      "expenseId": "9b031eee-c22b-448d-a7d5-a90bc36dc4f3",
+      "id": "9af0e6e9-ef9c-44f3-a2f0-d92485dae79a",
+      "participantId": "af43d11c-a0fc-4aca-b3ad-2026bab1eb65",
+      "share": 1,
+      "shareType": "equal",
+      "updatedAt": "2025-12-15T09:38:59.421Z"
+    },
+    {
+      "amount": null,
+      "createdAt": "2025-12-15T09:38:59.421Z",
+      "expenseId": "9b031eee-c22b-448d-a7d5-a90bc36dc4f3",
+      "id": "38aa9879-5fef-4c8d-bcfc-61b53a42716a",
+      "participantId": "fcf77959-5737-4a2e-af38-fa722683d7b5",
+      "share": 1,
+      "shareType": "equal",
+      "updatedAt": "2025-12-15T09:38:59.421Z"
+    },
+    {
+      "amount": null,
+      "createdAt": "2025-12-15T09:34:02.961Z",
+      "expenseId": "9d1f9031-3068-4e68-a4e9-10d35c95c5ca",
+      "id": "fa2b6b4b-d1ff-424d-bbac-edede4b03b12",
+      "participantId": "055a2262-0a90-4455-a643-25df2c7c4957",
+      "share": 1,
+      "shareType": "equal",
+      "updatedAt": "2025-12-15T09:34:02.961Z"
+    },
+    {
+      "amount": null,
+      "createdAt": "2025-12-15T09:34:02.961Z",
+      "expenseId": "9d1f9031-3068-4e68-a4e9-10d35c95c5ca",
+      "id": "fb578cfb-4439-459c-98db-8a36d1e4d356",
+      "participantId": "44712022-39c6-4c44-9e75-921cb570c4de",
+      "share": 1,
+      "shareType": "equal",
+      "updatedAt": "2025-12-15T09:34:02.961Z"
+    },
+    {
+      "amount": null,
+      "createdAt": "2025-12-15T09:34:02.961Z",
+      "expenseId": "9d1f9031-3068-4e68-a4e9-10d35c95c5ca",
+      "id": "4b3b7ece-72e0-410f-bfdd-3f6cd17f2f4c",
+      "participantId": "44d58b55-b6d3-412a-b302-fdbca2473f74",
+      "share": 1,
+      "shareType": "equal",
+      "updatedAt": "2025-12-15T09:34:02.961Z"
+    },
+    {
+      "amount": null,
+      "createdAt": "2025-12-15T09:34:02.961Z",
+      "expenseId": "9d1f9031-3068-4e68-a4e9-10d35c95c5ca",
+      "id": "a7a3b51b-dc9d-44c9-9854-c047db5bfbe2",
+      "participantId": "57faca48-f392-424b-a623-d9174d7035af",
+      "share": 1,
+      "shareType": "equal",
+      "updatedAt": "2025-12-15T09:34:02.961Z"
+    },
+    {
+      "amount": null,
+      "createdAt": "2025-12-15T09:34:02.961Z",
+      "expenseId": "9d1f9031-3068-4e68-a4e9-10d35c95c5ca",
+      "id": "51c7a9b8-6ce5-4071-b236-aa66c578708b",
+      "participantId": "af43d11c-a0fc-4aca-b3ad-2026bab1eb65",
+      "share": 1,
+      "shareType": "equal",
+      "updatedAt": "2025-12-15T09:34:02.961Z"
+    },
+    {
+      "amount": null,
+      "createdAt": "2025-12-15T09:34:02.961Z",
+      "expenseId": "9d1f9031-3068-4e68-a4e9-10d35c95c5ca",
+      "id": "fc5eeb3d-e808-4221-9f0e-0e84eed7f9cd",
+      "participantId": "fcf77959-5737-4a2e-af38-fa722683d7b5",
+      "share": 1,
+      "shareType": "equal",
+      "updatedAt": "2025-12-15T09:34:02.961Z"
+    },
+    {
+      "amount": 4500,
+      "createdAt": "2025-12-15T09:35:57.961Z",
+      "expenseId": "ce2ec25d-20f1-4c10-a7c5-ff545ecde20a",
+      "id": "eabbc98d-88ff-4c68-8e08-c6d5ad3dc687",
+      "participantId": "055a2262-0a90-4455-a643-25df2c7c4957",
+      "share": 0,
+      "shareType": "amount",
+      "updatedAt": "2025-12-15T09:35:57.961Z"
+    },
+    {
+      "amount": 4500,
+      "createdAt": "2025-12-15T09:35:57.961Z",
+      "expenseId": "ce2ec25d-20f1-4c10-a7c5-ff545ecde20a",
+      "id": "9d994062-82a3-4d3e-a500-9fc871298691",
+      "participantId": "44712022-39c6-4c44-9e75-921cb570c4de",
+      "share": 0,
+      "shareType": "amount",
+      "updatedAt": "2025-12-15T09:35:57.961Z"
+    },
+    {
+      "amount": 7500,
+      "createdAt": "2025-12-15T09:35:57.961Z",
+      "expenseId": "ce2ec25d-20f1-4c10-a7c5-ff545ecde20a",
+      "id": "16608a62-20b9-495c-bb2e-11a8ed113eb1",
+      "participantId": "57faca48-f392-424b-a623-d9174d7035af",
+      "share": 0,
+      "shareType": "amount",
+      "updatedAt": "2025-12-15T09:35:57.961Z"
+    },
+    {
+      "amount": null,
+      "createdAt": "2025-12-15T09:38:33.511Z",
+      "expenseId": "d472e109-8882-4e81-80d4-6c1b325a2640",
+      "id": "532dd0de-5cbe-4af0-bbf4-76706253b2b2",
+      "participantId": "055a2262-0a90-4455-a643-25df2c7c4957",
+      "share": 1,
+      "shareType": "weight",
+      "updatedAt": "2025-12-15T09:38:33.511Z"
+    },
+    {
+      "amount": null,
+      "createdAt": "2025-12-15T09:38:33.511Z",
+      "expenseId": "d472e109-8882-4e81-80d4-6c1b325a2640",
+      "id": "4d519b64-fc04-4924-b9d2-1640c7684397",
+      "participantId": "44712022-39c6-4c44-9e75-921cb570c4de",
+      "share": 1,
+      "shareType": "weight",
+      "updatedAt": "2025-12-15T09:38:33.511Z"
+    },
+    {
+      "amount": null,
+      "createdAt": "2025-12-15T09:38:33.511Z",
+      "expenseId": "d472e109-8882-4e81-80d4-6c1b325a2640",
+      "id": "d8cbaa8b-434e-4714-81a4-1125675fa71f",
+      "participantId": "44d58b55-b6d3-412a-b302-fdbca2473f74",
+      "share": 1.5,
+      "shareType": "weight",
+      "updatedAt": "2025-12-15T09:38:33.511Z"
+    },
+    {
+      "amount": null,
+      "createdAt": "2025-12-15T09:38:33.511Z",
+      "expenseId": "d472e109-8882-4e81-80d4-6c1b325a2640",
+      "id": "06959b07-39de-4fae-aee2-5b56e520146a",
+      "participantId": "57faca48-f392-424b-a623-d9174d7035af",
+      "share": 2,
+      "shareType": "weight",
+      "updatedAt": "2025-12-15T09:38:33.511Z"
+    },
+    {
+      "amount": null,
+      "createdAt": "2025-12-15T09:38:33.511Z",
+      "expenseId": "d472e109-8882-4e81-80d4-6c1b325a2640",
+      "id": "8973450a-2daa-46ae-a0b3-10b90bc69684",
+      "participantId": "af43d11c-a0fc-4aca-b3ad-2026bab1eb65",
+      "share": 2,
+      "shareType": "weight",
+      "updatedAt": "2025-12-15T09:38:33.511Z"
+    },
+    {
+      "amount": null,
+      "createdAt": "2025-12-15T09:38:33.511Z",
+      "expenseId": "d472e109-8882-4e81-80d4-6c1b325a2640",
+      "id": "60738d95-930b-47f6-b190-c82343c539ca",
+      "participantId": "fcf77959-5737-4a2e-af38-fa722683d7b5",
+      "share": 2,
+      "shareType": "weight",
+      "updatedAt": "2025-12-15T09:38:33.511Z"
+    },
+    {
+      "amount": null,
+      "createdAt": "2025-12-15T09:37:17.973Z",
+      "expenseId": "ed317711-ff93-43c7-b544-fb05e8122d2b",
+      "id": "6cee64d3-e0c4-4f1d-86bd-bfe707e69370",
+      "participantId": "055a2262-0a90-4455-a643-25df2c7c4957",
+      "share": 1,
+      "shareType": "equal",
+      "updatedAt": "2025-12-15T09:37:17.973Z"
+    },
+    {
+      "amount": null,
+      "createdAt": "2025-12-15T09:37:17.973Z",
+      "expenseId": "ed317711-ff93-43c7-b544-fb05e8122d2b",
+      "id": "b6321e5f-f7dc-478f-831b-357e957cc58d",
+      "participantId": "44712022-39c6-4c44-9e75-921cb570c4de",
+      "share": 1,
+      "shareType": "equal",
+      "updatedAt": "2025-12-15T09:37:17.973Z"
+    },
+    {
+      "amount": null,
+      "createdAt": "2025-12-15T09:37:17.973Z",
+      "expenseId": "ed317711-ff93-43c7-b544-fb05e8122d2b",
+      "id": "c2c65994-2aad-41ed-9472-efd37fc44ff7",
+      "participantId": "44d58b55-b6d3-412a-b302-fdbca2473f74",
+      "share": 1,
+      "shareType": "equal",
+      "updatedAt": "2025-12-15T09:37:17.973Z"
+    },
+    {
+      "amount": null,
+      "createdAt": "2025-12-15T09:37:17.973Z",
+      "expenseId": "ed317711-ff93-43c7-b544-fb05e8122d2b",
+      "id": "337469d5-a29b-42a8-b1ec-0b49632563b7",
+      "participantId": "57faca48-f392-424b-a623-d9174d7035af",
+      "share": 1,
+      "shareType": "equal",
+      "updatedAt": "2025-12-15T09:37:17.973Z"
+    },
+    {
+      "amount": null,
+      "createdAt": "2025-12-15T09:37:17.973Z",
+      "expenseId": "ed317711-ff93-43c7-b544-fb05e8122d2b",
+      "id": "b7af763d-612e-447a-8e4f-7bef8b832319",
+      "participantId": "af43d11c-a0fc-4aca-b3ad-2026bab1eb65",
+      "share": 1,
+      "shareType": "equal",
+      "updatedAt": "2025-12-15T09:37:17.973Z"
+    },
+    {
+      "amount": null,
+      "createdAt": "2025-12-15T09:37:17.973Z",
+      "expenseId": "ed317711-ff93-43c7-b544-fb05e8122d2b",
+      "id": "0fff207e-6371-4210-97b6-5f1a075699eb",
+      "participantId": "fcf77959-5737-4a2e-af38-fa722683d7b5",
+      "share": 1,
+      "shareType": "equal",
+      "updatedAt": "2025-12-15T09:37:17.973Z"
+    }
+  ],
+  "expenses": [
+    {
+      "amount": 240000,
+      "category": null,
+      "categoryId": "cat-lodging",
+      "convertedAmountMinor": 240000,
+      "createdAt": "2025-12-15T09:32:24.371Z",
+      "currency": "USD",
+      "date": "2025-08-05T04:00:00.000Z",
+      "description": "Beach House Rental",
+      "fxRateToTrip": null,
+      "id": "424508ac-2d89-4317-a5cc-18a35df273fe",
+      "originalAmountMinor": 240000,
+      "originalCurrency": "USD",
+      "paidBy": "57faca48-f392-424b-a623-d9174d7035af",
+      "tripId": "02ad4aef-870d-403f-93d6-b0bb5a59bfdd",
+      "updatedAt": "2025-12-15T09:32:24.371Z"
+    },
+    {
+      "amount": 28550,
+      "category": null,
+      "categoryId": "cat-groceries",
+      "convertedAmountMinor": 28550,
+      "createdAt": "2025-12-15T09:33:28.794Z",
+      "currency": "USD",
+      "date": "2025-08-05T04:00:00.000Z",
+      "description": "Groceries - 1",
+      "fxRateToTrip": null,
+      "id": "9246d18e-8d3f-4ab9-88e2-951632b1524f",
+      "originalAmountMinor": 28550,
+      "originalCurrency": "USD",
+      "paidBy": "af43d11c-a0fc-4aca-b3ad-2026bab1eb65",
+      "tripId": "02ad4aef-870d-403f-93d6-b0bb5a59bfdd",
+      "updatedAt": "2025-12-15 09:36:46"
+    },
+    {
+      "amount": 34275,
+      "category": null,
+      "categoryId": "cat-food",
+      "convertedAmountMinor": 34275,
+      "createdAt": "2025-12-15T09:34:53.518Z",
+      "currency": "USD",
+      "date": "2025-08-05T04:00:00.000Z",
+      "description": "Seafood Restaurant",
+      "fxRateToTrip": null,
+      "id": "7f103261-9d6b-430e-b559-03241c23dbce",
+      "originalAmountMinor": 34275,
+      "originalCurrency": "USD",
+      "paidBy": "44d58b55-b6d3-412a-b302-fdbca2473f74",
+      "tripId": "02ad4aef-870d-403f-93d6-b0bb5a59bfdd",
+      "updatedAt": "2025-12-15T09:34:53.518Z"
+    },
+    {
+      "amount": 18000,
+      "category": null,
+      "categoryId": "cat-leisure",
+      "convertedAmountMinor": 18000,
+      "createdAt": "2025-12-15T09:34:02.961Z",
+      "currency": "USD",
+      "date": "2025-08-06T04:00:00.000Z",
+      "description": "Beach Equipment Rental",
+      "fxRateToTrip": null,
+      "id": "9d1f9031-3068-4e68-a4e9-10d35c95c5ca",
+      "originalAmountMinor": 18000,
+      "originalCurrency": "USD",
+      "paidBy": "fcf77959-5737-4a2e-af38-fa722683d7b5",
+      "tripId": "02ad4aef-870d-403f-93d6-b0bb5a59bfdd",
+      "updatedAt": "2025-12-15T09:34:02.961Z"
+    },
+    {
+      "amount": 16500,
+      "category": null,
+      "categoryId": "cat-leisure",
+      "convertedAmountMinor": 16500,
+      "createdAt": "2025-12-15T09:35:57.961Z",
+      "currency": "USD",
+      "date": "2025-08-06T04:00:00.000Z",
+      "description": "Kids' Theme Park",
+      "fxRateToTrip": null,
+      "id": "ce2ec25d-20f1-4c10-a7c5-ff545ecde20a",
+      "originalAmountMinor": 16500,
+      "originalCurrency": "USD",
+      "paidBy": "57faca48-f392-424b-a623-d9174d7035af",
+      "tripId": "02ad4aef-870d-403f-93d6-b0bb5a59bfdd",
+      "updatedAt": "2025-12-15T09:35:57.961Z"
+    },
+    {
+      "amount": 42000,
+      "category": null,
+      "categoryId": "cat-leisure",
+      "convertedAmountMinor": 42000,
+      "createdAt": "2025-12-15T09:36:17.373Z",
+      "currency": "USD",
+      "date": "2025-08-07T04:00:00.000Z",
+      "description": "Boat Tour",
+      "fxRateToTrip": null,
+      "id": "5fc2d0de-3f20-40a8-a73f-ad3a3d760035",
+      "originalAmountMinor": 42000,
+      "originalCurrency": "USD",
+      "paidBy": "fcf77959-5737-4a2e-af38-fa722683d7b5",
+      "tripId": "02ad4aef-870d-403f-93d6-b0bb5a59bfdd",
+      "updatedAt": "2025-12-15T09:36:17.373Z"
+    },
+    {
+      "amount": 19830,
+      "category": null,
+      "categoryId": "cat-groceries",
+      "convertedAmountMinor": 19830,
+      "createdAt": "2025-12-15T09:37:17.973Z",
+      "currency": "USD",
+      "date": "2025-08-08T04:00:00.000Z",
+      "description": "Groceries - 2",
+      "fxRateToTrip": null,
+      "id": "ed317711-ff93-43c7-b544-fb05e8122d2b",
+      "originalAmountMinor": 19830,
+      "originalCurrency": "USD",
+      "paidBy": "af43d11c-a0fc-4aca-b3ad-2026bab1eb65",
+      "tripId": "02ad4aef-870d-403f-93d6-b0bb5a59bfdd",
+      "updatedAt": "2025-12-15T09:37:17.973Z"
+    },
+    {
+      "amount": 4260,
+      "category": null,
+      "categoryId": "cat-food",
+      "convertedAmountMinor": 4260,
+      "createdAt": "2025-12-15T09:37:49.999Z",
+      "currency": "USD",
+      "date": "2025-08-09T04:00:00.000Z",
+      "description": "Ice Cream Shop",
+      "fxRateToTrip": null,
+      "id": "2de5b54f-59ff-4a94-afb9-ab077dcc8b01",
+      "originalAmountMinor": 4260,
+      "originalCurrency": "USD",
+      "paidBy": "44d58b55-b6d3-412a-b302-fdbca2473f74",
+      "tripId": "02ad4aef-870d-403f-93d6-b0bb5a59bfdd",
+      "updatedAt": "2025-12-15T09:37:49.999Z"
+    },
+    {
+      "amount": 42580,
+      "category": null,
+      "categoryId": "cat-food",
+      "convertedAmountMinor": 42580,
+      "createdAt": "2025-12-15T09:38:33.511Z",
+      "currency": "USD",
+      "date": "2025-08-11T04:00:00.000Z",
+      "description": "Fancy Farewell Dinner",
+      "fxRateToTrip": null,
+      "id": "d472e109-8882-4e81-80d4-6c1b325a2640",
+      "originalAmountMinor": 42580,
+      "originalCurrency": "USD",
+      "paidBy": "fcf77959-5737-4a2e-af38-fa722683d7b5",
+      "tripId": "02ad4aef-870d-403f-93d6-b0bb5a59bfdd",
+      "updatedAt": "2025-12-15T09:38:33.511Z"
+    },
+    {
+      "amount": 9520,
+      "category": null,
+      "categoryId": "cat-travel",
+      "convertedAmountMinor": 9520,
+      "createdAt": "2025-12-15T09:38:59.421Z",
+      "currency": "USD",
+      "date": "2025-08-12T04:00:00.000Z",
+      "description": "Gas & Tolls",
+      "fxRateToTrip": null,
+      "id": "9b031eee-c22b-448d-a7d5-a90bc36dc4f3",
+      "originalAmountMinor": 9520,
+      "originalCurrency": "USD",
+      "paidBy": "57faca48-f392-424b-a623-d9174d7035af",
+      "tripId": "02ad4aef-870d-403f-93d6-b0bb5a59bfdd",
+      "updatedAt": "2025-12-15T09:38:59.421Z"
+    }
+  ],
+  "meta": {
+    "app": {
+      "name": "CrewSplit",
+      "version": "1.0.0"
+    },
+    "exportedAt": "2025-12-19T06:39:52.429Z",
+    "format": "crewledger.trip-export",
+    "version": 1
+  },
+  "participants": [
+    {
+      "avatarColor": "#F7DC6F",
+      "createdAt": "2025-12-15T09:30:12.216Z",
+      "id": "57faca48-f392-424b-a623-d9174d7035af",
+      "name": "Dad (Robert)",
+      "tripId": "02ad4aef-870d-403f-93d6-b0bb5a59bfdd",
+      "updatedAt": "2025-12-15T09:30:12.216Z"
+    },
+    {
+      "avatarColor": "#FF6B6B",
+      "createdAt": "2025-12-15T09:30:17.260Z",
+      "id": "af43d11c-a0fc-4aca-b3ad-2026bab1eb65",
+      "name": "Mom (Linda)",
+      "tripId": "02ad4aef-870d-403f-93d6-b0bb5a59bfdd",
+      "updatedAt": "2025-12-15T09:30:17.260Z"
+    },
+    {
+      "avatarColor": "#85C1E2",
+      "createdAt": "2025-12-15T09:30:27.814Z",
+      "id": "44d58b55-b6d3-412a-b302-fdbca2473f74",
+      "name": "Grams (Margaret)",
+      "tripId": "02ad4aef-870d-403f-93d6-b0bb5a59bfdd",
+      "updatedAt": "2025-12-15T09:30:27.814Z"
+    },
+    {
+      "avatarColor": "#FF6B6B",
+      "createdAt": "2025-12-15T09:30:39.031Z",
+      "id": "055a2262-0a90-4455-a643-25df2c7c4957",
+      "name": "Daughter (Emily)",
+      "tripId": "02ad4aef-870d-403f-93d6-b0bb5a59bfdd",
+      "updatedAt": "2025-12-15T09:30:39.031Z"
+    },
+    {
+      "avatarColor": "#F7DC6F",
+      "createdAt": "2025-12-15T09:30:49.419Z",
+      "id": "44712022-39c6-4c44-9e75-921cb570c4de",
+      "name": "Son (Jacob)",
+      "tripId": "02ad4aef-870d-403f-93d6-b0bb5a59bfdd",
+      "updatedAt": "2025-12-15T09:30:49.419Z"
+    },
+    {
+      "avatarColor": "#F7DC6F",
+      "createdAt": "2025-12-15T09:30:57.293Z",
+      "id": "fcf77959-5737-4a2e-af38-fa722683d7b5",
+      "name": "Uncle (Tom)",
+      "tripId": "02ad4aef-870d-403f-93d6-b0bb5a59bfdd",
+      "updatedAt": "2025-12-15T09:30:57.293Z"
+    }
+  ],
+  "settlements": [
+    {
+      "id": "f2a7b7a2-3e1f-4c1e-8c6c-1e6d9b1a0001",
+      "fromParticipantId": "57faca48-f392-424b-a623-d9174d7035af",
+      "toParticipantId": "af43d11c-a0fc-4aca-b3ad-2026bab1eb65",
+      "amountMinor": 12500,
+      "currency": "USD",
+      "description": "Reimburse groceries",
+      "createdAt": "2025-12-16T10:00:00.000Z",
+      "updatedAt": "2025-12-16T10:00:00.000Z"
+    },
+    {
+      "id": "3c6c1b7b-86d5-4b87-8be4-7f2c2f7a0002",
+      "fromParticipantId": "44712022-39c6-4c44-9e75-921cb570c4de",
+      "toParticipantId": "44d58b55-b6d3-412a-b302-fdbca2473f74",
+      "amountMinor": 8000,
+      "currency": "USD",
+      "description": "Beach gear split",
+      "createdAt": "2025-12-16T12:15:00.000Z",
+      "updatedAt": "2025-12-16T12:15:00.000Z"
+    }
+  ],
+  "trip": {
+    "createdAt": "2025-12-15T09:29:58.734Z",
+    "currency": "USD",
+    "currencyCode": "USD",
+    "description": null,
+    "emoji": "🏖️",
+    "endDate": "2025-08-12T04:00:00.000Z",
+    "id": "02ad4aef-870d-403f-93d6-b0bb5a59bfdd",
+    "name": "Family Beach Vacation",
+    "startDate": "2025-08-05T04:00:00.000Z",
+    "updatedAt": "2025-12-15T09:29:58.734Z"
+  }
+}

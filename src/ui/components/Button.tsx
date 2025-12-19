@@ -14,7 +14,12 @@ import {
 } from "react-native";
 import { theme } from "../theme";
 
-export type ButtonVariant = "primary" | "secondary" | "outline" | "ghost";
+export type ButtonVariant =
+  | "primary"
+  | "secondary"
+  | "outline"
+  | "ghost"
+  | "danger";
 export type ButtonSize = "sm" | "md" | "lg";
 
 interface ButtonProps {
@@ -70,7 +75,9 @@ export const Button: React.FC<ButtonProps> = ({
       {loading ? (
         <ActivityIndicator
           color={
-            variant === "primary" ? theme.colors.text : theme.colors.primary
+            variant === "primary" || variant === "danger"
+              ? theme.colors.text
+              : theme.colors.primary
           }
         />
       ) : (
@@ -94,6 +101,9 @@ const styles = StyleSheet.create({
   // Variants
   primary: {
     backgroundColor: theme.colors.primary,
+  },
+  danger: {
+    backgroundColor: theme.colors.error,
   },
   secondary: {
     backgroundColor: theme.colors.surface,
@@ -131,6 +141,9 @@ const styles = StyleSheet.create({
     fontWeight: theme.typography.semibold,
   },
   text_primary: {
+    color: theme.colors.text,
+  },
+  text_danger: {
     color: theme.colors.text,
   },
   text_secondary: {

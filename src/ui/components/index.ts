@@ -33,3 +33,6 @@ export type { StalenessWarningBannerProps } from "./StalenessWarningBanner";
 
 export { NoRateAvailableModal } from "./NoRateAvailableModal";
 export type { NoRateAvailableModalProps } from "./NoRateAvailableModal";
+
+export { ConfirmDialog } from "./ConfirmDialog";
+export type { ConfirmDialogProps } from "./ConfirmDialog";

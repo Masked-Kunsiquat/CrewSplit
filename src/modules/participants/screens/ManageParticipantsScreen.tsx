@@ -15,7 +15,13 @@ import {
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
 import { theme } from "@ui/theme";
 import { participantLogger } from "@utils/logger";
-import { Button, Card, Input, ParticipantListRow } from "@ui/components";
+import {
+  Button,
+  Card,
+  Input,
+  ParticipantListRow,
+  ConfirmDialog,
+} from "@ui/components";
 import { useParticipants } from "../hooks/use-participants";
 import { useTripById } from "@modules/trips/hooks/use-trips";
 import { createParticipant, deleteParticipant } from "../repository";
@@ -70,6 +76,10 @@ function ManageParticipantsContent({
   const [newParticipantName, setNewParticipantName] = useState("");
   const [nameError, setNameError] = useState<string | null>(null);
   const [isAdding, setIsAdding] = useState(false);
+  const [pendingRemoval, setPendingRemoval] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
 
   const { trip, refetch: refetchTrip } = useTripById(tripId);
   const {
@@ -127,27 +137,21 @@ function ManageParticipantsContent({
     participantId: string,
     participantName: string,
   ) => {
-    Alert.alert(
-      "Remove Participant",
-      `Remove ${participantName} from this trip?`,
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Remove",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              await deleteParticipant(participantId);
-              refetchParticipants();
-            } catch (err) {
-              const message = err instanceof Error ? err.message : String(err);
-              participantLogger.error("Failed to delete participant", err);
-              Alert.alert("Error", `Failed to remove participant: ${message}`);
-            }
-          },
-        },
-      ],
-    );
+    setPendingRemoval({ id: participantId, name: participantName });
+  };
+
+  const confirmRemoveParticipant = async () => {
+    if (!pendingRemoval) return;
+    try {
+      await deleteParticipant(pendingRemoval.id);
+      refetchParticipants();
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      participantLogger.error("Failed to delete participant", err);
+      Alert.alert("Error", `Failed to remove participant: ${message}`);
+    } finally {
+      setPendingRemoval(null);
+    }
   };
 
   if (loading) {
@@ -234,6 +238,18 @@ function ManageParticipantsContent({
           </Card>
         )}
       </ScrollView>
+
+      <ConfirmDialog
+        visible={!!pendingRemoval}
+        title="Remove Participant"
+        message={
+          pendingRemoval ? `Remove ${pendingRemoval.name} from this trip?` : ""
+        }
+        confirmLabel="Remove"
+        confirmVariant="danger"
+        onCancel={() => setPendingRemoval(null)}
+        onConfirm={confirmRemoveParticipant}
+      />
     </View>
   );
 }

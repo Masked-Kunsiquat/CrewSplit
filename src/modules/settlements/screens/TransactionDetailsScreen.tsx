@@ -3,7 +3,7 @@
  * UI/UX ENGINEER: View and manage individual settlement transactions
  */
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -14,7 +14,7 @@ import {
 } from "react-native";
 import { useRouter, useLocalSearchParams, useNavigation } from "expo-router";
 import { theme } from "@ui/theme";
-import { Button } from "@ui/components";
+import { Button, ConfirmDialog } from "@ui/components";
 import { useSettlement, useDeleteSettlement } from "../hooks/use-settlements";
 import { useTripById } from "@modules/trips/hooks/use-trips";
 import { formatCurrency } from "@utils/currency";
@@ -28,6 +28,7 @@ export default function TransactionDetailsScreen() {
   const { settlement, loading } = useSettlement(settlementId ?? null);
   const { deleteSettlement, loading: deleting } = useDeleteSettlement();
   const { trip } = useTripById(settlement?.tripId ?? null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   useEffect(() => {
     if (settlement) {
@@ -40,31 +41,22 @@ export default function TransactionDetailsScreen() {
   const handleDelete = () => {
     if (!settlement) return;
 
-    Alert.alert(
-      "Delete Payment",
-      "Are you sure you want to delete this payment? This will adjust settlement balances.",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              await deleteSettlement(settlement.id);
-              Alert.alert("Deleted", "Payment has been deleted", [
-                { text: "OK", onPress: () => router.back() },
-              ]);
-            } catch (error) {
-              console.error("Failed to delete settlement:", error);
-              Alert.alert(
-                "Error",
-                "Failed to delete payment. Please try again.",
-              );
-            }
-          },
-        },
-      ],
-    );
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!settlement) return;
+    try {
+      await deleteSettlement(settlement.id);
+      setShowDeleteConfirm(false);
+      Alert.alert("Deleted", "Payment has been deleted", [
+        { text: "OK", onPress: () => router.back() },
+      ]);
+    } catch (error) {
+      console.error("Failed to delete settlement:", error);
+      Alert.alert("Error", "Failed to delete payment. Please try again.");
+      setShowDeleteConfirm(false);
+    }
   };
 
   const handleEdit = () => {
@@ -99,88 +91,107 @@ export default function TransactionDetailsScreen() {
   const showCurrencyConversion = settlement.fxRateToTrip !== null;
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Amount</Text>
-        <Text style={styles.amountText}>
-          {formatCurrency(
-            settlement.originalAmountMinor,
-            settlement.originalCurrency,
+    <>
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.content}
+      >
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Amount</Text>
+          <Text style={styles.amountText}>
+            {formatCurrency(
+              settlement.originalAmountMinor,
+              settlement.originalCurrency,
+            )}
+          </Text>
+          {showCurrencyConversion && settlement.fxRateToTrip && trip && (
+            <Text style={styles.convertedText}>
+              Converted:{" "}
+              {formatCurrency(
+                settlement.convertedAmountMinor,
+                trip.currencyCode,
+              )}{" "}
+              (Rate: {settlement.fxRateToTrip.toFixed(4)})
+            </Text>
           )}
-        </Text>
-        {showCurrencyConversion && settlement.fxRateToTrip && trip && (
-          <Text style={styles.convertedText}>
-            Converted:{" "}
-            {formatCurrency(settlement.convertedAmountMinor, trip.currencyCode)}{" "}
-            (Rate: {settlement.fxRateToTrip.toFixed(4)})
-          </Text>
-        )}
-      </View>
+        </View>
 
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Payment Direction</Text>
-        <View style={styles.directionContainer}>
-          <View style={styles.participantBox}>
-            <Text style={styles.participantLabel}>From (Payer)</Text>
-            <Text style={styles.participantName}>
-              {settlement.fromParticipantName}
-            </Text>
-          </View>
-          <Text style={styles.arrow}>→</Text>
-          <View style={styles.participantBox}>
-            <Text style={styles.participantLabel}>To (Payee)</Text>
-            <Text style={styles.participantName}>
-              {settlement.toParticipantName}
-            </Text>
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Payment Direction</Text>
+          <View style={styles.directionContainer}>
+            <View style={styles.participantBox}>
+              <Text style={styles.participantLabel}>From (Payer)</Text>
+              <Text style={styles.participantName}>
+                {settlement.fromParticipantName}
+              </Text>
+            </View>
+            <Text style={styles.arrow}>→</Text>
+            <View style={styles.participantBox}>
+              <Text style={styles.participantLabel}>To (Payee)</Text>
+              <Text style={styles.participantName}>
+                {settlement.toParticipantName}
+              </Text>
+            </View>
           </View>
         </View>
-      </View>
 
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Date</Text>
-        <Text style={styles.detailText}>
-          {new Date(settlement.date).toLocaleDateString()}
-        </Text>
-      </View>
-
-      {settlement.paymentMethod && (
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Payment Method</Text>
+          <Text style={styles.sectionTitle}>Date</Text>
           <Text style={styles.detailText}>
-            {settlement.paymentMethod.charAt(0).toUpperCase() +
-              settlement.paymentMethod.slice(1).replace("_", " ")}
+            {new Date(settlement.date).toLocaleDateString()}
           </Text>
         </View>
-      )}
 
-      {settlement.description && (
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Note</Text>
-          <Text style={styles.detailText}>{settlement.description}</Text>
-        </View>
-      )}
-
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Record Info</Text>
-        <Text style={styles.metaText}>
-          Created: {new Date(settlement.createdAt).toLocaleString()}
-        </Text>
-        {settlement.updatedAt !== settlement.createdAt && (
-          <Text style={styles.metaText}>
-            Last updated: {new Date(settlement.updatedAt).toLocaleString()}
-          </Text>
+        {settlement.paymentMethod && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Payment Method</Text>
+            <Text style={styles.detailText}>
+              {settlement.paymentMethod.charAt(0).toUpperCase() +
+                settlement.paymentMethod.slice(1).replace("_", " ")}
+            </Text>
+          </View>
         )}
-      </View>
 
-      <View style={styles.actionButtons}>
-        <Button title="Edit" onPress={handleEdit} variant="secondary" />
-        <Button
-          title={deleting ? "Deleting..." : "Delete"}
-          onPress={handleDelete}
-          disabled={deleting}
-        />
-      </View>
-    </ScrollView>
+        {settlement.description && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Note</Text>
+            <Text style={styles.detailText}>{settlement.description}</Text>
+          </View>
+        )}
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Record Info</Text>
+          <Text style={styles.metaText}>
+            Created: {new Date(settlement.createdAt).toLocaleString()}
+          </Text>
+          {settlement.updatedAt !== settlement.createdAt && (
+            <Text style={styles.metaText}>
+              Last updated: {new Date(settlement.updatedAt).toLocaleString()}
+            </Text>
+          )}
+        </View>
+
+        <View style={styles.actionButtons}>
+          <Button title="Edit" onPress={handleEdit} variant="secondary" />
+          <Button
+            title={deleting ? "Deleting..." : "Delete"}
+            onPress={handleDelete}
+            disabled={deleting}
+          />
+        </View>
+      </ScrollView>
+
+      <ConfirmDialog
+        visible={showDeleteConfirm}
+        title="Delete Payment"
+        message="Are you sure you want to delete this payment? This will adjust settlement balances."
+        confirmLabel="Delete"
+        confirmVariant="danger"
+        onCancel={() => setShowDeleteConfirm(false)}
+        onConfirm={confirmDelete}
+        loading={deleting}
+      />
+    </>
   );
 }
 

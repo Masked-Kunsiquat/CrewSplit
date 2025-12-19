@@ -15,7 +15,7 @@ import {
 } from "react-native";
 import { useRouter, useLocalSearchParams, useNavigation } from "expo-router";
 import { theme } from "@ui/theme";
-import { Button, Input, Card } from "@ui/components";
+import { Button, Input, Card, ConfirmDialog } from "@ui/components";
 import { CurrencyPicker } from "@ui/components/CurrencyPicker";
 import { cachedFxRateProvider } from "../provider";
 
@@ -47,6 +47,7 @@ export default function ManualRateEntryScreen() {
   );
   const [rate, setRate] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+  const [showRateConfirm, setShowRateConfirm] = useState(false);
 
   // Validation
   const rateNum = parseFloat(rate);
@@ -74,14 +75,7 @@ export default function ManualRateEntryScreen() {
 
     // Warn if rate seems unrealistic (threshold accounts for high-value currencies like KRW, VND, IDR)
     if (rateNum > UNREALISTIC_RATE_THRESHOLD) {
-      Alert.alert(
-        "Confirm Rate",
-        `The exchange rate ${rateNum} seems unusually high. Are you sure this is correct?`,
-        [
-          { text: "Cancel", style: "cancel" },
-          { text: "Continue", onPress: () => saveRate() },
-        ],
-      );
+      setShowRateConfirm(true);
       return;
     }
 
@@ -219,6 +213,19 @@ export default function ManualRateEntryScreen() {
           disabled={!canSubmit}
         />
       </View>
+
+      <ConfirmDialog
+        visible={showRateConfirm}
+        title="Confirm Rate"
+        message={`The exchange rate ${rateNum} seems unusually high. Are you sure this is correct?`}
+        confirmLabel="Continue"
+        onCancel={() => setShowRateConfirm(false)}
+        onConfirm={() => {
+          setShowRateConfirm(false);
+          saveRate();
+        }}
+        loading={isSaving}
+      />
     </KeyboardAvoidingView>
   );
 }

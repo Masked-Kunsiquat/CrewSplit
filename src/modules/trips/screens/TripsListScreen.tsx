@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   View,
   Text,
@@ -6,12 +6,16 @@ import {
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
+  Alert,
 } from "react-native";
 import { useRouter, useNavigation } from "expo-router";
 import { theme } from "@ui/theme";
-import { Button, Card } from "@ui/components";
+import { Button, Card, ConfirmDialog } from "@ui/components";
 import { useTrips } from "../hooks/use-trips";
 import { useRefreshControl } from "@hooks/use-refresh-control";
+import { SampleTripBadge } from "@modules/onboarding/components/SampleTripBadge";
+import { deleteTrip } from "../repository";
+import { TripExportModal } from "../components/trip-export-modal";
 
 /**
  * Validates and formats a single date string
@@ -50,10 +54,24 @@ function formatDateRange(startDate: string, endDate?: string | null): string {
   return `${startFormatted} - ${endFormatted}`;
 }
 
+/**
+ * Render the Trips list screen with loading, error, empty, and populated states and navigation controls.
+ *
+ * Displays an activity indicator while loading, an error card if fetching fails, an empty-state card when there are no trips, and a list of trip cards when trips exist. Configures the header title and a settings button, supports pull-to-refresh, and includes a footer button to create a new trip.
+ *
+ * @returns The JSX element for the Trips list screen.
+ */
 export default function TripsListScreen() {
   const router = useRouter();
   const navigation = useNavigation();
   const { trips, loading, error, refetch } = useTrips();
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [exportTripId, setExportTripId] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+  const selectedCount = selectedIds.size;
+  const selectedTripIds = useMemo(() => Array.from(selectedIds), [selectedIds]);
 
   // Pull-to-refresh support
   const refreshControl = useRefreshControl([refetch]);
@@ -61,21 +79,88 @@ export default function TripsListScreen() {
   // Set header title for home screen
   useEffect(() => {
     navigation.setOptions({
-      title: "Trips",
-      headerRight: () => (
-        <TouchableOpacity
-          style={styles.headerButton}
-          onPress={() => router.push("/settings")}
-          activeOpacity={0.7}
-          accessibilityLabel="Open settings"
-          accessibilityRole="button"
-          accessibilityHint="Opens settings for the app"
-        >
-          <Text style={styles.settingsIcon}>⚙</Text>
-        </TouchableOpacity>
-      ),
+      title: selectedCount > 0 ? `${selectedCount} Selected` : "Trips",
+      headerRight: () =>
+        selectedCount > 0 ? (
+          <TouchableOpacity
+            style={styles.headerButton}
+            onPress={() => setSelectedIds(new Set())}
+            activeOpacity={0.7}
+            accessibilityLabel="Exit selection"
+            accessibilityRole="button"
+            accessibilityHint="Clears selected trips"
+          >
+            <Text style={styles.doneText}>Done</Text>
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity
+            style={styles.headerButton}
+            onPress={() => router.push("/settings")}
+            activeOpacity={0.7}
+            accessibilityLabel="Open settings"
+            accessibilityRole="button"
+            accessibilityHint="Opens settings for the app"
+          >
+            <Text style={styles.settingsIcon}>⚙</Text>
+          </TouchableOpacity>
+        ),
     });
-  }, [navigation, router]);
+  }, [navigation, router, selectedCount]);
+
+  const toggleSelection = (tripId: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(tripId)) {
+        next.delete(tripId);
+      } else {
+        next.add(tripId);
+      }
+      return next;
+    });
+  };
+
+  const handleTripPress = (tripId: string) => {
+    if (selectedCount > 0) {
+      toggleSelection(tripId);
+      return;
+    }
+    router.push(`/trips/${tripId}`);
+  };
+
+  const handleTripLongPress = (tripId: string) => {
+    toggleSelection(tripId);
+  };
+
+  const handleExportSelected = () => {
+    if (selectedCount !== 1) {
+      return;
+    }
+    setExportTripId(selectedTripIds[0] ?? null);
+  };
+
+  const handleDeleteSelected = () => {
+    if (selectedCount === 0 || deleting) {
+      return;
+    }
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDeleteSelected = async () => {
+    setShowDeleteConfirm(false);
+    setDeleting(true);
+    try {
+      for (const id of selectedTripIds) {
+        await deleteTrip(id);
+      }
+      setSelectedIds(new Set());
+      await refetch();
+    } catch (err) {
+      console.error("Failed to delete trips", err);
+      Alert.alert("Error", "Failed to delete selected trips.");
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -108,35 +193,93 @@ export default function TripsListScreen() {
 
         {!loading &&
           !error &&
-          trips.map((trip) => (
-            <Card
-              key={trip.id}
-              style={styles.tripCard}
-              onPress={() => router.push(`/trips/${trip.id}`)}
-            >
-              <View style={styles.tripHeader}>
-                {trip.emoji && (
-                  <Text style={styles.tripEmoji}>{trip.emoji}</Text>
+          trips.map((trip) => {
+            const isSelected = selectedIds.has(trip.id);
+            return (
+              <Card
+                key={trip.id}
+                style={[styles.tripCard, isSelected && styles.tripCardSelected]}
+                onPress={() => handleTripPress(trip.id)}
+                onLongPress={() => handleTripLongPress(trip.id)}
+              >
+                {selectedCount > 0 && (
+                  <View
+                    style={[
+                      styles.selectBadge,
+                      isSelected && styles.selectBadgeSelected,
+                    ]}
+                  >
+                    <Text style={styles.selectBadgeText}>
+                      {isSelected ? "✓" : ""}
+                    </Text>
+                  </View>
                 )}
-                <View style={styles.tripInfo}>
-                  <Text style={styles.tripName}>{trip.name}</Text>
-                  <Text style={styles.tripMeta}>
-                    {trip.currency} •{" "}
-                    {formatDateRange(trip.startDate, trip.endDate)}
-                  </Text>
+                {trip.isSampleData && (
+                  <SampleTripBadge style={styles.sampleBadge} />
+                )}
+                <View style={styles.tripHeader}>
+                  {trip.emoji && (
+                    <Text style={styles.tripEmoji}>{trip.emoji}</Text>
+                  )}
+                  <View style={styles.tripInfo}>
+                    <Text style={styles.tripName}>{trip.name}</Text>
+                    <Text style={styles.tripMeta}>
+                      {trip.currency} •{" "}
+                      {formatDateRange(trip.startDate, trip.endDate)}
+                    </Text>
+                  </View>
                 </View>
-              </View>
-            </Card>
-          ))}
+              </Card>
+            );
+          })}
       </ScrollView>
 
-      <View style={styles.footer}>
-        <Button
-          title="Create Trip"
-          onPress={() => router.push("/trips/create")}
-          fullWidth
+      {selectedCount > 0 ? (
+        <View style={styles.selectionBar}>
+          <Text style={styles.selectionCount}>{selectedCount} selected</Text>
+          <View style={styles.selectionActions}>
+            <Button
+              title="Export"
+              variant="outline"
+              onPress={handleExportSelected}
+              disabled={selectedCount !== 1}
+            />
+            <Button
+              title={deleting ? "Deleting..." : "Delete"}
+              onPress={handleDeleteSelected}
+              disabled={deleting}
+            />
+          </View>
+        </View>
+      ) : (
+        <View style={styles.footer}>
+          <Button
+            title="Create Trip"
+            onPress={() => router.push("/trips/create")}
+            fullWidth
+          />
+        </View>
+      )}
+
+      {exportTripId && (
+        <TripExportModal
+          visible={!!exportTripId}
+          tripId={exportTripId}
+          onClose={() => setExportTripId(null)}
         />
-      </View>
+      )}
+      <ConfirmDialog
+        visible={showDeleteConfirm}
+        title="Delete trips?"
+        message={`This will permanently delete ${
+          selectedCount === 1 ? "this trip" : "these trips"
+        }, including participants, expenses, and settlements.`}
+        confirmLabel="Delete"
+        confirmVariant="danger"
+        onCancel={() => setShowDeleteConfirm(false)}
+        onConfirm={confirmDeleteSelected}
+        loading={deleting}
+      />
     </View>
   );
 }
@@ -160,6 +303,11 @@ const styles = StyleSheet.create({
   settingsIcon: {
     fontSize: 24,
     color: theme.colors.textSecondary,
+  },
+  doneText: {
+    fontSize: theme.typography.base,
+    color: theme.colors.primary,
+    fontWeight: theme.typography.semibold,
   },
   centerContent: {
     alignItems: "center",
@@ -192,6 +340,40 @@ const styles = StyleSheet.create({
   },
   tripCard: {
     backgroundColor: theme.colors.surfaceElevated,
+    position: "relative",
+  },
+  tripCardSelected: {
+    borderWidth: 1,
+    borderColor: theme.colors.primary,
+  },
+  selectBadge: {
+    position: "absolute",
+    top: theme.spacing.sm,
+    left: theme.spacing.sm,
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    backgroundColor: theme.colors.surface,
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: 2,
+  },
+  selectBadgeSelected: {
+    borderColor: theme.colors.primary,
+    backgroundColor: theme.colors.primary,
+  },
+  selectBadgeText: {
+    fontSize: theme.typography.sm,
+    color: theme.colors.background,
+    fontWeight: theme.typography.bold,
+  },
+  sampleBadge: {
+    position: "absolute",
+    top: theme.spacing.sm,
+    right: theme.spacing.sm,
+    zIndex: 1,
   },
   tripHeader: {
     flexDirection: "row",
@@ -218,5 +400,20 @@ const styles = StyleSheet.create({
     padding: theme.spacing.lg,
     borderTopWidth: 1,
     borderTopColor: theme.colors.border,
+  },
+  selectionBar: {
+    padding: theme.spacing.lg,
+    borderTopWidth: 1,
+    borderTopColor: theme.colors.border,
+    gap: theme.spacing.md,
+  },
+  selectionCount: {
+    fontSize: theme.typography.base,
+    color: theme.colors.text,
+    fontWeight: theme.typography.semibold,
+  },
+  selectionActions: {
+    flexDirection: "row",
+    gap: theme.spacing.sm,
   },
 });

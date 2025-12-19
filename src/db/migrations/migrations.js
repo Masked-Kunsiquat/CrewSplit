@@ -7,6 +7,7 @@ import m0002 from "./0002_seed_system_categories.sql";
 import m0003 from "./0003_fix_category_fk_restrict.sql";
 import m0004 from "./0004_free_xavin.sql";
 import m0005 from "./0005_wealthy_cammi.sql";
+import m0006 from "./0006_mean_odin.sql";
 
 export default {
   journal,
@@ -17,5 +18,6 @@ export default {
     m0003,
     m0004,
     m0005,
+    m0006,
   },
 };

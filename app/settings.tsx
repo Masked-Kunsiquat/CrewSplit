@@ -3,22 +3,30 @@
  * Global app settings including display currency preference
  */
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
-  Alert,
   Linking,
+  Alert,
 } from "react-native";
 import { useNavigation, useRouter } from "expo-router";
 import { Image } from "expo-image";
 import { theme } from "@ui/theme";
-import { Card, CurrencyPicker, Button, Input } from "@ui/components";
+import {
+  Card,
+  CurrencyPicker,
+  Button,
+  Input,
+  ConfirmDialog,
+} from "@ui/components";
 import { useDisplayCurrency } from "@hooks/use-display-currency";
 import { useDeviceOwner } from "@hooks/use-device-owner";
 import { useFxRates } from "@modules/fx-rates/hooks/use-fx-rates";
+import { useOnboardingState } from "@modules/onboarding/hooks/use-onboarding-state";
+import { useReloadSampleData } from "@modules/onboarding/hooks/use-sample-data";
 
 /**
  * Format timestamp as relative time (e.g., "2 days ago")
@@ -39,6 +47,15 @@ function formatRelativeTime(timestamp: string): string {
   return `${Math.floor(diffDays / 30)}mo ago`;
 }
 
+/**
+ * Renders the Settings screen UI for managing app-wide preferences and utilities.
+ *
+ * Displays and allows editing of device owner name, selection of a display currency,
+ * inspection and navigation to exchange rate management, controls to restart onboarding
+ * and refresh sample data, and app/about attribution details.
+ *
+ * @returns The JSX element for the Settings screen component.
+ */
 export default function SettingsScreen() {
   const navigation = useNavigation();
   const router = useRouter();
@@ -49,6 +66,16 @@ export default function SettingsScreen() {
     setDeviceOwner,
   } = useDeviceOwner();
   const { rateCount, isStale, oldestUpdate } = useFxRates();
+  const { loading: onboardingLoading, isComplete: onboardingComplete } =
+    useOnboardingState();
+  const {
+    reloadSampleData,
+    loading: sampleDataLoading,
+    error: sampleDataError,
+  } = useReloadSampleData();
+
+  const [actionMessage, setActionMessage] = useState<string | null>(null);
+  const [showRefreshConfirm, setShowRefreshConfirm] = useState(false);
 
   // Set header title
   useEffect(() => {
@@ -93,6 +120,30 @@ export default function SettingsScreen() {
   const handleCancelEdit = () => {
     setEditingName(false);
     setNameInput("");
+  };
+
+  const handleRestartOnboarding = useCallback(() => {
+    router.push("/onboarding/walkthrough");
+  }, [router]);
+
+  const handleReloadSampleData = useCallback(() => {
+    setShowRefreshConfirm(true);
+  }, []);
+
+  const confirmRefreshSamples = async () => {
+    setActionMessage(null);
+    try {
+      const results = await reloadSampleData();
+      const tripCount = results.length;
+      setActionMessage(
+        `Sample trips refreshed (${tripCount} loaded). Check your Trips list.`,
+      );
+    } catch (err) {
+      console.error("Failed to refresh sample data", err);
+      setActionMessage("Could not refresh sample data. Please try again.");
+    } finally {
+      setShowRefreshConfirm(false);
+    }
   };
 
   return (
@@ -220,6 +271,56 @@ export default function SettingsScreen() {
             fullWidth
           />
         </Card>
+
+        <Card style={styles.section}>
+          <Text style={styles.sectionTitle}>Onboarding & Sample Data</Text>
+          <Text style={styles.sectionDescription}>
+            Rerun onboarding or refresh the built-in sample trip for demos.
+          </Text>
+
+          <View style={styles.actionRow}>
+            <Button
+              title={
+                onboardingLoading
+                  ? "Opening..."
+                  : onboardingComplete
+                    ? "Replay Walkthrough"
+                    : "Onboarding Incomplete"
+              }
+              variant="outline"
+              onPress={handleRestartOnboarding}
+              disabled={onboardingLoading}
+              fullWidth
+            />
+            <Button
+              title={
+                sampleDataLoading ? "Refreshing..." : "Refresh Sample Trip"
+              }
+              onPress={handleReloadSampleData}
+              disabled={sampleDataLoading}
+              fullWidth
+            />
+          </View>
+
+          {actionMessage && (
+            <Text style={styles.helperText}>{actionMessage}</Text>
+          )}
+          {sampleDataError && (
+            <Text style={styles.helperTextError}>
+              {sampleDataError.message}
+            </Text>
+          )}
+        </Card>
+
+        <ConfirmDialog
+          visible={showRefreshConfirm}
+          title="Refresh sample trips?"
+          message="Deletes existing sample trips and reloads all demo data."
+          confirmLabel="Refresh"
+          onCancel={() => setShowRefreshConfirm(false)}
+          onConfirm={confirmRefreshSamples}
+          loading={sampleDataLoading}
+        />
 
         <Card style={styles.section}>
           <Text style={styles.sectionTitle}>About CrewSplit</Text>
@@ -397,5 +498,19 @@ const styles = StyleSheet.create({
   },
   ratesSummaryStale: {
     color: theme.colors.warning,
+  },
+  actionRow: {
+    gap: theme.spacing.sm,
+  },
+  helperText: {
+    marginTop: theme.spacing.sm,
+    color: theme.colors.textSecondary,
+    fontSize: theme.typography.sm,
+    lineHeight: 18,
+  },
+  helperTextError: {
+    marginTop: theme.spacing.xs,
+    color: theme.colors.error,
+    fontSize: theme.typography.sm,
   },
 });
