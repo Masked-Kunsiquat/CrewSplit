@@ -1,8 +1,11 @@
+/* eslint-env jest */
 // Jest setup file for global test configuration
 
 // Mock expo-crypto for tests that don't need actual crypto functionality
 jest.mock("expo-crypto", () => ({
-  randomUUID: jest.fn(() => "test-uuid-" + Math.random().toString(36).substr(2, 9)),
+  randomUUID: jest.fn(
+    () => "test-uuid-" + Math.random().toString(36).substr(2, 9),
+  ),
   digestStringAsync: jest.fn(),
   CryptoDigestAlgorithm: {
     SHA256: "SHA-256",
@@ -17,7 +20,9 @@ jest.mock("expo-sqlite", () => {
         rows: [],
         getAllSync: jest.fn(() => []),
       })),
-      executeAsync: jest.fn(() => Promise.resolve({ rows: [], getAllAsync: () => Promise.resolve([]) })),
+      executeAsync: jest.fn(() =>
+        Promise.resolve({ rows: [], getAllAsync: () => Promise.resolve([]) }),
+      ),
       finalizeSync: jest.fn(),
       finalizeAsync: jest.fn(() => Promise.resolve()),
     };
