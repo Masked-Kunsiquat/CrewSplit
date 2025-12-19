@@ -5,8 +5,8 @@
 
 import React, { useEffect } from "react";
 import { useRouter, useNavigation } from "expo-router";
-import { View, Text, StyleSheet } from "react-native";
-import { Button } from "@ui/components";
+import { View, Text, StyleSheet, ScrollView } from "react-native";
+import { Button, Card } from "@ui/components";
 import { theme } from "@ui/theme";
 import { useOnboardingState } from "@modules/onboarding/hooks/use-onboarding-state";
 
@@ -26,31 +26,54 @@ export default function OnboardingWelcomeScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.description}>
-        Onboarding is minimal for now. Tap finish to jump into your trips or
-        restart later from Settings.
-      </Text>
-
-      <Button
-        title={loading ? "Finishing..." : "Finish Onboarding"}
-        onPress={handleFinish}
-        fullWidth
-      />
-    </View>
+    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+      <Card style={styles.card}>
+        <Text style={styles.kicker}>CrewSplit</Text>
+        <Text style={styles.headline}>Ready to start splitting together.</Text>
+        <Text style={styles.description}>
+          We’ve kept onboarding light. Finish to jump into your trips now or
+          restart any time from Settings.
+        </Text>
+        <View style={styles.bullets}>
+          <Text style={styles.bullet}>
+            • Add your name so we can auto-fill payer
+          </Text>
+          <Text style={styles.bullet}>
+            • Demo trips are preloaded — refresh or remove them from Settings
+          </Text>
+          <Text style={styles.bullet}>• Everything stays offline-first</Text>
+        </View>
+        <Button
+          title={loading ? "Finishing..." : "Finish Onboarding"}
+          onPress={handleFinish}
+          fullWidth
+        />
+      </Card>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: theme.spacing.lg,
-    gap: theme.spacing.lg,
     backgroundColor: theme.colors.background,
-    justifyContent: "center",
   },
-  title: {
-    fontSize: theme.typography.xl,
+  content: {
+    padding: theme.spacing.lg,
+    justifyContent: "center",
+    flexGrow: 1,
+  },
+  card: {
+    gap: theme.spacing.md,
+  },
+  kicker: {
+    fontSize: theme.typography.xs,
+    color: theme.colors.textSecondary,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
+  headline: {
+    fontSize: theme.typography.xxl,
     fontWeight: theme.typography.bold,
     color: theme.colors.text,
   },
@@ -58,5 +81,13 @@ const styles = StyleSheet.create({
     fontSize: theme.typography.base,
     color: theme.colors.textSecondary,
     lineHeight: 22,
+  },
+  bullets: {
+    gap: theme.spacing.xs,
+  },
+  bullet: {
+    fontSize: theme.typography.sm,
+    color: theme.colors.textSecondary,
+    lineHeight: 20,
   },
 });
