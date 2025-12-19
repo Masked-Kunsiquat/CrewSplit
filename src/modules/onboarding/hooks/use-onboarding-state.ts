@@ -129,9 +129,9 @@ export function useOnboardingFlow(flowId: OnboardingFlowId) {
 
   useEffect(() => {
     loadFlow();
-  }, [flowId]);
+  }, [flowId, loadFlow]);
 
-  const loadFlow = async () => {
+  const loadFlow = useCallback(async () => {
     try {
       setState((prev) => ({ ...prev, loading: true, error: null }));
       const flowState = await onboardingRepository.getOnboardingState(flowId);
@@ -150,7 +150,7 @@ export function useOnboardingFlow(flowId: OnboardingFlowId) {
         error: err as Error,
       });
     }
-  };
+  }, [flowId]);
 
   const markComplete = useCallback(async () => {
     try {

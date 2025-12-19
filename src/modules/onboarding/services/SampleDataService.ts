@@ -5,7 +5,6 @@
  * Handles import of trips, participants, expenses, splits, and settlements
  */
 
-import { nanoid } from "nanoid";
 import { db } from "@/db/client";
 import {
   trips,
@@ -54,8 +53,6 @@ export class SampleDataService {
 
     try {
       return await db.transaction(async (tx) => {
-        const now = new Date().toISOString();
-
         // 1. Create trip
         const tripId = template.trip.id; // Use original ID for consistency
         await tx.insert(trips).values({

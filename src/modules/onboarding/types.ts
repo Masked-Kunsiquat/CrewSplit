@@ -130,30 +130,30 @@ export interface SampleDataTemplate {
     startDate: string; // ISO 8601
     endDate: string | null; // ISO 8601 | null
   };
-  participants: Array<{
+  participants: {
     name: string;
     avatarColor: string; // Hex color
-  }>;
-  expenses: Array<{
+  }[];
+  expenses: {
     description: string;
     amountMinor: number; // Amount in cents
     currency: string; // ISO 4217 code
     paidByIndex: number; // Index into participants array
     categoryId: string | null;
     date: string; // ISO 8601
-    splits: Array<{
+    splits: {
       participantIndex: number; // Index into participants array
       shareType: "equal" | "percentage" | "amount";
       shareValue: number; // 1 for equal, 0-100 for percentage, cents for amount
-    }>;
-  }>;
-  settlements?: Array<{
+    }[];
+  }[];
+  settlements?: {
     fromParticipantIndex: number; // Index into participants array
     toParticipantIndex: number; // Index into participants array
     amountMinor: number; // Amount in cents
     currency: string; // ISO 4217 code
     status: "pending" | "completed";
-  }>;
+  }[];
 }
 
 // ============================================================================
