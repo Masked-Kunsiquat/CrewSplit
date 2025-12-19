@@ -19,7 +19,10 @@ import { OnboardingError, OnboardingErrorCode } from "../types";
 import { onboardingLogger } from "@utils/logger";
 
 // Import sample trip JSON
-import summerRoadTripData from "../../../../scripts/crewledger-summer-road-trip-2025-12-18.json";
+import summerRoadTripData from "../../../../sample-data/crewledger-summer-road-trip-2025-12-18.json";
+import familyBeachVacationData from "../../../../sample-data/crewledger-family-beach-vacation-2025-12-19.json";
+import weekendSkiTripData from "../../../../sample-data/crewledger-weekend-ski-trip-2025-12-18.json";
+import europeBackpackingData from "../../../../sample-data/crewledger-europe-backpacking-2025-12-18.json";
 
 /**
  * Service for loading sample trip data
@@ -183,17 +186,20 @@ export class SampleDataService {
    */
   private getTemplate(
     templateId: SampleDataTemplateId,
-  ): typeof summerRoadTripData | null {
-    const templates: Record<
-      SampleDataTemplateId,
-      typeof summerRoadTripData | null
-    > = {
+  ):
+    | typeof summerRoadTripData
+    | typeof familyBeachVacationData
+    | typeof weekendSkiTripData
+    | typeof europeBackpackingData
+    | null {
+    const templates: Record<SampleDataTemplateId, any> = {
       summer_road_trip: summerRoadTripData,
-      beach_weekend: null, // TODO: Add more templates
-      ski_trip: null, // TODO: Add more templates
+      family_beach_vacation: familyBeachVacationData,
+      weekend_ski_trip: weekendSkiTripData,
+      europe_backpacking: europeBackpackingData,
     };
 
-    return templates[templateId];
+    return templates[templateId] ?? null;
   }
 
   /**
@@ -203,7 +209,12 @@ export class SampleDataService {
    * @returns Array of available template IDs
    */
   getAvailableTemplates(): SampleDataTemplateId[] {
-    return ["summer_road_trip"]; // Expand as more templates added
+    return [
+      "summer_road_trip",
+      "family_beach_vacation",
+      "weekend_ski_trip",
+      "europe_backpacking",
+    ];
   }
 
   /**

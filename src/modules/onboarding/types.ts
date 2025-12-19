@@ -103,8 +103,9 @@ export interface OnboardingProgress {
  */
 export type SampleDataTemplateId =
   | "summer_road_trip"
-  | "beach_weekend"
-  | "ski_trip";
+  | "family_beach_vacation"
+  | "weekend_ski_trip"
+  | "europe_backpacking";
 
 /**
  * Sample trip metadata (subset of Trip entity)

@@ -146,7 +146,9 @@ export function useReloadSampleData() {
   const [error, setError] = useState<Error | null>(null);
 
   const reloadSampleData = useCallback(
-    async (templateId: SampleDataTemplateId): Promise<string> => {
+    async (
+      templateId?: SampleDataTemplateId,
+    ): Promise<{ templateId: SampleDataTemplateId; tripId: string }[]> => {
       try {
         setLoading(true);
         setError(null);
@@ -155,10 +157,20 @@ export function useReloadSampleData() {
         // Delete existing sample data (hard delete)
         await deleteSampleTrips();
 
-        // Load fresh copy from template
-        const tripId = await loadSampleTrip(templateId);
+        const templatesToLoad =
+          templateId !== undefined
+            ? [templateId]
+            : sampleDataService.getAvailableTemplates();
 
-        return tripId;
+        const results: { templateId: SampleDataTemplateId; tripId: string }[] =
+          [];
+
+        for (const id of templatesToLoad) {
+          const tripId = await loadSampleTrip(id);
+          results.push({ templateId: id, tripId });
+        }
+
+        return results;
       } catch (err) {
         onboardingLogger.error(
           `Failed to reload sample data: ${templateId}`,

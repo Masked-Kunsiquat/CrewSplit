@@ -149,12 +149,11 @@ export default function SettingsScreen() {
           onPress: async () => {
             setActionMessage(null);
             try {
-              await reloadSampleData("summer_road_trip");
+              const results = await reloadSampleData();
+              const tripCount = results.length;
               setActionMessage(
-                "Sample trip reloaded. You can find it in your Trips list.",
+                `Sample trips refreshed (${tripCount} loaded). Check your Trips list.`,
               );
-              // Optional: navigate to the sample trip
-              // router.push(`/trips/${tripId}`);
             } catch (err) {
               console.error("Failed to refresh sample data", err);
               Alert.alert(
