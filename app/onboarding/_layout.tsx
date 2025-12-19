@@ -14,6 +14,8 @@ export default function OnboardingLayout() {
         headerTintColor: colors.text,
         contentStyle: { backgroundColor: colors.background },
       }}
-    />
+    >
+      <Stack.Screen name="welcome" options={{ title: "Welcome!" }} />
+    </Stack>
   );
 }
