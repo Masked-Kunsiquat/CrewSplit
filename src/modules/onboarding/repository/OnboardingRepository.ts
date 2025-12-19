@@ -145,9 +145,13 @@ export class OnboardingRepository {
 
     // Parse JSON fields
     return {
-      ...result,
+      id: result.id as OnboardingFlowId,
+      isCompleted: result.isCompleted,
       completedSteps: JSON.parse(result.completedSteps) as OnboardingStepId[],
       metadata: JSON.parse(result.metadata) as Record<string, unknown>,
+      createdAt: result.createdAt,
+      updatedAt: result.updatedAt,
+      completedAt: result.completedAt,
     };
   }
 

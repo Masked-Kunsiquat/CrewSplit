@@ -119,7 +119,7 @@ export class SampleDataService {
               expenseId: expense.id,
               participantId: split.participantId,
               share: split.share,
-              shareType: split.shareType,
+              shareType: split.shareType as "equal" | "percentage" | "weight" | "amount",
               amount: split.amount,
               createdAt: split.createdAt,
               updatedAt: split.updatedAt,
@@ -135,14 +135,15 @@ export class SampleDataService {
               tripId,
               fromParticipantId: settlement.fromParticipantId,
               toParticipantId: settlement.toParticipantId,
-              amountMinor: settlement.amountMinor,
-              currency: settlement.currency,
-              status: settlement.status,
+              originalCurrency: settlement.currency,
+              originalAmountMinor: settlement.amountMinor,
+              fxRateToTrip: null, // Same currency as trip
+              convertedAmountMinor: settlement.amountMinor,
+              date: settlement.createdAt, // Use createdAt as settlement date
               description: settlement.description || null,
+              paymentMethod: null,
               createdAt: settlement.createdAt,
               updatedAt: settlement.updatedAt,
-              completedAt: settlement.completedAt || null,
-              settledAt: settlement.settledAt || null,
             });
           }
         }
