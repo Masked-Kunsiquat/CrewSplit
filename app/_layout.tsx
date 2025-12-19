@@ -3,7 +3,7 @@
  * Expo Router entry point
  */
 
-import { Stack, Redirect } from "expo-router";
+import { Stack, Redirect, usePathname } from "expo-router";
 import { View, Text, ActivityIndicator, StyleSheet } from "react-native";
 import { useEffect, useState } from "react";
 import { useDbMigrations } from "@db/client";
@@ -14,6 +14,7 @@ import { colors, spacing, typography } from "@ui/tokens";
 import { fxLogger } from "@utils/logger";
 
 export default function RootLayout() {
+  const pathname = usePathname();
   const { success, error } = useDbMigrations();
   const [fxInitialized, setFxInitialized] = useState(false);
   const [fxError, setFxError] = useState<Error | null>(null);
@@ -96,7 +97,9 @@ export default function RootLayout() {
     );
   }
 
-  if (!onboardingComplete) {
+  const isOnboardingRoute = pathname?.startsWith("/onboarding");
+
+  if (!onboardingComplete && !isOnboardingRoute) {
     return <Redirect href="/onboarding/welcome" />;
   }
 
