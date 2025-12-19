@@ -510,7 +510,7 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.8)",
+    backgroundColor: "rgba(10, 10, 10, 0.9)",
     justifyContent: "center",
     alignItems: "center",
     padding: theme.spacing.lg,
@@ -521,7 +521,9 @@ const styles = StyleSheet.create({
   modalCard: {
     width: "100%",
     maxWidth: 420,
-    backgroundColor: theme.colors.surfaceElevated,
+    backgroundColor: theme.colors.surface,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
     borderRadius: theme.borderRadius.lg,
     padding: theme.spacing.lg,
     gap: theme.spacing.md,
@@ -575,6 +577,8 @@ function ConfirmDialog({
       visible={visible}
       transparent
       animationType="fade"
+      presentationStyle="overFullScreen"
+      statusBarTranslucent
       onRequestClose={onCancel}
     >
       <View style={styles.modalOverlay}>

@@ -10,6 +10,7 @@ import {
   TouchableOpacity,
 } from "react-native";
 import { useRouter, useNavigation } from "expo-router";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import EmojiPicker from "rn-emoji-keyboard";
 import { theme } from "@ui/theme";
 import { Button, Input, CurrencyPicker, DateRangePicker } from "@ui/components";
@@ -40,6 +41,7 @@ export default function CreateTripScreen() {
   const [dateError, setDateError] = useState<string | null>(null);
   const [emoji, setEmoji] = useState<string | undefined>(undefined);
   const [emojiPickerOpen, setEmojiPickerOpen] = useState(false);
+  const insets = useSafeAreaInsets();
 
   // Set dynamic header title
   useEffect(() => {
@@ -112,7 +114,10 @@ export default function CreateTripScreen() {
     >
       <ScrollView
         style={styles.scrollView}
-        contentContainerStyle={styles.content}
+        contentContainerStyle={[
+          styles.content,
+          { paddingTop: theme.spacing.lg + insets.top },
+        ]}
         keyboardShouldPersistTaps="handled"
       >
         <Input
@@ -178,7 +183,12 @@ export default function CreateTripScreen() {
         />
       </ScrollView>
 
-      <View style={styles.footer}>
+      <View
+        style={[
+          styles.footer,
+          { paddingBottom: theme.spacing.lg + insets.bottom },
+        ]}
+      >
         <Button
           title="Cancel"
           variant="outline"

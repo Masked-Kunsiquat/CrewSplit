@@ -7,6 +7,12 @@ export type OnboardingStepId =
   | "tour_started"
   | "tour_complete";
 
+export type SampleDataTemplateId =
+  | "summer_road_trip"
+  | "family_beach_vacation"
+  | "weekend_ski_trip"
+  | "europe_backpacking";
+
 export interface OnboardingState {
   id: OnboardingFlowId;
   isCompleted: boolean;
