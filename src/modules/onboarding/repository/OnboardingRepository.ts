@@ -2,7 +2,7 @@ import { db } from "@db/client";
 import { userSettings } from "@db/schema/user-settings";
 import { onboardingState } from "@db/schema/onboarding-state";
 import { trips } from "@db/schema/trips";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import {
   OnboardingState,
   UserSettings,
@@ -12,12 +12,16 @@ import {
 
 export class OnboardingRepository {
   async getUserSettings(): Promise<UserSettings> {
-    const settings = await db
-      .select()
-      .from(userSettings)
-      .where(eq(userSettings.id, "default"))
-      .get();
-    if (!settings) {
+    return db.transaction(async (tx) => {
+      const settings = await tx
+        .select()
+        .from(userSettings)
+        .where(eq(userSettings.id, "default"))
+        .get();
+      if (settings) {
+        return settings;
+      }
+
       const newSettings: UserSettings = {
         id: "default",
         primaryUserName: null,
@@ -25,20 +29,26 @@ export class OnboardingRepository {
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
-      await db.insert(userSettings).values(newSettings);
+      await tx.insert(userSettings).values(newSettings);
       return newSettings;
-    }
-    return settings;
+    });
   }
 
   async updateUserSettings(
     update: Partial<UserSettings>,
   ): Promise<UserSettings> {
-    await db
-      .update(userSettings)
-      .set({ ...update, updatedAt: new Date().toISOString() })
-      .where(eq(userSettings.id, "default"));
-    return this.getUserSettings();
+    return db.transaction(async (tx) => {
+      await tx
+        .update(userSettings)
+        .set({ ...update, updatedAt: new Date().toISOString() })
+        .where(eq(userSettings.id, "default"));
+      const settings = await tx
+        .select()
+        .from(userSettings)
+        .where(eq(userSettings.id, "default"))
+        .get();
+      return settings as UserSettings;
+    });
   }
 
   async getOnboardingState(
@@ -57,50 +67,77 @@ export class OnboardingRepository {
     flowId: OnboardingFlowId,
     stepId: OnboardingStepId,
   ): Promise<OnboardingState> {
-    const state = await this.getOnboardingState(flowId);
-    if (state) {
-      const completedSteps = [...(state.completedSteps || []), stepId];
-      await db
-        .update(onboardingState)
-        .set({
-          completedSteps: completedSteps,
-          updatedAt: new Date().toISOString(),
-        })
-        .where(eq(onboardingState.id, flowId));
-    } else {
-      await db.insert(onboardingState).values({
-        id: flowId,
-        isCompleted: false,
-        completedSteps: [stepId],
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        completedAt: null,
-        metadata: {},
-      });
-    }
-    return this.getOnboardingState(flowId);
+    return db.transaction(async (tx) => {
+      const now = new Date().toISOString();
+      const state = await tx
+        .select()
+        .from(onboardingState)
+        .where(eq(onboardingState.id, flowId))
+        .get();
+
+      if (state) {
+        const completedSteps = [...(state.completedSteps || []), stepId];
+        await tx
+          .update(onboardingState)
+          .set({
+            completedSteps: completedSteps,
+            updatedAt: now,
+          })
+          .where(eq(onboardingState.id, flowId));
+      } else {
+        await tx.insert(onboardingState).values({
+          id: flowId,
+          isCompleted: false,
+          completedSteps: [stepId],
+          createdAt: now,
+          updatedAt: now,
+          completedAt: null,
+          metadata: {},
+        });
+      }
+
+      const updatedState = await tx
+        .select()
+        .from(onboardingState)
+        .where(eq(onboardingState.id, flowId))
+        .get();
+      return updatedState as OnboardingState;
+    });
   }
 
   async markFlowCompleted(flowId: OnboardingFlowId): Promise<OnboardingState> {
-    const state = await this.getOnboardingState(flowId);
-    const completedAt = new Date().toISOString();
-    if (state) {
-      await db
-        .update(onboardingState)
-        .set({ isCompleted: true, completedAt, updatedAt: completedAt })
-        .where(eq(onboardingState.id, flowId));
-    } else {
-      await db.insert(onboardingState).values({
-        id: flowId,
-        isCompleted: true,
-        completedSteps: [],
-        createdAt: completedAt,
-        updatedAt: completedAt,
-        completedAt: completedAt,
-        metadata: {},
-      });
-    }
-    return this.getOnboardingState(flowId);
+    return db.transaction(async (tx) => {
+      const completedAt = new Date().toISOString();
+      const state = await tx
+        .select()
+        .from(onboardingState)
+        .where(eq(onboardingState.id, flowId))
+        .get();
+
+      if (state) {
+        await tx
+          .update(onboardingState)
+          .set({ isCompleted: true, completedAt, updatedAt: completedAt })
+          .where(eq(onboardingState.id, flowId));
+      } else {
+        await tx.insert(onboardingState).values({
+          id: flowId,
+          isCompleted: true,
+          completedSteps: [],
+          createdAt: completedAt,
+          updatedAt: completedAt,
+          completedAt: completedAt,
+          metadata: {},
+        });
+      }
+
+      const updatedState = await tx
+        .select()
+        .from(onboardingState)
+        .where(eq(onboardingState.id, flowId))
+        .get();
+      return updatedState as OnboardingState;
+    });
   }
 
   async resetFlow(flowId: OnboardingFlowId): Promise<OnboardingState> {
@@ -136,11 +173,11 @@ export class OnboardingRepository {
   }
 
   async getSampleTrips(includeArchived = false): Promise<any[]> {
-    const query = db.select().from(trips).where(eq(trips.isSampleData, true));
-    if (!includeArchived) {
-      query.where(eq(trips.isArchived, false));
-    }
-    return query.all();
+    const query = db.select().from(trips);
+    const whereClause = includeArchived
+      ? eq(trips.isSampleData, true)
+      : and(eq(trips.isSampleData, true), eq(trips.isArchived, false));
+    return query.where(whereClause).all();
   }
 
   async archiveSampleTrips(): Promise<void> {

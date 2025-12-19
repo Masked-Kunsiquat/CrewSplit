@@ -9,19 +9,17 @@ import { eq } from "drizzle-orm";
 
 export class SampleDataService {
   async loadSampleTrip(templateId: string): Promise<string> {
-    const templateFiles: Record<string, string> = {
-      summer_road_trip: "crewledger-summer-road-trip-2025-12-18.json",
-      family_beach_vacation: "crewledger-family-beach-vacation-2025-12-19.json",
-      weekend_ski_trip: "crewledger-weekend-ski-trip-2025-12-18.json",
-      europe_backpacking: "crewledger-europe-backpacking-2025-12-18.json",
+    const templateFiles: Record<string, unknown> = {
+      summer_road_trip: require("../../../../sample-data/crewledger-summer-road-trip-2025-12-18.json"),
+      family_beach_vacation: require("../../../../sample-data/crewledger-family-beach-vacation-2025-12-19.json"),
+      weekend_ski_trip: require("../../../../sample-data/crewledger-weekend-ski-trip-2025-12-18.json"),
+      europe_backpacking: require("../../../../sample-data/crewledger-europe-backpacking-2025-12-18.json"),
     };
 
-    const fileName = templateFiles[templateId];
-    if (!fileName) {
+    const sampleData = templateFiles[templateId];
+    if (!sampleData) {
       throw new Error(`Unknown sample template: ${templateId}`);
     }
-
-    const sampleData = require(`../../../../sample-data/${fileName}`);
 
     const {
       trip,
