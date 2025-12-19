@@ -43,6 +43,15 @@ function formatRelativeTime(timestamp: string): string {
   return `${Math.floor(diffDays / 30)}mo ago`;
 }
 
+/**
+ * Renders the Settings screen UI for managing app-wide preferences and utilities.
+ *
+ * Displays and allows editing of device owner name, selection of a display currency,
+ * inspection and navigation to exchange rate management, controls to restart onboarding
+ * and refresh sample data, and app/about attribution details.
+ *
+ * @returns The JSX element for the Settings screen component.
+ */
 export default function SettingsScreen() {
   const navigation = useNavigation();
   const router = useRouter();
@@ -543,6 +552,15 @@ interface ConfirmDialogProps {
   loading?: boolean;
 }
 
+/**
+ * Renders a modal confirmation dialog with Cancel and confirm actions.
+ *
+ * @param confirmLabel - Text for the confirm button when not loading
+ * @param onCancel - Called when the dialog is dismissed or the Cancel action is pressed
+ * @param onConfirm - Called when the confirm action is pressed
+ * @param loading - When `true`, disables the confirm button and shows a working label
+ * @returns The confirmation dialog element to render in the component tree
+ */
 function ConfirmDialog({
   visible,
   title,

@@ -18,26 +18,15 @@ export interface SampleTripBadgeProps {
 }
 
 /**
- * Badge that marks a trip as a sample/demo trip
+ * Renders a small "SAMPLE" badge used to mark a trip as a sample or demo.
  *
- * Visual design:
- * - Small uppercase "SAMPLE" text
- * - Amber background (theme.colors.warning) for visibility
- * - Dark text for contrast (WCAG AAA compliant)
- * - Rounded corners matching design system
+ * The badge supports two visual variants: `"default"` (amber background) and
+ * `"subtle"` (muted low-emphasis background). Intended to be positioned by the
+ * consumer (e.g., absolute top-right of a trip card) via the `style` prop.
  *
- * Usage:
- * - Position: absolute top-right of trip card
- * - Only shown when trip.isSampleData === true
- * - Helps users distinguish sample from real data
- *
- * @example
- * // In trip card component:
- * {trip.isSampleData && <SampleTripBadge />}
- *
- * @example
- * // With custom positioning:
- * <SampleTripBadge style={{ top: 12, right: 12 }} />
+ * @param style - Optional ViewStyle overrides for positioning and layout.
+ * @param variant - Visual variant to apply; `"default"` or `"subtle"`.
+ * @returns A React element that displays the "SAMPLE" badge.
  */
 export function SampleTripBadge({
   style,

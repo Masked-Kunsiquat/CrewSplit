@@ -1,5 +1,10 @@
 import { Stack } from "expo-router";
 
+/**
+ * Defines the onboarding navigation layout using an Expo Router Stack.
+ *
+ * @returns A JSX element containing a Stack configured with no header and slide-from-right animation, with screens: `welcome`, `currency`, `username`, and `walkthrough`.
+ */
 export default function OnboardingLayout() {
   return (
     <Stack
