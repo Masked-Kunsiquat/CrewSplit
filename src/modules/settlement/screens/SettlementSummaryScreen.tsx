@@ -52,7 +52,6 @@ export default function SettlementSummaryScreen() {
   // Fetch recorded settlements
   const {
     settlements: recordedSettlements,
-    loading: settlementsLoading,
     refetch: refetchRecordedSettlements,
   } = useSettlements(tripId);
 
