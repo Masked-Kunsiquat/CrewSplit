@@ -1,21 +1,17 @@
-/**
- * ONBOARDING LAYOUT
- * Provides stack for onboarding screens
- */
-
 import { Stack } from "expo-router";
-import { colors } from "@ui/tokens";
 
 export default function OnboardingLayout() {
   return (
     <Stack
       screenOptions={{
-        headerStyle: { backgroundColor: colors.surfaceElevated },
-        headerTintColor: colors.text,
-        contentStyle: { backgroundColor: colors.background },
+        headerShown: false,
+        animation: "slide_from_right",
       }}
     >
-      <Stack.Screen name="welcome" options={{ title: "Welcome" }} />
+      <Stack.Screen name="welcome" />
+      <Stack.Screen name="currency" />
+      <Stack.Screen name="username" />
+      <Stack.Screen name="walkthrough" />
     </Stack>
   );
 }

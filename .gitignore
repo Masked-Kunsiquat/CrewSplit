@@ -1,4 +1,5 @@
 .claude/
+.gemini/
 
 # Dependencies
 node_modules/

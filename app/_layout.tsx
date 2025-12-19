@@ -106,18 +106,11 @@ export default function RootLayout() {
   return (
     <Stack
       screenOptions={{
-        headerStyle: {
-          backgroundColor: "#1a1a1a",
-        },
-        headerTintColor: "#ffffff",
-        headerTitleStyle: {
-          fontWeight: "600",
-        },
-        contentStyle: {
-          backgroundColor: "#0a0a0a",
-        },
+        headerShown: false,
       }}
     >
+      <Stack.Screen name="index" />
+      <Stack.Screen name="settings" />
       <Stack.Screen name="onboarding" options={{ headerShown: false }} />
     </Stack>
   );
