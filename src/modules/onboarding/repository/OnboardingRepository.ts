@@ -36,6 +36,48 @@ export class OnboardingRepository {
     if (this.schemaInitialized) return;
 
     try {
+      // ---------------------------------------------------------------------
+      // Ensure trips has sample-data columns (fallback if migration missed)
+      // ---------------------------------------------------------------------
+      try {
+        await db.run(
+          sql`ALTER TABLE "trips" ADD COLUMN "is_sample_data" integer DEFAULT false NOT NULL`,
+        );
+      } catch (err) {
+        // Ignore if column already exists
+        if (!(err as Error).message.includes("duplicate column name")) {
+          throw err;
+        }
+      }
+
+      try {
+        await db.run(
+          sql`ALTER TABLE "trips" ADD COLUMN "sample_data_template_id" text`,
+        );
+      } catch (err) {
+        if (!(err as Error).message.includes("duplicate column name")) {
+          throw err;
+        }
+      }
+
+      try {
+        await db.run(
+          sql`ALTER TABLE "trips" ADD COLUMN "is_archived" integer DEFAULT false NOT NULL`,
+        );
+      } catch (err) {
+        if (!(err as Error).message.includes("duplicate column name")) {
+          throw err;
+        }
+      }
+
+      // Indexes are idempotent with IF NOT EXISTS
+      await db.run(
+        sql`CREATE INDEX IF NOT EXISTS "idx_trips_sample_data" ON "trips" ("is_sample_data", "is_archived")`,
+      );
+      await db.run(
+        sql`CREATE INDEX IF NOT EXISTS "idx_trips_archived" ON "trips" ("is_archived")`,
+      );
+
       // user_settings (singleton)
       await db.run(
         sql`CREATE TABLE IF NOT EXISTS "user_settings" (

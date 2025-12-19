@@ -3,7 +3,7 @@
  * Expo Router entry point
  */
 
-import { Stack } from "expo-router";
+import { Stack, Redirect } from "expo-router";
 import { View, Text, ActivityIndicator, StyleSheet } from "react-native";
 import { useEffect, useState } from "react";
 import { useDbMigrations } from "@db/client";
@@ -96,14 +96,8 @@ export default function RootLayout() {
     );
   }
 
-  // TODO: Redirect to onboarding if not complete
-  // For now, just log status
   if (!onboardingComplete) {
-    console.log(
-      "Onboarding not complete - would redirect to /onboarding/welcome",
-    );
-    // When onboarding screens are ready:
-    // return <Redirect href="/onboarding/welcome" />;
+    return <Redirect href="/onboarding/welcome" />;
   }
 
   return (
