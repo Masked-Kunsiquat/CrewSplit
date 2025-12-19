@@ -5,9 +5,7 @@
     "version": "1.0.1",
     "orientation": "portrait",
     "userInterfaceStyle": "dark",
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.crewsplit.app",
@@ -18,10 +16,7 @@
     "android": {
       "package": "com.crewsplit.app"
     },
-    "plugins": [
-      "expo-router",
-      "expo-asset"
-    ],
+    "plugins": ["expo-router", "expo-asset"],
     "scheme": "crewsplit",
     "experiments": {
       "typedRoutes": true

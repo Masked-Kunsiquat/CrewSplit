@@ -5,17 +5,21 @@ This directory contains GitHub Actions workflows for automating releases and bui
 ## Workflows
 
 ### 1. Auto Tag Version (`auto-tag-version.yml`)
+
 **Trigger:** Push to `main` branch with changes to `package.json`
 
 **What it does:**
+
 - Detects version changes in `package.json`
 - Automatically creates/updates a Git tag (e.g., `v1.0.1`)
 - Pushes the tag to GitHub
 
 ### 2. Create GitHub Release (`create-github-release.yml`)
+
 **Trigger:** After Auto Tag Version workflow completes successfully
 
 **What it does:**
+
 - Waits for EAS Build to complete (up to 30 minutes)
 - Downloads the APK from EAS Build
 - Creates a GitHub Release with:
@@ -43,6 +47,7 @@ You need to configure the following secrets in your GitHub repository:
 The EAS build workflow is defined in `/.eas/workflows/create-production-builds.yml`.
 
 It's configured to:
+
 - Trigger on pushes to `main` branch
 - Build Android APK (not AAB)
 - Use the `production` profile from `eas.json`
@@ -63,8 +68,9 @@ When you want to create a new release:
 ## Version Display in App
 
 The app automatically displays the current version from `app.json` on the Settings screen via:
+
 ```typescript
-Constants.expoConfig?.version
+Constants.expoConfig?.version;
 ```
 
 This ensures the displayed version always matches your package version.
