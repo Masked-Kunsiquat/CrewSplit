@@ -256,7 +256,7 @@ function TripDashboardScreenContent({ tripId }: { tripId: string }) {
           style={styles.modalOverlay}
           onPress={() => setAddMenuVisible(false)}
         >
-          <View style={styles.modalContent}>
+          <Pressable style={styles.modalContent} onPress={() => {}}>
             <Text style={styles.modalTitle}>Add New</Text>
 
             <Pressable
@@ -271,8 +271,13 @@ function TripDashboardScreenContent({ tripId }: { tripId: string }) {
                   params: { id: tripId },
                 });
               }}
+              accessibilityRole="button"
+              accessibilityLabel="Add Expense"
+              accessibilityHint="Opens form to record a new expense for this trip"
             >
-              <Text style={styles.menuOptionIcon}>💰</Text>
+              <Text style={styles.menuOptionIcon} accessible={false}>
+                💰
+              </Text>
               <View style={styles.menuOptionText}>
                 <Text style={styles.menuOptionTitle}>Add Expense</Text>
                 <Text style={styles.menuOptionDescription}>
@@ -293,8 +298,13 @@ function TripDashboardScreenContent({ tripId }: { tripId: string }) {
                   params: { id: tripId },
                 });
               }}
+              accessibilityRole="button"
+              accessibilityLabel="Record Payment"
+              accessibilityHint="Opens form to log a payment between participants"
             >
-              <Text style={styles.menuOptionIcon}>💸</Text>
+              <Text style={styles.menuOptionIcon} accessible={false}>
+                💸
+              </Text>
               <View style={styles.menuOptionText}>
                 <Text style={styles.menuOptionTitle}>Record Payment</Text>
                 <Text style={styles.menuOptionDescription}>
@@ -306,10 +316,13 @@ function TripDashboardScreenContent({ tripId }: { tripId: string }) {
             <Pressable
               style={styles.cancelButton}
               onPress={() => setAddMenuVisible(false)}
+              accessibilityRole="button"
+              accessibilityLabel="Cancel"
+              accessibilityHint="Closes this menu and returns to trip dashboard"
             >
               <Text style={styles.cancelButtonText}>Cancel</Text>
             </Pressable>
-          </View>
+          </Pressable>
         </Pressable>
       </Modal>
     </View>
