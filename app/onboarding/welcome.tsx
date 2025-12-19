@@ -31,8 +31,8 @@ export default function OnboardingWelcomeScreen() {
         <Text style={styles.kicker}>CrewSplit</Text>
         <Text style={styles.headline}>Ready to start splitting together.</Text>
         <Text style={styles.description}>
-          We’ve kept onboarding light. Finish to jump into your trips now or
-          restart any time from Settings.
+          We’ve kept the welcome flow light. Finish to jump into your trips now
+          or restart any time from Settings.
         </Text>
         <View style={styles.bullets}>
           <Text style={styles.bullet}>
