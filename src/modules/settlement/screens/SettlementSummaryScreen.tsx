@@ -366,25 +366,27 @@ export default function SettlementSummaryScreen() {
             settlement.settlements.map((item, index) => (
               <View
                 key={`${item.from}-${item.to}-${index}`}
-                style={styles.settlementRow}
+                style={styles.settlementCard}
               >
-                <Text style={styles.settlementText}>
-                  <Text style={styles.from}>{item.fromName}</Text>
-                  <Text style={styles.arrow}> → </Text>
-                  <Text style={styles.to}>{item.toName}</Text>
-                </Text>
-                <View style={styles.settlementAmounts}>
-                  <Text style={styles.amount}>
-                    {formatCurrency(item.amount, settlement.currency)}
+                <View style={styles.settlementRow}>
+                  <Text style={styles.settlementText}>
+                    <Text style={styles.from}>{item.fromName}</Text>
+                    <Text style={styles.arrow}> → </Text>
+                    <Text style={styles.to}>{item.toName}</Text>
                   </Text>
-                  {showDisplayCurrency && item.displayAmount && (
-                    <Text style={styles.displayAmountSmall}>
-                      {formatCurrency(
-                        item.displayAmount.displayAmount,
-                        item.displayAmount.displayCurrency,
-                      )}
+                  <View style={styles.settlementAmounts}>
+                    <Text style={styles.amount}>
+                      {formatCurrency(item.amount, settlement.currency)}
                     </Text>
-                  )}
+                    {showDisplayCurrency && item.displayAmount && (
+                      <Text style={styles.displayAmountSmall}>
+                        {formatCurrency(
+                          item.displayAmount.displayAmount,
+                          item.displayAmount.displayCurrency,
+                        )}
+                      </Text>
+                    )}
+                  </View>
                 </View>
               </View>
             ))
@@ -599,13 +601,16 @@ const styles = StyleSheet.create({
   negativeAmount: {
     color: theme.colors.error,
   },
+  settlementCard: {
+    padding: theme.spacing.md,
+    backgroundColor: theme.colors.surface,
+    borderRadius: 8,
+    gap: theme.spacing.xs,
+  },
   settlementRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingVertical: theme.spacing.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
   },
   settlementText: {
     fontSize: theme.typography.base,
