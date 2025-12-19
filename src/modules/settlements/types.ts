@@ -63,6 +63,7 @@ export type SettlementPaymentMethod =
   | "cash"
   | "venmo"
   | "paypal"
+  | "zelle"
   | "bank_transfer"
   | "check"
   | "other";

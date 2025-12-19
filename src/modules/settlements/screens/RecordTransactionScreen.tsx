@@ -37,7 +37,7 @@ export default function RecordTransactionScreen() {
     fromParticipantId?: string;
     toParticipantId?: string;
     amount?: string;
-    expenseId?: string;
+    expenseSplitId?: string;
   }>();
 
   // Extract tripId from route parameter [id]
@@ -114,7 +114,7 @@ export default function RecordTransactionScreen() {
         date: date.toISOString(),
         description: description.trim() || undefined,
         paymentMethod: paymentMethod || undefined,
-        expenseSplitId: params.expenseId,
+        expenseSplitId: params.expenseSplitId,
       };
 
       await createSettlement(settlementData);
@@ -187,7 +187,6 @@ export default function RecordTransactionScreen() {
     { label: "Bank Transfer", value: "bank_transfer" },
     { label: "Cash", value: "cash" },
     { label: "Check", value: "check" },
-    { label: "None", value: "" },
     { label: "Other", value: "other" },
     { label: "PayPal", value: "paypal" },
     { label: "Venmo", value: "venmo" },
