@@ -43,7 +43,7 @@ jobs:
             echo "Version unchanged: $CURRENT_VERSION"
           fi
 
-      - name: Create or update tag
+      - name: Create tag if not exists
         if: steps.version-check.outputs.version_changed == 'true'
         run: |
           VERSION="${{ steps.version-check.outputs.current_version }}"
@@ -53,15 +53,18 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          # Check if tag exists
+          # Fetch all tags from remote to ensure we have the latest
+          git fetch --tags
+
+          # Check if tag exists locally or remotely
           if git rev-parse "$TAG_NAME" >/dev/null 2>&1; then
-            echo "Tag $TAG_NAME already exists, deleting and recreating..."
-            git tag -d "$TAG_NAME"
-            git push origin ":refs/tags/$TAG_NAME" || true
+            echo "⚠️  Tag $TAG_NAME already exists. Skipping tag creation."
+            echo "If you need to update this version, please increment the version number in package.json."
+            exit 0
           fi
 
-          # Create new tag
+          # Create and push new tag
           git tag -a "$TAG_NAME" -m "Release version $VERSION"
           git push origin "$TAG_NAME"
 
-          echo "Created and pushed tag: $TAG_NAME"
+          echo "✅ Created and pushed tag: $TAG_NAME"
