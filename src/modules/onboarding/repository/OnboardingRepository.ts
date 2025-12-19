@@ -12,7 +12,6 @@ import {
 
 export class OnboardingRepository {
   async getUserSettings(): Promise<UserSettings> {
-    console.log("OnboardingRepository.getUserSettings");
     const settings = await db
       .select()
       .from(userSettings)
@@ -35,7 +34,6 @@ export class OnboardingRepository {
   async updateUserSettings(
     update: Partial<UserSettings>,
   ): Promise<UserSettings> {
-    console.log("OnboardingRepository.updateUserSettings", update);
     await db
       .update(userSettings)
       .set({ ...update, updatedAt: new Date().toISOString() })
@@ -46,7 +44,6 @@ export class OnboardingRepository {
   async getOnboardingState(
     flowId: OnboardingFlowId,
   ): Promise<OnboardingState | null> {
-    console.log("OnboardingRepository.getOnboardingState", flowId);
     return (
       db
         .select()
@@ -60,7 +57,6 @@ export class OnboardingRepository {
     flowId: OnboardingFlowId,
     stepId: OnboardingStepId,
   ): Promise<OnboardingState> {
-    console.log("OnboardingRepository.markStepCompleted", flowId, stepId);
     const state = await this.getOnboardingState(flowId);
     if (state) {
       const completedSteps = [...(state.completedSteps || []), stepId];
@@ -86,7 +82,6 @@ export class OnboardingRepository {
   }
 
   async markFlowCompleted(flowId: OnboardingFlowId): Promise<OnboardingState> {
-    console.log("OnboardingRepository.markFlowCompleted", flowId);
     const state = await this.getOnboardingState(flowId);
     const completedAt = new Date().toISOString();
     if (state) {
@@ -108,14 +103,39 @@ export class OnboardingRepository {
     return this.getOnboardingState(flowId);
   }
 
+  async resetFlow(flowId: OnboardingFlowId): Promise<OnboardingState> {
+    const state = await this.getOnboardingState(flowId);
+    const now = new Date().toISOString();
+    if (state) {
+      await db
+        .update(onboardingState)
+        .set({
+          isCompleted: false,
+          completedSteps: [],
+          completedAt: null,
+          updatedAt: now,
+        })
+        .where(eq(onboardingState.id, flowId));
+    } else {
+      await db.insert(onboardingState).values({
+        id: flowId,
+        isCompleted: false,
+        completedSteps: [],
+        createdAt: now,
+        updatedAt: now,
+        completedAt: null,
+        metadata: {},
+      });
+    }
+    return this.getOnboardingState(flowId);
+  }
+
   async isInitialOnboardingCompleted(): Promise<boolean> {
-    console.log("OnboardingRepository.isInitialOnboardingCompleted");
     const state = await this.getOnboardingState("initial_onboarding");
     return state?.isCompleted ?? false;
   }
 
   async getSampleTrips(includeArchived = false): Promise<any[]> {
-    console.log("OnboardingRepository.getSampleTrips");
     const query = db.select().from(trips).where(eq(trips.isSampleData, true));
     if (!includeArchived) {
       query.where(eq(trips.isArchived, false));
@@ -124,7 +144,6 @@ export class OnboardingRepository {
   }
 
   async archiveSampleTrips(): Promise<void> {
-    console.log("OnboardingRepository.archiveSampleTrips");
     await db
       .update(trips)
       .set({ isArchived: true })
@@ -132,18 +151,15 @@ export class OnboardingRepository {
   }
 
   async restoreSampleTrips(): Promise<void> {
-    console.log("OnboardingRepository.restoreSampleTrips");
     await this.deleteSampleTrips();
     // The actual loading will be done by the service
   }
 
   async deleteSampleTrips(): Promise<void> {
-    console.log("OnboardingRepository.deleteSampleTrips");
     await db.delete(trips).where(eq(trips.isSampleData, true));
   }
 
   async hasSampleData(): Promise<boolean> {
-    console.log("OnboardingRepository.hasSampleData");
     const result = await db
       .select({ id: trips.id })
       .from(trips)
@@ -154,7 +170,6 @@ export class OnboardingRepository {
   }
 
   async hasActiveSampleData(): Promise<boolean> {
-    console.log("OnboardingRepository.hasActiveSampleData");
     const result = await db
       .select({ id: trips.id })
       .from(trips)

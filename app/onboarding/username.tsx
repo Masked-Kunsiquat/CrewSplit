@@ -1,12 +1,14 @@
 import React, { useState } from "react";
 import { useRouter } from "expo-router";
 import { View, Text, StyleSheet, Alert } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Button, Input } from "@ui/components";
 import { theme } from "@ui/theme";
 import { useUserSettings } from "@modules/onboarding/hooks/use-user-settings";
 
 export default function SetUserNameScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const [name, setName] = useState("");
   const { updateSettings, loading } = useUserSettings();
 
@@ -33,7 +35,15 @@ export default function SetUserNameScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        {
+          paddingTop: theme.spacing.lg + insets.top,
+          paddingBottom: theme.spacing.lg + insets.bottom,
+        },
+      ]}
+    >
       <View style={styles.header}>
         <Text style={styles.title}>What's Your Name?</Text>
         <Text style={styles.description}>
@@ -76,7 +86,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   header: {
-    paddingTop: theme.spacing.xxl,
+    paddingTop: theme.spacing.lg,
     gap: theme.spacing.sm,
     alignItems: "center",
   },
@@ -96,7 +106,7 @@ const styles = StyleSheet.create({
     height: 60,
   },
   footer: {
-    paddingBottom: theme.spacing.lg,
+    paddingBottom: 0,
     gap: theme.spacing.sm,
   },
 });

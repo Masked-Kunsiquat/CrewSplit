@@ -1,6 +1,7 @@
 import React, { useRef, useState } from "react";
 import { useRouter } from "expo-router";
 import { View, Text, StyleSheet, ScrollView, Dimensions } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Button } from "@ui/components";
 import { theme } from "@ui/theme";
 // eslint-disable-next-line import/no-unresolved
@@ -54,6 +55,7 @@ export default function WalkthroughScreen() {
   const [activeIndex, setActiveIndex] = useState(0);
   const scrollViewRef = useRef<ScrollView>(null);
   const { markComplete, loading } = useOnboardingState();
+  const insets = useSafeAreaInsets();
 
   const handleScroll = (event) => {
     const index = Math.round(event.nativeEvent.contentOffset.x / width);
@@ -81,12 +83,20 @@ export default function WalkthroughScreen() {
   const isLastStep = activeIndex === WALKTHROUGH_STEPS.length - 1;
 
   return (
-    <View style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        {
+          paddingTop: insets.top,
+          paddingBottom: insets.bottom,
+        },
+      ]}
+    >
       <Button
         title="Skip"
         onPress={handleSkip}
         variant="ghost"
-        style={styles.skipButton}
+        style={[styles.skipButton, { top: insets.top + theme.spacing.sm }]}
         disabled={loading}
       />
       <ScrollView

@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useRouter } from "expo-router";
 import { View, Text, StyleSheet, Pressable } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Button, CurrencyPicker } from "@ui/components";
 import { theme } from "@ui/theme";
 import { useUserSettings } from "@modules/onboarding/hooks/use-user-settings";
@@ -9,6 +10,7 @@ const POPULAR_CURRENCIES = ["USD", "EUR", "GBP", "CAD", "AUD", "JPY"];
 
 export default function SetDefaultCurrencyScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const [selectedCurrency, setSelectedCurrency] = useState<string | null>(null);
   const { updateSettings, loading } = useUserSettings();
 
@@ -29,7 +31,15 @@ export default function SetDefaultCurrencyScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        {
+          paddingTop: theme.spacing.lg + insets.top,
+          paddingBottom: theme.spacing.lg + insets.bottom,
+        },
+      ]}
+    >
       <View style={styles.header}>
         <Text style={styles.title}>Set Your Default Currency</Text>
         <Text style={styles.description}>
@@ -96,7 +106,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   header: {
-    paddingTop: theme.spacing.xxl,
+    paddingTop: theme.spacing.lg,
     gap: theme.spacing.sm,
     alignItems: "center",
   },
@@ -144,7 +154,7 @@ const styles = StyleSheet.create({
     color: theme.colors.background,
   },
   footer: {
-    paddingBottom: theme.spacing.lg,
+    paddingBottom: 0,
     gap: theme.spacing.sm,
   },
 });

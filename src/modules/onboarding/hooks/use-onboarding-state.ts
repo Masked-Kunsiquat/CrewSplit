@@ -51,5 +51,27 @@ export function useOnboardingState({
     }
   }, []);
 
-  return { isComplete, loading, error, markComplete, refresh: checkStatus };
+  const reset = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      await onboardingRepository.resetFlow("initial_onboarding");
+      setIsComplete(false);
+    } catch (e) {
+      console.error("Failed to reset onboarding", e);
+      setError(e as Error);
+      setIsComplete(false);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  return {
+    isComplete,
+    loading,
+    error,
+    markComplete,
+    reset,
+    refresh: checkStatus,
+  };
 }

@@ -3,6 +3,7 @@
  * LOCAL DATA ENGINEER: Database connection and migrations bootstrap
  */
 
+import { useEffect, useRef } from "react";
 import { drizzle } from "drizzle-orm/expo-sqlite";
 import { useMigrations } from "drizzle-orm/expo-sqlite/migrator";
 import { openDatabaseSync } from "expo-sqlite";
@@ -32,13 +33,23 @@ export const db = drizzle(expoDb, { schema });
  */
 export const useDbMigrations = () => {
   const { success, error } = useMigrations(db, migrations);
+  const loggedSuccess = useRef(false);
+  const loggedError = useRef<string | null>(null);
 
-  // Log migration status for debugging
-  if (success) {
-    migrationLogger.info("Database migrations applied successfully");
-  } else if (error) {
-    migrationLogger.error("Migration failed", error);
-  }
+  useEffect(() => {
+    if (success && !loggedSuccess.current) {
+      migrationLogger.info("Database migrations applied successfully");
+      loggedSuccess.current = true;
+    }
+
+    if (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      if (loggedError.current !== message) {
+        migrationLogger.error("Migration failed", error);
+        loggedError.current = message;
+      }
+    }
+  }, [success, error]);
 
   return { success, error };
 };

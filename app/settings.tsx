@@ -52,11 +52,8 @@ export default function SettingsScreen() {
     setDeviceOwner,
   } = useDeviceOwner();
   const { rateCount, isStale, oldestUpdate } = useFxRates();
-  const {
-    reset: resetOnboarding,
-    loading: onboardingLoading,
-    isComplete: onboardingComplete,
-  } = useOnboardingState();
+  const { loading: onboardingLoading, isComplete: onboardingComplete } =
+    useOnboardingState();
   const {
     reloadSampleData,
     loading: sampleDataLoading,
@@ -64,7 +61,6 @@ export default function SettingsScreen() {
   } = useReloadSampleData();
 
   const [actionMessage, setActionMessage] = useState<string | null>(null);
-  const [showRestartConfirm, setShowRestartConfirm] = useState(false);
   const [showRefreshConfirm, setShowRefreshConfirm] = useState(false);
 
   // Set header title
@@ -113,24 +109,12 @@ export default function SettingsScreen() {
   };
 
   const handleRestartOnboarding = useCallback(() => {
-    setShowRestartConfirm(true);
-  }, []);
+    router.push("/onboarding/walkthrough");
+  }, [router]);
 
   const handleReloadSampleData = useCallback(() => {
     setShowRefreshConfirm(true);
   }, []);
-
-  const confirmRestartOnboarding = async () => {
-    setShowRestartConfirm(false);
-    setActionMessage(null);
-    try {
-      await resetOnboarding();
-      router.replace("/onboarding/welcome");
-    } catch (err) {
-      console.error("Failed to reset onboarding", err);
-      setActionMessage("Failed to restart onboarding. Please try again.");
-    }
-  };
 
   const confirmRefreshSamples = async () => {
     setShowRefreshConfirm(false);
@@ -283,9 +267,9 @@ export default function SettingsScreen() {
             <Button
               title={
                 onboardingLoading
-                  ? "Resetting..."
+                  ? "Opening..."
                   : onboardingComplete
-                    ? "Restart Onboarding"
+                    ? "Replay Walkthrough"
                     : "Onboarding Incomplete"
               }
               variant="outline"
@@ -312,16 +296,6 @@ export default function SettingsScreen() {
             </Text>
           )}
         </Card>
-
-        <ConfirmDialog
-          visible={showRestartConfirm}
-          title="Restart onboarding?"
-          message="This marks onboarding as incomplete so you can revisit the setup flow. Your trips and expenses stay intact."
-          confirmLabel="Restart"
-          onCancel={() => setShowRestartConfirm(false)}
-          onConfirm={confirmRestartOnboarding}
-          loading={onboardingLoading}
-        />
 
         <ConfirmDialog
           visible={showRefreshConfirm}

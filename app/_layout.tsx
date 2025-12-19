@@ -5,7 +5,7 @@
 
 import { Stack, Redirect, usePathname } from "expo-router";
 import { View, Text, ActivityIndicator, StyleSheet } from "react-native";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useDbMigrations } from "@db/client";
 import { cachedFxRateProvider } from "@modules/fx-rates/provider";
 import { useFxSync } from "@modules/fx-rates/hooks";
@@ -24,7 +24,25 @@ export default function RootLayout() {
     isComplete: onboardingComplete,
     loading: onboardingLoading,
     error: onboardingError,
+    refresh: refreshOnboarding,
   } = useOnboardingState({ enabled: success });
+
+  const isOnboardingRoute = pathname?.startsWith("/onboarding");
+  const previousPath = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!success) {
+      previousPath.current = pathname ?? null;
+      return;
+    }
+
+    const prior = previousPath.current;
+    previousPath.current = pathname ?? null;
+
+    if (prior?.startsWith("/onboarding") && !isOnboardingRoute) {
+      refreshOnboarding();
+    }
+  }, [pathname, success, isOnboardingRoute, refreshOnboarding]);
 
   // Background sync for FX rates (must be called unconditionally)
   // Safe to run before provider initialization: checkStaleness only queries DB,
@@ -97,8 +115,6 @@ export default function RootLayout() {
     );
   }
 
-  const isOnboardingRoute = pathname?.startsWith("/onboarding");
-
   if (!onboardingComplete && !isOnboardingRoute) {
     return <Redirect href="/onboarding/welcome" />;
   }
@@ -106,10 +122,27 @@ export default function RootLayout() {
   return (
     <Stack
       screenOptions={{
-        headerShown: false,
+        headerShown: true,
+        headerStyle: {
+          backgroundColor: colors.background,
+        },
+        headerTintColor: colors.text,
+        headerTitleStyle: {
+          fontSize: typography.xl,
+          fontWeight: typography.semibold,
+          color: colors.text,
+        },
+        headerShadowVisible: false,
+        headerBackTitleVisible: false,
       }}
     >
-      <Stack.Screen name="index" />
+      <Stack.Screen
+        name="index"
+        options={{
+          headerBackVisible: false,
+          headerLeft: () => null,
+        }}
+      />
       <Stack.Screen name="settings" />
       <Stack.Screen name="onboarding" options={{ headerShown: false }} />
     </Stack>

@@ -22,6 +22,45 @@ export class SampleDataService {
 
     const tripId = trip.id;
 
+    const normalizedSettlements = settlementData?.map((settlement) => {
+      if ("originalCurrency" in settlement) {
+        return settlement;
+      }
+
+      const originalCurrency =
+        settlement.currency ?? trip.currency ?? trip.currencyCode ?? "USD";
+      const originalAmountMinor =
+        settlement.originalAmountMinor ?? settlement.amountMinor;
+
+      if (typeof originalAmountMinor !== "number") {
+        throw new Error(
+          `Invalid settlement amount for ${settlement.id ?? "unknown"}`,
+        );
+      }
+
+      const date =
+        settlement.date ?? settlement.createdAt ?? settlement.updatedAt;
+      const resolvedDate = date ?? new Date().toISOString();
+
+      return {
+        id: settlement.id,
+        tripId: settlement.tripId ?? tripId,
+        fromParticipantId: settlement.fromParticipantId,
+        toParticipantId: settlement.toParticipantId,
+        expenseSplitId: settlement.expenseSplitId ?? null,
+        originalCurrency,
+        originalAmountMinor,
+        fxRateToTrip: settlement.fxRateToTrip ?? null,
+        convertedAmountMinor:
+          settlement.convertedAmountMinor ?? originalAmountMinor,
+        date: resolvedDate,
+        description: settlement.description ?? null,
+        paymentMethod: settlement.paymentMethod ?? null,
+        createdAt: settlement.createdAt ?? resolvedDate,
+        updatedAt: settlement.updatedAt ?? resolvedDate,
+      };
+    });
+
     await db.transaction(async (tx) => {
       // Clear any existing sample data for this template
       await tx
@@ -46,8 +85,8 @@ export class SampleDataService {
       if (splitData?.length) {
         await tx.insert(expenseSplits).values(splitData);
       }
-      if (settlementData?.length) {
-        await tx.insert(settlements).values(settlementData);
+      if (normalizedSettlements?.length) {
+        await tx.insert(settlements).values(normalizedSettlements);
       }
     });
 

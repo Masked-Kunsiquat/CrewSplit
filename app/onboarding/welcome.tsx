@@ -1,6 +1,7 @@
 import React from "react";
 import { useRouter } from "expo-router";
 import { View, Text, StyleSheet } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Button } from "@ui/components";
 import { theme } from "@ui/theme";
 // eslint-disable-next-line import/no-unresolved
@@ -22,13 +23,22 @@ const FeatureCard = ({ icon, title, description }) => (
 
 export default function OnboardingWelcomeScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
 
   const handleNext = () => {
     router.push("/onboarding/currency");
   };
 
   return (
-    <View style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        {
+          paddingTop: theme.spacing.lg + insets.top,
+          paddingBottom: theme.spacing.lg + insets.bottom,
+        },
+      ]}
+    >
       <View style={styles.header}>
         <Text style={styles.logo}>👥💰</Text>
         <Text style={styles.title}>CrewSplit</Text>
@@ -69,7 +79,7 @@ const styles = StyleSheet.create({
   },
   header: {
     alignItems: "center",
-    paddingTop: theme.spacing.xxl,
+    paddingTop: theme.spacing.lg,
     gap: theme.spacing.sm,
   },
   logo: {
@@ -105,6 +115,6 @@ const styles = StyleSheet.create({
     color: theme.colors.textSecondary,
   },
   footer: {
-    paddingBottom: theme.spacing.lg,
+    paddingBottom: 0,
   },
 });
