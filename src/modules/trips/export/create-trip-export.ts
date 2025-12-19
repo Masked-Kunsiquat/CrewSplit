@@ -9,6 +9,7 @@ import type {
   expenses,
   participants,
   trips,
+  settlements,
 } from "@db/schema";
 import type { TripExportMetaV1, TripExportV1 } from "./types";
 
@@ -19,6 +20,7 @@ export type CreateTripExportInput = Readonly<{
   expenses?: (typeof expenses.$inferSelect)[];
   expenseSplits?: (typeof expenseSplits.$inferSelect)[];
   categories?: (typeof expenseCategories.$inferSelect)[];
+  settlements?: (typeof settlements.$inferSelect)[];
 }>;
 
 function compareStrings(a: string, b: string) {
@@ -35,6 +37,7 @@ export function createTripExportV1(input: CreateTripExportInput): TripExportV1 {
     expenses?: (typeof expenses.$inferSelect)[];
     expenseSplits?: (typeof expenseSplits.$inferSelect)[];
     categories?: (typeof expenseCategories.$inferSelect)[];
+    settlements?: (typeof settlements.$inferSelect)[];
   } = {
     meta: input.meta,
     trip: input.trip,
@@ -73,6 +76,16 @@ export function createTripExportV1(input: CreateTripExportInput): TripExportV1 {
       return (
         (a.sortOrder ?? 0) - (b.sortOrder ?? 0) ||
         compareStrings(a.name, b.name) ||
+        compareStrings(a.id, b.id)
+      );
+    });
+  }
+
+  if (input.settlements) {
+    out.settlements = [...input.settlements].sort((a, b) => {
+      return (
+        compareStrings(a.date, b.date) ||
+        compareStrings(a.createdAt, b.createdAt) ||
         compareStrings(a.id, b.id)
       );
     });
