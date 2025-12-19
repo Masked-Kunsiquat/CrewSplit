@@ -3,7 +3,7 @@
  * Global app settings including display currency preference
  */
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   View,
   Text,
@@ -19,6 +19,8 @@ import { Card, CurrencyPicker, Button, Input } from "@ui/components";
 import { useDisplayCurrency } from "@hooks/use-display-currency";
 import { useDeviceOwner } from "@hooks/use-device-owner";
 import { useFxRates } from "@modules/fx-rates/hooks/use-fx-rates";
+import { useOnboardingState } from "@modules/onboarding/hooks/use-onboarding-state";
+import { useReloadSampleData } from "@modules/onboarding/hooks/use-sample-data";
 
 /**
  * Format timestamp as relative time (e.g., "2 days ago")
@@ -49,6 +51,18 @@ export default function SettingsScreen() {
     setDeviceOwner,
   } = useDeviceOwner();
   const { rateCount, isStale, oldestUpdate } = useFxRates();
+  const {
+    reset: resetOnboarding,
+    loading: onboardingLoading,
+    isComplete: onboardingComplete,
+  } = useOnboardingState();
+  const {
+    reloadSampleData,
+    loading: sampleDataLoading,
+    error: sampleDataError,
+  } = useReloadSampleData();
+
+  const [actionMessage, setActionMessage] = useState<string | null>(null);
 
   // Set header title
   useEffect(() => {
@@ -94,6 +108,65 @@ export default function SettingsScreen() {
     setEditingName(false);
     setNameInput("");
   };
+
+  const handleRestartOnboarding = useCallback(() => {
+    Alert.alert(
+      "Restart onboarding?",
+      "This marks onboarding as incomplete so you can revisit the setup flow. Your trips and expenses stay intact.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Restart",
+          style: "destructive",
+          onPress: async () => {
+            setActionMessage(null);
+            try {
+              await resetOnboarding();
+              setActionMessage(
+                "Onboarding marked incomplete. Return to home to start again.",
+              );
+            } catch {
+              Alert.alert(
+                "Error",
+                "Failed to reset onboarding. Please try again.",
+              );
+            }
+          },
+        },
+      ],
+    );
+  }, [resetOnboarding]);
+
+  const handleReloadSampleData = useCallback(() => {
+    Alert.alert(
+      "Refresh sample trip?",
+      "Deletes existing sample data and reloads the demo trip.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Refresh",
+          style: "destructive",
+          onPress: async () => {
+            setActionMessage(null);
+            try {
+              await reloadSampleData("summer_road_trip");
+              setActionMessage(
+                "Sample trip reloaded. You can find it in your Trips list.",
+              );
+              // Optional: navigate to the sample trip
+              // router.push(`/trips/${tripId}`);
+            } catch (err) {
+              console.error("Failed to refresh sample data", err);
+              Alert.alert(
+                "Error",
+                "Could not refresh sample data. Please try again.",
+              );
+            }
+          },
+        },
+      ],
+    );
+  }, [reloadSampleData]);
 
   return (
     <View style={styles.container}>
@@ -219,6 +292,46 @@ export default function SettingsScreen() {
             onPress={() => router.push({ pathname: "/fx-rates/" } as any)}
             fullWidth
           />
+        </Card>
+
+        <Card style={styles.section}>
+          <Text style={styles.sectionTitle}>Onboarding & Sample Data</Text>
+          <Text style={styles.sectionDescription}>
+            Rerun onboarding or refresh the built-in sample trip for demos.
+          </Text>
+
+          <View style={styles.actionRow}>
+            <Button
+              title={
+                onboardingLoading
+                  ? "Resetting..."
+                  : onboardingComplete
+                    ? "Restart Onboarding"
+                    : "Onboarding Incomplete"
+              }
+              variant="outline"
+              onPress={handleRestartOnboarding}
+              disabled={onboardingLoading}
+              fullWidth
+            />
+            <Button
+              title={
+                sampleDataLoading ? "Refreshing..." : "Refresh Sample Trip"
+              }
+              onPress={handleReloadSampleData}
+              disabled={sampleDataLoading}
+              fullWidth
+            />
+          </View>
+
+          {actionMessage && (
+            <Text style={styles.helperText}>{actionMessage}</Text>
+          )}
+          {sampleDataError && (
+            <Text style={styles.helperTextError}>
+              {sampleDataError.message}
+            </Text>
+          )}
         </Card>
 
         <Card style={styles.section}>
@@ -397,5 +510,19 @@ const styles = StyleSheet.create({
   },
   ratesSummaryStale: {
     color: theme.colors.warning,
+  },
+  actionRow: {
+    gap: theme.spacing.sm,
+  },
+  helperText: {
+    marginTop: theme.spacing.sm,
+    color: theme.colors.textSecondary,
+    fontSize: theme.typography.sm,
+    lineHeight: 18,
+  },
+  helperTextError: {
+    marginTop: theme.spacing.xs,
+    color: theme.colors.error,
+    fontSize: theme.typography.sm,
   },
 });
