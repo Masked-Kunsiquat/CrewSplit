@@ -1,8 +1,3 @@
-/**
- * ONBOARDING - Welcome Screen
- * Minimal placeholder flow to mark onboarding complete
- */
-
 import React, { useEffect } from "react";
 import { useRouter, useNavigation } from "expo-router";
 import { View, Text, StyleSheet, ScrollView } from "react-native";
