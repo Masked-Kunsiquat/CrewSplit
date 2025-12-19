@@ -6,7 +6,7 @@
 import React from "react";
 import { View, Text, StyleSheet, Pressable } from "react-native";
 import { theme } from "@ui/theme";
-import { formatCents } from "@utils/currency";
+import { formatCurrency } from "@utils/currency";
 import type { SettlementWithParticipants } from "../types";
 
 interface TransactionRowProps {
@@ -33,7 +33,7 @@ export function TransactionRow({
       ]}
       onPress={onPress}
       accessibilityRole="button"
-      accessibilityLabel={`Payment from ${settlement.fromParticipantName} to ${settlement.toParticipantName}, ${formatCents(settlement.originalAmountMinor)} ${settlement.originalCurrency}`}
+      accessibilityLabel={`Payment from ${settlement.fromParticipantName} to ${settlement.toParticipantName}, ${formatCurrency(settlement.originalAmountMinor, settlement.originalCurrency)} ${settlement.originalCurrency}`}
     >
       <View style={styles.leftContent}>
         {showDate && <Text style={styles.date}>{formattedDate}</Text>}
@@ -60,9 +60,8 @@ export function TransactionRow({
       </View>
       <View style={styles.rightContent}>
         <Text style={styles.amount}>
-          {formatCents(settlement.originalAmountMinor)}
+          {formatCurrency(settlement.originalAmountMinor, settlement.originalCurrency)}
         </Text>
-        <Text style={styles.currency}>{settlement.originalCurrency}</Text>
       </View>
     </Pressable>
   );
@@ -80,7 +79,7 @@ const styles = StyleSheet.create({
   },
   containerPressed: {
     opacity: 0.7,
-    backgroundColor: theme.colors.surfaceHover,
+    backgroundColor: theme.colors.surface,
   },
   leftContent: {
     flex: 1,
@@ -123,10 +122,5 @@ const styles = StyleSheet.create({
     fontSize: theme.typography.lg,
     fontWeight: "bold",
     color: theme.colors.primary,
-  },
-  currency: {
-    fontSize: theme.typography.xs,
-    color: theme.colors.textSecondary,
-    marginTop: theme.spacing.xs,
   },
 });
