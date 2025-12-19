@@ -5,6 +5,18 @@ type UseOnboardingStateProps = {
   enabled?: boolean;
 };
 
+/**
+ * Manages and exposes the initial onboarding completion state and related actions.
+ *
+ * @param enabled - When false, the hook will not perform status checks or refreshes (loading remains false).
+ * @returns An object containing:
+ *  - isComplete: whether the initial onboarding flow is completed
+ *  - loading: whether a check or mutation is in progress
+ *  - error: the last error encountered, or `null`
+ *  - markComplete: function to mark the onboarding flow as completed
+ *  - reset: function to reset the onboarding flow to incomplete
+ *  - refresh: function to re-check the onboarding completion status
+ */
 export function useOnboardingState({
   enabled = true,
 }: UseOnboardingStateProps = {}) {

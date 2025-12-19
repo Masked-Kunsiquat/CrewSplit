@@ -13,6 +13,18 @@ import { useOnboardingState } from "@modules/onboarding/hooks/use-onboarding-sta
 import { colors, spacing, typography } from "@ui/tokens";
 import { fxLogger } from "@utils/logger";
 
+/**
+ * Root layout component that coordinates database migrations, FX provider initialization, background FX synchronization, onboarding state checks, and top-level navigation.
+ *
+ * This component:
+ * - Waits for database migrations to complete and shows an error view if migrations fail.
+ * - Triggers and monitors initialization of the cached FX rate provider and runs background FX sync (non-blocking on failure).
+ * - Checks onboarding completion and redirects to the onboarding welcome screen when needed.
+ * - Renders a centered loader while migrations, FX initialization, or onboarding checks are in progress.
+ * - Renders the app navigation Stack (main, settings, onboarding) once initialization and onboarding checks complete.
+ *
+ * @returns The root React element for the app: either a migration error view, a loading view, an onboarding redirect, or the main navigation stack.
+ */
 export default function RootLayout() {
   const pathname = usePathname();
   const { success, error } = useDbMigrations();

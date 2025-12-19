@@ -8,6 +8,15 @@ import { useUserSettings } from "@modules/onboarding/hooks/use-user-settings";
 
 const POPULAR_CURRENCIES = ["USD", "EUR", "GBP", "CAD", "AUD", "JPY"];
 
+/**
+ * Renders the "Set Your Default Currency" onboarding screen where users can pick a default currency.
+ *
+ * The screen lets users choose from popular currencies or a full currency picker. Tapping "Next" saves
+ * the selected currency and advances to the username onboarding step; tapping "Skip" saves "USD" and advances.
+ * If saving fails, an alert is shown to the user.
+ *
+ * @returns The JSX element for the Set Default Currency onboarding screen.
+ */
 export default function SetDefaultCurrencyScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();

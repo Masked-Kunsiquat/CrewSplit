@@ -31,6 +31,13 @@ import { useFxSync } from "@modules/fx-rates/hooks/use-fx-sync";
 import { useSettlements } from "@modules/settlements/hooks/use-settlements";
 import { TransactionRow } from "@modules/settlements/components/TransactionRow";
 
+/**
+ * Render the settlement summary screen for a trip, showing balances, expense breakdown, suggested payments, recorded payments, and export/FX controls.
+ *
+ * The component displays totals and optional display-currency amounts, warns about stale FX rates or unsplit expenses, lists participant balances and suggested payments, and provides navigation to record or review payments and expenses. It also opens an export modal and an FX-rate recovery modal when a conversion error is present, and updates the native header title with the trip name.
+ *
+ * @returns The React element representing the settlement summary screen for the current trip.
+ */
 export default function SettlementSummaryScreen() {
   const navigation = useNavigation();
   const router = useRouter();
