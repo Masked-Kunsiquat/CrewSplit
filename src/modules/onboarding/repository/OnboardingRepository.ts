@@ -29,6 +29,22 @@ export class OnboardingRepository {
   private schemaInitialized = false;
 
   /**
+   * Utility: check if a column exists on a table.
+   * Uses PRAGMA table_info for robustness across driver errors.
+   */
+  private async hasColumn(table: string, column: string): Promise<boolean> {
+    try {
+      const rows = await db.all(sql.raw(`PRAGMA table_info("${table}")`));
+      return (
+        Array.isArray(rows) && rows.some((row: any) => row?.name === column)
+      );
+    } catch (err) {
+      console.warn(`Failed to inspect columns for table ${table}`, err);
+      return false;
+    }
+  }
+
+  /**
    * Defensive guard: ensure onboarding tables exist.
    * Helps recover if migrations didn't run on a given device.
    */
@@ -39,35 +55,22 @@ export class OnboardingRepository {
       // ---------------------------------------------------------------------
       // Ensure trips has sample-data columns (fallback if migration missed)
       // ---------------------------------------------------------------------
-      try {
+      if (!(await this.hasColumn("trips", "is_sample_data"))) {
         await db.run(
           sql`ALTER TABLE "trips" ADD COLUMN "is_sample_data" integer DEFAULT false NOT NULL`,
         );
-      } catch (err) {
-        // Ignore if column already exists
-        if (!(err as Error).message.includes("duplicate column name")) {
-          throw err;
-        }
       }
 
-      try {
+      if (!(await this.hasColumn("trips", "sample_data_template_id"))) {
         await db.run(
           sql`ALTER TABLE "trips" ADD COLUMN "sample_data_template_id" text`,
         );
-      } catch (err) {
-        if (!(err as Error).message.includes("duplicate column name")) {
-          throw err;
-        }
       }
 
-      try {
+      if (!(await this.hasColumn("trips", "is_archived"))) {
         await db.run(
           sql`ALTER TABLE "trips" ADD COLUMN "is_archived" integer DEFAULT false NOT NULL`,
         );
-      } catch (err) {
-        if (!(err as Error).message.includes("duplicate column name")) {
-          throw err;
-        }
       }
 
       // Indexes are idempotent with IF NOT EXISTS
