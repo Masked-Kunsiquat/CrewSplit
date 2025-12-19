@@ -7,7 +7,13 @@ import { theme } from "@ui/theme";
 // eslint-disable-next-line import/no-unresolved
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 
-const FeatureCard = ({ icon, title, description }) => (
+type FeatureCardProps = {
+  icon: string;
+  title: string;
+  description: string;
+};
+
+const FeatureCard = ({ icon, title, description }: FeatureCardProps) => (
   <View style={styles.featureCard}>
     <MaterialCommunityIcons
       name={icon}

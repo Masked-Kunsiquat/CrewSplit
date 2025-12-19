@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useRouter } from "expo-router";
-import { View, Text, StyleSheet, Pressable } from "react-native";
+import { View, Text, StyleSheet, Pressable, Alert } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Button, CurrencyPicker } from "@ui/components";
 import { theme } from "@ui/theme";
@@ -15,15 +15,32 @@ export default function SetDefaultCurrencyScreen() {
   const { updateSettings, loading } = useUserSettings();
 
   const handleNext = async () => {
-    if (selectedCurrency) {
-      await updateSettings({ defaultCurrency: selectedCurrency });
+    if (!selectedCurrency) {
+      return;
     }
-    router.push("/onboarding/username");
+    try {
+      await updateSettings({ defaultCurrency: selectedCurrency });
+      router.push("/onboarding/username");
+    } catch (error) {
+      console.error("Failed to update default currency", error);
+      Alert.alert(
+        "Couldn't save currency",
+        "Please try again. Your selection was not saved.",
+      );
+    }
   };
 
   const handleSkip = async () => {
-    await updateSettings({ defaultCurrency: "USD" });
-    router.push("/onboarding/username");
+    try {
+      await updateSettings({ defaultCurrency: "USD" });
+      router.push("/onboarding/username");
+    } catch (error) {
+      console.error("Failed to set default currency", error);
+      Alert.alert(
+        "Couldn't save currency",
+        "Please try again. Your selection was not saved.",
+      );
+    }
   };
 
   const handleSelectPopular = (currency: string) => {
@@ -74,9 +91,10 @@ export default function SetDefaultCurrencyScreen() {
       </View>
 
       <CurrencyPicker
-        onCurrencyChange={(c) => setSelectedCurrency(c?.code ?? null)}
-        selectedCurrencyCode={selectedCurrency}
-        showCurrencyName={false}
+        label="Currency"
+        value={selectedCurrency}
+        onChange={(currency) => setSelectedCurrency(currency)}
+        placeholder="Select currency"
       />
 
       <View style={styles.footer}>

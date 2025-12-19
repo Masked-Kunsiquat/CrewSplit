@@ -39,7 +39,12 @@ const WALKTHROUGH_STEPS = [
   },
 ];
 
-const ProgressDots = ({ steps, activeIndex }) => (
+type ProgressDotsProps = {
+  steps: Array<unknown>;
+  activeIndex: number;
+};
+
+const ProgressDots = ({ steps, activeIndex }: ProgressDotsProps) => (
   <View style={styles.dotsContainer}>
     {steps.map((_, index) => (
       <View
