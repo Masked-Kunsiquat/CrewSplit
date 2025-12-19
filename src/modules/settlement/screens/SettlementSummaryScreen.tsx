@@ -28,6 +28,8 @@ import { useRefreshControl } from "@hooks/use-refresh-control";
 import { TripExportModal } from "@modules/trips/components/trip-export-modal";
 import { formatErrorMessage } from "src/utils/format-error";
 import { useFxSync } from "@modules/fx-rates/hooks/use-fx-sync";
+import { useSettlements } from "@modules/settlements/hooks/use-settlements";
+import { TransactionRow } from "@modules/settlements/components/TransactionRow";
 
 export default function SettlementSummaryScreen() {
   const navigation = useNavigation();
@@ -47,6 +49,12 @@ export default function SettlementSummaryScreen() {
     refetch: refetchSettlement,
   } = useSettlementWithDisplay(tripId ?? null, displayCurrency ?? undefined);
 
+  // Fetch recorded settlements
+  const {
+    settlements: recordedSettlements,
+    refetch: refetchRecordedSettlements,
+  } = useSettlements(tripId);
+
   // FX rate staleness detection and refresh
   const {
     isStale,
@@ -56,7 +64,11 @@ export default function SettlementSummaryScreen() {
   } = useFxSync({ autoRefresh: false });
 
   // Pull-to-refresh support
-  const refreshControl = useRefreshControl([refetchTrip, refetchSettlement]);
+  const refreshControl = useRefreshControl([
+    refetchTrip,
+    refetchSettlement,
+    refetchRecordedSettlements,
+  ]);
 
   // Show modal when conversion error occurs
   useEffect(() => {
@@ -338,30 +350,44 @@ export default function SettlementSummaryScreen() {
 
         {/* Suggested Payments Section */}
         <Card style={styles.section}>
-          <Text style={styles.sectionTitle}>Suggested Payments</Text>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Suggested Payments</Text>
+            {tripId && (
+              <TouchableOpacity
+                onPress={() =>
+                  router.push(`/trips/${tripId}/settlements/record`)
+                }
+                style={styles.recordButton}
+              >
+                <Text style={styles.recordButtonText}>+ Record</Text>
+              </TouchableOpacity>
+            )}
+          </View>
           {hasSettlements ? (
             settlement.settlements.map((item, index) => (
               <View
                 key={`${item.from}-${item.to}-${index}`}
-                style={styles.settlementRow}
+                style={styles.settlementCard}
               >
-                <Text style={styles.settlementText}>
-                  <Text style={styles.from}>{item.fromName}</Text>
-                  <Text style={styles.arrow}> → </Text>
-                  <Text style={styles.to}>{item.toName}</Text>
-                </Text>
-                <View style={styles.settlementAmounts}>
-                  <Text style={styles.amount}>
-                    {formatCurrency(item.amount, settlement.currency)}
+                <View style={styles.settlementRow}>
+                  <Text style={styles.settlementText}>
+                    <Text style={styles.from}>{item.fromName}</Text>
+                    <Text style={styles.arrow}> → </Text>
+                    <Text style={styles.to}>{item.toName}</Text>
                   </Text>
-                  {showDisplayCurrency && item.displayAmount && (
-                    <Text style={styles.displayAmountSmall}>
-                      {formatCurrency(
-                        item.displayAmount.displayAmount,
-                        item.displayAmount.displayCurrency,
-                      )}
+                  <View style={styles.settlementAmounts}>
+                    <Text style={styles.amount}>
+                      {formatCurrency(item.amount, settlement.currency)}
                     </Text>
-                  )}
+                    {showDisplayCurrency && item.displayAmount && (
+                      <Text style={styles.displayAmountSmall}>
+                        {formatCurrency(
+                          item.displayAmount.displayAmount,
+                          item.displayAmount.displayCurrency,
+                        )}
+                      </Text>
+                    )}
+                  </View>
                 </View>
               </View>
             ))
@@ -373,6 +399,37 @@ export default function SettlementSummaryScreen() {
             </Text>
           )}
         </Card>
+
+        {/* Recorded Payments Section */}
+        {recordedSettlements && recordedSettlements.length > 0 && (
+          <Card style={styles.section}>
+            <Text style={styles.sectionTitle}>
+              Payment History ({recordedSettlements.length})
+            </Text>
+            {recordedSettlements.slice(0, 5).map((settlement) => (
+              <TransactionRow
+                key={settlement.id}
+                settlement={settlement}
+                onPress={() =>
+                  router.push(`/trips/${tripId}/settlements/${settlement.id}`)
+                }
+              />
+            ))}
+            {recordedSettlements.length > 5 && (
+              <TouchableOpacity
+                style={styles.viewAllButton}
+                onPress={() => {
+                  // TODO: Navigate to full transaction list
+                  router.push(`/trips/${tripId}/settlements/record`);
+                }}
+              >
+                <Text style={styles.viewAllText}>
+                  View all {recordedSettlements.length} payments →
+                </Text>
+              </TouchableOpacity>
+            )}
+          </Card>
+        )}
 
         {/* Audit Trail Info */}
         {hasBalances && (
@@ -545,13 +602,16 @@ const styles = StyleSheet.create({
   negativeAmount: {
     color: theme.colors.error,
   },
+  settlementCard: {
+    padding: theme.spacing.md,
+    backgroundColor: theme.colors.surface,
+    borderRadius: 8,
+    gap: theme.spacing.xs,
+  },
   settlementRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingVertical: theme.spacing.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
   },
   settlementText: {
     fontSize: theme.typography.base,
@@ -655,6 +715,33 @@ const styles = StyleSheet.create({
   },
   reviewButtonText: {
     color: theme.colors.background,
+    fontSize: theme.typography.sm,
+    fontWeight: theme.typography.semibold,
+  },
+  sectionHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: theme.spacing.sm,
+  },
+  recordButton: {
+    backgroundColor: theme.colors.primary,
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.sm,
+    borderRadius: 8,
+  },
+  recordButtonText: {
+    color: theme.colors.background,
+    fontSize: theme.typography.sm,
+    fontWeight: theme.typography.semibold,
+  },
+  viewAllButton: {
+    marginTop: theme.spacing.sm,
+    padding: theme.spacing.sm,
+    alignItems: "center",
+  },
+  viewAllText: {
+    color: theme.colors.primary,
     fontSize: theme.typography.sm,
     fontWeight: theme.typography.semibold,
   },

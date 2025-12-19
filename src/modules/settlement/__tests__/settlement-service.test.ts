@@ -9,6 +9,7 @@ import {
   getExpenseSplits,
 } from "../../expenses/repository";
 import { getParticipantsForTrip } from "../../participants/repository";
+import { SettlementRepository } from "../../settlements/repository";
 
 jest.mock("@utils/logger", () => {
   const logger = {
@@ -29,6 +30,12 @@ jest.mock("../../participants/repository", () => ({
   getParticipantsForTrip: jest.fn(),
 }));
 
+jest.mock("../../settlements/repository", () => ({
+  SettlementRepository: {
+    getSettlementsForTrip: jest.fn(),
+  },
+}));
+
 describe("SettlementService", () => {
   /**
    * Clean up all test data after each test to ensure isolation
@@ -41,15 +48,20 @@ describe("SettlementService", () => {
     participants = [],
     expenses = [],
     splits = {},
+    recordedSettlements = [],
   }: {
     participants?: any[];
     expenses?: any[];
     splits?: Record<string, any[]>;
+    recordedSettlements?: any[];
   }) => {
     (getParticipantsForTrip as jest.Mock).mockResolvedValue(participants);
     (getExpensesForTrip as jest.Mock).mockResolvedValue(expenses);
     (getExpenseSplits as jest.Mock).mockImplementation((expenseId: string) =>
       Promise.resolve(splits[expenseId] ?? []),
+    );
+    (SettlementRepository.getSettlementsForTrip as jest.Mock).mockResolvedValue(
+      recordedSettlements,
     );
   };
 

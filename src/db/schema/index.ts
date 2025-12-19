@@ -9,3 +9,4 @@ export * from "./expenses";
 export * from "./expense-splits";
 export * from "./expense-categories";
 export * from "./fx-rates";
+export * from "./settlements";

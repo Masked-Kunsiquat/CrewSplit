@@ -13,6 +13,43 @@ import { Button, Card } from "@ui/components";
 import { useTrips } from "../hooks/use-trips";
 import { useRefreshControl } from "@hooks/use-refresh-control";
 
+/**
+ * Validates and formats a single date string
+ * @param dateString - ISO 8601 date string to parse
+ * @returns Formatted date string (MM/DD/YY)
+ * @throws Error with code "INVALID_DATE_FORMAT" if date is invalid
+ */
+function formatSingleDate(dateString: string): string {
+  const date = new Date(dateString);
+
+  if (isNaN(date.getTime())) {
+    const error = new Error(`Invalid date format: "${dateString}"`) as Error & {
+      code: string;
+    };
+    error.code = "INVALID_DATE_FORMAT";
+    throw error;
+  }
+
+  return `${(date.getMonth() + 1).toString().padStart(2, "0")}/${date.getDate().toString().padStart(2, "0")}/${date.getFullYear().toString().slice(-2)}`;
+}
+
+/**
+ * Formats a date range for display
+ * @param startDate - Start date string (required)
+ * @param endDate - End date string (optional)
+ * @returns Formatted date range (e.g., "01/15/24" or "01/15/24 - 01/20/24")
+ */
+function formatDateRange(startDate: string, endDate?: string | null): string {
+  const startFormatted = formatSingleDate(startDate);
+
+  if (!endDate) {
+    return startFormatted;
+  }
+
+  const endFormatted = formatSingleDate(endDate);
+  return `${startFormatted} - ${endFormatted}`;
+}
+
 export default function TripsListScreen() {
   const router = useRouter();
   const navigation = useNavigation();
@@ -85,7 +122,7 @@ export default function TripsListScreen() {
                   <Text style={styles.tripName}>{trip.name}</Text>
                   <Text style={styles.tripMeta}>
                     {trip.currency} •{" "}
-                    {new Date(trip.startDate).toLocaleDateString()}
+                    {formatDateRange(trip.startDate, trip.endDate)}
                   </Text>
                 </View>
               </View>

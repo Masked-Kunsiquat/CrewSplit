@@ -10,19 +10,26 @@ import type {
 } from "@db/schema";
 import type { ExpenseSplit as ExpenseSplitRow } from "@db/schema/expense-splits";
 import type { ExpenseCategory as ExpenseCategoryRow } from "@db/schema/expense-categories";
+import type { Settlement as SettlementRow } from "@db/schema/settlements";
 
-export type TripExportDomain = "participants" | "expenses" | "categories";
+export type TripExportDomain =
+  | "participants"
+  | "expenses"
+  | "categories"
+  | "settlements";
 
 export type TripExportOptions = Readonly<{
   participants: boolean;
   expenses: boolean;
   categories: boolean;
+  settlements: boolean;
 }>;
 
 export const defaultTripExportOptions: TripExportOptions = {
   participants: true,
   expenses: true,
   categories: true,
+  settlements: true,
 };
 
 export type TripExportMetaV1 = Readonly<{
@@ -42,4 +49,5 @@ export type TripExportV1 = Readonly<{
   expenses?: ExpenseRow[];
   expenseSplits?: ExpenseSplitRow[];
   categories?: ExpenseCategoryRow[];
+  settlements?: SettlementRow[];
 }>;

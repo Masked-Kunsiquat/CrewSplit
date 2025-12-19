@@ -6,10 +6,20 @@
 const { FlatCompat } = require("@eslint/eslintrc");
 const compat = new FlatCompat();
 
-module.exports = compat.config({
-  extends: ["expo", "prettier"],
-  plugins: ["prettier"],
-  rules: {
-    "prettier/prettier": "warn",
+module.exports = [
+  ...compat.config({
+    extends: ["expo", "prettier"],
+    plugins: ["prettier"],
+    rules: {
+      "prettier/prettier": "warn",
+    },
+  }),
+  {
+    files: ["jest.setup.js", "jest.config.js"],
+    languageOptions: {
+      globals: {
+        jest: "readonly",
+      },
+    },
   },
-});
+];

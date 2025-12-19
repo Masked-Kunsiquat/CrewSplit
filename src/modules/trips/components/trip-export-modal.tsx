@@ -90,6 +90,12 @@ export function TripExportModal({
               onPress={() => toggle("expenses")}
             />
             <OptionRow
+              label="Settlements"
+              description="Recorded payments between participants"
+              checked={options.settlements}
+              onPress={() => toggle("settlements")}
+            />
+            <OptionRow
               label="Categories"
               description="System + custom categories referenced by the trip"
               checked={options.categories}

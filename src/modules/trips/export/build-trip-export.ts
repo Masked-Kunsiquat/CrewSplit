@@ -10,6 +10,7 @@ import {
   expenses,
   participants,
   trips,
+  settlements,
 } from "@db/schema";
 import { asc, eq, inArray, or } from "drizzle-orm";
 import { createTripExportV1 } from "./create-trip-export";
@@ -127,6 +128,18 @@ export async function buildTripExportV1FromDb(
       );
   })();
 
+  const settlementsRows = options.settlements
+    ? await db
+        .select()
+        .from(settlements)
+        .where(eq(settlements.tripId, tripId))
+        .orderBy(
+          asc(settlements.date),
+          asc(settlements.createdAt),
+          asc(settlements.id),
+        )
+    : undefined;
+
   return createTripExportV1({
     meta: exportMeta,
     trip,
@@ -134,5 +147,6 @@ export async function buildTripExportV1FromDb(
     expenses: expensesRows,
     expenseSplits: expenseSplitsRows,
     categories: categoriesRows,
+    settlements: settlementsRows,
   });
 }

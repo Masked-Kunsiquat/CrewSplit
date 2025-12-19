@@ -105,19 +105,19 @@ StalenessWarningBanner (reusable component)
 
 ### Rate Age Colors (in RateListScreen)
 
-| Age | Color | Token | Example |
-|-----|-------|-------|---------|
-| < 1 day | Green | `theme.colors.success` (#4ade80) | Just refreshed |
-| 1-7 days | Gray | `theme.colors.textSecondary` (#a0a0a0) | Still fresh |
-| > 7 days | Amber | `theme.colors.warning` (#fbbf24) | Stale warning |
+| Age      | Color | Token                                  | Example        |
+| -------- | ----- | -------------------------------------- | -------------- |
+| < 1 day  | Green | `theme.colors.success` (#4ade80)       | Just refreshed |
+| 1-7 days | Gray  | `theme.colors.textSecondary` (#a0a0a0) | Still fresh    |
+| > 7 days | Amber | `theme.colors.warning` (#fbbf24)       | Stale warning  |
 
 ### Source Icons
 
-| Source | Icon | Label | Priority |
-|--------|------|-------|----------|
-| `manual` | ✏️ | Manual | 100 (highest) |
-| `frankfurter` | 🏦 | Frankfurter API | 50 |
-| `exchangerate-api` | 🌐 | ExchangeRate API | 40 |
+| Source             | Icon | Label            | Priority      |
+| ------------------ | ---- | ---------------- | ------------- |
+| `manual`           | ✏️   | Manual           | 100 (highest) |
+| `frankfurter`      | 🏦   | Frankfurter API  | 50            |
+| `exchangerate-api` | 🌐   | ExchangeRate API | 40            |
 
 ---
 
@@ -135,6 +135,7 @@ StalenessWarningBanner (reusable component)
 ```
 
 **When to use:**
+
 - In settlement screens when display currency rate is stale
 - In expense screens with multi-currency
 - In RateListScreen header
@@ -156,16 +157,18 @@ StalenessWarningBanner (reusable component)
 ```
 
 **When to use:**
+
 - When `FxRateProvider.getRate()` throws `FX_RATE_NOT_FOUND` error
 - In settlement calculations with missing display currency rate
 - In expense creation with unsupported currencies
 
 **Example integration:**
+
 ```typescript
 try {
   const rate = cachedFxRateProvider.getRate(from, to);
 } catch (error) {
-  if (error.code === 'FX_RATE_NOT_FOUND') {
+  if (error.code === "FX_RATE_NOT_FOUND") {
     setShowModal(true);
     setMissingPair({ from, to });
   }
@@ -274,6 +277,7 @@ try {
 ### Card Variants
 
 **Standard Card (RateListScreen item):**
+
 ```typescript
 <Card style={styles.rateCard}>
   {/* backgroundColor: theme.colors.surface */}
@@ -281,6 +285,7 @@ try {
 ```
 
 **Info Card (ManualRateEntryScreen):**
+
 ```typescript
 <Card style={styles.infoCard}>
   {/* Lighter background, icon + text */}
@@ -288,6 +293,7 @@ try {
 ```
 
 **Warning Card (StalenessWarningBanner):**
+
 ```typescript
 <Card style={styles.warningCard}>
   {/* backgroundColor: theme.colors.warningBg */}
@@ -300,33 +306,38 @@ try {
 ### Typography Hierarchy
 
 **Screen Titles** (in header):
+
 ```typescript
-fontSize: theme.typography.xl     // 19px
-fontWeight: theme.typography.bold // "700"
+fontSize: theme.typography.xl; // 19px
+fontWeight: theme.typography.bold; // "700"
 ```
 
 **Section Titles:**
+
 ```typescript
-fontSize: theme.typography.lg       // 17px
-fontWeight: theme.typography.semibold // "600"
+fontSize: theme.typography.lg; // 17px
+fontWeight: theme.typography.semibold; // "600"
 ```
 
 **Body Text:**
+
 ```typescript
-fontSize: theme.typography.base // 15px
-color: theme.colors.text        // #ffffff
+fontSize: theme.typography.base; // 15px
+color: theme.colors.text; // #ffffff
 ```
 
 **Helper Text:**
+
 ```typescript
-fontSize: theme.typography.sm       // 13px
-color: theme.colors.textSecondary  // #a0a0a0
+fontSize: theme.typography.sm; // 13px
+color: theme.colors.textSecondary; // #a0a0a0
 ```
 
 **Metadata / Labels:**
+
 ```typescript
-fontSize: theme.typography.xs     // 11px
-color: theme.colors.textMuted    // #666666
+fontSize: theme.typography.xs; // 11px
+color: theme.colors.textMuted; // #666666
 ```
 
 ---
@@ -334,6 +345,7 @@ color: theme.colors.textMuted    // #666666
 ### Common Layout Patterns
 
 **Form Section:**
+
 ```typescript
 <View style={styles.formSection}>
   <Text style={styles.sectionTitle}>Currency Pair</Text>
@@ -359,6 +371,7 @@ const styles = StyleSheet.create({
 ```
 
 **Footer with Buttons:**
+
 ```typescript
 <View style={styles.footer}>
   <Button title="Cancel" variant="outline" onPress={...} fullWidth />
@@ -505,6 +518,7 @@ When integrating these components:
 ## Quick Tips
 
 ### Do's
+
 ✅ Use `theme.spacing.*` for all spacing (never magic numbers)
 ✅ Use `theme.colors.*` for all colors
 ✅ Use `Alert.alert()` for important confirmations
@@ -513,6 +527,7 @@ When integrating these components:
 ✅ Test with VoiceOver/TalkBack enabled
 
 ### Don'ts
+
 ❌ Don't hardcode colors or spacing values
 ❌ Don't use ScrollView for long lists (use FlatList)
 ❌ Don't forget error handling on async operations

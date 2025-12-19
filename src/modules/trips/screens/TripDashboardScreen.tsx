@@ -11,6 +11,8 @@ import {
   ScrollView,
   ActivityIndicator,
   Alert,
+  Modal,
+  Pressable,
 } from "react-native";
 import { useRouter, useLocalSearchParams, useNavigation } from "expo-router";
 import { theme } from "@ui/theme";
@@ -84,6 +86,7 @@ function TripDashboardScreenContent({ tripId }: { tripId: string }) {
   const [emojiPickerOpen, setEmojiPickerOpen] = useState(false);
   const [endDateInput, setEndDateInput] = useState<Date | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [addMenuVisible, setAddMenuVisible] = useState(false);
 
   // Update native header title when trip loads
   useEffect(() => {
@@ -236,16 +239,92 @@ function TripDashboardScreenContent({ tripId }: { tripId: string }) {
 
       <View style={styles.footer}>
         <Button
-          title="Add Expense"
-          onPress={() =>
-            router.push({
-              pathname: "/trips/[id]/expenses/add",
-              params: { id: tripId },
-            })
-          }
+          title="+ Add"
+          onPress={() => setAddMenuVisible(true)}
           fullWidth
         />
       </View>
+
+      {/* Add Menu Modal */}
+      <Modal
+        visible={addMenuVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setAddMenuVisible(false)}
+      >
+        <Pressable
+          style={styles.modalOverlay}
+          onPress={() => setAddMenuVisible(false)}
+        >
+          <Pressable style={styles.modalContent} onPress={() => {}}>
+            <Text style={styles.modalTitle}>Add New</Text>
+
+            <Pressable
+              style={({ pressed }) => [
+                styles.menuOption,
+                pressed && styles.menuOptionPressed,
+              ]}
+              onPress={() => {
+                setAddMenuVisible(false);
+                router.push({
+                  pathname: "/trips/[id]/expenses/add",
+                  params: { id: tripId },
+                });
+              }}
+              accessibilityRole="button"
+              accessibilityLabel="Add Expense"
+              accessibilityHint="Opens form to record a new expense for this trip"
+            >
+              <Text style={styles.menuOptionIcon} accessible={false}>
+                💰
+              </Text>
+              <View style={styles.menuOptionText}>
+                <Text style={styles.menuOptionTitle}>Add Expense</Text>
+                <Text style={styles.menuOptionDescription}>
+                  Record a new expense for this trip
+                </Text>
+              </View>
+            </Pressable>
+
+            <Pressable
+              style={({ pressed }) => [
+                styles.menuOption,
+                pressed && styles.menuOptionPressed,
+              ]}
+              onPress={() => {
+                setAddMenuVisible(false);
+                router.push({
+                  pathname: "/trips/[id]/settlements/record",
+                  params: { id: tripId },
+                });
+              }}
+              accessibilityRole="button"
+              accessibilityLabel="Record Payment"
+              accessibilityHint="Opens form to log a payment between participants"
+            >
+              <Text style={styles.menuOptionIcon} accessible={false}>
+                💸
+              </Text>
+              <View style={styles.menuOptionText}>
+                <Text style={styles.menuOptionTitle}>Record Payment</Text>
+                <Text style={styles.menuOptionDescription}>
+                  Log a payment between participants
+                </Text>
+              </View>
+            </Pressable>
+
+            <Pressable
+              style={styles.cancelButton}
+              onPress={() => setAddMenuVisible(false)}
+              accessibilityRole="button"
+              accessibilityLabel="Cancel"
+              accessibilityHint="Closes this menu and returns to trip dashboard"
+            >
+              <Text style={styles.cancelButtonText}>Cancel</Text>
+            </Pressable>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </View>
   );
 }
@@ -281,5 +360,62 @@ const styles = StyleSheet.create({
     padding: theme.spacing.lg,
     borderTopWidth: 1,
     borderTopColor: theme.colors.border,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "flex-end",
+  },
+  modalContent: {
+    backgroundColor: theme.colors.background,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: theme.spacing.lg,
+    paddingBottom: theme.spacing.xl,
+  },
+  modalTitle: {
+    fontSize: theme.typography.xl,
+    fontWeight: theme.typography.bold,
+    color: theme.colors.text,
+    marginBottom: theme.spacing.lg,
+  },
+  menuOption: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: theme.spacing.lg,
+    backgroundColor: theme.colors.surface,
+    borderRadius: 12,
+    marginBottom: theme.spacing.md,
+  },
+  menuOptionPressed: {
+    opacity: 0.7,
+    backgroundColor: theme.colors.surfaceElevated,
+  },
+  menuOptionIcon: {
+    fontSize: 32,
+    marginRight: theme.spacing.md,
+  },
+  menuOptionText: {
+    flex: 1,
+  },
+  menuOptionTitle: {
+    fontSize: theme.typography.base,
+    fontWeight: theme.typography.semibold,
+    color: theme.colors.text,
+    marginBottom: theme.spacing.xs,
+  },
+  menuOptionDescription: {
+    fontSize: theme.typography.sm,
+    color: theme.colors.textSecondary,
+  },
+  cancelButton: {
+    padding: theme.spacing.lg,
+    alignItems: "center",
+    marginTop: theme.spacing.sm,
+  },
+  cancelButtonText: {
+    fontSize: theme.typography.base,
+    fontWeight: theme.typography.semibold,
+    color: theme.colors.textSecondary,
   },
 });
