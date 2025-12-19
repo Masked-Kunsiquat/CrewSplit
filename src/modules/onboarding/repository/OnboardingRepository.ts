@@ -38,16 +38,35 @@ export class OnboardingRepository {
     update: Partial<UserSettings>,
   ): Promise<UserSettings> {
     return db.transaction(async (tx) => {
-      await tx
-        .update(userSettings)
-        .set({ ...update, updatedAt: new Date().toISOString() })
-        .where(eq(userSettings.id, "default"));
-      const settings = await tx
+      const now = new Date().toISOString();
+      const current = await tx
         .select()
         .from(userSettings)
         .where(eq(userSettings.id, "default"))
         .get();
-      return settings as UserSettings;
+
+      if (current) {
+        await tx
+          .update(userSettings)
+          .set({ ...update, updatedAt: now })
+          .where(eq(userSettings.id, "default"));
+        return {
+          ...current,
+          ...update,
+          updatedAt: now,
+        } as UserSettings;
+      }
+
+      const newSettings: UserSettings = {
+        id: "default",
+        primaryUserName: null,
+        defaultCurrency: "USD",
+        createdAt: now,
+        updatedAt: now,
+        ...update,
+      };
+      await tx.insert(userSettings).values(newSettings);
+      return newSettings;
     });
   }
 

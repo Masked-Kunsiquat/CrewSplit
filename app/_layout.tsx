@@ -42,7 +42,7 @@ export default function RootLayout() {
     if (prior?.startsWith("/onboarding") && !isOnboardingRoute) {
       refreshOnboarding();
     }
-  }, [pathname, success, isOnboardingRoute, refreshOnboarding]);
+  }, [pathname, success, isOnboardingRoute]);
 
   // Background sync for FX rates (must be called unconditionally)
   // Safe to run before provider initialization: checkStaleness only queries DB,
