@@ -16,7 +16,7 @@ import { participants as participantsTable } from "@db/schema/participants";
 import { trips as tripsTable } from "@db/schema/trips";
 import { expenses as expensesTable } from "@db/schema/expenses";
 import { expenseSplits as expenseSplitsTable } from "@db/schema/expense-splits";
-import { eq, and } from "drizzle-orm";
+import { eq, and, inArray } from "drizzle-orm";
 import {
   Settlement,
   NewSettlementData,
@@ -314,6 +314,20 @@ export const createSettlement = async (
       amountMinor: convertedAmountMinor,
     });
 
+    // Defensive check for participant data
+    if (!fromParticipant.length || !toParticipant.length) {
+      settlementLogger.error("Participant deleted concurrently during settlement creation", {
+        settlementId,
+        fromParticipantId: data.fromParticipantId,
+        toParticipantId: data.toParticipantId,
+      });
+      const error = new Error(
+        "Participant was deleted during settlement creation",
+      ) as Error & { code: string };
+      error.code = "PARTICIPANT_DELETED";
+      throw error;
+    }
+
     return {
       ...mapSettlement(inserted),
       fromParticipantName: fromParticipant[0].name,
@@ -376,6 +390,20 @@ export const getSettlementById = async (
     settlementId: id,
     tripId: settlement.tripId,
   });
+
+  // Defensive check for participant data
+  if (!fromParticipant.length || !toParticipant.length) {
+    settlementLogger.warn("Settlement references deleted participant", {
+      settlementId: id,
+      fromParticipantId: settlement.fromParticipantId,
+      toParticipantId: settlement.toParticipantId,
+    });
+    return {
+      ...mapSettlement(settlement),
+      fromParticipantName: fromParticipant.length ? fromParticipant[0].name : "Unknown",
+      toParticipantName: toParticipant.length ? toParticipant[0].name : "Unknown",
+    };
+  }
 
   return {
     ...mapSettlement(settlement),
@@ -503,13 +531,31 @@ export const getSettlementsForExpense = async (
 
   const splitIds = splits.map((s) => s.id);
 
-  // Fetch settlements for all splits
-  const allSettlements: SettlementWithParticipants[] = [];
+  // Batch fetch all settlements for these splits (avoid N+1 query pattern)
+  const settlements = await db
+    .select()
+    .from(settlementsTable)
+    .where(inArray(settlementsTable.expenseSplitId, splitIds));
 
-  for (const splitId of splitIds) {
-    const settlements = await getSettlementsForExpenseSplit(splitId);
-    allSettlements.push(...settlements);
+  if (!settlements.length) {
+    settlementLogger.debug("No settlements found for expense", { expenseId });
+    return [];
   }
+
+  // Fetch participants once for all settlements
+  const tripId = settlements[0].tripId;
+  const participants = await db
+    .select()
+    .from(participantsTable)
+    .where(eq(participantsTable.tripId, tripId));
+
+  const participantMap = new Map(participants.map((p) => [p.id, p.name]));
+
+  const allSettlements: SettlementWithParticipants[] = settlements.map((s) => ({
+    ...mapSettlement(s),
+    fromParticipantName: participantMap.get(s.fromParticipantId) ?? "Unknown",
+    toParticipantName: participantMap.get(s.toParticipantId) ?? "Unknown",
+  }));
 
   settlementLogger.debug("Loaded settlements for expense", {
     expenseId,
@@ -582,9 +628,9 @@ export const updateSettlement = async (
     originalAmountMinor,
     fxRateToTrip,
     convertedAmountMinor,
-    date: patch.date ?? existing.date,
-    description: patch.description ?? existing.description,
-    paymentMethod: patch.paymentMethod ?? existing.paymentMethod,
+    date: patch.date !== undefined ? patch.date : existing.date,
+    description: patch.description !== undefined ? patch.description : existing.description,
+    paymentMethod: patch.paymentMethod !== undefined ? patch.paymentMethod : existing.paymentMethod,
     updatedAt: now,
   };
 
@@ -618,6 +664,20 @@ export const updateSettlement = async (
       settlementId: id,
       tripId: existing.tripId,
     });
+
+    // Defensive check for participant data
+    if (!fromParticipant.length || !toParticipant.length) {
+      settlementLogger.error("Participant deleted concurrently during settlement update", {
+        settlementId: id,
+        fromParticipantId: updated.fromParticipantId,
+        toParticipantId: updated.toParticipantId,
+      });
+      const error = new Error(
+        "Participant was deleted during settlement update",
+      ) as Error & { code: string };
+      error.code = "PARTICIPANT_DELETED";
+      throw error;
+    }
 
     return {
       ...mapSettlement(updated),
