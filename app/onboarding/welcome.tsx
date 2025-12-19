@@ -3,7 +3,8 @@
  * Minimal placeholder flow to mark onboarding complete
  */
 
-import { useRouter } from "expo-router";
+import React, { useEffect } from "react";
+import { useRouter, useNavigation } from "expo-router";
 import { View, Text, StyleSheet } from "react-native";
 import { Button } from "@ui/components";
 import { theme } from "@ui/theme";
@@ -11,7 +12,13 @@ import { useOnboardingState } from "@modules/onboarding/hooks/use-onboarding-sta
 
 export default function OnboardingWelcomeScreen() {
   const router = useRouter();
+  const navigation = useNavigation();
   const { markComplete, loading } = useOnboardingState();
+
+  // Set header title
+  useEffect(() => {
+    navigation.setOptions({ title: "Welcome!" });
+  }, [navigation]);
 
   const handleFinish = async () => {
     await markComplete();
@@ -20,7 +27,6 @@ export default function OnboardingWelcomeScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Welcome to CrewSplit</Text>
       <Text style={styles.description}>
         Onboarding is minimal for now. Tap finish to jump into your trips or
         restart later from Settings.
