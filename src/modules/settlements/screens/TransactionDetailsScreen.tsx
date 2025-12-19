@@ -15,10 +15,7 @@ import {
 import { useRouter, useLocalSearchParams, useNavigation } from "expo-router";
 import { theme } from "@ui/theme";
 import { Button } from "@ui/components";
-import {
-  useSettlement,
-  useDeleteSettlement,
-} from "../hooks/use-settlements";
+import { useSettlement, useDeleteSettlement } from "../hooks/use-settlements";
 import { formatCurrency } from "@utils/currency";
 
 export default function TransactionDetailsScreen() {
@@ -104,12 +101,19 @@ export default function TransactionDetailsScreen() {
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Amount</Text>
         <Text style={styles.amountText}>
-          {formatCurrency(settlement.originalAmountMinor, settlement.originalCurrency)}
+          {formatCurrency(
+            settlement.originalAmountMinor,
+            settlement.originalCurrency,
+          )}
         </Text>
         {showCurrencyConversion && settlement.fxRateToTrip && (
           <Text style={styles.convertedText}>
-            Converted: {formatCurrency(settlement.convertedAmountMinor, settlement.originalCurrency)} (Rate:{" "}
-            {settlement.fxRateToTrip.toFixed(4)})
+            Converted:{" "}
+            {formatCurrency(
+              settlement.convertedAmountMinor,
+              settlement.originalCurrency,
+            )}{" "}
+            (Rate: {settlement.fxRateToTrip.toFixed(4)})
           </Text>
         )}
       </View>
@@ -170,11 +174,7 @@ export default function TransactionDetailsScreen() {
       </View>
 
       <View style={styles.actionButtons}>
-        <Button
-          title="Edit"
-          onPress={handleEdit}
-          variant="secondary"
-        />
+        <Button title="Edit" onPress={handleEdit} variant="secondary" />
         <Button
           title={deleting ? "Deleting..." : "Delete"}
           onPress={handleDelete}

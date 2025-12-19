@@ -86,7 +86,9 @@ function applySettlements(
  */
 export async function computeSettlement(
   tripId: string,
-): Promise<SettlementSummary & { recordedSettlements: SettlementWithParticipants[] }> {
+): Promise<
+  SettlementSummary & { recordedSettlements: SettlementWithParticipants[] }
+> {
   settlementLogger.debug("Computing settlement", { tripId });
 
   // Load all data in parallel for performance

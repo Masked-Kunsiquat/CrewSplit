@@ -46,8 +46,11 @@ export default function RecordTransactionScreen() {
   const { participants, loading: participantsLoading } = useParticipants(
     tripId ?? null,
   );
-  const { createSettlement, loading: creating, error: createError } =
-    useCreateSettlement();
+  const {
+    createSettlement,
+    loading: creating,
+    error: createError,
+  } = useCreateSettlement();
 
   // Form state
   const [amount, setAmount] = useState(params.amount ?? "");
@@ -257,9 +260,7 @@ export default function RecordTransactionScreen() {
           <Picker
             value={paymentMethod || ""}
             onChange={(value: string) =>
-              setPaymentMethod(
-                (value as SettlementPaymentMethod) || null,
-              )
+              setPaymentMethod((value as SettlementPaymentMethod) || null)
             }
             options={paymentMethodOptions}
           />

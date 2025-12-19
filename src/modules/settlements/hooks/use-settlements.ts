@@ -5,9 +5,7 @@
 
 import { useState, useCallback } from "react";
 import { useQuery } from "../../../hooks";
-import {
-  SettlementRepository
-} from "../repository";
+import { SettlementRepository } from "../repository";
 import type {
   SettlementWithParticipants,
   NewSettlementData,
@@ -134,7 +132,10 @@ export function useUpdateSettlement() {
       setError(null);
 
       try {
-        const settlement = await SettlementRepository.updateSettlement(id, data);
+        const settlement = await SettlementRepository.updateSettlement(
+          id,
+          data,
+        );
         setLoading(false);
         return settlement;
       } catch (err) {

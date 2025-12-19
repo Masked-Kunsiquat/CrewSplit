@@ -355,7 +355,9 @@ export default function SettlementSummaryScreen() {
             <Text style={styles.sectionTitle}>Suggested Payments</Text>
             {tripId && (
               <TouchableOpacity
-                onPress={() => router.push(`/trips/${tripId}/settlements/record`)}
+                onPress={() =>
+                  router.push(`/trips/${tripId}/settlements/record`)
+                }
                 style={styles.recordButton}
               >
                 <Text style={styles.recordButtonText}>+ Record</Text>

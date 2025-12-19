@@ -21,7 +21,13 @@
  */
 
 import { sql } from "drizzle-orm";
-import { sqliteTable, text, integer, real, index } from "drizzle-orm/sqlite-core";
+import {
+  sqliteTable,
+  text,
+  integer,
+  real,
+  index,
+} from "drizzle-orm/sqlite-core";
 import { trips } from "./trips";
 import { participants } from "./participants";
 import { expenseSplits } from "./expense-splits";
@@ -73,9 +79,12 @@ export const settlements = sqliteTable(
      * - Links settlement to that split
      * - UI can show "Paid: Dinner split" instead of just generic payment
      */
-    expenseSplitId: text("expense_split_id").references(() => expenseSplits.id, {
-      onDelete: "restrict",
-    }),
+    expenseSplitId: text("expense_split_id").references(
+      () => expenseSplits.id,
+      {
+        onDelete: "restrict",
+      },
+    ),
 
     /**
      * Multi-currency support (same pattern as expenses.ts)

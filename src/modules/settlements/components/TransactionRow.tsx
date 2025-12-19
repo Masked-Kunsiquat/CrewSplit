@@ -20,10 +20,13 @@ export function TransactionRow({
   onPress,
   showDate = true,
 }: TransactionRowProps) {
-  const formattedDate = new Date(settlement.date).toLocaleDateString(undefined, {
-    month: "short",
-    day: "numeric",
-  });
+  const formattedDate = new Date(settlement.date).toLocaleDateString(
+    undefined,
+    {
+      month: "short",
+      day: "numeric",
+    },
+  );
 
   return (
     <Pressable
@@ -60,7 +63,10 @@ export function TransactionRow({
       </View>
       <View style={styles.rightContent}>
         <Text style={styles.amount}>
-          {formatCurrency(settlement.originalAmountMinor, settlement.originalCurrency)}
+          {formatCurrency(
+            settlement.originalAmountMinor,
+            settlement.originalCurrency,
+          )}
         </Text>
       </View>
     </Pressable>

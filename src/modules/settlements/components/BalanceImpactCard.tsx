@@ -60,7 +60,8 @@ export function BalanceImpactCard({
       {isOverpayment && (
         <View style={styles.warningBox}>
           <Text style={styles.warningText}>
-            ⚠️ This payment exceeds the suggested amount. {fromParticipant.participantName} will now be owed money.
+            ⚠️ This payment exceeds the suggested amount.{" "}
+            {fromParticipant.participantName} will now be owed money.
           </Text>
         </View>
       )}
