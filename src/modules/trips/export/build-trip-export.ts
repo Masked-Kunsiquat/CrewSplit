@@ -133,7 +133,11 @@ export async function buildTripExportV1FromDb(
         .select()
         .from(settlements)
         .where(eq(settlements.tripId, tripId))
-        .orderBy(asc(settlements.date), asc(settlements.createdAt), asc(settlements.id))
+        .orderBy(
+          asc(settlements.date),
+          asc(settlements.createdAt),
+          asc(settlements.id),
+        )
     : undefined;
 
   return createTripExportV1({

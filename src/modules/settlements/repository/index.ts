@@ -316,11 +316,14 @@ export const createSettlement = async (
 
     // Defensive check for participant data
     if (!fromParticipant.length || !toParticipant.length) {
-      settlementLogger.error("Participant deleted concurrently during settlement creation", {
-        settlementId,
-        fromParticipantId: data.fromParticipantId,
-        toParticipantId: data.toParticipantId,
-      });
+      settlementLogger.error(
+        "Participant deleted concurrently during settlement creation",
+        {
+          settlementId,
+          fromParticipantId: data.fromParticipantId,
+          toParticipantId: data.toParticipantId,
+        },
+      );
       const error = new Error(
         "Participant was deleted during settlement creation",
       ) as Error & { code: string };
@@ -400,8 +403,12 @@ export const getSettlementById = async (
     });
     return {
       ...mapSettlement(settlement),
-      fromParticipantName: fromParticipant.length ? fromParticipant[0].name : "Unknown",
-      toParticipantName: toParticipant.length ? toParticipant[0].name : "Unknown",
+      fromParticipantName: fromParticipant.length
+        ? fromParticipant[0].name
+        : "Unknown",
+      toParticipantName: toParticipant.length
+        ? toParticipant[0].name
+        : "Unknown",
     };
   }
 
@@ -629,8 +636,14 @@ export const updateSettlement = async (
     fxRateToTrip,
     convertedAmountMinor,
     date: patch.date !== undefined ? patch.date : existing.date,
-    description: patch.description !== undefined ? patch.description : existing.description,
-    paymentMethod: patch.paymentMethod !== undefined ? patch.paymentMethod : existing.paymentMethod,
+    description:
+      patch.description !== undefined
+        ? patch.description
+        : existing.description,
+    paymentMethod:
+      patch.paymentMethod !== undefined
+        ? patch.paymentMethod
+        : existing.paymentMethod,
     updatedAt: now,
   };
 
@@ -667,11 +680,14 @@ export const updateSettlement = async (
 
     // Defensive check for participant data
     if (!fromParticipant.length || !toParticipant.length) {
-      settlementLogger.error("Participant deleted concurrently during settlement update", {
-        settlementId: id,
-        fromParticipantId: updated.fromParticipantId,
-        toParticipantId: updated.toParticipantId,
-      });
+      settlementLogger.error(
+        "Participant deleted concurrently during settlement update",
+        {
+          settlementId: id,
+          fromParticipantId: updated.fromParticipantId,
+          toParticipantId: updated.toParticipantId,
+        },
+      );
       const error = new Error(
         "Participant was deleted during settlement update",
       ) as Error & { code: string };

@@ -12,7 +12,11 @@ import type { ExpenseSplit as ExpenseSplitRow } from "@db/schema/expense-splits"
 import type { ExpenseCategory as ExpenseCategoryRow } from "@db/schema/expense-categories";
 import type { Settlement as SettlementRow } from "@db/schema/settlements";
 
-export type TripExportDomain = "participants" | "expenses" | "categories" | "settlements";
+export type TripExportDomain =
+  | "participants"
+  | "expenses"
+  | "categories"
+  | "settlements";
 
 export type TripExportOptions = Readonly<{
   participants: boolean;

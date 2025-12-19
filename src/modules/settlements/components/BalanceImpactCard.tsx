@@ -31,7 +31,8 @@ export function BalanceImpactCard({
   // If payer had negative balance (owed money), check if payment exceeds the absolute amount
   // If payer had zero/positive balance, any payment is an overpayment
   const isOverpayment =
-    amount > Math.abs(fromParticipant.beforeBalance) || fromParticipant.afterBalance > 0;
+    amount > Math.abs(fromParticipant.beforeBalance) ||
+    fromParticipant.afterBalance > 0;
 
   return (
     <View style={styles.container}>

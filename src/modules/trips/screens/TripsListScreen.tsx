@@ -15,14 +15,14 @@ import { useRefreshControl } from "@hooks/use-refresh-control";
 
 function formatDateRange(startDate: string, endDate?: string | null): string {
   const start = new Date(startDate);
-  const startFormatted = `${(start.getMonth() + 1).toString().padStart(2, '0')}/${start.getDate().toString().padStart(2, '0')}/${start.getFullYear().toString().slice(-2)}`;
+  const startFormatted = `${(start.getMonth() + 1).toString().padStart(2, "0")}/${start.getDate().toString().padStart(2, "0")}/${start.getFullYear().toString().slice(-2)}`;
 
   if (!endDate) {
     return startFormatted;
   }
 
   const end = new Date(endDate);
-  const endFormatted = `${(end.getMonth() + 1).toString().padStart(2, '0')}/${end.getDate().toString().padStart(2, '0')}/${end.getFullYear().toString().slice(-2)}`;
+  const endFormatted = `${(end.getMonth() + 1).toString().padStart(2, "0")}/${end.getDate().toString().padStart(2, "0")}/${end.getFullYear().toString().slice(-2)}`;
 
   return `${startFormatted} - ${endFormatted}`;
 }
@@ -98,7 +98,8 @@ export default function TripsListScreen() {
                 <View style={styles.tripInfo}>
                   <Text style={styles.tripName}>{trip.name}</Text>
                   <Text style={styles.tripMeta}>
-                    {trip.currency} • {formatDateRange(trip.startDate, trip.endDate)}
+                    {trip.currency} •{" "}
+                    {formatDateRange(trip.startDate, trip.endDate)}
                   </Text>
                 </View>
               </View>
