@@ -79,7 +79,7 @@ export default function RootLayout() {
             ? "Applying database migrations..."
             : !fxInitialized
               ? "Loading exchange rates..."
-              : "Checking onboarding status..."}
+              : "Checking welcome status..."}
         </Text>
         {onboardingError ? (
           <Text style={styles.errorMessageSmall}>
@@ -117,7 +117,9 @@ export default function RootLayout() {
           backgroundColor: "#0a0a0a",
         },
       }}
-    />
+    >
+      <Stack.Screen name="onboarding" options={{ headerShown: false }} />
+    </Stack>
   );
 }
 
