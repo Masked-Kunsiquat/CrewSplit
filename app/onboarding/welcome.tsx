@@ -27,6 +27,13 @@ const FeatureCard = ({ icon, title, description }: FeatureCardProps) => (
   </View>
 );
 
+/**
+ * Render the onboarding welcome screen with branding, three feature highlights, and a primary call-to-action.
+ *
+ * Pressing the "Get Started" button navigates to the currency selection route.
+ *
+ * @returns The onboarding welcome screen as a React element.
+ */
 export default function OnboardingWelcomeScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();

@@ -131,14 +131,14 @@ export function useSampleData() {
 }
 
 /**
- * Hook for reloading sample data from scratch
- * Deletes existing samples and reimports from JSON
+ * Provides state and an action to delete and reimport sample trips.
  *
- * Use for "Restore Sample Trips" button in Settings
+ * The returned `reloadSampleData` action hard-deletes existing sample trips and then loads either a single template (when `templateId` is provided) or all available templates, returning an array of loaded template/trip id pairs.
  *
- * @example
- * const { reloadSampleData, loading } = useReloadSampleData();
- * await reloadSampleData('summer_road_trip');
+ * @returns An object containing:
+ * - `loading` — `true` while the reload operation is in progress.
+ * - `error` — the last error that occurred during reload, or `null`.
+ * - `reloadSampleData` — A function that accepts an optional `templateId` and returns an array of `{ templateId, tripId }` for each loaded template. If `templateId` is provided only that template is reloaded; otherwise all available templates are reloaded.
  */
 export function useReloadSampleData() {
   const { deleteSampleTrips, loadSampleTrip } = useSampleData();

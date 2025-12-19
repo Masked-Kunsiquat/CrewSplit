@@ -6,6 +6,13 @@ import { Button, Input } from "@ui/components";
 import { theme } from "@ui/theme";
 import { useUserSettings } from "@modules/onboarding/hooks/use-user-settings";
 
+/**
+ * Onboarding screen that prompts the user to enter a display name or skip the step.
+ *
+ * Attempts to save the trimmed name to user settings and navigates to the onboarding walkthrough on success; on failure it shows an alert. Presents a confirmation when skipping. While saving, actions are disabled and the primary button shows a loading label. Any save error from the settings hook is displayed below the input.
+ *
+ * @returns The onboarding UI for entering or skipping a user name
+ */
 export default function SetUserNameScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();

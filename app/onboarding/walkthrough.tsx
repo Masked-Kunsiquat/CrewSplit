@@ -62,6 +62,13 @@ const ProgressDots = ({ steps, activeIndex }: ProgressDotsProps) => (
   </View>
 );
 
+/**
+ * Displays a horizontal, paged onboarding walkthrough with progress dots and actions to advance, skip, or finish onboarding.
+ *
+ * The screen presents a sequence of steps (icon, title, description), a "Skip" action, and a primary action that shows "Next" while advancing pages or "Get Started" on the last step. Completing onboarding attempts to load sample data, marks onboarding as complete, and navigates to the app root; failures show an alert with the error message.
+ *
+ * @returns The rendered walkthrough screen as a React element
+ */
 export default function WalkthroughScreen() {
   const router = useRouter();
   const [activeIndex, setActiveIndex] = useState(0);

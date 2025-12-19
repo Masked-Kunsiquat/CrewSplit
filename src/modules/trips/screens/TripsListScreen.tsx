@@ -51,6 +51,13 @@ function formatDateRange(startDate: string, endDate?: string | null): string {
   return `${startFormatted} - ${endFormatted}`;
 }
 
+/**
+ * Render the Trips list screen with loading, error, empty, and populated states and navigation controls.
+ *
+ * Displays an activity indicator while loading, an error card if fetching fails, an empty-state card when there are no trips, and a list of trip cards when trips exist. Configures the header title and a settings button, supports pull-to-refresh, and includes a footer button to create a new trip.
+ *
+ * @returns The JSX element for the Trips list screen.
+ */
 export default function TripsListScreen() {
   const router = useRouter();
   const navigation = useNavigation();
