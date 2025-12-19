@@ -183,7 +183,7 @@ export default function RecordTransactionScreen() {
       .map((code) => ({ label: code, value: code })),
   ];
 
-  const paymentMethodOptions: PickerOption[] = [
+  const paymentMethodOptions: PickerOption<SettlementPaymentMethod>[] = [
     { label: "Bank Transfer", value: "bank_transfer" },
     { label: "Cash", value: "cash" },
     { label: "Check", value: "check" },
@@ -192,6 +192,28 @@ export default function RecordTransactionScreen() {
     { label: "Venmo", value: "venmo" },
     { label: "Zelle", value: "zelle" },
   ];
+
+  const validPaymentMethods = new Set<string>(
+    paymentMethodOptions.map((option) => option.value),
+  );
+
+  const isSettlementPaymentMethod = (
+    value: string,
+  ): value is SettlementPaymentMethod => validPaymentMethods.has(value);
+
+  const handlePaymentMethodChange = (value: SettlementPaymentMethod | "") => {
+    if (!value) {
+      setPaymentMethod(null);
+      return;
+    }
+
+    if (isSettlementPaymentMethod(value)) {
+      setPaymentMethod(value);
+      return;
+    }
+
+    console.warn("Ignoring unknown payment method value", value);
+  };
 
   return (
     <KeyboardAvoidingView
@@ -256,11 +278,9 @@ export default function RecordTransactionScreen() {
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Payment Method (Optional)</Text>
-          <Picker
+          <Picker<SettlementPaymentMethod | "">
             value={paymentMethod || ""}
-            onChange={(value: string) =>
-              setPaymentMethod((value as SettlementPaymentMethod) || null)
-            }
+            onChange={handlePaymentMethodChange}
             options={paymentMethodOptions}
           />
         </View>
