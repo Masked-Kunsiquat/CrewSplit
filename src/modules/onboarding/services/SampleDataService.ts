@@ -16,6 +16,7 @@ import {
 import { eq } from "drizzle-orm";
 import type { SampleDataTemplateId } from "../types";
 import { OnboardingError, OnboardingErrorCode } from "../types";
+import { onboardingLogger } from "@utils/logger";
 
 // Import sample trip JSON
 import summerRoadTripData from "../../../../scripts/crewledger-summer-road-trip-2025-12-18.json";
@@ -43,6 +44,7 @@ export class SampleDataService {
    * router.push(`/trips/${tripId}`);
    */
   async loadSampleTrip(templateId: SampleDataTemplateId): Promise<string> {
+    onboardingLogger.info("Loading sample trip", { templateId });
     const template = this.getTemplate(templateId);
     if (!template) {
       throw new OnboardingError(
@@ -55,6 +57,9 @@ export class SampleDataService {
     try {
       return await db.transaction(async (tx) => {
         // Clean any existing copy of this sample trip to avoid UNIQUE conflicts
+        onboardingLogger.debug("Removing existing sample trip", {
+          tripId: template.trip.id,
+        });
         await tx.delete(trips).where(eq(trips.id, template.trip.id));
 
         // 1. Create trip
@@ -153,10 +158,14 @@ export class SampleDataService {
           }
         }
 
+        onboardingLogger.info("Sample trip loaded", { tripId });
         return tripId;
       });
     } catch (error) {
-      console.error(`Failed to load sample trip: ${templateId}`, error);
+      onboardingLogger.error(
+        `Failed to load sample trip: ${templateId}`,
+        error,
+      );
       throw new OnboardingError(
         `Failed to import sample data: ${templateId}`,
         OnboardingErrorCode.SAMPLE_DATA_LOAD_FAILED,

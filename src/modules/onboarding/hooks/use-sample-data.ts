@@ -7,6 +7,7 @@ import { useState, useCallback } from "react";
 import { onboardingRepository } from "../repository/OnboardingRepository";
 import { sampleDataService } from "../services/SampleDataService";
 import type { SampleDataTemplateId } from "../types";
+import { onboardingLogger } from "@utils/logger";
 
 /**
  * Hook for managing sample trip data
@@ -33,10 +34,18 @@ export function useSampleData() {
       try {
         setLoading(true);
         setError(null);
+        onboardingLogger.info("Requesting sample trip load", { templateId });
         const tripId = await sampleDataService.loadSampleTrip(templateId);
+        onboardingLogger.info("Sample trip loaded successfully", {
+          templateId,
+          tripId,
+        });
         return tripId;
       } catch (err) {
-        console.error(`Failed to load sample trip: ${templateId}`, err);
+        onboardingLogger.error(
+          `Failed to load sample trip: ${templateId}`,
+          err,
+        );
         setError(err as Error);
         throw err;
       } finally {
@@ -50,9 +59,10 @@ export function useSampleData() {
     try {
       setLoading(true);
       setError(null);
+      onboardingLogger.info("Archiving sample trips");
       await onboardingRepository.archiveSampleTrips();
     } catch (err) {
-      console.error("Failed to archive sample trips:", err);
+      onboardingLogger.error("Failed to archive sample trips", err);
       setError(err as Error);
       throw err;
     } finally {
@@ -64,9 +74,10 @@ export function useSampleData() {
     try {
       setLoading(true);
       setError(null);
+      onboardingLogger.info("Restoring sample trips");
       await onboardingRepository.restoreSampleTrips();
     } catch (err) {
-      console.error("Failed to restore sample trips:", err);
+      onboardingLogger.error("Failed to restore sample trips", err);
       setError(err as Error);
       throw err;
     } finally {
@@ -78,9 +89,10 @@ export function useSampleData() {
     try {
       setLoading(true);
       setError(null);
+      onboardingLogger.info("Deleting sample trips");
       await onboardingRepository.deleteSampleTrips();
     } catch (err) {
-      console.error("Failed to delete sample trips:", err);
+      onboardingLogger.error("Failed to delete sample trips", err);
       setError(err as Error);
       throw err;
     } finally {
@@ -138,6 +150,7 @@ export function useReloadSampleData() {
       try {
         setLoading(true);
         setError(null);
+        onboardingLogger.info("Reloading sample data", { templateId });
 
         // Delete existing sample data (hard delete)
         await deleteSampleTrips();
@@ -147,7 +160,10 @@ export function useReloadSampleData() {
 
         return tripId;
       } catch (err) {
-        console.error(`Failed to reload sample data: ${templateId}`, err);
+        onboardingLogger.error(
+          `Failed to reload sample data: ${templateId}`,
+          err,
+        );
         setError(err as Error);
         throw err;
       } finally {

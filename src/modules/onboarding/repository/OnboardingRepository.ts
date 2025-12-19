@@ -8,6 +8,7 @@
 import { db } from "@/db/client";
 import { userSettings, onboardingState, trips, type Trip } from "@/db/schema";
 import { eq, and, sql } from "drizzle-orm";
+import { onboardingLogger } from "@utils/logger";
 import type {
   UserSettings,
   UserPreferencesUpdate,
@@ -39,7 +40,10 @@ export class OnboardingRepository {
         Array.isArray(rows) && rows.some((row: any) => row?.name === column)
       );
     } catch (err) {
-      console.warn(`Failed to inspect columns for table ${table}`, err);
+      onboardingLogger.warn(
+        `Failed to inspect columns for table ${table}`,
+        err,
+      );
       return false;
     }
   }
@@ -52,6 +56,7 @@ export class OnboardingRepository {
     if (this.schemaInitialized) return;
 
     try {
+      onboardingLogger.info("Ensuring onboarding schema");
       // ---------------------------------------------------------------------
       // Ensure trips has sample-data columns (fallback if migration missed)
       // ---------------------------------------------------------------------
@@ -59,18 +64,21 @@ export class OnboardingRepository {
         await db.run(
           sql`ALTER TABLE "trips" ADD COLUMN "is_sample_data" integer DEFAULT false NOT NULL`,
         );
+        onboardingLogger.info("Added trips.is_sample_data column");
       }
 
       if (!(await this.hasColumn("trips", "sample_data_template_id"))) {
         await db.run(
           sql`ALTER TABLE "trips" ADD COLUMN "sample_data_template_id" text`,
         );
+        onboardingLogger.info("Added trips.sample_data_template_id column");
       }
 
       if (!(await this.hasColumn("trips", "is_archived"))) {
         await db.run(
           sql`ALTER TABLE "trips" ADD COLUMN "is_archived" integer DEFAULT false NOT NULL`,
         );
+        onboardingLogger.info("Added trips.is_archived column");
       }
 
       // Indexes are idempotent with IF NOT EXISTS
@@ -80,6 +88,7 @@ export class OnboardingRepository {
       await db.run(
         sql`CREATE INDEX IF NOT EXISTS "idx_trips_archived" ON "trips" ("is_archived")`,
       );
+      onboardingLogger.debug("Ensured sample data indexes on trips");
 
       // user_settings (singleton)
       await db.run(
@@ -128,8 +137,9 @@ export class OnboardingRepository {
       );
 
       this.schemaInitialized = true;
+      onboardingLogger.info("Onboarding schema ready");
     } catch (err) {
-      console.error("Failed to ensure onboarding schema", err);
+      onboardingLogger.error("Failed to ensure onboarding schema", err);
       throw new OnboardingError(
         "Failed to ensure onboarding schema",
         OnboardingErrorCode.SCHEMA_INIT_FAILED,
@@ -159,11 +169,12 @@ export class OnboardingRepository {
       .get();
 
     if (existing) {
+      onboardingLogger.debug("Loaded user settings row");
       return existing;
     }
 
     // Auto-create default settings (migration should handle this, but defensive)
-    console.warn(
+    onboardingLogger.warn(
       "User settings not found - initializing default row (migration may have failed)",
     );
     return this.initializeDefaultSettings();
