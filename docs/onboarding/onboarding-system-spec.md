@@ -42,6 +42,7 @@ This document specifies a comprehensive onboarding and tour system for CrewSplit
 **Existing Table Modifications:**
 
 **`trips`** table additions:
+
 - `is_sample_data` (boolean, default: false)
 - `sample_data_template_id` (text, nullable)
 - `is_archived` (boolean, default: false)
@@ -49,6 +50,7 @@ This document specifies a comprehensive onboarding and tour system for CrewSplit
 ### 1.2 Data Storage Strategy
 
 **Why Database over AsyncStorage:**
+
 - Single source of truth (follows project principles)
 - Enables deterministic queries
 - Supports atomic transactions
@@ -70,6 +72,7 @@ Display in trips list with badge
 ```
 
 **Archive Flow:**
+
 ```
 User deletes sample trip
     ↓
@@ -80,6 +83,7 @@ NO: Confirm hard delete → CASCADE removal
 ```
 
 **Restore Flow:**
+
 ```
 User taps "Restore Sample Trips" in Settings
     ↓
@@ -97,6 +101,7 @@ Navigate to trips list
 ### 2.1 First-Time User Onboarding
 
 **Flow:**
+
 1. App Launch → Check `onboarding_state` where `id = 'initial_onboarding'`
 2. If not completed → Redirect to `/onboarding/welcome`
 3. Welcome Screen → Tap "Get Started"
@@ -107,6 +112,7 @@ Navigate to trips list
 8. Mark onboarding complete → Redirect to home
 
 **Exit Points:**
+
 - Any screen: User can tap "Skip" or back button
 - Skipped preferences: Use defaults (USD, no name)
 - Progress saved: Can resume later if interrupted
@@ -114,6 +120,7 @@ Navigate to trips list
 ### 2.2 Tour Mode (Returning Users)
 
 **Flow:**
+
 1. Settings → Tap "Take Tour"
 2. Tour overlay renders over current screen
 3. User progresses through steps with "Next"
@@ -121,6 +128,7 @@ Navigate to trips list
 5. Completion tracked in `onboarding_state` where `id = 'tour_mode'`
 
 **Key Difference from Onboarding:**
+
 - Works with user's existing data (no sample trips required)
 - Overlay-based (doesn't change navigation)
 - Re-runnable anytime
@@ -133,6 +141,7 @@ Navigate to trips list
 ### 3.1 Onboarding Screens
 
 **WelcomeScreen:**
+
 - Large app logo/emoji (👥💰)
 - App name: "CrewSplit"
 - Tagline: "Split expenses with zero friction"
@@ -143,6 +152,7 @@ Navigate to trips list
 - "Get Started" button (primary, full-width)
 
 **SetDefaultCurrencyScreen:**
+
 - Title: "Set Your Default Currency"
 - Popular currencies grid (USD, EUR, GBP, CAD, AUD, JPY)
 - Full CurrencyPicker component
@@ -150,6 +160,7 @@ Navigate to trips list
 - "Skip" button (sets USD)
 
 **SetUserNameScreen:**
+
 - Title: "What's Your Name?"
 - Description: Auto-add to new trips
 - Large text input (autofocus)
@@ -157,6 +168,7 @@ Navigate to trips list
 - "Skip" button with confirmation
 
 **WalkthroughScreen:**
+
 - Full-screen carousel
 - 5 slides with illustrations:
   1. Create Trips
@@ -171,6 +183,7 @@ Navigate to trips list
 ### 3.2 Visual Indicators
 
 **SampleTripBadge:**
+
 - Position: Top-right of trip card
 - Background: `theme.colors.warning` (amber)
 - Text: "SAMPLE" (uppercase, bold, xs)
@@ -178,6 +191,7 @@ Navigate to trips list
 - Border radius: small
 
 **TourOverlay:**
+
 - Backdrop: `rgba(0, 0, 0, 0.7)`
 - Spotlight: 2px primary border with pulse animation
 - Tooltip: Elevated surface with shadow
@@ -263,7 +277,7 @@ app/
 
 ### 4.4 Root Layout Integration
 
-**app/_layout.tsx:**
+**app/\_layout.tsx:**
 
 ```typescript
 const { isComplete, loading } = useOnboardingStatus();
@@ -313,9 +327,11 @@ return <Stack {...} />;
 ### 5.1 Required Sample Trips
 
 Using existing JSON export from `scripts/`:
+
 - **Summer Road Trip** (from crewledger-summer-road-trip-2025-12-18.json)
 
 **Enhancements Needed:**
+
 - Add settlement/transaction records (missing from export)
 - Ensure varied split types (equal, percentage, exact amounts)
 - Multi-currency examples if possible
@@ -323,6 +339,7 @@ Using existing JSON export from `scripts/`:
 ### 5.2 Sample Data Template Format
 
 **Import from JSON:**
+
 ```typescript
 {
   "trip": {...},
@@ -334,6 +351,7 @@ Using existing JSON export from `scripts/`:
 ```
 
 **Settlement transactions to add:**
+
 ```typescript
 {
   "settlements": [
@@ -359,11 +377,13 @@ Using existing JSON export from `scripts/`:
 ### 6.1 Migration File: `0006_add_onboarding_system.sql`
 
 **Safe for existing users:**
+
 - All new columns have defaults
 - No data loss
 - Backward compatible
 
 **Contents:**
+
 1. Create `user_settings` table + initialize singleton
 2. Create `onboarding_state` table
 3. Add 3 columns to `trips` (all with defaults)
@@ -371,6 +391,7 @@ Using existing JSON export from `scripts/`:
 5. Add update triggers for timestamps
 
 **Verification Steps:**
+
 - [ ] Existing trips have `is_sample_data = 0`
 - [ ] `user_settings` singleton exists
 - [ ] No data loss
@@ -379,6 +400,7 @@ Using existing JSON export from `scripts/`:
 ### 6.2 Migration Testing
 
 **Test Cases:**
+
 1. Fresh install → Onboarding flows → Sample trips loaded
 2. Existing user (100 trips) → Migration runs → No data loss
 3. Archive sample → Restore sample → Verify data integrity
@@ -389,17 +411,20 @@ Using existing JSON export from `scripts/`:
 ## 7. Performance Considerations
 
 **Lazy Loading:**
+
 - Don't load sample JSON on every app launch
 - Load only when:
   - Onboarding completes
   - User taps "Restore Sample Trips"
 
 **Animation Performance:**
+
 - All animations use `useNativeDriver: true`
 - Tour overlay: fade in/out (300ms)
 - Spotlight: pulse effect (1s loop)
 
 **Memory Management:**
+
 - Unload tour overlay when not active
 - Don't keep sample JSON in memory after loading
 - Clear tour state on exit
@@ -411,6 +436,7 @@ Using existing JSON export from `scripts/`:
 ### 8.1 Critical User Flows
 
 **Test Cases:**
+
 1. First launch → Complete onboarding → Verify sample trips loaded
 2. Skip all onboarding steps → Verify defaults (USD, no name)
 3. Delete sample trip → Verify archived (not hard deleted)
@@ -439,16 +465,19 @@ Using existing JSON export from `scripts/`:
 ## 9. Success Metrics
 
 **Onboarding Completion:**
+
 - % of users completing full onboarding
 - % of users skipping steps
 - Average time to complete
 
 **Sample Data Usage:**
+
 - % of users keeping sample trips
 - % of users deleting samples immediately
 - % of users restoring samples
 
 **Tour Engagement:**
+
 - % of users taking tour from Settings
 - Average tour completion rate
 - Most-skipped tour steps
@@ -458,6 +487,7 @@ Using existing JSON export from `scripts/`:
 ## 10. Implementation Phases
 
 ### Phase 1: Database Schema (PRIORITY)
+
 - [ ] Create schema files (user_settings, onboarding_state)
 - [ ] Update trips schema (3 new columns)
 - [ ] Generate migration file
@@ -466,6 +496,7 @@ Using existing JSON export from `scripts/`:
 - [ ] Write repository tests
 
 ### Phase 2: Sample Data Service
+
 - [ ] Add settlement transactions to sample trip JSON
 - [ ] Create SampleDataService
 - [ ] Implement JSON import logic
@@ -473,6 +504,7 @@ Using existing JSON export from `scripts/`:
 - [ ] Write service tests
 
 ### Phase 3: Onboarding Screens
+
 - [ ] Create onboarding routes
 - [ ] Build WelcomeScreen
 - [ ] Build SetDefaultCurrencyScreen
@@ -482,6 +514,7 @@ Using existing JSON export from `scripts/`:
 - [ ] Test complete flow
 
 ### Phase 4: Tour Mode
+
 - [ ] Create TourOverlay component
 - [ ] Implement spotlight mechanism
 - [ ] Create tour step definitions
@@ -490,6 +523,7 @@ Using existing JSON export from `scripts/`:
 - [ ] Test tour interactions
 
 ### Phase 5: Integration
+
 - [ ] Update root layout with onboarding check
 - [ ] Add SampleTripBadge to trip cards
 - [ ] Add Settings UI (tour trigger, restore samples)
@@ -497,6 +531,7 @@ Using existing JSON export from `scripts/`:
 - [ ] End-to-end testing
 
 ### Phase 6: Polish & Testing
+
 - [ ] Accessibility audit
 - [ ] Performance testing (low-end devices)
 - [ ] Animation tuning
@@ -508,23 +543,27 @@ Using existing JSON export from `scripts/`:
 ## 11. Key Design Decisions
 
 ### Why Database Instead of AsyncStorage?
+
 - **Single source of truth**: Aligns with project principles
 - **Deterministic queries**: Can join with trips/expenses
 - **Future-proof**: Enables sync, backup, analytics
 - **Consistency**: All data in SQLite
 
 ### Why Archive Instead of Hard Delete?
+
 - **Reversible**: Users can restore samples anytime
 - **Safe**: Accidental deletion doesn't lose templates
 - **Transparent**: Clear "undo" path via Settings
 
 ### Why Overlay Tour Instead of Guided Navigation?
+
 - **Non-disruptive**: Works with user's actual data
 - **Realistic**: Shows features in real context
 - **Flexible**: Can be run anytime, anywhere
 - **Exit-friendly**: Doesn't trap user in flow
 
 ### Why Singleton user_settings Table?
+
 - **Simplicity**: Single row is easier to query
 - **Performance**: No joins needed
 - **Clarity**: One place for global preferences
@@ -535,12 +574,14 @@ Using existing JSON export from `scripts/`:
 ## 12. Dependencies
 
 **Existing:**
+
 - Expo Router (navigation)
 - Drizzle ORM (database)
 - AsyncStorage (temporary onboarding flag)
 - React Native Reanimated (animations)
 
 **New (if needed):**
+
 - None - using existing dependencies
 
 ---
@@ -548,6 +589,7 @@ Using existing JSON export from `scripts/`:
 ## 13. Rollout Plan
 
 ### For Existing Users
+
 - Migration auto-applies on app start
 - No disruption to existing trips
 - Settings menu gains two new options:
@@ -556,6 +598,7 @@ Using existing JSON export from `scripts/`:
 - No forced onboarding (already using app)
 
 ### For New Users
+
 - Onboarding flows on first launch
 - Sample trips auto-load
 - Can skip/exit anytime
@@ -566,6 +609,7 @@ Using existing JSON export from `scripts/`:
 ## 14. Future Enhancements
 
 **Potential additions (NOT in scope):**
+
 - Multiple sample trip templates (beach trip, ski trip, etc.)
 - Contextual tooltips (show hint on first feature use)
 - Onboarding progress sync (multi-device)
@@ -587,16 +631,14 @@ export interface UserSettings {
 }
 
 // Onboarding Flows
-export type OnboardingFlowId =
-  | 'initial_onboarding'
-  | 'tour_mode';
+export type OnboardingFlowId = "initial_onboarding" | "tour_mode";
 
 export type OnboardingStepId =
-  | 'welcome'
-  | 'preferences'
-  | 'sample_trip_loaded'
-  | 'tour_started'
-  | 'tour_complete';
+  | "welcome"
+  | "preferences"
+  | "sample_trip_loaded"
+  | "tour_started"
+  | "tour_complete";
 
 export interface OnboardingState {
   id: OnboardingFlowId;
@@ -621,6 +663,7 @@ export interface SampleTripMetadata {
 ## Appendix B: File Checklist
 
 **Schema Files:**
+
 - [ ] `src/db/schema/user-settings.ts`
 - [ ] `src/db/schema/onboarding-state.ts`
 - [ ] Update `src/db/schema/trips.ts`
@@ -628,27 +671,32 @@ export interface SampleTripMetadata {
 - [ ] Update `src/db/migrations/migrations.js`
 
 **Repository:**
+
 - [ ] `src/modules/onboarding/repository/OnboardingRepository.ts`
 - [ ] `src/modules/onboarding/services/SampleDataService.ts`
 - [ ] `src/modules/onboarding/types.ts`
 
 **Hooks:**
+
 - [ ] `src/modules/onboarding/hooks/use-onboarding-state.ts`
 - [ ] `src/modules/onboarding/hooks/use-user-settings.ts`
 - [ ] `src/modules/onboarding/hooks/use-tour.ts`
 
 **Screens:**
+
 - [ ] `src/modules/onboarding/screens/WelcomeScreen.tsx`
 - [ ] `src/modules/onboarding/screens/SetDefaultCurrencyScreen.tsx`
 - [ ] `src/modules/onboarding/screens/SetUserNameScreen.tsx`
 - [ ] `src/modules/onboarding/screens/WalkthroughScreen.tsx`
 
 **Components:**
+
 - [ ] `src/modules/onboarding/components/SampleTripBadge.tsx`
 - [ ] `src/modules/onboarding/components/TourOverlay.tsx`
 - [ ] `src/modules/onboarding/components/ProgressDots.tsx`
 
 **Routes:**
+
 - [ ] `app/onboarding/_layout.tsx`
 - [ ] `app/onboarding/welcome.tsx`
 - [ ] `app/onboarding/currency.tsx`
@@ -658,9 +706,11 @@ export interface SampleTripMetadata {
 - [ ] Update `app/settings.tsx`
 
 **Data:**
+
 - [ ] Update `scripts/crewledger-summer-road-trip-2025-12-18.json` (add settlements)
 
 **Tests:**
+
 - [ ] `src/modules/onboarding/__tests__/repository.test.ts`
 - [ ] `src/modules/onboarding/__tests__/sample-data-service.test.ts`
 - [ ] Integration tests for complete flows

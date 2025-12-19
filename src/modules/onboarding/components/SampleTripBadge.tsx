@@ -45,11 +45,7 @@ export function SampleTripBadge({
 }: SampleTripBadgeProps) {
   return (
     <View
-      style={[
-        styles.badge,
-        variant === "subtle" && styles.badgeSubtle,
-        style,
-      ]}
+      style={[styles.badge, variant === "subtle" && styles.badgeSubtle, style]}
     >
       <Text
         style={[

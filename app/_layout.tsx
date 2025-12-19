@@ -77,8 +77,8 @@ export default function RootLayout() {
           {!success
             ? "Applying database migrations..."
             : !fxInitialized
-            ? "Loading exchange rates..."
-            : "Checking onboarding status..."}
+              ? "Loading exchange rates..."
+              : "Checking onboarding status..."}
         </Text>
         {onboardingError ? (
           <Text style={styles.errorMessageSmall}>
@@ -99,7 +99,9 @@ export default function RootLayout() {
   // TODO: Redirect to onboarding if not complete
   // For now, just log status
   if (!onboardingComplete) {
-    console.log("Onboarding not complete - would redirect to /onboarding/welcome");
+    console.log(
+      "Onboarding not complete - would redirect to /onboarding/welcome",
+    );
     // When onboarding screens are ready:
     // return <Redirect href="/onboarding/welcome" />;
   }

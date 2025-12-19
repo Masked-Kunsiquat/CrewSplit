@@ -70,7 +70,7 @@ export function useOnboardingState(options?: { enabled?: boolean }) {
       setError(null);
       await onboardingRepository.markStepCompleted(
         "initial_onboarding",
-        stepId
+        stepId,
       );
     } catch (err) {
       console.error(`Failed to mark step complete: ${stepId}`, err);
@@ -175,7 +175,7 @@ export function useOnboardingFlow(flowId: OnboardingFlowId) {
         throw err;
       }
     },
-    [flowId]
+    [flowId],
   );
 
   const reset = useCallback(async () => {

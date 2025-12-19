@@ -6,12 +6,7 @@
  */
 
 import { db } from "@/db/client";
-import {
-  userSettings,
-  onboardingState,
-  trips,
-  type Trip,
-} from "@/db/schema";
+import { userSettings, onboardingState, trips, type Trip } from "@/db/schema";
 import { eq, and, sql } from "drizzle-orm";
 import type {
   UserSettings,
@@ -124,7 +119,7 @@ export class OnboardingRepository {
 
     // Auto-create default settings (migration should handle this, but defensive)
     console.warn(
-      "User settings not found - initializing default row (migration may have failed)"
+      "User settings not found - initializing default row (migration may have failed)",
     );
     return this.initializeDefaultSettings();
   }
@@ -137,7 +132,7 @@ export class OnboardingRepository {
    * @returns Updated user settings
    */
   async updateUserSettings(
-    update: UserPreferencesUpdate
+    update: UserPreferencesUpdate,
   ): Promise<UserSettings> {
     await this.ensureOnboardingSchema();
 
@@ -186,7 +181,7 @@ export class OnboardingRepository {
     if (!result) {
       throw new OnboardingError(
         "Failed to initialize user settings",
-        OnboardingErrorCode.SETTINGS_NOT_FOUND
+        OnboardingErrorCode.SETTINGS_NOT_FOUND,
       );
     }
 
@@ -204,7 +199,7 @@ export class OnboardingRepository {
    * @returns Onboarding state or null if flow never started
    */
   async getOnboardingState(
-    flowId: OnboardingFlowId
+    flowId: OnboardingFlowId,
   ): Promise<OnboardingState | null> {
     await this.ensureOnboardingSchema();
 
@@ -241,7 +236,7 @@ export class OnboardingRepository {
    */
   async markStepCompleted(
     flowId: OnboardingFlowId,
-    stepId: OnboardingStepId
+    stepId: OnboardingStepId,
   ): Promise<OnboardingState> {
     await this.ensureOnboardingSchema();
 
@@ -264,7 +259,7 @@ export class OnboardingRepository {
       if (!created) {
         throw new OnboardingError(
           `Failed to create onboarding state for flow: ${flowId}`,
-          OnboardingErrorCode.STATE_NOT_FOUND
+          OnboardingErrorCode.STATE_NOT_FOUND,
         );
       }
       return created;
@@ -272,7 +267,7 @@ export class OnboardingRepository {
 
     // Add step if not already completed (use Set for deduplication)
     const completedSteps = Array.from(
-      new Set([...existing.completedSteps, stepId])
+      new Set([...existing.completedSteps, stepId]),
     );
 
     await db
@@ -288,7 +283,7 @@ export class OnboardingRepository {
     if (!updated) {
       throw new OnboardingError(
         `Failed to update onboarding state for flow: ${flowId}`,
-        OnboardingErrorCode.STATE_NOT_FOUND
+        OnboardingErrorCode.STATE_NOT_FOUND,
       );
     }
     return updated;
@@ -337,7 +332,7 @@ export class OnboardingRepository {
     if (!updated) {
       throw new OnboardingError(
         `Failed to mark flow complete: ${flowId}`,
-        OnboardingErrorCode.STATE_NOT_FOUND
+        OnboardingErrorCode.STATE_NOT_FOUND,
       );
     }
     return updated;

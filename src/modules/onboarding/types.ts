@@ -101,7 +101,10 @@ export interface OnboardingProgress {
  * Sample data template identifiers
  * Links trips to specific sample templates for restoration
  */
-export type SampleDataTemplateId = "summer_road_trip" | "beach_weekend" | "ski_trip";
+export type SampleDataTemplateId =
+  | "summer_road_trip"
+  | "beach_weekend"
+  | "ski_trip";
 
 /**
  * Sample trip metadata (subset of Trip entity)
@@ -164,7 +167,7 @@ export class OnboardingError extends Error {
   constructor(
     message: string,
     public readonly code: string,
-    public readonly details?: unknown
+    public readonly details?: unknown,
   ) {
     super(message);
     this.name = "OnboardingError";

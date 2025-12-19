@@ -48,7 +48,7 @@ export class SampleDataService {
       throw new OnboardingError(
         `Sample data template not found: ${templateId}`,
         OnboardingErrorCode.TEMPLATE_NOT_FOUND,
-        { templateId }
+        { templateId },
       );
     }
 
@@ -110,7 +110,7 @@ export class SampleDataService {
 
           // Get splits for this expense
           const expenseSplitsForExpense = template.expenseSplits.filter(
-            (split) => split.expenseId === expense.id
+            (split) => split.expenseId === expense.id,
           );
 
           for (const split of expenseSplitsForExpense) {
@@ -119,7 +119,11 @@ export class SampleDataService {
               expenseId: expense.id,
               participantId: split.participantId,
               share: split.share,
-              shareType: split.shareType as "equal" | "percentage" | "weight" | "amount",
+              shareType: split.shareType as
+                | "equal"
+                | "percentage"
+                | "weight"
+                | "amount",
               amount: split.amount,
               createdAt: split.createdAt,
               updatedAt: split.updatedAt,
@@ -155,7 +159,7 @@ export class SampleDataService {
       throw new OnboardingError(
         `Failed to import sample data: ${templateId}`,
         OnboardingErrorCode.SAMPLE_DATA_LOAD_FAILED,
-        { templateId, error }
+        { templateId, error },
       );
     }
   }
@@ -168,7 +172,7 @@ export class SampleDataService {
    * @returns Template data or null if not found
    */
   private getTemplate(
-    templateId: SampleDataTemplateId
+    templateId: SampleDataTemplateId,
   ): typeof summerRoadTripData | null {
     const templates: Record<
       SampleDataTemplateId,

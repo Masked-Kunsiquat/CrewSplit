@@ -44,21 +44,18 @@ export function useUserSettings() {
     }
   };
 
-  const updateSettings = useCallback(
-    async (update: UserPreferencesUpdate) => {
-      try {
-        setError(null);
-        const updated = await onboardingRepository.updateUserSettings(update);
-        setSettings(updated);
-        return updated;
-      } catch (err) {
-        console.error("Failed to update user settings:", err);
-        setError(err as Error);
-        throw err;
-      }
-    },
-    []
-  );
+  const updateSettings = useCallback(async (update: UserPreferencesUpdate) => {
+    try {
+      setError(null);
+      const updated = await onboardingRepository.updateUserSettings(update);
+      setSettings(updated);
+      return updated;
+    } catch (err) {
+      console.error("Failed to update user settings:", err);
+      setError(err as Error);
+      throw err;
+    }
+  }, []);
 
   return {
     settings,
@@ -91,7 +88,7 @@ export function useDeviceOwnerSync() {
         // Don't throw - this is best-effort sync
       }
     },
-    [updateSettings]
+    [updateSettings],
   );
 
   return {

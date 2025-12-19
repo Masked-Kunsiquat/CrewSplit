@@ -116,9 +116,7 @@ export default function TripsListScreen() {
               onPress={() => router.push(`/trips/${trip.id}`)}
             >
               {trip.isSampleData && (
-                <SampleTripBadge
-                  style={styles.sampleBadge}
-                />
+                <SampleTripBadge style={styles.sampleBadge} />
               )}
               <View style={styles.tripHeader}>
                 {trip.emoji && (

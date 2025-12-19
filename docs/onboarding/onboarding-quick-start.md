@@ -19,6 +19,7 @@ src/db/schema/onboarding-state.ts
 ```
 
 **Update trips schema:**
+
 ```typescript
 // src/db/schema/trips.ts
 // Add these columns:
@@ -28,11 +29,13 @@ isArchived: integer("is_archived", { mode: "boolean" }).notNull().default(false)
 ```
 
 **Generate migration:**
+
 ```bash
 npx drizzle-kit generate --config drizzle.config.ts
 ```
 
 **Test migration:**
+
 1. Create test trip with existing schema
 2. Restart app
 3. Verify: existing trips have `is_sample_data = 0`, `is_archived = 0`
@@ -43,12 +46,14 @@ npx drizzle-kit generate --config drizzle.config.ts
 ### 2. Repository Layer
 
 **Create:**
+
 ```bash
 src/modules/onboarding/repository/OnboardingRepository.ts
 src/modules/onboarding/types.ts
 ```
 
 **Key methods:**
+
 ```typescript
 // User settings (singleton)
 getUserSettings(): Promise<UserSettings>
@@ -72,6 +77,7 @@ hasSampleData(): Promise<boolean>
 ### 3. Sample Data Service
 
 **Prepare sample trip JSON:**
+
 ```bash
 # Edit: scripts/crewledger-summer-road-trip-2025-12-18.json
 # ADD settlement transactions:
@@ -92,11 +98,13 @@ hasSampleData(): Promise<boolean>
 ```
 
 **Create service:**
+
 ```bash
 src/modules/onboarding/services/SampleDataService.ts
 ```
 
 **Key method:**
+
 ```typescript
 async loadSampleTrip(templateId: string): Promise<string> {
   // Read JSON file
@@ -112,6 +120,7 @@ async loadSampleTrip(templateId: string): Promise<string> {
 ### 4. Hooks
 
 **Create:**
+
 ```bash
 src/modules/onboarding/hooks/use-onboarding-state.ts
 src/modules/onboarding/hooks/use-user-settings.ts
@@ -119,6 +128,7 @@ src/modules/onboarding/hooks/use-tour.ts
 ```
 
 **use-onboarding-state.ts:**
+
 ```typescript
 export function useOnboardingState() {
   const [isComplete, setIsComplete] = useState(false);
@@ -135,7 +145,7 @@ export function useOnboardingState() {
   };
 
   const markComplete = async () => {
-    await onboardingRepository.markFlowCompleted('initial_onboarding');
+    await onboardingRepository.markFlowCompleted("initial_onboarding");
     setIsComplete(true);
   };
 
@@ -148,6 +158,7 @@ export function useOnboardingState() {
 ### 5. Onboarding Screens
 
 **Create routes:**
+
 ```bash
 app/onboarding/_layout.tsx
 app/onboarding/welcome.tsx
@@ -156,7 +167,8 @@ app/onboarding/username.tsx
 app/onboarding/walkthrough.tsx
 ```
 
-**_layout.tsx:**
+**\_layout.tsx:**
+
 ```typescript
 import { Stack } from 'expo-router';
 
@@ -173,6 +185,7 @@ export default function OnboardingLayout() {
 ```
 
 **Screen progression:**
+
 ```
 /onboarding/welcome     → Tap "Get Started"
 /onboarding/currency    → Select currency, tap "Next" or "Skip"
@@ -187,7 +200,8 @@ export default function OnboardingLayout() {
 
 ### 6. Root Layout Integration
 
-**Update app/_layout.tsx:**
+**Update app/\_layout.tsx:**
+
 ```typescript
 export default function RootLayout() {
   const { success, error } = useDbMigrations();
@@ -215,21 +229,24 @@ export default function RootLayout() {
 ### 7. Sample Trip Badge
 
 **Create component:**
+
 ```bash
 src/modules/onboarding/components/SampleTripBadge.tsx
 ```
 
 **Add to TripCard:**
+
 ```typescript
 // In TripCard component:
 {trip.isSampleData && <SampleTripBadge />}
 ```
 
 **Styling:**
+
 ```typescript
 const styles = StyleSheet.create({
   badge: {
-    position: 'absolute',
+    position: "absolute",
     top: theme.spacing.sm,
     right: theme.spacing.sm,
     backgroundColor: theme.colors.warning,
@@ -241,7 +258,7 @@ const styles = StyleSheet.create({
     fontSize: theme.typography.xs,
     fontWeight: theme.typography.bold,
     color: theme.colors.background,
-    textTransform: 'uppercase',
+    textTransform: "uppercase",
   },
 });
 ```
@@ -251,6 +268,7 @@ const styles = StyleSheet.create({
 ### 8. Archive/Restore Logic
 
 **Update delete trip logic:**
+
 ```typescript
 async function handleDeleteTrip(tripId: string) {
   const trip = await tripRepository.getTripById(tripId);
@@ -258,23 +276,23 @@ async function handleDeleteTrip(tripId: string) {
   if (trip.isSampleData) {
     // Archive instead of delete
     await onboardingRepository.archiveSampleTrips();
-    showToast('Sample trip archived. Restore from Settings anytime.');
+    showToast("Sample trip archived. Restore from Settings anytime.");
   } else {
     // Confirm hard delete
     Alert.alert(
-      'Delete Trip?',
-      'This will permanently delete all expenses and participants.',
+      "Delete Trip?",
+      "This will permanently delete all expenses and participants.",
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: "Cancel", style: "cancel" },
         {
-          text: 'Delete',
-          style: 'destructive',
+          text: "Delete",
+          style: "destructive",
           onPress: async () => {
             await tripRepository.deleteTrip(tripId);
-            showToast('Trip deleted.');
+            showToast("Trip deleted.");
           },
         },
-      ]
+      ],
     );
   }
 }
@@ -285,6 +303,7 @@ async function handleDeleteTrip(tripId: string) {
 ### 9. Settings Integration
 
 **Update app/settings.tsx:**
+
 ```typescript
 // Add after Exchange Rates section
 
@@ -315,6 +334,7 @@ async function handleDeleteTrip(tripId: string) {
 ```
 
 **Restore handler:**
+
 ```typescript
 const handleRestoreSampleTrips = async () => {
   try {
@@ -325,13 +345,13 @@ const handleRestoreSampleTrips = async () => {
 
     // Load from JSON
     const sampleService = new SampleDataService();
-    const tripId = await sampleService.loadSampleTrip('summer_road_trip');
+    const tripId = await sampleService.loadSampleTrip("summer_road_trip");
 
-    showToast('Sample trips restored!');
-    router.push('/'); // Navigate to trips list
+    showToast("Sample trips restored!");
+    router.push("/"); // Navigate to trips list
   } catch (error) {
-    console.error('Failed to restore sample trips:', error);
-    showToast('Failed to restore sample trips. Please try again.');
+    console.error("Failed to restore sample trips:", error);
+    showToast("Failed to restore sample trips. Please try again.");
   } finally {
     setLoading(false);
   }
@@ -343,32 +363,37 @@ const handleRestoreSampleTrips = async () => {
 ### 10. Tour Mode (Optional - Can defer)
 
 **Create tour overlay:**
+
 ```bash
 src/modules/onboarding/components/TourOverlay.tsx
 src/modules/onboarding/hooks/use-tour.ts
 ```
 
 **Tour step definition:**
+
 ```typescript
 const TOUR_STEPS = [
   {
-    id: 'welcome',
-    title: 'Welcome to CrewSplit',
-    description: 'This is your trips list. Tap a trip to see details.',
-    tooltipPosition: 'center',
+    id: "welcome",
+    title: "Welcome to CrewSplit",
+    description: "This is your trips list. Tap a trip to see details.",
+    tooltipPosition: "center",
   },
   {
-    id: 'create-trip',
-    title: 'Create Your First Trip',
-    description: 'Tap here to create a new trip with your crew.',
-    tooltipPosition: 'top',
-    spotlight: { /* ... */ },
+    id: "create-trip",
+    title: "Create Your First Trip",
+    description: "Tap here to create a new trip with your crew.",
+    tooltipPosition: "top",
+    spotlight: {
+      /* ... */
+    },
   },
   // ... more steps
 ];
 ```
 
 **Usage:**
+
 ```typescript
 const { activeTour, currentStep, nextStep, exitTour } = useTour({
   steps: TOUR_STEPS,
@@ -396,12 +421,14 @@ return (
 ## Testing Checklist
 
 **Database:**
+
 - [ ] Migration runs without errors
 - [ ] Existing trips unaffected
 - [ ] `user_settings` singleton created
 - [ ] Indexes created correctly
 
 **Repository:**
+
 - [ ] `getUserSettings()` returns default row
 - [ ] `updateUserSettings()` persists changes
 - [ ] `markStepCompleted()` tracks progress
@@ -409,6 +436,7 @@ return (
 - [ ] `restoreSampleTrips()` reloads data
 
 **Onboarding Flow:**
+
 - [ ] First launch → redirects to `/onboarding/welcome`
 - [ ] Can skip any step (defaults applied)
 - [ ] Can exit mid-flow (progress saved)
@@ -417,6 +445,7 @@ return (
 - [ ] Redirects to home after completion
 
 **Sample Data:**
+
 - [ ] Sample trips show badge
 - [ ] Delete → archives (not hard deletes)
 - [ ] Restore from Settings → reloads
@@ -424,6 +453,7 @@ return (
 - [ ] Restore → trips visible again
 
 **Settings:**
+
 - [ ] "Take Tour" button visible
 - [ ] "Restore Sample Trips" button visible
 - [ ] Restore works when no samples exist
@@ -434,6 +464,7 @@ return (
 ## Quick Commands
 
 **Database:**
+
 ```bash
 # Generate migration
 npx drizzle-kit generate
@@ -443,6 +474,7 @@ npx drizzle-kit studio
 ```
 
 **Testing:**
+
 ```bash
 # Run tests
 npm test -- onboarding
@@ -455,6 +487,7 @@ npm run lint
 ```
 
 **Development:**
+
 ```bash
 # Start dev server
 npm start
@@ -471,20 +504,24 @@ npm run ios
 ## Key Files Reference
 
 **Schema:**
+
 - `src/db/schema/user-settings.ts`
 - `src/db/schema/onboarding-state.ts`
 - `src/db/schema/trips.ts` (update)
 
 **Repository:**
+
 - `src/modules/onboarding/repository/OnboardingRepository.ts`
 - `src/modules/onboarding/services/SampleDataService.ts`
 
 **Hooks:**
+
 - `src/modules/onboarding/hooks/use-onboarding-state.ts`
 - `src/modules/onboarding/hooks/use-user-settings.ts`
 - `src/modules/onboarding/hooks/use-tour.ts` (optional)
 
 **Screens:**
+
 - `app/onboarding/_layout.tsx`
 - `app/onboarding/welcome.tsx`
 - `app/onboarding/currency.tsx`
@@ -492,15 +529,18 @@ npm run ios
 - `app/onboarding/walkthrough.tsx`
 
 **Components:**
+
 - `src/modules/onboarding/components/SampleTripBadge.tsx`
 - `src/modules/onboarding/components/TourOverlay.tsx` (optional)
 
 **Integrations:**
+
 - `app/_layout.tsx` (add onboarding redirect)
 - `app/settings.tsx` (add tour + restore buttons)
 - Trip card component (add badge)
 
 **Sample Data:**
+
 - `scripts/crewledger-summer-road-trip-2025-12-18.json` (add settlements)
 
 ---
@@ -508,18 +548,23 @@ npm run ios
 ## Common Issues & Solutions
 
 **Issue:** Migration fails on existing data
+
 - **Solution:** Verify all new columns have defaults or are nullable
 
 **Issue:** Onboarding never completes
+
 - **Solution:** Check `onboardingRepository.markFlowCompleted()` is called
 
 **Issue:** Sample trips not showing badge
+
 - **Solution:** Verify `isSampleData` flag is set on import
 
 **Issue:** Archived trips still visible
+
 - **Solution:** Filter query: `WHERE is_archived = 0`
 
 **Issue:** Restore doesn't work
+
 - **Solution:** Check JSON file path and permissions
 
 ---

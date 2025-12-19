@@ -43,7 +43,7 @@ export function useSampleData() {
         setLoading(false);
       }
     },
-    []
+    [],
   );
 
   const archiveSampleTrips = useCallback(async () => {
@@ -154,7 +154,7 @@ export function useReloadSampleData() {
         setLoading(false);
       }
     },
-    [deleteSampleTrips, loadSampleTrip]
+    [deleteSampleTrips, loadSampleTrip],
   );
 
   return {
