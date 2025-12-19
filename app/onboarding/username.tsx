@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useRouter } from "expo-router";
 import { View, Text, StyleSheet, Alert } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Button, Input } from "@ui/components";
+import { Button, ConfirmDialog, Input } from "@ui/components";
 import { theme } from "@ui/theme";
 import { useUserSettings } from "@modules/onboarding/hooks/use-user-settings";
 
@@ -17,6 +17,7 @@ export default function SetUserNameScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const [name, setName] = useState("");
+  const [showSkipConfirm, setShowSkipConfirm] = useState(false);
   const { updateSettings, loading, error } = useUserSettings();
 
   const handleNext = async () => {
@@ -36,18 +37,12 @@ export default function SetUserNameScreen() {
   };
 
   const handleSkip = () => {
-    Alert.alert(
-      "Skip for now?",
-      "You can always set your name later in the app settings.",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Skip",
-          style: "default",
-          onPress: () => router.push("/onboarding/walkthrough"),
-        },
-      ],
-    );
+    setShowSkipConfirm(true);
+  };
+
+  const confirmSkip = () => {
+    setShowSkipConfirm(false);
+    router.push("/onboarding/walkthrough");
   };
 
   return (
@@ -91,6 +86,15 @@ export default function SetUserNameScreen() {
           disabled={loading}
         />
       </View>
+
+      <ConfirmDialog
+        visible={showSkipConfirm}
+        title="Skip for now?"
+        message="You can always set your name later in the app settings."
+        confirmLabel="Skip"
+        onCancel={() => setShowSkipConfirm(false)}
+        onConfirm={confirmSkip}
+      />
     </View>
   );
 }

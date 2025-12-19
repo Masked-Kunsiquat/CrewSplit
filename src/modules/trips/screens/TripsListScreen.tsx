@@ -10,7 +10,7 @@ import {
 } from "react-native";
 import { useRouter, useNavigation } from "expo-router";
 import { theme } from "@ui/theme";
-import { Button, Card } from "@ui/components";
+import { Button, Card, ConfirmDialog } from "@ui/components";
 import { useTrips } from "../hooks/use-trips";
 import { useRefreshControl } from "@hooks/use-refresh-control";
 import { SampleTripBadge } from "@modules/onboarding/components/SampleTripBadge";
@@ -68,6 +68,7 @@ export default function TripsListScreen() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [exportTripId, setExportTripId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const selectedCount = selectedIds.size;
   const selectedTripIds = useMemo(() => Array.from(selectedIds), [selectedIds]);
@@ -141,33 +142,24 @@ export default function TripsListScreen() {
     if (selectedCount === 0 || deleting) {
       return;
     }
-    const label = selectedCount === 1 ? "this trip" : "these trips";
-    Alert.alert(
-      "Delete trips?",
-      `This will permanently delete ${label}, including participants, expenses, and settlements.`,
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: async () => {
-            setDeleting(true);
-            try {
-              for (const id of selectedTripIds) {
-                await deleteTrip(id);
-              }
-              setSelectedIds(new Set());
-              await refetch();
-            } catch (err) {
-              console.error("Failed to delete trips", err);
-              Alert.alert("Error", "Failed to delete selected trips.");
-            } finally {
-              setDeleting(false);
-            }
-          },
-        },
-      ],
-    );
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDeleteSelected = async () => {
+    setShowDeleteConfirm(false);
+    setDeleting(true);
+    try {
+      for (const id of selectedTripIds) {
+        await deleteTrip(id);
+      }
+      setSelectedIds(new Set());
+      await refetch();
+    } catch (err) {
+      console.error("Failed to delete trips", err);
+      Alert.alert("Error", "Failed to delete selected trips.");
+    } finally {
+      setDeleting(false);
+    }
   };
 
   return (
@@ -204,41 +196,41 @@ export default function TripsListScreen() {
           trips.map((trip) => {
             const isSelected = selectedIds.has(trip.id);
             return (
-            <Card
-              key={trip.id}
-              style={[styles.tripCard, isSelected && styles.tripCardSelected]}
-              onPress={() => handleTripPress(trip.id)}
-              onLongPress={() => handleTripLongPress(trip.id)}
-            >
-              {selectedCount > 0 && (
-                <View
-                  style={[
-                    styles.selectBadge,
-                    isSelected && styles.selectBadgeSelected,
-                  ]}
-                >
-                  <Text style={styles.selectBadgeText}>
-                    {isSelected ? "✓" : ""}
-                  </Text>
-                </View>
-              )}
-              {trip.isSampleData && (
-                <SampleTripBadge style={styles.sampleBadge} />
-              )}
-              <View style={styles.tripHeader}>
-                {trip.emoji && (
-                  <Text style={styles.tripEmoji}>{trip.emoji}</Text>
+              <Card
+                key={trip.id}
+                style={[styles.tripCard, isSelected && styles.tripCardSelected]}
+                onPress={() => handleTripPress(trip.id)}
+                onLongPress={() => handleTripLongPress(trip.id)}
+              >
+                {selectedCount > 0 && (
+                  <View
+                    style={[
+                      styles.selectBadge,
+                      isSelected && styles.selectBadgeSelected,
+                    ]}
+                  >
+                    <Text style={styles.selectBadgeText}>
+                      {isSelected ? "✓" : ""}
+                    </Text>
+                  </View>
                 )}
-                <View style={styles.tripInfo}>
-                  <Text style={styles.tripName}>{trip.name}</Text>
-                  <Text style={styles.tripMeta}>
-                    {trip.currency} •{" "}
-                    {formatDateRange(trip.startDate, trip.endDate)}
-                  </Text>
+                {trip.isSampleData && (
+                  <SampleTripBadge style={styles.sampleBadge} />
+                )}
+                <View style={styles.tripHeader}>
+                  {trip.emoji && (
+                    <Text style={styles.tripEmoji}>{trip.emoji}</Text>
+                  )}
+                  <View style={styles.tripInfo}>
+                    <Text style={styles.tripName}>{trip.name}</Text>
+                    <Text style={styles.tripMeta}>
+                      {trip.currency} •{" "}
+                      {formatDateRange(trip.startDate, trip.endDate)}
+                    </Text>
+                  </View>
                 </View>
-              </View>
-            </Card>
-          );
+              </Card>
+            );
           })}
       </ScrollView>
 
@@ -276,6 +268,18 @@ export default function TripsListScreen() {
           onClose={() => setExportTripId(null)}
         />
       )}
+      <ConfirmDialog
+        visible={showDeleteConfirm}
+        title="Delete trips?"
+        message={`This will permanently delete ${
+          selectedCount === 1 ? "this trip" : "these trips"
+        }, including participants, expenses, and settlements.`}
+        confirmLabel="Delete"
+        confirmVariant="danger"
+        onCancel={() => setShowDeleteConfirm(false)}
+        onConfirm={confirmDeleteSelected}
+        loading={deleting}
+      />
     </View>
   );
 }

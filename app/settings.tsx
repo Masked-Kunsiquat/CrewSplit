@@ -10,14 +10,18 @@ import {
   StyleSheet,
   ScrollView,
   Linking,
-  Modal,
-  Pressable,
   Alert,
 } from "react-native";
 import { useNavigation, useRouter } from "expo-router";
 import { Image } from "expo-image";
 import { theme } from "@ui/theme";
-import { Card, CurrencyPicker, Button, Input } from "@ui/components";
+import {
+  Card,
+  CurrencyPicker,
+  Button,
+  Input,
+  ConfirmDialog,
+} from "@ui/components";
 import { useDisplayCurrency } from "@hooks/use-display-currency";
 import { useDeviceOwner } from "@hooks/use-device-owner";
 import { useFxRates } from "@modules/fx-rates/hooks/use-fx-rates";
@@ -508,100 +512,4 @@ const styles = StyleSheet.create({
     color: theme.colors.error,
     fontSize: theme.typography.sm,
   },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(10, 10, 10, 0.9)",
-    justifyContent: "center",
-    alignItems: "center",
-    padding: theme.spacing.lg,
-  },
-  modalBackdrop: {
-    ...StyleSheet.absoluteFillObject,
-  },
-  modalCard: {
-    width: "100%",
-    maxWidth: 420,
-    backgroundColor: theme.colors.surface,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    borderRadius: theme.borderRadius.lg,
-    padding: theme.spacing.lg,
-    gap: theme.spacing.md,
-    ...theme.shadows.lg,
-  },
-  modalTitle: {
-    fontSize: theme.typography.lg,
-    fontWeight: theme.typography.bold,
-    color: theme.colors.text,
-  },
-  modalMessage: {
-    fontSize: theme.typography.base,
-    color: theme.colors.textSecondary,
-    lineHeight: 20,
-  },
-  modalActions: {
-    gap: theme.spacing.sm,
-  },
 });
-
-interface ConfirmDialogProps {
-  visible: boolean;
-  title: string;
-  message: string;
-  confirmLabel: string;
-  onCancel: () => void;
-  onConfirm: () => void;
-  loading?: boolean;
-}
-
-/**
- * Renders a modal confirmation dialog with Cancel and confirm actions.
- *
- * @param confirmLabel - Text for the confirm button when not loading
- * @param onCancel - Called when the dialog is dismissed or the Cancel action is pressed
- * @param onConfirm - Called when the confirm action is pressed
- * @param loading - When `true`, disables the confirm button and shows a working label
- * @returns The confirmation dialog element to render in the component tree
- */
-function ConfirmDialog({
-  visible,
-  title,
-  message,
-  confirmLabel,
-  onCancel,
-  onConfirm,
-  loading,
-}: ConfirmDialogProps) {
-  return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="fade"
-      presentationStyle="overFullScreen"
-      statusBarTranslucent
-      onRequestClose={onCancel}
-    >
-      <View style={styles.modalOverlay}>
-        <Pressable style={styles.modalBackdrop} onPress={onCancel} />
-        <View style={styles.modalCard}>
-          <Text style={styles.modalTitle}>{title}</Text>
-          <Text style={styles.modalMessage}>{message}</Text>
-          <View style={styles.modalActions}>
-            <Button
-              title="Cancel"
-              variant="ghost"
-              onPress={onCancel}
-              fullWidth
-            />
-            <Button
-              title={loading ? "Working..." : confirmLabel}
-              onPress={onConfirm}
-              fullWidth
-              disabled={loading}
-            />
-          </View>
-        </View>
-      </View>
-    </Modal>
-  );
-}
