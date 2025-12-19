@@ -12,6 +12,7 @@ import { theme } from "@ui/theme";
 import { Button, Card } from "@ui/components";
 import { useTrips } from "../hooks/use-trips";
 import { useRefreshControl } from "@hooks/use-refresh-control";
+import { SampleTripBadge } from "@modules/onboarding/components/SampleTripBadge";
 
 /**
  * Validates and formats a single date string
@@ -114,6 +115,11 @@ export default function TripsListScreen() {
               style={styles.tripCard}
               onPress={() => router.push(`/trips/${trip.id}`)}
             >
+              {trip.isSampleData && (
+                <SampleTripBadge
+                  style={styles.sampleBadge}
+                />
+              )}
               <View style={styles.tripHeader}>
                 {trip.emoji && (
                   <Text style={styles.tripEmoji}>{trip.emoji}</Text>
@@ -192,6 +198,13 @@ const styles = StyleSheet.create({
   },
   tripCard: {
     backgroundColor: theme.colors.surfaceElevated,
+    position: "relative",
+  },
+  sampleBadge: {
+    position: "absolute",
+    top: theme.spacing.sm,
+    right: theme.spacing.sm,
+    zIndex: 1,
   },
   tripHeader: {
     flexDirection: "row",

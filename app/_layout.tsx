@@ -9,6 +9,7 @@ import { useEffect, useState } from "react";
 import { useDbMigrations } from "@db/client";
 import { cachedFxRateProvider } from "@modules/fx-rates/provider";
 import { useFxSync } from "@modules/fx-rates/hooks";
+import { useOnboardingState } from "@modules/onboarding/hooks/use-onboarding-state";
 import { colors, spacing, typography } from "@ui/tokens";
 import { fxLogger } from "@utils/logger";
 
@@ -16,6 +17,9 @@ export default function RootLayout() {
   const { success, error } = useDbMigrations();
   const [fxInitialized, setFxInitialized] = useState(false);
   const [fxError, setFxError] = useState<Error | null>(null);
+
+  // Check onboarding status (for future redirect to onboarding screens)
+  const { isComplete: onboardingComplete, loading: onboardingLoading } = useOnboardingState();
 
   // Background sync for FX rates (must be called unconditionally)
   // Safe to run before provider initialization: checkStaleness only queries DB,
@@ -60,15 +64,17 @@ export default function RootLayout() {
     );
   }
 
-  // Show loading while migrations or FX initialization in progress
-  if (!success || !fxInitialized) {
+  // Show loading while migrations, FX initialization, or onboarding check in progress
+  if (!success || !fxInitialized || onboardingLoading) {
     return (
       <View style={styles.container}>
         <ActivityIndicator size="large" color={colors.primary} />
         <Text style={styles.loadingText}>
           {!success
             ? "Applying database migrations..."
-            : "Loading exchange rates..."}
+            : !fxInitialized
+            ? "Loading exchange rates..."
+            : "Checking onboarding status..."}
         </Text>
       </View>
     );
@@ -79,6 +85,14 @@ export default function RootLayout() {
     fxLogger.warn(
       "App started with FX rate provider initialization failure - conversions may not work",
     );
+  }
+
+  // TODO: Redirect to onboarding if not complete
+  // For now, just log status
+  if (!onboardingComplete) {
+    console.log("Onboarding not complete - would redirect to /onboarding/welcome");
+    // When onboarding screens are ready:
+    // return <Redirect href="/onboarding/welcome" />;
   }
 
   return (
