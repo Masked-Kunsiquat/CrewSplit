@@ -46,15 +46,16 @@ export default function TransactionDetailsScreen() {
 
   const confirmDelete = async () => {
     if (!settlement) return;
-    setShowDeleteConfirm(false);
     try {
       await deleteSettlement(settlement.id);
+      setShowDeleteConfirm(false);
       Alert.alert("Deleted", "Payment has been deleted", [
         { text: "OK", onPress: () => router.back() },
       ]);
     } catch (error) {
       console.error("Failed to delete settlement:", error);
       Alert.alert("Error", "Failed to delete payment. Please try again.");
+      setShowDeleteConfirm(false);
     }
   };
 

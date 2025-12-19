@@ -131,7 +131,6 @@ export default function SettingsScreen() {
   }, []);
 
   const confirmRefreshSamples = async () => {
-    setShowRefreshConfirm(false);
     setActionMessage(null);
     try {
       const results = await reloadSampleData();
@@ -142,6 +141,8 @@ export default function SettingsScreen() {
     } catch (err) {
       console.error("Failed to refresh sample data", err);
       setActionMessage("Could not refresh sample data. Please try again.");
+    } finally {
+      setShowRefreshConfirm(false);
     }
   };
 
