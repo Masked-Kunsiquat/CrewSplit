@@ -53,6 +53,9 @@ export class SampleDataService {
 
     try {
       return await db.transaction(async (tx) => {
+        // Clean any existing copy of this sample trip to avoid UNIQUE conflicts
+        await tx.delete(trips).where(eq(trips.id, template.trip.id));
+
         // 1. Create trip
         const tripId = template.trip.id; // Use original ID for consistency
         await tx.insert(trips).values({
