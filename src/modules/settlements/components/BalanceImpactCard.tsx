@@ -6,7 +6,7 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { theme } from "@ui/theme";
-import { formatCents } from "@utils/currency";
+import { formatCurrency } from "@utils/currency";
 
 interface BalanceChange {
   participantName: string;
@@ -34,7 +34,7 @@ export function BalanceImpactCard({
     <View style={styles.container}>
       <Text style={styles.title}>Balance Impact</Text>
       <Text style={styles.subtitle}>
-        Payment of {formatCents(amount)} {currency}
+        Payment of {formatCurrency(amount, currency)}
       </Text>
 
       <View style={styles.changeRow}>
@@ -84,7 +84,7 @@ function BalanceChangeItem({
   label,
 }: BalanceChangeItemProps) {
   const formatBalance = (balance: number) => {
-    const formatted = formatCents(Math.abs(balance));
+    const formatted = formatCurrency(Math.abs(balance), currency);
     if (balance > 0) return `+${formatted}`;
     if (balance < 0) return `-${formatted}`;
     return formatted;

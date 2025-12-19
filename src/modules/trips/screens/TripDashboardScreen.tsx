@@ -245,6 +245,17 @@ function TripDashboardScreenContent({ tripId }: { tripId: string }) {
           }
           fullWidth
         />
+        <Button
+          title="Add Transaction"
+          onPress={() =>
+            router.push({
+              pathname: "/trips/[id]/settlements/record",
+              params: { id: tripId },
+            })
+          }
+          variant="secondary"
+          fullWidth
+        />
       </View>
     </View>
   );
@@ -278,6 +289,8 @@ const styles = StyleSheet.create({
     color: theme.colors.background,
   },
   footer: {
+    flexDirection: "row",
+    gap: theme.spacing.md,
     padding: theme.spacing.lg,
     borderTopWidth: 1,
     borderTopColor: theme.colors.border,

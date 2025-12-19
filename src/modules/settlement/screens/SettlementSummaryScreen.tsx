@@ -358,7 +358,7 @@ export default function SettlementSummaryScreen() {
                 onPress={() => router.push(`/trips/${tripId}/settlements/record`)}
                 style={styles.recordButton}
               >
-                <Text style={styles.recordButtonText}>+ Record Payment</Text>
+                <Text style={styles.recordButtonText}>+ Record</Text>
               </TouchableOpacity>
             )}
           </View>

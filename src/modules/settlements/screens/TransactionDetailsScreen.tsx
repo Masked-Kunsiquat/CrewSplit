@@ -19,7 +19,7 @@ import {
   useSettlement,
   useDeleteSettlement,
 } from "../hooks/use-settlements";
-import { formatCents } from "@utils/currency";
+import { formatCurrency } from "@utils/currency";
 
 export default function TransactionDetailsScreen() {
   const router = useRouter();
@@ -104,12 +104,11 @@ export default function TransactionDetailsScreen() {
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Amount</Text>
         <Text style={styles.amountText}>
-          {formatCents(settlement.originalAmountMinor)}{" "}
-          {settlement.originalCurrency}
+          {formatCurrency(settlement.originalAmountMinor, settlement.originalCurrency)}
         </Text>
         {showCurrencyConversion && settlement.fxRateToTrip && (
           <Text style={styles.convertedText}>
-            Converted: {formatCents(settlement.convertedAmountMinor)} (Rate:{" "}
+            Converted: {formatCurrency(settlement.convertedAmountMinor, settlement.originalCurrency)} (Rate:{" "}
             {settlement.fxRateToTrip.toFixed(4)})
           </Text>
         )}
@@ -175,14 +174,11 @@ export default function TransactionDetailsScreen() {
           title="Edit"
           onPress={handleEdit}
           variant="secondary"
-          style={styles.actionButton}
         />
         <Button
           title={deleting ? "Deleting..." : "Delete"}
           onPress={handleDelete}
-          variant="danger"
           disabled={deleting}
-          style={styles.actionButton}
         />
       </View>
     </ScrollView>
@@ -237,7 +233,7 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.sm,
   },
   amountText: {
-    fontSize: theme.typography["2xl"],
+    fontSize: theme.typography.xxl,
     fontWeight: "bold",
     color: theme.colors.text,
   },
@@ -285,8 +281,5 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: theme.spacing.md,
     marginTop: theme.spacing.xl,
-  },
-  actionButton: {
-    flex: 1,
   },
 });

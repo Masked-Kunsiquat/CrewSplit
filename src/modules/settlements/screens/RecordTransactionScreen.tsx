@@ -26,21 +26,22 @@ import {
 import { useTripById } from "../../trips/hooks/use-trips";
 import { useParticipants } from "../../participants/hooks/use-participants";
 import { useCreateSettlement } from "../hooks/use-settlements";
-import { formatCents, parseCurrency } from "@utils/currency";
+import { parseCurrency } from "@utils/currency";
 import type { NewSettlementData, SettlementPaymentMethod } from "../types";
 
 export default function RecordTransactionScreen() {
   const router = useRouter();
   const navigation = useNavigation();
   const params = useLocalSearchParams<{
-    tripId?: string;
+    id?: string | string[];
     fromParticipantId?: string;
     toParticipantId?: string;
     amount?: string;
     expenseId?: string;
   }>();
 
-  const tripId = params.tripId;
+  // Extract tripId from route parameter [id]
+  const tripId = Array.isArray(params.id) ? params.id[0] : params.id;
   const { trip, loading: tripLoading } = useTripById(tripId ?? null);
   const { participants, loading: participantsLoading } = useParticipants(
     tripId ?? null,
@@ -181,13 +182,14 @@ export default function RecordTransactionScreen() {
   ];
 
   const paymentMethodOptions: PickerOption[] = [
-    { label: "None", value: "" },
-    { label: "Cash", value: "cash" },
-    { label: "Venmo", value: "venmo" },
-    { label: "PayPal", value: "paypal" },
     { label: "Bank Transfer", value: "bank_transfer" },
+    { label: "Cash", value: "cash" },
     { label: "Check", value: "check" },
+    { label: "None", value: "" },
     { label: "Other", value: "other" },
+    { label: "PayPal", value: "paypal" },
+    { label: "Venmo", value: "venmo" },
+    { label: "Zelle", value: "zelle" },
   ];
 
   return (
@@ -203,31 +205,30 @@ export default function RecordTransactionScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Amount</Text>
           <View style={styles.amountRow}>
-            <Input
-              label=""
-              value={amount}
-              onChangeText={setAmount}
-              placeholder="0.00"
-              keyboardType="decimal-pad"
-              style={styles.amountInput}
-              autoFocus
-            />
-            <Picker
-              label=""
-              value={currency}
-              onValueChange={(value) => setCurrency(value)}
-              options={currencyOptions}
-              style={styles.currencyPicker}
-            />
+            <View style={styles.amountInputWrapper}>
+              <Input
+                value={amount}
+                onChangeText={setAmount}
+                placeholder="0.00"
+                keyboardType="decimal-pad"
+                autoFocus
+              />
+            </View>
+            <View style={styles.currencyPickerWrapper}>
+              <Picker
+                value={currency}
+                onChange={(value: string) => setCurrency(value)}
+                options={currencyOptions}
+              />
+            </View>
           </View>
         </View>
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>From (Payer)</Text>
           <Picker
-            label=""
             value={fromParticipantId || ""}
-            onValueChange={(value) => setFromParticipantId(value || null)}
+            onChange={(value: string) => setFromParticipantId(value || null)}
             options={participantOptions}
             placeholder="Select payer"
           />
@@ -236,9 +237,8 @@ export default function RecordTransactionScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>To (Payee)</Text>
           <Picker
-            label=""
             value={toParticipantId || ""}
-            onValueChange={(value) => setToParticipantId(value || null)}
+            onChange={(value: string) => setToParticipantId(value || null)}
             options={participantOptions}
             placeholder="Select payee"
           />
@@ -247,7 +247,6 @@ export default function RecordTransactionScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Date</Text>
           <DatePicker
-            label=""
             value={date}
             onChange={setDate}
             maximumDate={new Date()}
@@ -257,9 +256,8 @@ export default function RecordTransactionScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Payment Method (Optional)</Text>
           <Picker
-            label=""
             value={paymentMethod || ""}
-            onValueChange={(value) =>
+            onChange={(value: string) =>
               setPaymentMethod(
                 (value as SettlementPaymentMethod) || null,
               )
@@ -271,7 +269,6 @@ export default function RecordTransactionScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Note (Optional)</Text>
           <Input
-            label=""
             value={description}
             onChangeText={setDescription}
             placeholder="e.g., Venmo payment for dinner"
@@ -292,13 +289,13 @@ export default function RecordTransactionScreen() {
           title="Cancel"
           onPress={() => router.back()}
           variant="secondary"
-          style={styles.footerButton}
+          fullWidth
         />
         <Button
           title={creating ? "Saving..." : "Save Payment"}
           onPress={handleSave}
           disabled={creating}
-          style={styles.footerButton}
+          fullWidth
         />
       </View>
     </KeyboardAvoidingView>
@@ -358,10 +355,10 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: theme.spacing.md,
   },
-  amountInput: {
+  amountInputWrapper: {
     flex: 2,
   },
-  currencyPicker: {
+  currencyPickerWrapper: {
     flex: 1,
   },
   errorContainer: {
@@ -377,8 +374,5 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: theme.colors.border,
     backgroundColor: theme.colors.background,
-  },
-  footerButton: {
-    flex: 1,
   },
 });
