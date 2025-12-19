@@ -23,15 +23,19 @@ import type { OnboardingFlowId, OnboardingStepId } from "../types";
  * if (loading) return <LoadingScreen />;
  * if (!isComplete) return <Redirect href="/onboarding/welcome" />;
  */
-export function useOnboardingState() {
+export function useOnboardingState(options?: { enabled?: boolean }) {
+  const enabled = options?.enabled ?? true;
   const [isComplete, setIsComplete] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
-  // Check onboarding status on mount
+  // Check onboarding status when enabled
   useEffect(() => {
+    if (!enabled) {
+      return;
+    }
     checkStatus();
-  }, []);
+  }, [enabled]);
 
   const checkStatus = async () => {
     try {

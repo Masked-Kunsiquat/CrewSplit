@@ -19,7 +19,11 @@ export default function RootLayout() {
   const [fxError, setFxError] = useState<Error | null>(null);
 
   // Check onboarding status (for future redirect to onboarding screens)
-  const { isComplete: onboardingComplete, loading: onboardingLoading } = useOnboardingState();
+  const {
+    isComplete: onboardingComplete,
+    loading: onboardingLoading,
+    error: onboardingError,
+  } = useOnboardingState({ enabled: success });
 
   // Background sync for FX rates (must be called unconditionally)
   // Safe to run before provider initialization: checkStaleness only queries DB,
@@ -76,6 +80,11 @@ export default function RootLayout() {
             ? "Loading exchange rates..."
             : "Checking onboarding status..."}
         </Text>
+        {onboardingError ? (
+          <Text style={styles.errorMessageSmall}>
+            {onboardingError.message}
+          </Text>
+        ) : null}
       </View>
     );
   }
@@ -134,6 +143,12 @@ const styles = StyleSheet.create({
   },
   errorMessage: {
     fontSize: typography.base,
+    color: colors.textSecondary,
+    textAlign: "center",
+  },
+  errorMessageSmall: {
+    marginTop: spacing.sm,
+    fontSize: typography.sm,
     color: colors.textSecondary,
     textAlign: "center",
   },

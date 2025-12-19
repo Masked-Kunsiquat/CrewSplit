@@ -31,6 +31,73 @@ import { OnboardingError, OnboardingErrorCode } from "../types";
  * - Archive/restore sample trips
  */
 export class OnboardingRepository {
+  private schemaInitialized = false;
+
+  /**
+   * Defensive guard: ensure onboarding tables exist.
+   * Helps recover if migrations didn't run on a given device.
+   */
+  private async ensureOnboardingSchema(): Promise<void> {
+    if (this.schemaInitialized) return;
+
+    try {
+      // user_settings (singleton)
+      await db.run(
+        sql`CREATE TABLE IF NOT EXISTS "user_settings" (
+          "id" text PRIMARY KEY DEFAULT 'default' NOT NULL,
+          "primary_user_name" text,
+          "default_currency" text DEFAULT 'USD' NOT NULL,
+          "created_at" text DEFAULT (datetime('now')) NOT NULL,
+          "updated_at" text DEFAULT (datetime('now')) NOT NULL
+        )`,
+      );
+
+      await db.run(
+        sql`INSERT OR IGNORE INTO "user_settings" ("id") VALUES ('default')`,
+      );
+
+      await db.run(
+        sql`CREATE TRIGGER IF NOT EXISTS "update_user_settings_timestamp"
+        AFTER UPDATE ON "user_settings"
+        FOR EACH ROW
+        BEGIN
+          UPDATE "user_settings" SET "updated_at" = datetime('now') WHERE "id" = NEW."id";
+        END`,
+      );
+
+      // onboarding_state (flow tracking)
+      await db.run(
+        sql`CREATE TABLE IF NOT EXISTS "onboarding_state" (
+          "id" text PRIMARY KEY NOT NULL,
+          "is_completed" integer DEFAULT false NOT NULL,
+          "completed_steps" text DEFAULT '[]' NOT NULL,
+          "metadata" text DEFAULT '{}' NOT NULL,
+          "created_at" text DEFAULT (datetime('now')) NOT NULL,
+          "updated_at" text DEFAULT (datetime('now')) NOT NULL,
+          "completed_at" text
+        )`,
+      );
+
+      await db.run(
+        sql`CREATE TRIGGER IF NOT EXISTS "update_onboarding_state_timestamp"
+        AFTER UPDATE ON "onboarding_state"
+        FOR EACH ROW
+        BEGIN
+          UPDATE "onboarding_state" SET "updated_at" = datetime('now') WHERE "id" = NEW."id";
+        END`,
+      );
+
+      this.schemaInitialized = true;
+    } catch (err) {
+      console.error("Failed to ensure onboarding schema", err);
+      throw new OnboardingError(
+        "Failed to ensure onboarding schema",
+        OnboardingErrorCode.SCHEMA_INIT_FAILED,
+        err,
+      );
+    }
+  }
+
   // ============================================================================
   // USER SETTINGS (Singleton Pattern)
   // ============================================================================
@@ -43,6 +110,8 @@ export class OnboardingRepository {
    * @throws OnboardingError if initialization fails
    */
   async getUserSettings(): Promise<UserSettings> {
+    await this.ensureOnboardingSchema();
+
     const existing = await db
       .select()
       .from(userSettings)
@@ -70,6 +139,8 @@ export class OnboardingRepository {
   async updateUserSettings(
     update: UserPreferencesUpdate
   ): Promise<UserSettings> {
+    await this.ensureOnboardingSchema();
+
     await db
       .update(userSettings)
       .set({
@@ -90,6 +161,8 @@ export class OnboardingRepository {
    * @throws OnboardingError if initialization fails after retry
    */
   async initializeDefaultSettings(): Promise<UserSettings> {
+    await this.ensureOnboardingSchema();
+
     const defaultSettings = {
       id: "default",
       primaryUserName: null,
@@ -133,6 +206,8 @@ export class OnboardingRepository {
   async getOnboardingState(
     flowId: OnboardingFlowId
   ): Promise<OnboardingState | null> {
+    await this.ensureOnboardingSchema();
+
     const result = await db
       .select()
       .from(onboardingState)
@@ -168,6 +243,8 @@ export class OnboardingRepository {
     flowId: OnboardingFlowId,
     stepId: OnboardingStepId
   ): Promise<OnboardingState> {
+    await this.ensureOnboardingSchema();
+
     const existing = await this.getOnboardingState(flowId);
 
     if (!existing) {
@@ -225,6 +302,8 @@ export class OnboardingRepository {
    * @returns Updated onboarding state
    */
   async markFlowCompleted(flowId: OnboardingFlowId): Promise<OnboardingState> {
+    await this.ensureOnboardingSchema();
+
     const now = new Date().toISOString();
 
     // Ensure flow state exists before marking complete
@@ -271,6 +350,8 @@ export class OnboardingRepository {
    * @param flowId - Flow identifier
    */
   async resetOnboardingFlow(flowId: OnboardingFlowId): Promise<void> {
+    await this.ensureOnboardingSchema();
+
     await db
       .delete(onboardingState)
       .where(eq(onboardingState.id, flowId))
