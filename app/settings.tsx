@@ -27,6 +27,7 @@ import { useDeviceOwner } from "@hooks/use-device-owner";
 import { useFxRates } from "@modules/fx-rates/hooks/use-fx-rates";
 import { useOnboardingState } from "@modules/onboarding/hooks/use-onboarding-state";
 import { useReloadSampleData } from "@modules/onboarding/hooks/use-sample-data";
+import Constants from "expo-constants";
 
 /**
  * Format timestamp as relative time (e.g., "2 days ago")
@@ -331,7 +332,9 @@ export default function SettingsScreen() {
             All calculations are auditable and reproducible, with no hidden
             business logic.
           </Text>
-          <Text style={styles.versionText}>Version 1.0.0</Text>
+          <Text style={styles.versionText}>
+            Version {Constants.expoConfig?.version ?? "1.0.0"}
+          </Text>
         </Card>
 
         <Card style={styles.section}>

@@ -1,0 +1,112 @@
+name: Create GitHub Release with APK
+
+on:
+  workflow_run:
+    workflows: ["Auto Tag Version"]
+    types:
+      - completed
+
+permissions:
+  contents: write
+
+jobs:
+  wait-for-eas-build:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Get version from package.json
+        id: version
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "tag=v$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Install EAS CLI
+        run: npm install -g eas-cli
+
+      - name: Wait for EAS build to complete
+        id: wait-build
+        run: |
+          echo "Waiting for EAS build to complete for version ${{ steps.version.outputs.version }}"
+          echo "This workflow will check for the build artifact..."
+
+          # Wait up to 30 minutes for build (checking every 60 seconds)
+          MAX_ATTEMPTS=30
+          ATTEMPT=0
+
+          while [ $ATTEMPT -lt $MAX_ATTEMPTS ]; do
+            echo "Checking for build artifacts (attempt $((ATTEMPT + 1))/$MAX_ATTEMPTS)..."
+
+            # Check latest builds for this project
+            eas build:list --platform=android --limit=1 --json > build-list.json || true
+
+            if [ -f build-list.json ]; then
+              BUILD_STATUS=$(cat build-list.json | jq -r '.[0].status' 2>/dev/null || echo "unknown")
+              BUILD_ID=$(cat build-list.json | jq -r '.[0].id' 2>/dev/null || echo "")
+
+              echo "Latest build status: $BUILD_STATUS (ID: $BUILD_ID)"
+
+              if [ "$BUILD_STATUS" = "FINISHED" ]; then
+                echo "build_id=$BUILD_ID" >> $GITHUB_OUTPUT
+                echo "Build completed successfully!"
+                break
+              elif [ "$BUILD_STATUS" = "ERRORED" ] || [ "$BUILD_STATUS" = "CANCELED" ]; then
+                echo "Build failed or was canceled"
+                exit 1
+              fi
+            fi
+
+            ATTEMPT=$((ATTEMPT + 1))
+            sleep 60
+          done
+
+          if [ $ATTEMPT -eq $MAX_ATTEMPTS ]; then
+            echo "Timeout waiting for build to complete"
+            exit 1
+          fi
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Download APK from EAS
+        id: download
+        run: |
+          # Get build artifact URL
+          BUILD_LIST=$(eas build:list --platform=android --limit=1 --json)
+          ARTIFACT_URL=$(echo $BUILD_LIST | jq -r '.[0].artifacts.applicationArchiveUrl')
+
+          if [ "$ARTIFACT_URL" = "null" ] || [ -z "$ARTIFACT_URL" ]; then
+            echo "No artifact URL found"
+            exit 1
+          fi
+
+          echo "Downloading APK from: $ARTIFACT_URL"
+          curl -L -o CrewSplit-v${{ steps.version.outputs.version }}.apk "$ARTIFACT_URL"
+
+          echo "apk_path=CrewSplit-v${{ steps.version.outputs.version }}.apk" >> $GITHUB_OUTPUT
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.tag }}
+          name: CrewSplit ${{ steps.version.outputs.version }}
+          draft: false
+          prerelease: false
+          files: |
+            ${{ steps.download.outputs.apk_path }}
+          body: |
+            ## CrewSplit v${{ steps.version.outputs.version }}
+
+            Production build created via EAS Build.
+
+            ### Installation
+            Download the APK file and install it on your Android device.
+
+            **Note:** You may need to enable "Install from Unknown Sources" in your device settings.
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

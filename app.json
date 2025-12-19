@@ -2,13 +2,16 @@
   "expo": {
     "name": "CrewSplit",
     "slug": "crewsplit",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "userInterfaceStyle": "dark",
     "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.crewsplit.app"
+      "bundleIdentifier": "com.crewsplit.app",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "package": "com.crewsplit.app"
@@ -17,6 +20,12 @@
     "scheme": "crewsplit",
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "ae60ea5d-e749-4112-a803-290755675ff0"
+      }
     }
   }
 }
