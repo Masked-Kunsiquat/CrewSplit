@@ -14,7 +14,6 @@ import {
 } from "@db/schema/settlements";
 import { participants as participantsTable } from "@db/schema/participants";
 import { trips as tripsTable } from "@db/schema/trips";
-import { expenses as expensesTable } from "@db/schema/expenses";
 import { expenseSplits as expenseSplitsTable } from "@db/schema/expense-splits";
 import { eq, and, inArray } from "drizzle-orm";
 import {
@@ -25,15 +24,6 @@ import {
 } from "../types";
 import { settlementLogger } from "@utils/logger";
 import { cachedFxRateProvider } from "@modules/fx-rates/provider/cached-fx-rate-provider";
-
-/**
- * Enriched settlement with participant names and optional expense details
- */
-interface EnrichedSettlement extends Settlement {
-  fromParticipantName: string;
-  toParticipantName: string;
-  expenseDescription?: string | null;
-}
 
 /**
  * Map database row to domain Settlement type

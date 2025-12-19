@@ -25,7 +25,7 @@ export default function TransactionDetailsScreen() {
   const params = useLocalSearchParams<{ id?: string }>();
   const settlementId = params.id;
 
-  const { settlement, loading, refetch } = useSettlement(settlementId ?? null);
+  const { settlement, loading } = useSettlement(settlementId ?? null);
   const { deleteSettlement, loading: deleting } = useDeleteSettlement();
   const { trip } = useTripById(settlement?.tripId ?? null);
 
