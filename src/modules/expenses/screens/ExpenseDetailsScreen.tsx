@@ -31,7 +31,6 @@ import { cachedFxRateProvider } from "@modules/fx-rates/provider";
 import { deleteExpense } from "../repository";
 import { currencyLogger } from "@utils/logger";
 import { useRefreshControl } from "@hooks/use-refresh-control";
-import { TripExportModal } from "@modules/trips/components/trip-export-modal";
 import { useFxSync } from "@modules/fx-rates/hooks/use-fx-sync";
 
 export default function ExpenseDetailsScreen() {
@@ -75,7 +74,6 @@ function ExpenseDetailsContent({
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [editingExpense, setEditingExpense] = useState(false);
-  const [exportModalVisible, setExportModalVisible] = useState(false);
   const [rateModalVisible, setRateModalVisible] = useState(false);
   const [conversionError, setConversionError] = useState<{
     fromCurrency: string;
@@ -129,6 +127,12 @@ function ExpenseDetailsContent({
     participants.forEach((p) => map.set(p.id, p.name));
     return map;
   }, [participants]);
+
+  // Find the category for this expense
+  const expenseCategory = useMemo(() => {
+    if (!expense) return null;
+    return categories.find((c) => c.id === expense.categoryId);
+  }, [expense, categories]);
 
   // Compute per-participant portions in trip currency minor units
   const splitPortions = useMemo(() => {
@@ -333,16 +337,6 @@ function ExpenseDetailsContent({
             <Text style={styles.sectionTitle}>{expense.description}</Text>
             <View style={styles.headerButtons}>
               <TouchableOpacity
-                onPress={() => setExportModalVisible(true)}
-                style={styles.editButton}
-                accessible={true}
-                accessibilityRole="button"
-                accessibilityLabel="Export trip"
-                accessibilityHint="Opens export options for this trip"
-              >
-                <Text style={styles.editButtonText}>Export Trip</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
                 onPress={() =>
                   router.push(`/trips/${tripId}/expenses/${expenseId}/edit`)
                 }
@@ -438,17 +432,17 @@ function ExpenseDetailsContent({
             <Text style={styles.metaValue}>{paidByName}</Text>
           </View>
 
-          {expense.category && (
-            <View style={styles.metaRow}>
-              <Text style={styles.metaLabel}>Category:</Text>
-              <Text style={styles.metaValue}>{expense.category}</Text>
-            </View>
-          )}
-
           <View style={styles.metaRow}>
             <Text style={styles.metaLabel}>Date:</Text>
             <Text style={styles.metaValue}>
               {new Date(expense.date).toLocaleDateString()}
+            </Text>
+          </View>
+
+          <View style={styles.metaRow}>
+            <Text style={styles.metaLabel}>Category:</Text>
+            <Text style={styles.metaValue}>
+              {expenseCategory?.name || "Uncategorized"}
             </Text>
           </View>
         </Card>
@@ -523,12 +517,6 @@ function ExpenseDetailsContent({
           </Card>
         )}
       </ScrollView>
-
-      <TripExportModal
-        visible={exportModalVisible}
-        tripId={tripId}
-        onClose={() => setExportModalVisible(false)}
-      />
 
       <NoRateAvailableModal
         visible={rateModalVisible}
