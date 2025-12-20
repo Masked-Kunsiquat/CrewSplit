@@ -336,7 +336,9 @@ function ExpenseDetailsContent({
         {/* Main Expense Info */}
         <Card style={styles.section}>
           <View style={styles.header}>
-            <Text style={styles.sectionTitle}>{expense.description}</Text>
+            <Text style={styles.sectionTitle} numberOfLines={0}>
+              {expense.description}
+            </Text>
             <View style={styles.headerButtons}>
               <TouchableOpacity
                 onPress={() =>
@@ -589,6 +591,7 @@ const styles = StyleSheet.create({
   headerButtons: {
     flexDirection: "row",
     gap: theme.spacing.sm,
+    marginLeft: theme.spacing.sm,
   },
   editButton: {
     padding: theme.spacing.sm,
@@ -626,6 +629,9 @@ const styles = StyleSheet.create({
     fontWeight: theme.typography.semibold,
     color: theme.colors.text,
     marginBottom: theme.spacing.sm,
+    flexShrink: 1,
+    flexGrow: 1,
+    flexWrap: "wrap",
   },
   amountRow: {
     flexDirection: "row",

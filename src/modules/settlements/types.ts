@@ -21,12 +21,14 @@ export type Settlement = Omit<DbSettlement, "paymentMethod"> & {
  * Defined before Settlement so it can be used in the type override
  */
 export type SettlementPaymentMethod =
+  | "apple_pay"
   | "cash"
+  | "cashapp"
+  | "check"
+  | "bank_transfer"
   | "venmo"
   | "paypal"
   | "zelle"
-  | "bank_transfer"
-  | "check"
   | "other";
 
 /**

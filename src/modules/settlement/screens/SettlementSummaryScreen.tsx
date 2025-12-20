@@ -424,8 +424,10 @@ export default function SettlementSummaryScreen() {
               <TransactionRow
                 key={settlement.id}
                 settlement={settlement}
-                onPress={() =>
-                  router.push(`/trips/${tripId}/settlements/${settlement.id}`)
+                onLongPress={() =>
+                  router.push(
+                    `/trips/${tripId}/settlements/record?settlementId=${settlement.id}`,
+                  )
                 }
               />
             ))}
@@ -533,6 +535,7 @@ const styles = StyleSheet.create({
     fontSize: theme.typography.sm,
     color: theme.colors.textMuted,
     fontStyle: "italic",
+    paddingRight: theme.spacing.xs,
   },
   loadingText: {
     fontSize: theme.typography.base,

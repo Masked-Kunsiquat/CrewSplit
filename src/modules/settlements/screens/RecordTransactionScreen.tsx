@@ -25,7 +25,11 @@ import {
 } from "@ui/components";
 import { useTripById } from "../../trips/hooks/use-trips";
 import { useParticipants } from "../../participants/hooks/use-participants";
-import { useCreateSettlement } from "../hooks/use-settlements";
+import {
+  useCreateSettlement,
+  useSettlement,
+  useUpdateSettlement,
+} from "../hooks/use-settlements";
 import { parseCurrency } from "@utils/currency";
 import type { NewSettlementData, SettlementPaymentMethod } from "../types";
 
@@ -38,10 +42,12 @@ export default function RecordTransactionScreen() {
     toParticipantId?: string;
     amount?: string;
     expenseSplitId?: string;
+    settlementId?: string | string[];
   }>();
 
   // Extract tripId from route parameter [id]
-  const tripId = Array.isArray(params.id) ? params.id[0] : params.id;
+  const tripId = normalizeRouteParam(params.id);
+  const settlementId = normalizeRouteParam(params.settlementId);
   const { trip, loading: tripLoading } = useTripById(tripId ?? null);
   const { participants, loading: participantsLoading } = useParticipants(
     tripId ?? null,
@@ -51,6 +57,17 @@ export default function RecordTransactionScreen() {
     loading: creating,
     error: createError,
   } = useCreateSettlement();
+  const {
+    settlement,
+    loading: settlementLoading,
+    error: settlementError,
+  } = useSettlement(settlementId);
+  const {
+    updateSettlement,
+    loading: updating,
+    error: updateError,
+  } = useUpdateSettlement();
+  const [hasInitialized, setHasInitialized] = useState(false);
 
   // Form state
   const [amount, setAmount] = useState(params.amount ?? "");
@@ -65,6 +82,7 @@ export default function RecordTransactionScreen() {
   const [description, setDescription] = useState("");
   const [paymentMethod, setPaymentMethod] =
     useState<SettlementPaymentMethod | null>(null);
+  const isEditing = !!settlementId;
 
   // Set default currency from trip
   useEffect(() => {
@@ -77,10 +95,22 @@ export default function RecordTransactionScreen() {
   useEffect(() => {
     if (trip) {
       navigation.setOptions({
-        title: `Record Payment - ${trip.name}`,
+        title: `${isEditing ? "Edit" : "Record"} Payment - ${trip.name}`,
       });
     }
-  }, [trip, navigation]);
+  }, [trip, navigation, isEditing]);
+
+  useEffect(() => {
+    if (!settlement || hasInitialized) return;
+    setAmount((settlement.originalAmountMinor / 100).toFixed(2));
+    setCurrency(settlement.originalCurrency);
+    setFromParticipantId(settlement.fromParticipantId);
+    setToParticipantId(settlement.toParticipantId);
+    setDate(new Date(settlement.date));
+    setDescription(settlement.description ?? "");
+    setPaymentMethod(settlement.paymentMethod ?? null);
+    setHasInitialized(true);
+  }, [settlement, hasInitialized]);
 
   const handleSave = async () => {
     if (!tripId || !fromParticipantId || !toParticipantId) {
@@ -105,6 +135,23 @@ export default function RecordTransactionScreen() {
     }
 
     try {
+      if (isEditing && settlementId) {
+        await updateSettlement(settlementId, {
+          originalAmountMinor: parsedAmount,
+          originalCurrency: currency,
+          date: date.toISOString(),
+          description: description.trim() || undefined,
+          paymentMethod: paymentMethod || undefined,
+        });
+        Alert.alert("Success", "Payment updated successfully", [
+          {
+            text: "OK",
+            onPress: () => router.back(),
+          },
+        ]);
+        return;
+      }
+
       const settlementData: NewSettlementData = {
         tripId,
         fromParticipantId,
@@ -126,18 +173,33 @@ export default function RecordTransactionScreen() {
         },
       ]);
     } catch (error) {
-      console.error("Failed to create settlement:", error);
+      console.error("Failed to save settlement:", error);
       const errorMessage =
         error instanceof Error ? error.message : "Unknown error";
-      Alert.alert("Error", `Failed to record payment: ${errorMessage}`);
+      Alert.alert("Error", `Failed to save payment: ${errorMessage}`);
     }
   };
 
-  if (tripLoading || participantsLoading) {
+  if (tripLoading || participantsLoading || (isEditing && settlementLoading)) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={theme.colors.primary} />
         <Text style={styles.loadingText}>Loading...</Text>
+      </View>
+    );
+  }
+
+  if (settlementError || (isEditing && !settlement)) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.centerContent}>
+          <Text style={styles.errorTitle}>Payment Not Found</Text>
+          <Text style={styles.errorText}>
+            {settlementError?.message ||
+              "The payment could not be loaded. Please try again."}
+          </Text>
+          <Button title="Go Back" onPress={() => router.back()} />
+        </View>
       </View>
     );
   }
@@ -184,13 +246,15 @@ export default function RecordTransactionScreen() {
   ];
 
   const paymentMethodOptions: PickerOption<SettlementPaymentMethod>[] = [
+    { label: "Apple Pay", value: "apple_pay" },
     { label: "Bank Transfer", value: "bank_transfer" },
     { label: "Cash", value: "cash" },
+    { label: "Cash App", value: "cashapp" },
     { label: "Check", value: "check" },
-    { label: "Other", value: "other" },
     { label: "PayPal", value: "paypal" },
     { label: "Venmo", value: "venmo" },
     { label: "Zelle", value: "zelle" },
+    { label: "Other", value: "other" },
   ];
 
   const validPaymentMethods = new Set<string>(
@@ -254,6 +318,8 @@ export default function RecordTransactionScreen() {
             onChange={(value: string) => setFromParticipantId(value || null)}
             options={participantOptions}
             placeholder="Select payer"
+            disabled={isEditing}
+            helperText={isEditing ? "Payer cannot be changed yet" : undefined}
           />
         </View>
 
@@ -264,6 +330,8 @@ export default function RecordTransactionScreen() {
             onChange={(value: string) => setToParticipantId(value || null)}
             options={participantOptions}
             placeholder="Select payee"
+            disabled={isEditing}
+            helperText={isEditing ? "Payee cannot be changed yet" : undefined}
           />
         </View>
 
@@ -296,9 +364,11 @@ export default function RecordTransactionScreen() {
           />
         </View>
 
-        {createError && (
+        {(createError || updateError) && (
           <View style={styles.errorContainer}>
-            <Text style={styles.errorText}>{createError.message}</Text>
+            <Text style={styles.errorText}>
+              {(createError || updateError)?.message}
+            </Text>
           </View>
         )}
       </ScrollView>
@@ -311,14 +381,27 @@ export default function RecordTransactionScreen() {
           fullWidth
         />
         <Button
-          title={creating ? "Saving..." : "Save Payment"}
+          title={
+            creating || updating
+              ? "Saving..."
+              : isEditing
+                ? "Save Changes"
+                : "Save Payment"
+          }
           onPress={handleSave}
-          disabled={creating}
+          disabled={creating || updating}
           fullWidth
         />
       </View>
     </KeyboardAvoidingView>
   );
+}
+
+function normalizeRouteParam(param: string | string[] | undefined) {
+  if (!param) return null;
+  const value = Array.isArray(param) ? param[0] : param;
+  const normalized = value.trim();
+  return normalized.length > 0 ? normalized : null;
 }
 
 const styles = StyleSheet.create({
@@ -387,7 +470,6 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.md,
   },
   footer: {
-    flexDirection: "row",
     padding: theme.spacing.lg,
     gap: theme.spacing.md,
     borderTopWidth: 1,
