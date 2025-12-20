@@ -6,13 +6,9 @@
 import React from "react";
 import { View, Text, StyleSheet, Pressable } from "react-native";
 import { Image } from "expo-image";
-// @ts-expect-error @expo/vector-icons lacks TypeScript definitions
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-// @ts-expect-error @expo/vector-icons lacks TypeScript definitions
 import { Entypo } from "@expo/vector-icons";
-// @ts-expect-error @expo/vector-icons lacks TypeScript definitions
 import { Ionicons } from "@expo/vector-icons";
-// @ts-expect-error @expo/vector-icons lacks TypeScript definitions
 import { FontAwesome6 } from "@expo/vector-icons";
 import { theme } from "@ui/theme";
 import { formatCurrency } from "@utils/currency";
