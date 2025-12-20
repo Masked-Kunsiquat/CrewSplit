@@ -339,7 +339,7 @@ function ParticipantDetailsContent({
               <View style={styles.statRow}>
                 <Text style={styles.statLabel}>Participation</Text>
                 <Text style={styles.statValue}>
-                  Part of {expensesPartOf.length} of {expenses.length} expenses
+                  {expensesPartOf.length}/{expenses.length} expenses
                 </Text>
               </View>
             </View>
@@ -366,7 +366,7 @@ function ParticipantDetailsContent({
                 return (
                   <View
                     key={`${settlementItem.from}-${settlementItem.to}-${index}`}
-                    style={styles.settlementRow}
+                    style={styles.settlementCard}
                   >
                     <Text style={styles.settlementText}>{actionText}</Text>
                     <Text
@@ -382,15 +382,15 @@ function ParticipantDetailsContent({
               })}
             </View>
           ) : (
-            <View style={styles.emptyState}>
+            <Card style={styles.emptyStateCard}>
               <Text style={styles.emptyStateText}>All settled up!</Text>
-            </View>
+            </Card>
           )}
         </Card>
 
         {/* Expenses Section */}
         <Card style={styles.section}>
-          <View style={styles.expenseHeader}>
+          <View style={styles.expenseHeaderContainer}>
             <Text style={styles.sectionTitle}>Expenses</Text>
             <View style={styles.segmentedControl}>
               <Pressable
@@ -442,8 +442,8 @@ function ParticipantDetailsContent({
                   <Pressable
                     key={expense.id}
                     style={({ pressed }) => [
-                      styles.expenseRow,
-                      pressed && styles.expenseRowPressed,
+                      styles.expenseCard,
+                      pressed && styles.expenseCardPressed,
                     ]}
                     onPress={() =>
                       router.push(`/trips/${tripId}/expenses/${expense.id}`)
@@ -452,7 +452,7 @@ function ParticipantDetailsContent({
                     accessibilityLabel={`View expense: ${expense.description}`}
                   >
                     <View style={styles.expenseInfo}>
-                      <View style={styles.expenseHeader}>
+                      <View style={styles.expenseTopRow}>
                         {category && (
                           <Text style={styles.categoryEmoji}>
                             {category.emoji}
@@ -496,13 +496,13 @@ function ParticipantDetailsContent({
               })}
             </View>
           ) : (
-            <View style={styles.emptyState}>
+            <Card style={styles.emptyStateCard}>
               <Text style={styles.emptyStateText}>
                 {viewMode === "paid-by"
                   ? "No expenses paid by this participant"
                   : "Not part of any expenses"}
               </Text>
-            </View>
+            </Card>
           )}
         </Card>
 
@@ -519,9 +519,9 @@ function ParticipantDetailsContent({
                   const categoryEmoji = category?.emoji || "📦";
 
                   return (
-                    <View key={categoryId} style={styles.categoryRow}>
+                    <View key={categoryId} style={styles.categoryCard}>
                       <View style={styles.categoryInfo}>
-                        <Text style={styles.categoryEmoji}>
+                        <Text style={styles.categoryEmojiLarge}>
                           {categoryEmoji}
                         </Text>
                         <Text style={styles.categoryName}>{categoryName}</Text>
@@ -635,25 +635,26 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     paddingVertical: theme.spacing.xs,
+    gap: theme.spacing.sm,
   },
   statLabel: {
-    fontSize: theme.typography.base,
+    fontSize: theme.typography.sm,
     color: theme.colors.textSecondary,
-    flex: 1,
+    flexShrink: 0,
   },
   statValue: {
-    fontSize: theme.typography.lg,
+    fontSize: theme.typography.sm,
     fontWeight: theme.typography.semibold,
     color: theme.colors.text,
     textAlign: "right",
-    flexShrink: 1,
+    flex: 1,
   },
   displayCurrencySmall: {
     fontSize: theme.typography.xs,
     color: theme.colors.textMuted,
     fontStyle: "italic",
     textAlign: "right",
-    marginLeft: theme.spacing.sm,
+    paddingRight: theme.spacing.xs,
     flexShrink: 1,
   },
   section: {
@@ -664,21 +665,18 @@ const styles = StyleSheet.create({
     fontSize: theme.typography.lg,
     fontWeight: theme.typography.semibold,
     color: theme.colors.text,
+    marginBottom: theme.spacing.xs,
   },
   settlementList: {
-    gap: theme.spacing.xs,
-    marginTop: theme.spacing.xs,
+    gap: theme.spacing.sm,
   },
-  settlementRow: {
+  settlementCard: {
+    padding: theme.spacing.md,
+    backgroundColor: theme.colors.surface,
+    borderRadius: 8,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingVertical: theme.spacing.sm,
-    paddingHorizontal: theme.spacing.md,
-    backgroundColor: theme.colors.surface,
-    borderRadius: theme.borderRadius.sm,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
   },
   settlementText: {
     fontSize: theme.typography.base,
@@ -689,16 +687,15 @@ const styles = StyleSheet.create({
     fontSize: theme.typography.base,
     fontWeight: theme.typography.semibold,
   },
-  emptyState: {
-    alignItems: "center",
-    paddingVertical: theme.spacing.xl,
+  emptyStateCard: {
+    backgroundColor: theme.colors.surface,
   },
   emptyStateText: {
     fontSize: theme.typography.base,
     color: theme.colors.textSecondary,
     textAlign: "center",
   },
-  expenseHeader: {
+  expenseHeaderContainer: {
     gap: theme.spacing.sm,
   },
   segmentedControl: {
@@ -728,27 +725,27 @@ const styles = StyleSheet.create({
     fontWeight: theme.typography.semibold,
   },
   expenseList: {
-    gap: theme.spacing.xs,
-    marginTop: theme.spacing.xs,
+    gap: theme.spacing.sm,
   },
-  expenseRow: {
+  expenseCard: {
+    padding: theme.spacing.md,
+    backgroundColor: theme.colors.surface,
+    borderRadius: 8,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingVertical: theme.spacing.sm,
-    paddingHorizontal: theme.spacing.md,
-    backgroundColor: theme.colors.surface,
-    borderRadius: theme.borderRadius.sm,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
   },
-  expenseRowPressed: {
-    backgroundColor: theme.colors.hover,
+  expenseCardPressed: {
+    opacity: 0.7,
   },
   expenseInfo: {
     flex: 1,
     gap: 4,
     marginRight: theme.spacing.md,
+  },
+  expenseTopRow: {
+    flexDirection: "row",
+    alignItems: "center",
   },
   categoryEmoji: {
     fontSize: theme.typography.base,
@@ -777,23 +774,24 @@ const styles = StyleSheet.create({
     textAlign: "right",
   },
   categoryList: {
-    gap: theme.spacing.xs,
-    marginTop: theme.spacing.xs,
+    gap: theme.spacing.sm,
   },
-  categoryRow: {
+  categoryCard: {
+    padding: theme.spacing.md,
+    backgroundColor: theme.colors.surface,
+    borderRadius: 8,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingVertical: theme.spacing.sm,
-    paddingHorizontal: theme.spacing.md,
-    backgroundColor: theme.colors.surface,
-    borderRadius: theme.borderRadius.sm,
   },
   categoryInfo: {
     flexDirection: "row",
     alignItems: "center",
     flex: 1,
     gap: theme.spacing.sm,
+  },
+  categoryEmojiLarge: {
+    fontSize: theme.typography.lg,
   },
   categoryName: {
     fontSize: theme.typography.base,
