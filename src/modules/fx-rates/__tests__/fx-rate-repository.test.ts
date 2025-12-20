@@ -209,8 +209,12 @@ describe("FxRateRepository", () => {
   it("getStalenessInfo counts stale API rates older than 1 day", async () => {
     const now = new Date();
     const fresh = new Date(now.getTime() - 12 * 60 * 60 * 1000).toISOString(); // 12 hours ago (fresh)
-    const staleApi = new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000).toISOString(); // 2 days ago (stale)
-    const manualOld = new Date(now.getTime() - 10 * 24 * 60 * 60 * 1000).toISOString(); // 10 days ago (but manual)
+    const staleApi = new Date(
+      now.getTime() - 2 * 24 * 60 * 60 * 1000,
+    ).toISOString(); // 2 days ago (stale)
+    const manualOld = new Date(
+      now.getTime() - 10 * 24 * 60 * 60 * 1000,
+    ).toISOString(); // 10 days ago (but manual)
 
     mockDb.reset([
       createRateRow({

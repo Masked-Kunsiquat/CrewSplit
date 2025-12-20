@@ -31,9 +31,9 @@ export const db = drizzle(expoDb, { schema });
 const ensureSchemaIntegrity = async (): Promise<void> => {
   try {
     // Check if onboarding columns exist in trips table
-    const tableInfo = expoDb.getAllSync(
-      "PRAGMA table_info(trips)",
-    ) as Array<{ name: string }>;
+    const tableInfo = expoDb.getAllSync("PRAGMA table_info(trips)") as {
+      name: string;
+    }[];
     const columnNames = new Set(tableInfo.map((col) => col.name));
 
     const missingColumns: string[] = [];
@@ -85,7 +85,7 @@ const ensureSchemaIntegrity = async (): Promise<void> => {
     // Ensure user_settings and onboarding_state tables exist
     const tables = expoDb.getAllSync(
       "SELECT name FROM sqlite_master WHERE type='table'",
-    ) as Array<{ name: string }>;
+    ) as { name: string }[];
     const tableSet = new Set(tables.map((t) => t.name));
 
     if (!tableSet.has("user_settings")) {
@@ -157,9 +157,7 @@ export const useDbMigrations = () => {
           migrationLogger.info("Schema integrity verified");
         })
         .catch((err) => {
-          setSchemaError(
-            err instanceof Error ? err : new Error(String(err)),
-          );
+          setSchemaError(err instanceof Error ? err : new Error(String(err)));
         });
     }
   }, [success, schemaChecked]);

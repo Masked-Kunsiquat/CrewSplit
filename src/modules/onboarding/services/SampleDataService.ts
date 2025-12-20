@@ -82,7 +82,9 @@ export class SampleDataService {
     try {
       await db.transaction(async (tx) => {
         // Clear any existing sample data for this template
-        await tx.delete(trips).where(eq(trips.sampleDataTemplateId, templateId));
+        await tx
+          .delete(trips)
+          .where(eq(trips.sampleDataTemplateId, templateId));
         // Note: CASCADE should handle related data, but if not, you'd delete them manually.
         // For example:
         // await tx.delete(participants).where(inArray(participants.tripId, ...));

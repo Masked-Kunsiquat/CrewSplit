@@ -12,6 +12,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Button } from "@ui/components";
 import { theme } from "@ui/theme";
 // @ts-expect-error @expo/vector-icons lacks TypeScript definitions
+// eslint-disable-next-line import/no-unresolved
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useOnboardingState } from "@modules/onboarding/hooks/use-onboarding-state";
 import { SampleDataService } from "@modules/onboarding/services/SampleDataService";
