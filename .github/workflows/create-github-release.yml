@@ -1,4 +1,4 @@
-name: Create GitHub Release with APK
+name: Create GitHub Release
 
 on:
   workflow_run:
@@ -10,7 +10,7 @@ permissions:
   contents: write
 
 jobs:
-  wait-for-eas-build:
+  wait-and-release:
     runs-on: ubuntu-latest
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
 
@@ -25,70 +25,129 @@ jobs:
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "tag=v$VERSION" >> $GITHUB_OUTPUT
 
+      - name: Get commit messages since last tag
+        id: changelog
+        run: |
+          # Get the previous tag
+          PREVIOUS_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+
+          if [ -z "$PREVIOUS_TAG" ]; then
+            echo "No previous tag found, using all commits"
+            COMMITS=$(git log --pretty=format:"- %s (%h)" --reverse)
+          else
+            echo "Getting commits since $PREVIOUS_TAG"
+            COMMITS=$(git log $PREVIOUS_TAG..HEAD --pretty=format:"- %s (%h)" --reverse)
+          fi
+
+          # Write to file to preserve newlines
+          echo "$COMMITS" > changelog.txt
+          echo "previous_tag=$PREVIOUS_TAG" >> $GITHUB_OUTPUT
+
       - name: Install EAS CLI
         run: npm install -g eas-cli
 
       - name: Wait for EAS build to complete
         id: wait-build
         run: |
-          echo "Waiting for EAS build to complete for version ${{ steps.version.outputs.version }}"
-          echo "This workflow will check for the build artifact..."
+          echo "Waiting for EAS build triggered by tag ${{ steps.version.outputs.tag }}"
+          echo "Expo should automatically start a build when it sees the tag..."
 
-          # Wait up to 30 minutes for build (checking every 60 seconds)
-          MAX_ATTEMPTS=30
+          # Smart polling strategy to avoid rate limits:
+          # - Initial delay: 5 min (builds typically take 7-15 min minimum)
+          # - First checks (5-15 min): every 2 min (catch fast builds)
+          # - Mid checks (15-30 min): every 3 min (most builds finish here)
+          # - Late checks (30-60 min): every 5 min (for slow builds)
+          # Total: ~20 API calls over 60 minutes instead of 36+
+
+          echo "⏳ Initial delay: Waiting 5 minutes before first check (builds typically take 7-15 min)..."
+          sleep 300
+          ELAPSED_TIME=300
+
           ATTEMPT=0
 
-          while [ $ATTEMPT -lt $MAX_ATTEMPTS ]; do
-            echo "Checking for build artifacts (attempt $((ATTEMPT + 1))/$MAX_ATTEMPTS)..."
+          while true; do
+            ATTEMPT=$((ATTEMPT + 1))
 
-            # Check latest builds for this project
-            eas build:list --platform=android --limit=1 --json > build-list.json || true
-
-            if [ -f build-list.json ]; then
-              BUILD_STATUS=$(cat build-list.json | jq -r '.[0].status' 2>/dev/null || echo "unknown")
-              BUILD_ID=$(cat build-list.json | jq -r '.[0].id' 2>/dev/null || echo "")
-
-              echo "Latest build status: $BUILD_STATUS (ID: $BUILD_ID)"
-
-              if [ "$BUILD_STATUS" = "FINISHED" ]; then
-                echo "build_id=$BUILD_ID" >> $GITHUB_OUTPUT
-                echo "Build completed successfully!"
-                break
-              elif [ "$BUILD_STATUS" = "ERRORED" ] || [ "$BUILD_STATUS" = "CANCELED" ]; then
-                echo "Build failed or was canceled"
-                exit 1
-              fi
+            # Determine sleep interval based on elapsed time
+            if [ $ELAPSED_TIME -lt 900 ]; then
+              # 5-15 minutes: check every 2 minutes
+              SLEEP_INTERVAL=120
+              PHASE="early (2min intervals)"
+            elif [ $ELAPSED_TIME -lt 1800 ]; then
+              # 15-30 minutes: check every 3 minutes
+              SLEEP_INTERVAL=180
+              PHASE="mid (3min intervals)"
+            elif [ $ELAPSED_TIME -lt 3600 ]; then
+              # 30-60 minutes: check every 5 minutes
+              SLEEP_INTERVAL=300
+              PHASE="late (5min intervals)"
+            else
+              # Timeout after 60 minutes
+              echo "⏱️ Timeout: Build did not complete within 60 minutes"
+              echo "Check Expo dashboard: https://expo.dev"
+              exit 1
             fi
 
-            ATTEMPT=$((ATTEMPT + 1))
-            sleep 60
-          done
+            echo "⏳ Checking for build (attempt $ATTEMPT, ${ELAPSED_TIME}s elapsed, $PHASE)..."
 
-          if [ $ATTEMPT -eq $MAX_ATTEMPTS ]; then
-            echo "Timeout waiting for build to complete"
-            exit 1
-          fi
+            # List recent builds and check for one matching our version
+            BUILD_LIST=$(eas build:list --platform=android --limit=5 --json 2>/dev/null || echo "[]")
+
+            # Find build with matching git commit SHA or recent timestamp
+            BUILD_STATUS=$(echo "$BUILD_LIST" | jq -r '.[0].status' 2>/dev/null || echo "unknown")
+            BUILD_ID=$(echo "$BUILD_LIST" | jq -r '.[0].id' 2>/dev/null || echo "")
+            ARTIFACT_URL=$(echo "$BUILD_LIST" | jq -r '.[0].artifacts.buildUrl' 2>/dev/null || echo "")
+
+            echo "Latest build: ID=$BUILD_ID, Status=$BUILD_STATUS"
+
+            if [ "$BUILD_STATUS" = "FINISHED" ]; then
+              echo "✅ Build completed successfully after ${ELAPSED_TIME}s!"
+              echo "build_id=$BUILD_ID" >> $GITHUB_OUTPUT
+
+              # Get APK download URL
+              APK_URL=$(echo "$BUILD_LIST" | jq -r '.[0].artifacts.applicationArchiveUrl' 2>/dev/null || echo "")
+              echo "apk_url=$APK_URL" >> $GITHUB_OUTPUT
+              break
+            elif [ "$BUILD_STATUS" = "ERRORED" ] || [ "$BUILD_STATUS" = "CANCELED" ]; then
+              echo "❌ Build failed or was canceled (Status: $BUILD_STATUS)"
+              echo "Check the build logs at: https://expo.dev/accounts/$(eas whoami)/projects/crewsplit/builds/$BUILD_ID"
+              exit 1
+            elif [ "$BUILD_STATUS" = "IN_PROGRESS" ] || [ "$BUILD_STATUS" = "IN_QUEUE" ]; then
+              echo "🔨 Build is $BUILD_STATUS..."
+            else
+              echo "🔍 No build found yet, waiting for Expo to trigger..."
+            fi
+
+            echo "Sleeping for ${SLEEP_INTERVAL}s..."
+            sleep $SLEEP_INTERVAL
+            ELAPSED_TIME=$((ELAPSED_TIME + SLEEP_INTERVAL))
+          done
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
 
-      - name: Download APK from EAS
+      - name: Download APK
         id: download
         run: |
-          # Get build artifact URL
-          BUILD_LIST=$(eas build:list --platform=android --limit=1 --json)
-          ARTIFACT_URL=$(echo $BUILD_LIST | jq -r '.[0].artifacts.applicationArchiveUrl')
+          APK_URL="${{ steps.wait-build.outputs.apk_url }}"
 
-          if [ "$ARTIFACT_URL" = "null" ] || [ -z "$ARTIFACT_URL" ]; then
-            echo "No artifact URL found"
+          if [ -z "$APK_URL" ] || [ "$APK_URL" = "null" ]; then
+            echo "❌ No APK URL found in build artifacts"
             exit 1
           fi
 
-          echo "Downloading APK from: $ARTIFACT_URL"
-          curl -L -o CrewSplit-v${{ steps.version.outputs.version }}.apk "$ARTIFACT_URL"
+          echo "📦 Downloading APK from: $APK_URL"
+          APK_FILE="CrewSplit-v${{ steps.version.outputs.version }}.apk"
+          curl -L -o "$APK_FILE" "$APK_URL"
 
-          echo "apk_path=CrewSplit-v${{ steps.version.outputs.version }}.apk" >> $GITHUB_OUTPUT
-        env:
-          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          # Verify file exists and has size > 0
+          if [ ! -f "$APK_FILE" ] || [ ! -s "$APK_FILE" ]; then
+            echo "❌ Failed to download APK or file is empty"
+            exit 1
+          fi
+
+          FILE_SIZE=$(stat -f%z "$APK_FILE" 2>/dev/null || stat -c%s "$APK_FILE" 2>/dev/null || echo "0")
+          echo "✅ Downloaded APK: $APK_FILE ($FILE_SIZE bytes)"
+          echo "apk_file=$APK_FILE" >> $GITHUB_OUTPUT
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
@@ -98,15 +157,23 @@ jobs:
           draft: false
           prerelease: false
           files: |
-            ${{ steps.download.outputs.apk_path }}
+            ${{ steps.download.outputs.apk_file }}
           body: |
             ## CrewSplit v${{ steps.version.outputs.version }}
 
-            Production build created via EAS Build.
+            ### Changes in this release
+
+            $(cat changelog.txt)
 
             ### Installation
-            Download the APK file and install it on your Android device.
 
-            **Note:** You may need to enable "Install from Unknown Sources" in your device settings.
+            1. Download the APK file from the **Assets** section below
+            2. Install it on your Android device
+            3. You may need to enable "Install from Unknown Sources" in your device settings
+
+            ### Build Info
+
+            - Built with EAS Build (Build ID: ${{ steps.wait-build.outputs.build_id }})
+            - Platform: Android
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
