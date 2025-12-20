@@ -136,14 +136,24 @@ const seedSystemCategories = async (): Promise<void> => {
   const { expenseCategories } = schema;
 
   const systemCategories = [
-    { id: 'cat-travel', name: 'Travel & Transportation', emoji: '✈️', sortOrder: 100 },
-    { id: 'cat-food', name: 'Food & Drinks', emoji: '🍔', sortOrder: 200 },
-    { id: 'cat-leisure', name: 'Leisure & Entertainment', emoji: '🎭', sortOrder: 300 },
-    { id: 'cat-lodging', name: 'Lodging', emoji: '🏨', sortOrder: 400 },
-    { id: 'cat-groceries', name: 'Groceries', emoji: '🛒', sortOrder: 500 },
-    { id: 'cat-insurance', name: 'Insurance', emoji: '🛡️', sortOrder: 600 },
-    { id: 'cat-shopping', name: 'Shopping', emoji: '🛍️', sortOrder: 700 },
-    { id: 'cat-other', name: 'Other', emoji: '📌', sortOrder: 999 },
+    {
+      id: "cat-travel",
+      name: "Travel & Transportation",
+      emoji: "✈️",
+      sortOrder: 100,
+    },
+    { id: "cat-food", name: "Food & Drinks", emoji: "🍔", sortOrder: 200 },
+    {
+      id: "cat-leisure",
+      name: "Leisure & Entertainment",
+      emoji: "🎭",
+      sortOrder: 300,
+    },
+    { id: "cat-lodging", name: "Lodging", emoji: "🏨", sortOrder: 400 },
+    { id: "cat-groceries", name: "Groceries", emoji: "🛒", sortOrder: 500 },
+    { id: "cat-insurance", name: "Insurance", emoji: "🛡️", sortOrder: 600 },
+    { id: "cat-shopping", name: "Shopping", emoji: "🛍️", sortOrder: 700 },
+    { id: "cat-other", name: "Other", emoji: "📌", sortOrder: 999 },
   ];
 
   const now = new Date().toISOString();
@@ -164,7 +174,10 @@ const seedSystemCategories = async (): Promise<void> => {
       migrationLogger.debug(`Seeded category: ${cat.id}`);
     } catch (err) {
       // Ignore if category already exists (primary key conflict)
-      if (err instanceof Error && err.message.includes('UNIQUE constraint failed')) {
+      if (
+        err instanceof Error &&
+        err.message.includes("UNIQUE constraint failed")
+      ) {
         migrationLogger.debug(`Category ${cat.id} already exists, skipping`);
       } else {
         throw err;
@@ -172,7 +185,7 @@ const seedSystemCategories = async (): Promise<void> => {
     }
   }
 
-  migrationLogger.info('System categories seeded successfully');
+  migrationLogger.info("System categories seeded successfully");
 };
 
 /**
@@ -232,7 +245,12 @@ export const useDbMigrations = () => {
   }, [success, migrationVerified, categoriesSeeded]);
 
   useEffect(() => {
-    if (success && migrationVerified && categoriesSeeded && !loggedSuccess.current) {
+    if (
+      success &&
+      migrationVerified &&
+      categoriesSeeded &&
+      !loggedSuccess.current
+    ) {
       migrationLogger.info("Database migrations applied successfully");
       loggedSuccess.current = true;
     }
