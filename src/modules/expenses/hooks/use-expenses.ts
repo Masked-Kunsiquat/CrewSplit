@@ -53,6 +53,7 @@ export function useExpenseWithSplits(expenseId: string) {
     [expenseId],
     { expense: null, splits: [] },
     "Failed to load expense",
+    true,
   );
 
   return {

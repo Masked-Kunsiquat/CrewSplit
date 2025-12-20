@@ -8,6 +8,7 @@ import m0003 from "./0003_fix_category_fk_restrict.sql";
 import m0004 from "./0004_free_xavin.sql";
 import m0005 from "./0005_wealthy_cammi.sql";
 import m0006 from "./0006_mean_odin.sql";
+import m0007 from "./0007_add_expense_notes.sql";
 
 export default {
   journal,
@@ -19,5 +20,6 @@ export default {
     m0004,
     m0005,
     m0006,
+    m0007,
   },
 };

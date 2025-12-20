@@ -25,6 +25,7 @@ export interface Expense {
   id: string;
   tripId: string;
   description: string;
+  notes?: string | null;
   amount: number; // Derived: equals convertedAmountMinor (trip currency)
   currency: string; // Trip currency code (legacy column)
   originalCurrency: string;
@@ -51,6 +52,7 @@ export interface ExpenseSplit {
 export interface CreateExpenseInput {
   tripId: string;
   description: string;
+  notes?: string | null;
   originalAmountMinor: number;
   originalCurrency: string;
   fxRateToTrip?: number | null;
@@ -69,6 +71,7 @@ export interface CreateExpenseInput {
 
 export interface UpdateExpenseInput {
   description?: string;
+  notes?: string | null;
   originalAmountMinor?: number;
   originalCurrency?: string;
   fxRateToTrip?: number | null;

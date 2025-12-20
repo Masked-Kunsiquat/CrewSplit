@@ -445,6 +445,13 @@ function ExpenseDetailsContent({
               {expenseCategory?.name || "Uncategorized"}
             </Text>
           </View>
+
+          {expense.notes ? (
+            <View style={styles.notesRow}>
+              <Text style={styles.notesLabel}>Notes</Text>
+              <Text style={styles.notesText}>{expense.notes}</Text>
+            </View>
+          ) : null}
         </Card>
 
         {/* Splits Section */}
@@ -687,6 +694,19 @@ const styles = StyleSheet.create({
     fontSize: theme.typography.base,
     color: theme.colors.text,
     fontWeight: theme.typography.medium,
+  },
+  notesRow: {
+    marginTop: theme.spacing.sm,
+    gap: theme.spacing.xs,
+  },
+  notesLabel: {
+    fontSize: theme.typography.sm,
+    color: theme.colors.textSecondary,
+  },
+  notesText: {
+    fontSize: theme.typography.base,
+    color: theme.colors.text,
+    lineHeight: 20,
   },
   splitRow: {
     flexDirection: "row",
