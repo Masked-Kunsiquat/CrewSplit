@@ -93,22 +93,40 @@ jobs:
 
             echo "⏳ Checking for build (attempt $ATTEMPT, ${ELAPSED_TIME}s elapsed, $PHASE)..."
 
-            # List recent builds and check for one matching our version
+            # List recent builds and pick one matching this workflow's commit SHA.
             BUILD_LIST=$(eas build:list --platform=android --limit=5 --json 2>/dev/null || echo "[]")
 
-            # Find build with matching git commit SHA or recent timestamp
-            BUILD_STATUS=$(echo "$BUILD_LIST" | jq -r '.[0].status' 2>/dev/null || echo "unknown")
-            BUILD_ID=$(echo "$BUILD_LIST" | jq -r '.[0].id' 2>/dev/null || echo "")
-            ARTIFACT_URL=$(echo "$BUILD_LIST" | jq -r '.[0].artifacts.buildUrl' 2>/dev/null || echo "")
+            MATCHED_BUILD=$(echo "$BUILD_LIST" | jq -c --arg sha "$GITHUB_SHA" '[.[] | select((.gitCommitSha // .commit // .gitCommitHash // "") == $sha)] | .[0] // empty' 2>/dev/null || echo "")
+            if [ -n "$MATCHED_BUILD" ]; then
+              BUILD_SOURCE="sha-match"
+              SELECTED_BUILD="$MATCHED_BUILD"
+            else
+              FALLBACK_BUILD=$(echo "$BUILD_LIST" | jq -c '.[0] // empty' 2>/dev/null || echo "")
+              if [ -n "$FALLBACK_BUILD" ]; then
+                BUILD_SOURCE="latest"
+                SELECTED_BUILD="$FALLBACK_BUILD"
+              else
+                BUILD_SOURCE="none"
+                SELECTED_BUILD=""
+              fi
+            fi
 
-            echo "Latest build: ID=$BUILD_ID, Status=$BUILD_STATUS"
+            BUILD_STATUS=$(echo "$SELECTED_BUILD" | jq -r '.status // "unknown"' 2>/dev/null || echo "unknown")
+            BUILD_ID=$(echo "$SELECTED_BUILD" | jq -r '.id // ""' 2>/dev/null || echo "")
+            ARTIFACT_URL=$(echo "$SELECTED_BUILD" | jq -r '.artifacts.buildUrl // ""' 2>/dev/null || echo "")
+
+            if [ "$BUILD_SOURCE" = "none" ]; then
+              echo "⚠️ No builds returned by EAS yet; waiting..."
+            else
+              echo "Selected build ($BUILD_SOURCE): ID=$BUILD_ID, Status=$BUILD_STATUS"
+            fi
 
             if [ "$BUILD_STATUS" = "FINISHED" ]; then
               echo "✅ Build completed successfully after ${ELAPSED_TIME}s!"
               echo "build_id=$BUILD_ID" >> $GITHUB_OUTPUT
 
               # Get APK download URL
-              APK_URL=$(echo "$BUILD_LIST" | jq -r '.[0].artifacts.applicationArchiveUrl' 2>/dev/null || echo "")
+              APK_URL=$(echo "$SELECTED_BUILD" | jq -r '.artifacts.applicationArchiveUrl // ""' 2>/dev/null || echo "")
               echo "apk_url=$APK_URL" >> $GITHUB_OUTPUT
               break
             elif [ "$BUILD_STATUS" = "ERRORED" ] || [ "$BUILD_STATUS" = "CANCELED" ]; then
@@ -140,7 +158,7 @@ jobs:
 
           echo "📦 Downloading APK from: $APK_URL"
           APK_FILE="CrewSplit-v${{ steps.version.outputs.version }}.apk"
-          curl -L -o "$APK_FILE" "$APK_URL"
+          curl -L --fail --show-error -o "$APK_FILE" "$APK_URL"
 
           # Verify file exists and has size > 0
           if [ ! -f "$APK_FILE" ] || [ ! -s "$APK_FILE" ]; then
@@ -148,9 +166,30 @@ jobs:
             exit 1
           fi
 
-          FILE_SIZE=$(stat -f%z "$APK_FILE" 2>/dev/null || stat -c%s "$APK_FILE" 2>/dev/null || echo "0")
+          FILE_SIZE=$(stat -c%s "$APK_FILE" 2>/dev/null || stat -f%z "$APK_FILE" 2>/dev/null || echo "0")
           echo "✅ Downloaded APK: $APK_FILE ($FILE_SIZE bytes)"
           echo "apk_file=$APK_FILE" >> $GITHUB_OUTPUT
+
+      - name: Prepare release notes
+        run: |
+          {
+            echo "## CrewSplit v${{ steps.version.outputs.version }}"
+            echo ""
+            echo "### Changes in this release"
+            echo ""
+            cat changelog.txt
+            echo ""
+            echo "### Installation"
+            echo ""
+            echo "1. Download the APK file from the **Assets** section below"
+            echo "2. Install it on your Android device"
+            echo "3. You may need to enable \"Install from Unknown Sources\" in your device settings"
+            echo ""
+            echo "### Build Info"
+            echo ""
+            echo "- Built with EAS Build (Build ID: ${{ steps.wait-build.outputs.build_id }})"
+            echo "- Platform: Android"
+          } > release-notes.md
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
@@ -161,22 +200,6 @@ jobs:
           prerelease: false
           files: |
             ${{ steps.download.outputs.apk_file }}
-          body: |
-            ## CrewSplit v${{ steps.version.outputs.version }}
-
-            ### Changes in this release
-
-            $(cat changelog.txt)
-
-            ### Installation
-
-            1. Download the APK file from the **Assets** section below
-            2. Install it on your Android device
-            3. You may need to enable "Install from Unknown Sources" in your device settings
-
-            ### Build Info
-
-            - Built with EAS Build (Build ID: ${{ steps.wait-build.outputs.build_id }})
-            - Platform: Android
+          body_path: release-notes.md
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

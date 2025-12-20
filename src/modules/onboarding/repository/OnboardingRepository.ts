@@ -73,7 +73,7 @@ export class OnboardingRepository {
   async getOnboardingState(
     flowId: OnboardingFlowId,
   ): Promise<OnboardingState | null> {
-    const result = db
+    const result = await db
       .select()
       .from(onboardingState)
       .where(eq(onboardingState.id, flowId))
