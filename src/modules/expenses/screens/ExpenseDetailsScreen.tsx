@@ -350,11 +350,7 @@ function ExpenseDetailsContent({
                 accessibilityLabel="Edit expense"
                 accessibilityHint="Opens the edit expense screen"
               >
-                <AntDesign
-                  name="edit"
-                  size={18}
-                  color={theme.colors.primary}
-                />
+                <AntDesign name="edit" size={18} color={theme.colors.primary} />
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={() => setEditingExpense(!editingExpense)}

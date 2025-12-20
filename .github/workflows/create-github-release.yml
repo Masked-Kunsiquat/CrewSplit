@@ -48,7 +48,7 @@ jobs:
 
       - name: Install dependencies
         run: npx expo install react-native-web
-      
+
       - name: Wait for EAS build to complete
         id: wait-build
         run: |

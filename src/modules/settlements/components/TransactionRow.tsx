@@ -51,9 +51,7 @@ export function TransactionRow({
       accessibilityRole="button"
       accessibilityLabel={`Payment from ${settlement.fromParticipantName} to ${settlement.toParticipantName}, ${formatCurrency(settlement.originalAmountMinor, settlement.originalCurrency)} ${settlement.originalCurrency}`}
     >
-      {paymentBadge && (
-        <View style={styles.paymentBadge}>{paymentBadge}</View>
-      )}
+      {paymentBadge && <View style={styles.paymentBadge}>{paymentBadge}</View>}
       <View style={styles.leftContent}>
         {showDate && <Text style={styles.date}>{formattedDate}</Text>}
         <View style={styles.participantsRow}>

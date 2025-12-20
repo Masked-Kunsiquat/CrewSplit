@@ -44,11 +44,7 @@ export function TripHeader({ trip, onEdit }: TripHeaderProps) {
         accessibilityLabel="Edit trip details"
         accessibilityHint="Opens the edit screen for this trip"
       >
-        <AntDesign
-          name="edit"
-          size={18}
-          color={theme.colors.primary}
-        />
+        <AntDesign name="edit" size={18} color={theme.colors.primary} />
       </TouchableOpacity>
     </View>
   );
