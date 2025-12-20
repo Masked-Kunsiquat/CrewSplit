@@ -81,7 +81,6 @@ const styles = StyleSheet.create({
     padding: theme.spacing.md,
     backgroundColor: theme.colors.surface,
     borderRadius: 8,
-    marginBottom: theme.spacing.sm,
   },
   containerPressed: {
     opacity: 0.7,
@@ -90,6 +89,7 @@ const styles = StyleSheet.create({
   leftContent: {
     flex: 1,
     marginRight: theme.spacing.md,
+    flexShrink: 1,
   },
   date: {
     fontSize: theme.typography.xs,
@@ -100,11 +100,13 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     marginBottom: theme.spacing.xs,
+    flexWrap: "wrap",
   },
   participantName: {
     fontSize: theme.typography.base,
     fontWeight: "600",
     color: theme.colors.text,
+    flexShrink: 1,
   },
   arrow: {
     fontSize: theme.typography.base,
@@ -123,6 +125,7 @@ const styles = StyleSheet.create({
   },
   rightContent: {
     alignItems: "flex-end",
+    marginLeft: theme.spacing.sm,
   },
   amount: {
     fontSize: theme.typography.lg,

@@ -416,7 +416,7 @@ export default function SettlementSummaryScreen() {
 
         {/* Recorded Payments Section */}
         {recordedSettlements && recordedSettlements.length > 0 && (
-          <Card style={[styles.section, styles.transactionHistoryCard]}>
+          <Card style={styles.section}>
             <Text style={styles.sectionTitle}>
               Payment History ({recordedSettlements.length})
             </Text>
@@ -559,11 +559,6 @@ const styles = StyleSheet.create({
     fontWeight: theme.typography.semibold,
     color: theme.colors.text,
     marginBottom: theme.spacing.xs,
-  },
-  transactionHistoryCard: {
-    padding: theme.spacing.md,
-    gap: theme.spacing.sm,
-    backgroundColor: theme.colors.surface,
   },
   balanceCard: {
     padding: theme.spacing.md,
