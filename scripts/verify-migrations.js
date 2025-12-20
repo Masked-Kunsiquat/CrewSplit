@@ -16,7 +16,7 @@ const drizzleBin = path.join(
   ".bin",
   process.platform === "win32" ? "drizzle-kit.cmd" : "drizzle-kit",
 );
-const configPath = path.join(repoRoot, "drizzle.config.ts");
+const schemaPath = path.join(repoRoot, "src", "db", "schema", "index.ts");
 
 const listFiles = (dir, suffix) =>
   fs
@@ -51,21 +51,27 @@ try {
   tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), "crewsplit-migrations-"));
   const tmpMigrationsDir = path.join(tmpRoot, "migrations");
   const tmpMetaDir = path.join(tmpMigrationsDir, "meta");
+  const tmpConfigPath = path.join(tmpRoot, "drizzle.config.cjs");
 
   fs.mkdirSync(tmpMetaDir, { recursive: true });
-  fs.cpSync(metaDir, tmpMetaDir, { recursive: true });
+  fs.cpSync(migrationsDir, tmpMigrationsDir, { recursive: true });
+
+  fs.writeFileSync(
+    tmpConfigPath,
+    [
+      "module.exports = {",
+      `  schema: ${JSON.stringify(schemaPath)},`,
+      `  out: ${JSON.stringify(tmpMigrationsDir)},`,
+      '  dialect: "sqlite",',
+      '  driver: "expo",',
+      "};",
+      "",
+    ].join("\n"),
+  );
 
   execFileSync(
     drizzleBin,
-    [
-      "generate",
-      "--config",
-      configPath,
-      "--out",
-      tmpMigrationsDir,
-      "--name",
-      "schema-verification",
-    ],
+    ["generate", "--config", tmpConfigPath],
     { stdio: "inherit" },
   );
 
