@@ -13,6 +13,13 @@ import {
   Pressable,
 } from "react-native";
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
+import {
+  MaterialCommunityIcons,
+  MaterialIcons,
+  AntDesign,
+  Entypo,
+  Fontisto,
+} from "@expo/vector-icons";
 import { theme } from "@ui/theme";
 import { Card, Button } from "@ui/components";
 import { useParticipants } from "../hooks/use-participants";
@@ -27,6 +34,56 @@ import type { ExpenseSplit } from "@modules/expenses/types";
 import { getExpenseSplits } from "@modules/expenses/repository";
 
 type ViewMode = "paid-by" | "part-of";
+
+/**
+ * Get the appropriate icon for a category
+ */
+function getCategoryIcon(categoryName: string) {
+  const iconSize = 20;
+  const iconColor = theme.colors.primary;
+
+  switch (categoryName) {
+    case "Travel & Transportation":
+      return (
+        <MaterialCommunityIcons
+          name="airplane"
+          size={iconSize}
+          color={iconColor}
+        />
+      );
+    case "Food & Drinks":
+      return (
+        <MaterialCommunityIcons name="food" size={iconSize} color={iconColor} />
+      );
+    case "Leisure & Entertainment":
+      return (
+        <MaterialCommunityIcons
+          name="drama-masks"
+          size={iconSize}
+          color={iconColor}
+        />
+      );
+    case "Lodging":
+      return <MaterialIcons name="hotel" size={iconSize} color={iconColor} />;
+    case "Groceries":
+      return (
+        <MaterialIcons
+          name="local-grocery-store"
+          size={iconSize}
+          color={iconColor}
+        />
+      );
+    case "Insurance":
+      return <AntDesign name="insurance" size={iconSize} color={iconColor} />;
+    case "Shopping":
+      return (
+        <Fontisto name="shopping-bag-1" size={iconSize} color={iconColor} />
+      );
+    case "Other":
+    default:
+      return <Entypo name="pin" size={iconSize} color={iconColor} />;
+  }
+}
 
 export default function ParticipantDetailsScreen() {
   const router = useRouter();
@@ -438,6 +495,7 @@ function ParticipantDetailsContent({
                 const category = categories.find(
                   (c) => c.id === expense.categoryId,
                 );
+                const categoryName = category?.name || "Other";
                 return (
                   <Pressable
                     key={expense.id}
@@ -453,11 +511,9 @@ function ParticipantDetailsContent({
                   >
                     <View style={styles.expenseInfo}>
                       <View style={styles.expenseTopRow}>
-                        {category && (
-                          <Text style={styles.categoryEmoji}>
-                            {category.emoji}
-                          </Text>
-                        )}
+                        <View style={styles.expenseIcon}>
+                          {getCategoryIcon(categoryName)}
+                        </View>
                         <Text
                           style={styles.expenseDescription}
                           numberOfLines={1}
@@ -516,14 +572,13 @@ function ParticipantDetailsContent({
                 .map(([categoryId, amount]) => {
                   const category = categories.find((c) => c.id === categoryId);
                   const categoryName = category?.name || "Uncategorized";
-                  const categoryEmoji = category?.emoji || "📦";
 
                   return (
                     <View key={categoryId} style={styles.categoryCard}>
                       <View style={styles.categoryInfo}>
-                        <Text style={styles.categoryEmojiLarge}>
-                          {categoryEmoji}
-                        </Text>
+                        <View style={styles.categoryIcon}>
+                          {getCategoryIcon(categoryName)}
+                        </View>
                         <Text style={styles.categoryName}>{categoryName}</Text>
                       </View>
                       <View style={styles.categoryAmounts}>
@@ -747,8 +802,11 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
   },
-  categoryEmoji: {
-    fontSize: theme.typography.base,
+  expenseIcon: {
+    width: 24,
+    height: 24,
+    alignItems: "center",
+    justifyContent: "center",
     marginRight: theme.spacing.xs,
   },
   expenseDescription: {
@@ -790,8 +848,11 @@ const styles = StyleSheet.create({
     flex: 1,
     gap: theme.spacing.sm,
   },
-  categoryEmojiLarge: {
-    fontSize: theme.typography.lg,
+  categoryIcon: {
+    width: 24,
+    height: 24,
+    alignItems: "center",
+    justifyContent: "center",
   },
   categoryName: {
     fontSize: theme.typography.base,
