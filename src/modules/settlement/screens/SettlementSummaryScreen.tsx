@@ -13,6 +13,7 @@ import {
   TouchableOpacity,
 } from "react-native";
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { theme } from "@ui/theme";
 import {
   Card,
@@ -364,9 +365,13 @@ export default function SettlementSummaryScreen() {
                 onPress={() =>
                   router.push(`/trips/${tripId}/settlements/record`)
                 }
-                style={styles.recordButton}
+                style={styles.recordIconButton}
               >
-                <Text style={styles.recordButtonText}>+ Record</Text>
+                <MaterialCommunityIcons
+                  name="receipt-text-edit"
+                  size={24}
+                  color={theme.colors.primary}
+                />
               </TouchableOpacity>
             )}
           </View>
@@ -409,7 +414,7 @@ export default function SettlementSummaryScreen() {
 
         {/* Recorded Payments Section */}
         {recordedSettlements && recordedSettlements.length > 0 && (
-          <Card style={[styles.section, styles.transactionHistoryCard]}>
+          <Card style={styles.section}>
             <Text style={styles.sectionTitle}>
               Payment History ({recordedSettlements.length})
             </Text>
@@ -417,8 +422,10 @@ export default function SettlementSummaryScreen() {
               <TransactionRow
                 key={settlement.id}
                 settlement={settlement}
-                onPress={() =>
-                  router.push(`/trips/${tripId}/settlements/${settlement.id}`)
+                onLongPress={() =>
+                  router.push(
+                    `/trips/${tripId}/settlements/record?settlementId=${settlement.id}`,
+                  )
                 }
               />
             ))}
@@ -526,6 +533,7 @@ const styles = StyleSheet.create({
     fontSize: theme.typography.sm,
     color: theme.colors.textMuted,
     fontStyle: "italic",
+    paddingRight: theme.spacing.xs,
   },
   loadingText: {
     fontSize: theme.typography.base,
@@ -552,11 +560,6 @@ const styles = StyleSheet.create({
     fontWeight: theme.typography.semibold,
     color: theme.colors.text,
     marginBottom: theme.spacing.xs,
-  },
-  transactionHistoryCard: {
-    padding: theme.spacing.md,
-    gap: theme.spacing.sm,
-    backgroundColor: theme.colors.surface,
   },
   balanceCard: {
     padding: theme.spacing.md,
@@ -736,16 +739,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: theme.spacing.sm,
   },
-  recordButton: {
-    backgroundColor: theme.colors.primary,
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.sm,
-    borderRadius: 8,
-  },
-  recordButtonText: {
-    color: theme.colors.background,
-    fontSize: theme.typography.sm,
-    fontWeight: theme.typography.semibold,
+  recordIconButton: {
+    padding: theme.spacing.xs,
   },
   viewAllButton: {
     marginTop: theme.spacing.sm,

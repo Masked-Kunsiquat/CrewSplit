@@ -339,34 +339,20 @@ export const createSettlement = async (
 export const getSettlementById = async (
   id: string,
 ): Promise<SettlementWithParticipants | null> => {
-  const result = await db
-    .select({
-      settlement: settlementsTable,
-      fromParticipantName: participantsTable.name,
-      toParticipantName: participantsTable.name,
-    })
+  const rows = await db
+    .select()
     .from(settlementsTable)
-    .innerJoin(
-      participantsTable,
-      eq(settlementsTable.fromParticipantId, participantsTable.id),
-    )
-    .innerJoin(
-      participantsTable,
-      eq(settlementsTable.toParticipantId, participantsTable.id),
-    )
     .where(eq(settlementsTable.id, id))
     .limit(1);
 
-  if (!result.length) {
+  if (!rows.length) {
     settlementLogger.warn("Settlement not found", { settlementId: id });
     return null;
   }
 
-  // Manual join resolution since Drizzle returns duplicate column names
-  const row = result[0];
-  const settlement = row.settlement;
+  const settlement = rows[0];
 
-  // Re-fetch participant names separately to avoid join ambiguity
+  // Fetch participant names separately to avoid join alias collisions
   const [fromParticipant, toParticipant] = await Promise.all([
     db
       .select({ name: participantsTable.name })

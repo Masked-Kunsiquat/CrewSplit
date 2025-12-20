@@ -50,6 +50,13 @@
       "when": 1766127428079,
       "tag": "0006_mean_odin",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1766200000000,
+      "tag": "0007_add_expense_notes",
+      "breakpoints": true
     }
   ]
 }

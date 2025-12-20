@@ -2,10 +2,11 @@
   "expo": {
     "name": "CrewSplit",
     "slug": "crewsplit",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "orientation": "portrait",
     "userInterfaceStyle": "dark",
     "assetBundlePatterns": ["**/*"],
+    "platforms": ["android"],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.crewsplit.app",

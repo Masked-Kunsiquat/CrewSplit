@@ -1,6 +1,6 @@
 {
   "name": "crewsplit",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "main": "expo-router/entry",
   "scripts": {
     "start": "expo start",
@@ -9,9 +9,11 @@
     "web": "expo start --web",
     "test": "jest",
     "lint": "eslint .",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "verify-migrations": "node scripts/verify-migrations.js"
   },
   "dependencies": {
+    "@expo/vector-icons": "^15.0.3",
     "@marceloterreiro/flash-calendar": "^1.6.0",
     "@react-native-async-storage/async-storage": "2.2.0",
     "@react-native-community/datetimepicker": "8.4.4",

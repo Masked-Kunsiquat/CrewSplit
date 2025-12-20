@@ -24,7 +24,8 @@ type Condition =
   | { type: "eq"; column: keyof MockFxRateRow; value: unknown }
   | { type: "and"; clauses: Condition[] }
   | { type: "or"; clauses: Condition[] }
-  | { type: "lt"; column: keyof MockFxRateRow; value: unknown };
+  | { type: "lt"; column: keyof MockFxRateRow; value: unknown }
+  | { type: "lte"; column: keyof MockFxRateRow; value: unknown };
 
 type SqlDescriptor =
   | { sqlType: "min"; column: keyof MockFxRateRow }
@@ -68,6 +69,14 @@ export const sql = (
     return { sqlType: "count" };
   }
 
+  if (raw.includes("<=")) {
+    return {
+      type: "lte",
+      column: values[0] as keyof MockFxRateRow,
+      value: values[1],
+    };
+  }
+
   if (raw.includes("<")) {
     return {
       type: "lt",
@@ -106,6 +115,25 @@ const evaluateCondition = (
       }
 
       return String(left) < String(right);
+    }
+    case "lte": {
+      const left = row[condition.column];
+      const right = condition.value;
+
+      if (
+        left === null ||
+        left === undefined ||
+        right === null ||
+        right === undefined
+      ) {
+        return false;
+      }
+
+      if (typeof left === "number" && typeof right === "number") {
+        return left <= right;
+      }
+
+      return String(left) <= String(right);
     }
     case "and":
       return condition.clauses.every((clause) =>

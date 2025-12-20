@@ -96,6 +96,12 @@ const normalizeSplitAmount = (
   return Math.round(amount * fxRateToTrip);
 };
 
+const normalizeNotes = (value: string | null | undefined): string | null => {
+  if (value === undefined || value === null) return null;
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : null;
+};
+
 export const addExpense = async (
   expenseData: CreateExpenseInput,
 ): Promise<Expense> => {
@@ -120,6 +126,8 @@ export const addExpense = async (
     categoryId,
   });
 
+  const notes = normalizeNotes(expenseData.notes);
+
   return db.transaction(async (tx) => {
     // Validate categoryId exists
     const categoryExists = await tx
@@ -142,6 +150,7 @@ export const addExpense = async (
         id: expenseId,
         tripId: expenseData.tripId,
         description: expenseData.description,
+        notes,
         amount: convertedAmountMinor,
         currency: tripCurrencyCode,
         originalCurrency: expenseData.originalCurrency,
@@ -245,8 +254,11 @@ export const updateExpense = async (
 
   const categoryId = patch.categoryId ?? existing.categoryId;
   const now = new Date().toISOString();
+  const normalizedNotes =
+    patch.notes !== undefined ? normalizeNotes(patch.notes) : existing.notes;
   const updatePayload: Partial<typeof expensesTable.$inferInsert> = {
     description: patch.description ?? existing.description,
+    notes: normalizedNotes,
     amount: convertedAmountMinor,
     currency: tripCurrencyCode,
     originalCurrency,

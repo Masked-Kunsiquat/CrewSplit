@@ -188,7 +188,7 @@ export default function RateListScreen() {
                 <View style={styles.warningContent}>
                   <Text style={styles.warningTitle}>Rates are stale</Text>
                   <Text style={styles.warningText}>
-                    Some exchange rates are over 7 days old. Tap refresh to
+                    Some exchange rates are over 24 hours old. Tap refresh to
                     update.
                   </Text>
                 </View>

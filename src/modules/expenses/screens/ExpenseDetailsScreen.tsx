@@ -13,6 +13,7 @@ import {
   Alert,
   TouchableOpacity,
 } from "react-native";
+import { AntDesign } from "@expo/vector-icons";
 import { useRouter, useLocalSearchParams, useNavigation } from "expo-router";
 import { theme } from "@ui/theme";
 import {
@@ -31,7 +32,6 @@ import { cachedFxRateProvider } from "@modules/fx-rates/provider";
 import { deleteExpense } from "../repository";
 import { currencyLogger } from "@utils/logger";
 import { useRefreshControl } from "@hooks/use-refresh-control";
-import { TripExportModal } from "@modules/trips/components/trip-export-modal";
 import { useFxSync } from "@modules/fx-rates/hooks/use-fx-sync";
 
 export default function ExpenseDetailsScreen() {
@@ -75,7 +75,6 @@ function ExpenseDetailsContent({
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [editingExpense, setEditingExpense] = useState(false);
-  const [exportModalVisible, setExportModalVisible] = useState(false);
   const [rateModalVisible, setRateModalVisible] = useState(false);
   const [conversionError, setConversionError] = useState<{
     fromCurrency: string;
@@ -129,6 +128,12 @@ function ExpenseDetailsContent({
     participants.forEach((p) => map.set(p.id, p.name));
     return map;
   }, [participants]);
+
+  // Find the category for this expense
+  const expenseCategory = useMemo(() => {
+    if (!expense) return null;
+    return categories.find((c) => c.id === expense.categoryId);
+  }, [expense, categories]);
 
   // Compute per-participant portions in trip currency minor units
   const splitPortions = useMemo(() => {
@@ -330,18 +335,10 @@ function ExpenseDetailsContent({
         {/* Main Expense Info */}
         <Card style={styles.section}>
           <View style={styles.header}>
-            <Text style={styles.sectionTitle}>{expense.description}</Text>
+            <Text style={styles.sectionTitle} numberOfLines={0}>
+              {expense.description}
+            </Text>
             <View style={styles.headerButtons}>
-              <TouchableOpacity
-                onPress={() => setExportModalVisible(true)}
-                style={styles.editButton}
-                accessible={true}
-                accessibilityRole="button"
-                accessibilityLabel="Export trip"
-                accessibilityHint="Opens export options for this trip"
-              >
-                <Text style={styles.editButtonText}>Export Trip</Text>
-              </TouchableOpacity>
               <TouchableOpacity
                 onPress={() =>
                   router.push(`/trips/${tripId}/expenses/${expenseId}/edit`)
@@ -352,7 +349,7 @@ function ExpenseDetailsContent({
                 accessibilityLabel="Edit expense"
                 accessibilityHint="Opens the edit expense screen"
               >
-                <Text style={styles.editButtonText}>Edit</Text>
+                <AntDesign name="edit" size={18} color={theme.colors.primary} />
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={() => setEditingExpense(!editingExpense)}
@@ -371,14 +368,13 @@ function ExpenseDetailsContent({
                     : "Shows the delete option"
                 }
               >
-                <Text
-                  style={[
-                    styles.editButtonText,
-                    editingExpense && styles.deleteButtonTextActive,
-                  ]}
-                >
-                  {editingExpense ? "Cancel" : "Delete"}
-                </Text>
+                <AntDesign
+                  name="delete"
+                  size={18}
+                  color={
+                    editingExpense ? theme.colors.text : theme.colors.primary
+                  }
+                />
               </TouchableOpacity>
             </View>
           </View>
@@ -438,19 +434,26 @@ function ExpenseDetailsContent({
             <Text style={styles.metaValue}>{paidByName}</Text>
           </View>
 
-          {expense.category && (
-            <View style={styles.metaRow}>
-              <Text style={styles.metaLabel}>Category:</Text>
-              <Text style={styles.metaValue}>{expense.category}</Text>
-            </View>
-          )}
-
           <View style={styles.metaRow}>
             <Text style={styles.metaLabel}>Date:</Text>
             <Text style={styles.metaValue}>
               {new Date(expense.date).toLocaleDateString()}
             </Text>
           </View>
+
+          <View style={styles.metaRow}>
+            <Text style={styles.metaLabel}>Category:</Text>
+            <Text style={styles.metaValue}>
+              {expenseCategory?.name || "Uncategorized"}
+            </Text>
+          </View>
+
+          {expense.notes ? (
+            <View style={styles.notesRow}>
+              <Text style={styles.notesLabel}>Notes</Text>
+              <Text style={styles.notesText}>{expense.notes}</Text>
+            </View>
+          ) : null}
         </Card>
 
         {/* Splits Section */}
@@ -524,12 +527,6 @@ function ExpenseDetailsContent({
         )}
       </ScrollView>
 
-      <TripExportModal
-        visible={exportModalVisible}
-        tripId={tripId}
-        onClose={() => setExportModalVisible(false)}
-      />
-
       <NoRateAvailableModal
         visible={rateModalVisible}
         fromCurrency={conversionError?.fromCurrency ?? ""}
@@ -589,6 +586,7 @@ const styles = StyleSheet.create({
   headerButtons: {
     flexDirection: "row",
     gap: theme.spacing.sm,
+    marginLeft: theme.spacing.sm,
   },
   editButton: {
     padding: theme.spacing.sm,
@@ -597,17 +595,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: theme.colors.border,
   },
-  editButtonText: {
-    fontSize: theme.typography.sm,
-    fontWeight: theme.typography.semibold,
-    color: theme.colors.primary,
-  },
   deleteButtonActive: {
     backgroundColor: theme.colors.error,
     borderColor: theme.colors.error,
-  },
-  deleteButtonTextActive: {
-    color: theme.colors.text,
   },
   loadingText: {
     fontSize: theme.typography.base,
@@ -634,6 +624,8 @@ const styles = StyleSheet.create({
     fontWeight: theme.typography.semibold,
     color: theme.colors.text,
     marginBottom: theme.spacing.sm,
+    flexShrink: 1,
+    flexGrow: 1,
   },
   amountRow: {
     flexDirection: "row",
@@ -699,6 +691,19 @@ const styles = StyleSheet.create({
     fontSize: theme.typography.base,
     color: theme.colors.text,
     fontWeight: theme.typography.medium,
+  },
+  notesRow: {
+    marginTop: theme.spacing.sm,
+    gap: theme.spacing.xs,
+  },
+  notesLabel: {
+    fontSize: theme.typography.sm,
+    color: theme.colors.textSecondary,
+  },
+  notesText: {
+    fontSize: theme.typography.base,
+    color: theme.colors.text,
+    lineHeight: 20,
   },
   splitRow: {
     flexDirection: "row",

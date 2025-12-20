@@ -369,9 +369,9 @@ export const getStalenessInfo = async (): Promise<{
   const oldestFetchedAt = result[0]?.oldestFetchedAt ?? null;
   const totalRates = result[0]?.totalRates ?? 0;
 
-  // Count rates older than 7 days (excluding manual rates)
-  const sevenDaysAgo = new Date(
-    Date.now() - 7 * 24 * 60 * 60 * 1000,
+  // Count rates 1 day old or older (excluding manual rates)
+  const oneDayAgo = new Date(
+    Date.now() - 1 * 24 * 60 * 60 * 1000,
   ).toISOString();
   const staleResult = await db
     .select({ count: sql<number>`COUNT(*)` })
@@ -379,7 +379,7 @@ export const getStalenessInfo = async (): Promise<{
     .where(
       and(
         eq(fxRatesTable.isArchived, false),
-        sql`${fxRatesTable.fetchedAt} < ${sevenDaysAgo}`,
+        sql`${fxRatesTable.fetchedAt} <= ${oneDayAgo}`,
         or(
           eq(fxRatesTable.source, "frankfurter"),
           eq(fxRatesTable.source, "exchangerate-api"),

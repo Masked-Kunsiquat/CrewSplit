@@ -22,8 +22,11 @@ import { formatCurrency } from "@utils/currency";
 export default function TransactionDetailsScreen() {
   const router = useRouter();
   const navigation = useNavigation();
-  const params = useLocalSearchParams<{ id?: string }>();
-  const settlementId = params.id;
+  const params = useLocalSearchParams<{
+    id?: string | string[];
+    settlementId?: string | string[];
+  }>();
+  const settlementId = normalizeRouteParam(params.settlementId);
 
   const { settlement, loading } = useSettlement(settlementId ?? null);
   const { deleteSettlement, loading: deleting } = useDeleteSettlement();
@@ -193,6 +196,13 @@ export default function TransactionDetailsScreen() {
       />
     </>
   );
+}
+
+function normalizeRouteParam(param: string | string[] | undefined) {
+  if (!param) return null;
+  const value = Array.isArray(param) ? param[0] : param;
+  const normalized = value.trim();
+  return normalized.length > 0 ? normalized : null;
 }
 
 const styles = StyleSheet.create({

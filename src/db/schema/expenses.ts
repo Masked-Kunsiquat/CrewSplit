@@ -25,6 +25,7 @@ export const expenses = sqliteTable("expenses", {
 
   // Expense details
   description: text("description").notNull(),
+  notes: text("notes"),
 
   // Amount in CENTS (integer) - e.g., $12.34 = 1234
   // This avoids floating-point precision issues

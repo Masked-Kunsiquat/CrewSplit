@@ -1,6 +1,6 @@
 /**
  * UI COMPONENT - Staleness Warning Banner
- * UI/UX ENGINEER: Banner to warn users when FX rates are stale (>7 days old)
+ * UI/UX ENGINEER: Banner to warn users when FX rates are stale (>24 hours old)
  */
 
 import React from "react";
@@ -29,7 +29,7 @@ export interface StalenessWarningBannerProps {
 /**
  * Warning banner component for stale exchange rates
  *
- * Displays when rates are older than 7 days, with option to refresh.
+ * Displays when rates are older than 24 hours, with option to refresh.
  *
  * @example
  * <StalenessWarningBanner

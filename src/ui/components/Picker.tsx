@@ -191,6 +191,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: theme.typography.base,
     color: theme.colors.text,
+    marginRight: theme.spacing.xs,
   },
   triggerTextPlaceholder: {
     color: theme.colors.textMuted,
@@ -254,8 +255,10 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.surfaceElevated,
   },
   optionText: {
+    flex: 1,
     fontSize: theme.typography.base,
     color: theme.colors.text,
+    marginRight: theme.spacing.sm,
   },
   optionTextSelected: {
     color: theme.colors.primary,

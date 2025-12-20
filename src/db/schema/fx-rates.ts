@@ -48,7 +48,7 @@ import { trips } from "./trips";
  *
  * STALENESS:
  * - fetchedAt: When rate was obtained (ISO 8601 timestamp)
- * - Rates older than 7 days may trigger refresh warning in UI
+ * - Rates older than 24 hours may trigger refresh warning in UI
  * - Manual rates never expire
  */
 export const fxRates = sqliteTable(
@@ -230,6 +230,6 @@ export interface FxRateWithMetadata extends FxRate {
   parsedMetadata: Record<string, unknown> | null;
   /** Age in days since fetchedAt */
   ageDays: number;
-  /** Is this rate stale? (>7 days old, not manual) */
+  /** Is this rate stale? (>24 hours old, not manual) */
   isStale: boolean;
 }

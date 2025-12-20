@@ -3,7 +3,7 @@
  * UI integration for automatic FX rate staleness checking and background refresh
  *
  * Responsibilities:
- * - Check staleness on mount (>7 days old)
+ * - Check staleness on mount (>24 hours old)
  * - Trigger automatic refresh if stale AND online
  * - Expose manual refresh function
  * - Show toast notifications for success/failure
@@ -78,7 +78,7 @@ export function useFxSync(options: UseFxSyncOptions = {}) {
   const [lastChecked, setLastChecked] = useState<Date | null>(null);
 
   /**
-   * Check if rates are stale (>7 days old)
+   * Check if rates are stale (>24 hours old)
    */
   const checkStaleness = useCallback(async () => {
     try {
@@ -231,7 +231,7 @@ export function useFxSync(options: UseFxSyncOptions = {}) {
     refreshing,
 
     /**
-     * True if any rates are stale (>7 days old)
+     * True if any rates are stale (>24 hours old)
      */
     isStale,
 

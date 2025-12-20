@@ -145,7 +145,6 @@ export default function RootLayout() {
           color: colors.text,
         },
         headerShadowVisible: false,
-        headerBackTitleVisible: false,
       }}
     >
       <Stack.Screen

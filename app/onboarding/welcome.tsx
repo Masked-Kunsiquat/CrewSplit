@@ -4,11 +4,10 @@ import { View, Text, StyleSheet } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Button } from "@ui/components";
 import { theme } from "@ui/theme";
-// eslint-disable-next-line import/no-unresolved
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 type FeatureCardProps = {
-  icon: string;
+  icon: React.ComponentProps<typeof MaterialCommunityIcons>["name"];
   title: string;
   description: string;
 };
@@ -99,7 +98,7 @@ const styles = StyleSheet.create({
     fontSize: 60,
   },
   title: {
-    fontSize: theme.typography.h1,
+    fontSize: theme.typography.xxxl,
     fontWeight: "bold",
     color: theme.colors.text,
   },

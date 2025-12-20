@@ -14,6 +14,8 @@ export interface Trip {
   emoji?: string; // Optional emoji for visual identification
   createdAt: string;
   updatedAt: string;
+  isSampleData?: boolean; // Indicates if this is sample data
+  sampleDataTemplateId?: string; // Template ID for sample data
 }
 
 export interface CreateTripInput {

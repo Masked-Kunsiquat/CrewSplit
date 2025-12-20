@@ -139,6 +139,7 @@ function EditExpenseScreenContent({
 
   // Basic expense fields
   const [description, setDescription] = useState("");
+  const [notes, setNotes] = useState("");
   const [amount, setAmount] = useState("");
   const [date, setDate] = useState(new Date());
   const [paidBy, setPaidBy] = useState<string | null>(null);
@@ -157,6 +158,7 @@ function EditExpenseScreenContent({
     if (!expense || !splits) return;
 
     setDescription(expense.description);
+    setNotes(expense.notes ?? "");
     // Convert from minor units to major units for display (without currency symbol)
     setAmount((expense.originalAmountMinor / 100).toFixed(2));
     setDate(new Date(expense.date));
@@ -472,6 +474,7 @@ function EditExpenseScreenContent({
 
       const result = await update(expenseId, {
         description: description.trim(),
+        notes: notes.trim().length > 0 ? notes.trim() : null,
         originalAmountMinor: amountMinor,
         originalCurrency: expense.originalCurrency ?? trip.currency,
         paidBy,
@@ -589,6 +592,17 @@ function EditExpenseScreenContent({
           value={description}
           onChangeText={setDescription}
           editable={!isSaving}
+        />
+
+        <Input
+          label="Notes (optional)"
+          placeholder="Add a note or receipt details"
+          value={notes}
+          onChangeText={setNotes}
+          editable={!isSaving}
+          multiline
+          numberOfLines={3}
+          style={styles.notesInput}
         />
 
         <View style={styles.row}>
@@ -798,6 +812,10 @@ const styles = StyleSheet.create({
     fontSize: theme.typography.xs,
     color: theme.colors.textMuted,
     marginBottom: theme.spacing.sm,
+  },
+  notesInput: {
+    minHeight: 96,
+    textAlignVertical: "top",
   },
   participantList: {
     backgroundColor: theme.colors.background,

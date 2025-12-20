@@ -112,7 +112,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   title: {
-    fontSize: theme.typography.h2,
+    fontSize: theme.typography.xxl,
     fontWeight: "bold",
     color: theme.colors.text,
   },
@@ -123,7 +123,7 @@ const styles = StyleSheet.create({
   },
   input: {
     textAlign: "center",
-    fontSize: theme.typography.h3,
+    fontSize: theme.typography.lg,
     height: 60,
   },
   footer: {
