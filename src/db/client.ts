@@ -21,113 +21,111 @@ expoDb.execSync("PRAGMA foreign_keys = ON");
 // Create Drizzle instance with schema
 export const db = drizzle(expoDb, { schema });
 
-/**
- * Defensive schema guard that ensures critical columns exist.
- * This handles edge cases where migrations may have been marked as applied
- * but didn't actually run (e.g., during app upgrades with existing databases).
- *
- * IMPORTANT: Only adds missing columns with safe defaults - never modifies existing data.
- */
-const ensureSchemaIntegrity = async (): Promise<void> => {
-  try {
-    // Check if onboarding columns exist in trips table
-    const tableInfo = expoDb.getAllSync("PRAGMA table_info(trips)") as {
-      name: string;
-    }[];
-    const columnNames = new Set(tableInfo.map((col) => col.name));
+const migrationsTable = "__drizzle_migrations";
 
-    const missingColumns: string[] = [];
-    if (!columnNames.has("is_sample_data")) {
-      missingColumns.push("is_sample_data");
-    }
-    if (!columnNames.has("sample_data_template_id")) {
-      missingColumns.push("sample_data_template_id");
-    }
-    if (!columnNames.has("is_archived")) {
-      missingColumns.push("is_archived");
-    }
+type MigrationEntry = (typeof migrations.journal.entries)[number];
 
-    if (missingColumns.length > 0) {
-      migrationLogger.warn(
-        `Detected missing columns in trips table: ${missingColumns.join(", ")}. Applying defensive schema fixes.`,
-      );
+const readAppliedMigrations = (): number[] => {
+  const table = expoDb.getAllSync(
+    "SELECT name FROM sqlite_master WHERE type='table' AND name=?",
+    [migrationsTable],
+  ) as { name: string }[];
 
-      // Apply the missing column additions from migration 0006
-      if (missingColumns.includes("is_sample_data")) {
-        expoDb.execSync(
-          "ALTER TABLE trips ADD COLUMN is_sample_data INTEGER DEFAULT 0 NOT NULL",
-        );
-      }
-      if (missingColumns.includes("sample_data_template_id")) {
-        expoDb.execSync(
-          "ALTER TABLE trips ADD COLUMN sample_data_template_id TEXT",
-        );
-      }
-      if (missingColumns.includes("is_archived")) {
-        expoDb.execSync(
-          "ALTER TABLE trips ADD COLUMN is_archived INTEGER DEFAULT 0 NOT NULL",
-        );
-      }
+  if (table.length === 0) {
+    return [];
+  }
 
-      // Create indexes if they don't exist (safe - IF NOT EXISTS)
-      expoDb.execSync(
-        "CREATE INDEX IF NOT EXISTS idx_trips_sample_data ON trips (is_sample_data, is_archived)",
-      );
-      expoDb.execSync(
-        "CREATE INDEX IF NOT EXISTS idx_trips_archived ON trips (is_archived)",
-      );
+  const rows = expoDb.getAllSync(
+    `SELECT created_at FROM ${migrationsTable} ORDER BY id`,
+  ) as { created_at: number | string }[];
 
-      migrationLogger.info(
-        "Schema integrity restored - missing columns added successfully",
-      );
-    }
+  return rows
+    .map((row) => Number(row.created_at))
+    .filter((value) => Number.isFinite(value));
+};
 
-    // Ensure user_settings and onboarding_state tables exist
-    const tables = expoDb.getAllSync(
-      "SELECT name FROM sqlite_master WHERE type='table'",
-    ) as { name: string }[];
-    const tableSet = new Set(tables.map((t) => t.name));
+const buildMigrationIssues = (
+  applied: number[],
+  expected: MigrationEntry[],
+): string[] => {
+  const issues: string[] = [];
+  const expectedTimes = expected.map((entry) => entry.when);
+  const expectedTagsByTime = new Map(
+    expected.map((entry) => [entry.when, entry.tag] as const),
+  );
+  const appliedSet = new Set(applied);
 
-    if (!tableSet.has("user_settings")) {
-      migrationLogger.warn(
-        "Missing user_settings table - applying schema from migration 0006",
-      );
-      expoDb.execSync(`
-        CREATE TABLE user_settings (
-          id TEXT PRIMARY KEY DEFAULT 'default' NOT NULL,
-          primary_user_name TEXT,
-          default_currency TEXT DEFAULT 'USD' NOT NULL,
-          created_at TEXT DEFAULT (datetime('now')) NOT NULL,
-          updated_at TEXT DEFAULT (datetime('now')) NOT NULL
-        )
-      `);
-      expoDb.execSync(
-        "INSERT INTO user_settings (id) VALUES ('default') ON CONFLICT DO NOTHING",
-      );
-    }
+  if (expected.length === 0) {
+    return issues;
+  }
 
-    if (!tableSet.has("onboarding_state")) {
-      migrationLogger.warn(
-        "Missing onboarding_state table - applying schema from migration 0006",
-      );
-      expoDb.execSync(`
-        CREATE TABLE onboarding_state (
-          id TEXT PRIMARY KEY NOT NULL,
-          is_completed INTEGER DEFAULT 0 NOT NULL,
-          completed_steps TEXT DEFAULT '[]' NOT NULL,
-          metadata TEXT DEFAULT '{}' NOT NULL,
-          created_at TEXT DEFAULT (datetime('now')) NOT NULL,
-          updated_at TEXT DEFAULT (datetime('now')) NOT NULL,
-          completed_at TEXT
-        )
-      `);
-    }
-  } catch (err) {
-    migrationLogger.error("Schema integrity check failed", err);
-    throw new Error(
-      `Schema integrity check failed: ${err instanceof Error ? err.message : String(err)}`,
+  if (applied.length === 0) {
+    issues.push(
+      `No rows found in ${migrationsTable} after migrations completed`,
+    );
+    return issues;
+  }
+
+  const unknown = applied.filter((time) => !expectedTagsByTime.has(time));
+  if (unknown.length > 0) {
+    issues.push(`Unknown migration timestamps recorded: ${unknown.join(", ")}`);
+  }
+
+  const expectedPrefix = expectedTimes.slice(0, applied.length);
+  const prefixMismatch = expectedPrefix.some(
+    (time, index) => time !== applied[index],
+  );
+  if (prefixMismatch) {
+    const appliedTags = applied.map(
+      (time) => expectedTagsByTime.get(time) ?? `unknown(${time})`,
+    );
+    issues.push(
+      `Applied migrations are out of order: ${appliedTags.join(" -> ")}`,
     );
   }
+
+  const maxApplied = Math.max(...applied);
+  const missingBeforeLatest = expected
+    .filter((entry) => entry.when <= maxApplied && !appliedSet.has(entry.when))
+    .map((entry) => entry.tag);
+
+  if (missingBeforeLatest.length > 0) {
+    issues.push(
+      `Skipped migrations before latest applied: ${missingBeforeLatest.join(
+        ", ",
+      )}`,
+    );
+  }
+
+  if (applied.length !== expected.length) {
+    issues.push(
+      `Applied migration count (${applied.length}) does not match expected (${expected.length})`,
+    );
+  }
+
+  return issues;
+};
+
+const verifyMigrationState = (): void => {
+  const applied = readAppliedMigrations();
+  const expected = migrations.journal.entries;
+  const issues = buildMigrationIssues(applied, expected);
+
+  if (issues.length === 0) {
+    return;
+  }
+
+  migrationLogger.error("Migration history mismatch detected", {
+    issues,
+    applied,
+    expected: expected.map((entry) => entry.tag),
+  });
+
+  throw new Error(
+    `Migration history mismatch detected: ${issues.join(
+      "; ",
+    )}. This database requires a recovery migration or clean rebuild.`,
+  );
 };
 
 /**
@@ -139,31 +137,37 @@ const ensureSchemaIntegrity = async (): Promise<void> => {
  * - Only new migrations are applied (idempotent)
  * - Failures surface to _layout.tsx for user-visible error
  * - Never auto-wipe data - rely on proper migration files
- * - Defensive schema guard ensures critical columns exist even if migrations were skipped
+ * - Migration history is verified against __drizzle_migrations after Drizzle completes
  */
 export const useDbMigrations = () => {
   const { success, error } = useMigrations(db, migrations);
   const loggedSuccess = useRef(false);
   const loggedError = useRef<string | null>(null);
-  const [schemaChecked, setSchemaChecked] = useState(false);
-  const [schemaError, setSchemaError] = useState<Error | null>(null);
+  const [migrationChecked, setMigrationChecked] = useState(false);
+  const [migrationVerified, setMigrationVerified] = useState(false);
+  const [migrationStateError, setMigrationStateError] = useState<Error | null>(
+    null,
+  );
 
-  // Run defensive schema integrity check after Drizzle migrations succeed
+  // Verify migration ordering/state after Drizzle migrations succeed.
   useEffect(() => {
-    if (success && !schemaChecked) {
-      ensureSchemaIntegrity()
-        .then(() => {
-          setSchemaChecked(true);
-          migrationLogger.info("Schema integrity verified");
-        })
-        .catch((err) => {
-          setSchemaError(err instanceof Error ? err : new Error(String(err)));
-        });
+    if (success && !migrationChecked) {
+      try {
+        verifyMigrationState();
+        setMigrationVerified(true);
+        migrationLogger.info("Migration history verified");
+      } catch (err) {
+        setMigrationStateError(
+          err instanceof Error ? err : new Error(String(err)),
+        );
+      } finally {
+        setMigrationChecked(true);
+      }
     }
-  }, [success, schemaChecked]);
+  }, [success, migrationChecked]);
 
   useEffect(() => {
-    if (success && schemaChecked && !loggedSuccess.current) {
+    if (success && migrationVerified && !loggedSuccess.current) {
       migrationLogger.info("Database migrations applied successfully");
       loggedSuccess.current = true;
     }
@@ -175,10 +179,10 @@ export const useDbMigrations = () => {
         loggedError.current = message;
       }
     }
-  }, [success, schemaChecked, error]);
+  }, [success, migrationVerified, error]);
 
   return {
-    success: success && schemaChecked,
-    error: error || schemaError,
+    success: success && migrationVerified,
+    error: error || migrationStateError,
   };
 };

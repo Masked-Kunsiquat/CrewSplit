@@ -9,7 +9,8 @@
     "web": "expo start --web",
     "test": "jest",
     "lint": "eslint .",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "verify-migrations": "node scripts/verify-migrations.js"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",
