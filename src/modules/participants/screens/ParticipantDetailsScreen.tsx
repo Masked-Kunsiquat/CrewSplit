@@ -13,13 +13,6 @@ import {
   Pressable,
 } from "react-native";
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
-import {
-  MaterialCommunityIcons,
-  MaterialIcons,
-  AntDesign,
-  Entypo,
-  Fontisto,
-} from "@expo/vector-icons";
 import { theme } from "@ui/theme";
 import { Card, Button } from "@ui/components";
 import { useParticipants } from "../hooks/use-participants";
@@ -29,61 +22,12 @@ import { useExpenseCategories } from "@modules/expenses/hooks/use-expense-catego
 import { useDisplayCurrency } from "@hooks/use-display-currency";
 import { useRefreshControl } from "@hooks/use-refresh-control";
 import { formatCurrency } from "@utils/currency";
+import { getCategoryIcon } from "@utils/category-icons";
 import { cachedFxRateProvider } from "@modules/fx-rates/provider";
 import type { ExpenseSplit } from "@modules/expenses/types";
 import { getExpenseSplits } from "@modules/expenses/repository";
 
 type ViewMode = "paid-by" | "part-of";
-
-/**
- * Get the appropriate icon for a category
- */
-function getCategoryIcon(categoryName: string) {
-  const iconSize = 20;
-  const iconColor = theme.colors.primary;
-
-  switch (categoryName) {
-    case "Travel & Transportation":
-      return (
-        <MaterialCommunityIcons
-          name="airplane"
-          size={iconSize}
-          color={iconColor}
-        />
-      );
-    case "Food & Drinks":
-      return (
-        <MaterialCommunityIcons name="food" size={iconSize} color={iconColor} />
-      );
-    case "Leisure & Entertainment":
-      return (
-        <MaterialCommunityIcons
-          name="drama-masks"
-          size={iconSize}
-          color={iconColor}
-        />
-      );
-    case "Lodging":
-      return <MaterialIcons name="hotel" size={iconSize} color={iconColor} />;
-    case "Groceries":
-      return (
-        <MaterialIcons
-          name="local-grocery-store"
-          size={iconSize}
-          color={iconColor}
-        />
-      );
-    case "Insurance":
-      return <AntDesign name="insurance" size={iconSize} color={iconColor} />;
-    case "Shopping":
-      return (
-        <Fontisto name="shopping-bag-1" size={iconSize} color={iconColor} />
-      );
-    case "Other":
-    default:
-      return <Entypo name="pin" size={iconSize} color={iconColor} />;
-  }
-}
 
 export default function ParticipantDetailsScreen() {
   const router = useRouter();
@@ -512,7 +456,11 @@ function ParticipantDetailsContent({
                     <View style={styles.expenseInfo}>
                       <View style={styles.expenseTopRow}>
                         <View style={styles.expenseIcon}>
-                          {getCategoryIcon(categoryName)}
+                          {getCategoryIcon({
+                            categoryName,
+                            size: 20,
+                            color: theme.colors.primary,
+                          })}
                         </View>
                         <Text
                           style={styles.expenseDescription}
@@ -577,7 +525,11 @@ function ParticipantDetailsContent({
                     <View key={categoryId} style={styles.categoryCard}>
                       <View style={styles.categoryInfo}>
                         <View style={styles.categoryIcon}>
-                          {getCategoryIcon(categoryName)}
+                          {getCategoryIcon({
+                            categoryName,
+                            size: 20,
+                            color: theme.colors.primary,
+                          })}
                         </View>
                         <Text style={styles.categoryName}>{categoryName}</Text>
                       </View>
