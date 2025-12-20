@@ -12,6 +12,7 @@ import {
   ActivityIndicator,
   Alert,
   TouchableOpacity,
+  Pressable,
 } from "react-native";
 import { AntDesign } from "@expo/vector-icons";
 import { useRouter, useLocalSearchParams, useNavigation } from "expo-router";
@@ -431,7 +432,17 @@ function ExpenseDetailsContent({
 
           <View style={styles.metaRow}>
             <Text style={styles.metaLabel}>Paid by:</Text>
-            <Text style={styles.metaValue}>{paidByName}</Text>
+            <Pressable
+              onPress={() =>
+                router.push(`/trips/${tripId}/participants/${expense.paidBy}`)
+              }
+              accessibilityRole="button"
+              accessibilityLabel={`View ${paidByName} details`}
+            >
+              <Text style={[styles.metaValue, styles.linkText]}>
+                {paidByName}
+              </Text>
+            </Pressable>
           </View>
 
           <View style={styles.metaRow}>
@@ -467,7 +478,19 @@ function ExpenseDetailsContent({
               return (
                 <View key={split.id} style={styles.splitRow}>
                   <View style={styles.splitInfo}>
-                    <Text style={styles.splitName}>{participantName}</Text>
+                    <Pressable
+                      onPress={() =>
+                        router.push(
+                          `/trips/${tripId}/participants/${split.participantId}`,
+                        )
+                      }
+                      accessibilityRole="button"
+                      accessibilityLabel={`View ${participantName} details`}
+                    >
+                      <Text style={[styles.splitName, styles.linkText]}>
+                        {participantName}
+                      </Text>
+                    </Pressable>
                     <Text style={styles.splitType}>
                       {split.shareType === "equal" && "Equal share"}
                       {split.shareType === "percentage" && `${split.share}%`}
@@ -691,6 +714,10 @@ const styles = StyleSheet.create({
     fontSize: theme.typography.base,
     color: theme.colors.text,
     fontWeight: theme.typography.medium,
+  },
+  linkText: {
+    color: theme.colors.primary,
+    textDecorationLine: "underline",
   },
   notesRow: {
     marginTop: theme.spacing.sm,
