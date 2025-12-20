@@ -6,6 +6,7 @@
     "orientation": "portrait",
     "userInterfaceStyle": "dark",
     "assetBundlePatterns": ["**/*"],
+    "platforms": ["android"],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.crewsplit.app",
