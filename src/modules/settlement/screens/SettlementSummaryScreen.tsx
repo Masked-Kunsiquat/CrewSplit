@@ -13,8 +13,6 @@ import {
   TouchableOpacity,
 } from "react-native";
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
-// @ts-expect-error @expo/vector-icons lacks TypeScript definitions
-
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { theme } from "@ui/theme";
 import {

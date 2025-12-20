@@ -5,7 +5,6 @@
 
 import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
-// @ts-expect-error @expo/vector-icons lacks TypeScript definitions
 import { AntDesign } from "@expo/vector-icons";
 import { theme } from "@ui/theme";
 import type { Trip } from "../../types";

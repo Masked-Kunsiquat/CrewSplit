@@ -11,13 +11,15 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Button } from "@ui/components";
 import { theme } from "@ui/theme";
-// @ts-expect-error @expo/vector-icons lacks TypeScript definitions
-
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useOnboardingState } from "@modules/onboarding/hooks/use-onboarding-state";
 import { SampleDataService } from "@modules/onboarding/services/SampleDataService";
 
 const { width } = Dimensions.get("window");
+
+type MaterialCommunityIconName = React.ComponentProps<
+  typeof MaterialCommunityIcons
+>["name"];
 
 const WALKTHROUGH_STEPS = [
   {
@@ -45,10 +47,14 @@ const WALKTHROUGH_STEPS = [
     title: "Multi-currency",
     description: "Use different currencies within the same trip.",
   },
-];
+] as const satisfies ReadonlyArray<{
+  icon: MaterialCommunityIconName;
+  title: string;
+  description: string;
+}>;
 
 type ProgressDotsProps = {
-  steps: unknown[];
+  steps: readonly unknown[];
   activeIndex: number;
 };
 

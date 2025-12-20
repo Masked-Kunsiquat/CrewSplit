@@ -13,7 +13,6 @@ import {
   Alert,
   TouchableOpacity,
 } from "react-native";
-// @ts-expect-error @expo/vector-icons lacks TypeScript definitions
 import { AntDesign } from "@expo/vector-icons";
 import { useRouter, useLocalSearchParams, useNavigation } from "expo-router";
 import { theme } from "@ui/theme";
