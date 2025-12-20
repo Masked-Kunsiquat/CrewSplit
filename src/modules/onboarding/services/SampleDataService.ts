@@ -8,7 +8,15 @@ import { settlements } from "@db/schema/settlements";
 import { eq } from "drizzle-orm";
 import type { SampleDataTemplateId } from "../types";
 
-const sampleDataTemplates: Record<SampleDataTemplateId, unknown> = {
+interface SampleDataTemplate {
+  trip: any;
+  participants?: any[];
+  expenses?: any[];
+  expenseSplits?: any[];
+  settlements?: any[];
+}
+
+const sampleDataTemplates: Record<SampleDataTemplateId, SampleDataTemplate> = {
   summer_road_trip: require("../../../../sample-data/crewledger-summer-road-trip-2025-12-18.json"),
   family_beach_vacation: require("../../../../sample-data/crewledger-family-beach-vacation-2025-12-19.json"),
   weekend_ski_trip: require("../../../../sample-data/crewledger-weekend-ski-trip-2025-12-18.json"),
@@ -32,7 +40,7 @@ export class SampleDataService {
 
     const tripId = trip.id;
 
-    const normalizedSettlements = settlementData?.map((settlement) => {
+    const normalizedSettlements = settlementData?.map((settlement: any) => {
       if ("originalCurrency" in settlement) {
         return settlement;
       }
@@ -71,32 +79,44 @@ export class SampleDataService {
       };
     });
 
-    await db.transaction(async (tx) => {
-      // Clear any existing sample data for this template
-      await tx.delete(trips).where(eq(trips.sampleDataTemplateId, templateId));
-      // Note: CASCADE should handle related data, but if not, you'd delete them manually.
-      // For example:
-      // await tx.delete(participants).where(inArray(participants.tripId, ...));
+    try {
+      await db.transaction(async (tx) => {
+        // Clear any existing sample data for this template
+        await tx.delete(trips).where(eq(trips.sampleDataTemplateId, templateId));
+        // Note: CASCADE should handle related data, but if not, you'd delete them manually.
+        // For example:
+        // await tx.delete(participants).where(inArray(participants.tripId, ...));
 
-      // Insert new sample data
-      await tx.insert(trips).values({
-        ...trip,
-        isSampleData: true,
-        sampleDataTemplateId: templateId,
+        // Insert new sample data
+        await tx.insert(trips).values({
+          ...trip,
+          isSampleData: true,
+          sampleDataTemplateId: templateId,
+        });
+        if (participantData?.length) {
+          await tx.insert(participants).values(participantData);
+        }
+        if (expenseData?.length) {
+          await tx.insert(expenses).values(expenseData);
+        }
+        if (splitData?.length) {
+          await tx.insert(expenseSplits).values(splitData);
+        }
+        if (normalizedSettlements?.length) {
+          await tx.insert(settlements).values(normalizedSettlements);
+        }
       });
-      if (participantData?.length) {
-        await tx.insert(participants).values(participantData);
+    } catch (err) {
+      // Provide helpful error message if database schema is outdated
+      if (err instanceof Error && err.message.includes("no such column")) {
+        const columnMatch = err.message.match(/no such column: (\S+)/);
+        const missingColumn = columnMatch ? columnMatch[1] : "unknown";
+        throw new Error(
+          `Database schema is outdated (missing column: ${missingColumn}). Please restart the app to apply schema updates.`,
+        );
       }
-      if (expenseData?.length) {
-        await tx.insert(expenses).values(expenseData);
-      }
-      if (splitData?.length) {
-        await tx.insert(expenseSplits).values(splitData);
-      }
-      if (normalizedSettlements?.length) {
-        await tx.insert(settlements).values(normalizedSettlements);
-      }
-    });
+      throw err;
+    }
 
     return tripId;
   }

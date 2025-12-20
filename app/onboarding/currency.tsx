@@ -139,7 +139,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   title: {
-    fontSize: theme.typography.h2,
+    fontSize: theme.typography.xxl,
     fontWeight: "bold",
     color: theme.colors.text,
   },

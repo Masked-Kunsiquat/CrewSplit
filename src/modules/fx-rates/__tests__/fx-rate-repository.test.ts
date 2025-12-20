@@ -231,6 +231,24 @@ describe("FxRateRepository", () => {
     expect(info.oldestFetchedAt).toBe("2023-12-15T00:00:00.000Z");
   });
 
+  it("getStalenessInfo includes rates exactly 7 days old as stale", async () => {
+    // Edge case: rate fetched exactly 7 days ago should be marked as stale
+    const exactlySevenDaysAgo = new Date(
+      Date.now() - 7 * 24 * 60 * 60 * 1000,
+    ).toISOString();
+
+    mockDb.reset([
+      createRateRow({
+        id: "exactly-seven-days",
+        fetchedAt: exactlySevenDaysAgo,
+        source: "frankfurter",
+      }),
+    ]);
+
+    const info = await FxRateRepository.getStalenessInfo();
+    expect(info.staleRates).toBe(1); // Should be counted as stale (>=7 days)
+  });
+
   it("archives specific rate by id", async () => {
     mockDb.reset([
       createRateRow({

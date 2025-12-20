@@ -11,7 +11,7 @@ interface CardProps {
   children: React.ReactNode;
   onPress?: () => void;
   onLongPress?: () => void;
-  style?: ViewStyle;
+  style?: ViewStyle | (ViewStyle | false | null | undefined)[];
   elevated?: boolean;
   /**
    * Optional label for accessibility; falls back to child text when absent

@@ -4,7 +4,7 @@ import { View, Text, StyleSheet } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Button } from "@ui/components";
 import { theme } from "@ui/theme";
-// eslint-disable-next-line import/no-unresolved
+// @ts-expect-error @expo/vector-icons lacks TypeScript definitions
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 type FeatureCardProps = {
@@ -99,7 +99,7 @@ const styles = StyleSheet.create({
     fontSize: 60,
   },
   title: {
-    fontSize: theme.typography.h1,
+    fontSize: theme.typography.xxxl,
     fontWeight: "bold",
     color: theme.colors.text,
   },

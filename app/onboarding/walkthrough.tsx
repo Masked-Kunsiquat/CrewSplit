@@ -11,7 +11,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Button } from "@ui/components";
 import { theme } from "@ui/theme";
-// eslint-disable-next-line import/no-unresolved
+// @ts-expect-error @expo/vector-icons lacks TypeScript definitions
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useOnboardingState } from "@modules/onboarding/hooks/use-onboarding-state";
 import { SampleDataService } from "@modules/onboarding/services/SampleDataService";
@@ -77,7 +77,7 @@ export default function WalkthroughScreen() {
   const [isFinishing, setIsFinishing] = useState(false);
   const insets = useSafeAreaInsets();
 
-  const handleScroll = (event) => {
+  const handleScroll = (event: any) => {
     const index = Math.round(event.nativeEvent.contentOffset.x / width);
     setActiveIndex(index);
   };
@@ -125,13 +125,14 @@ export default function WalkthroughScreen() {
         },
       ]}
     >
-      <Button
-        title="Skip"
-        onPress={handleSkip}
-        variant="ghost"
-        style={[styles.skipButton, { top: insets.top + theme.spacing.sm }]}
-        disabled={isBusy}
-      />
+      <View style={[styles.skipButton, { top: insets.top + theme.spacing.sm }]}>
+        <Button
+          title="Skip"
+          onPress={handleSkip}
+          variant="ghost"
+          disabled={isBusy}
+        />
+      </View>
       <ScrollView
         ref={scrollViewRef}
         horizontal
@@ -191,7 +192,7 @@ const styles = StyleSheet.create({
     gap: theme.spacing.md,
   },
   slideTitle: {
-    fontSize: theme.typography.h2,
+    fontSize: theme.typography.xxl,
     fontWeight: "bold",
     color: theme.colors.text,
     textAlign: "center",

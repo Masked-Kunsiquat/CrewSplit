@@ -369,7 +369,7 @@ export const getStalenessInfo = async (): Promise<{
   const oldestFetchedAt = result[0]?.oldestFetchedAt ?? null;
   const totalRates = result[0]?.totalRates ?? 0;
 
-  // Count rates older than 7 days (excluding manual rates)
+  // Count rates 7 days old or older (excluding manual rates)
   const sevenDaysAgo = new Date(
     Date.now() - 7 * 24 * 60 * 60 * 1000,
   ).toISOString();
@@ -379,7 +379,7 @@ export const getStalenessInfo = async (): Promise<{
     .where(
       and(
         eq(fxRatesTable.isArchived, false),
-        sql`${fxRatesTable.fetchedAt} < ${sevenDaysAgo}`,
+        sql`${fxRatesTable.fetchedAt} <= ${sevenDaysAgo}`,
         or(
           eq(fxRatesTable.source, "frankfurter"),
           eq(fxRatesTable.source, "exchangerate-api"),
