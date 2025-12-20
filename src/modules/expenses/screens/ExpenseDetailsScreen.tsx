@@ -627,7 +627,6 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.sm,
     flexShrink: 1,
     flexGrow: 1,
-    flexWrap: "wrap",
   },
   amountRow: {
     flexDirection: "row",

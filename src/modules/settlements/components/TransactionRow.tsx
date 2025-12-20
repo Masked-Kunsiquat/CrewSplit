@@ -12,7 +12,10 @@ import { Ionicons } from "@expo/vector-icons";
 import { FontAwesome6 } from "@expo/vector-icons";
 import { theme } from "@ui/theme";
 import { formatCurrency } from "@utils/currency";
-import type { SettlementWithParticipants } from "../types";
+import type {
+  SettlementPaymentMethod,
+  SettlementWithParticipants,
+} from "../types";
 
 interface TransactionRowProps {
   settlement: SettlementWithParticipants;
@@ -83,7 +86,7 @@ export function TransactionRow({
   );
 }
 
-function getPaymentBadge(paymentMethod: string | null) {
+function getPaymentBadge(paymentMethod: SettlementPaymentMethod | null) {
   if (!paymentMethod) return null;
 
   switch (paymentMethod) {
