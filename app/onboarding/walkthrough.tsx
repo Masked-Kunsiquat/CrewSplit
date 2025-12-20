@@ -47,11 +47,11 @@ const WALKTHROUGH_STEPS = [
     title: "Multi-currency",
     description: "Use different currencies within the same trip.",
   },
-] as const satisfies ReadonlyArray<{
+] as const satisfies readonly {
   icon: MaterialCommunityIconName;
   title: string;
   description: string;
-}>;
+}[];
 
 type ProgressDotsProps = {
   steps: readonly unknown[];

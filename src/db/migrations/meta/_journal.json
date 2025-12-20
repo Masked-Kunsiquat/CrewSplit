@@ -5,57 +5,8 @@
     {
       "idx": 0,
       "version": "6",
-      "when": 1765327727245,
-      "tag": "0000_aberrant_moira_mactaggert",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "6",
-      "when": 1765757331424,
-      "tag": "0001_closed_wind_dancer",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "6",
-      "when": 1765757400000,
-      "tag": "0002_seed_system_categories",
-      "breakpoints": false
-    },
-    {
-      "idx": 3,
-      "version": "6",
-      "when": 1734192000000,
-      "tag": "0003_fix_category_fk_restrict",
-      "breakpoints": true
-    },
-    {
-      "idx": 4,
-      "version": "6",
-      "when": 1765816208019,
-      "tag": "0004_free_xavin",
-      "breakpoints": true
-    },
-    {
-      "idx": 5,
-      "version": "6",
-      "when": 1766079995179,
-      "tag": "0005_wealthy_cammi",
-      "breakpoints": true
-    },
-    {
-      "idx": 6,
-      "version": "6",
-      "when": 1766127428079,
-      "tag": "0006_mean_odin",
-      "breakpoints": true
-    },
-    {
-      "idx": 7,
-      "version": "7",
-      "when": 1766200000000,
-      "tag": "0007_add_expense_notes",
+      "when": 1766245940536,
+      "tag": "0000_friendly_miek",
       "breakpoints": true
     }
   ]

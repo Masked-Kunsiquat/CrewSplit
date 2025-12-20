@@ -5,6 +5,7 @@ import { participants } from "@db/schema/participants";
 import { expenses } from "@db/schema/expenses";
 import { expenseSplits } from "@db/schema/expense-splits";
 import { settlements } from "@db/schema/settlements";
+import { expenseCategories } from "@db/schema/expense-categories";
 import { eq } from "drizzle-orm";
 import type { SampleDataTemplateId } from "../types";
 
@@ -14,6 +15,7 @@ interface SampleDataTemplate {
   expenses?: any[];
   expenseSplits?: any[];
   settlements?: any[];
+  categories?: any[];
 }
 
 const sampleDataTemplates: Record<SampleDataTemplateId, SampleDataTemplate> = {
@@ -36,9 +38,14 @@ export class SampleDataService {
       expenses: expenseData,
       expenseSplits: splitData,
       settlements: settlementData,
+      categories: categoryData,
     } = sampleData;
 
     const tripId = trip.id;
+
+    // CRITICAL: Check if categories exist BEFORE transaction
+    const categoriesBeforeTx = await db.select().from(expenseCategories);
+    console.log(`Categories BEFORE transaction: ${categoriesBeforeTx.length}`, categoriesBeforeTx.map(c => c.id));
 
     const normalizedSettlements = settlementData?.map((settlement: any) => {
       if ("originalCurrency" in settlement) {
@@ -90,23 +97,52 @@ export class SampleDataService {
         // await tx.delete(participants).where(inArray(participants.tripId, ...));
 
         // Insert new sample data
+        console.log("Inserting trip...");
         await tx.insert(trips).values({
           ...trip,
           isSampleData: true,
           sampleDataTemplateId: templateId,
         });
+
+        // Insert categories only if they're trip-specific (not system categories)
+        // System categories are already seeded in migration
+        if (categoryData?.length) {
+          const tripSpecificCategories = categoryData.filter(
+            (cat: any) => !cat.isSystem && cat.tripId === tripId,
+          );
+          console.log(`Inserting ${tripSpecificCategories.length} trip-specific categories...`);
+          if (tripSpecificCategories.length > 0) {
+            await tx.insert(expenseCategories).values(tripSpecificCategories);
+          }
+        }
+
+        console.log(`Inserting ${participantData?.length || 0} participants...`);
         if (participantData?.length) {
           await tx.insert(participants).values(participantData);
         }
+
+        // Verify categories exist before inserting expenses
+        const existingCategories = await tx.select().from(expenseCategories);
+        console.log(`Existing categories in DB: ${existingCategories.length}`, existingCategories.map(c => c.id));
+
+        console.log(`Inserting ${expenseData?.length || 0} expenses...`);
         if (expenseData?.length) {
+          // Log first expense to debug
+          console.log('First expense:', JSON.stringify(expenseData[0], null, 2));
           await tx.insert(expenses).values(expenseData);
         }
+
+        console.log(`Inserting ${splitData?.length || 0} expense splits...`);
         if (splitData?.length) {
           await tx.insert(expenseSplits).values(splitData);
         }
+
+        console.log(`Inserting ${normalizedSettlements?.length || 0} settlements...`);
         if (normalizedSettlements?.length) {
           await tx.insert(settlements).values(normalizedSettlements);
         }
+
+        console.log("Sample data inserted successfully!");
       });
     } catch (err) {
       // Provide helpful error message if database schema is outdated
