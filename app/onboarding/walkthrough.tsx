@@ -105,7 +105,11 @@ export default function WalkthroughScreen() {
     setIsFinishing(true);
     try {
       const sampleDataService = new SampleDataService();
+      // Load all 4 sample trips for new users
       await sampleDataService.loadSampleTrip("summer_road_trip");
+      await sampleDataService.loadSampleTrip("family_beach_vacation");
+      await sampleDataService.loadSampleTrip("weekend_ski_trip");
+      await sampleDataService.loadSampleTrip("europe_backpacking");
       await markComplete();
       router.replace("/");
     } catch (error) {
