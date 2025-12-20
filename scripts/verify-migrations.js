@@ -69,11 +69,9 @@ try {
     ].join("\n"),
   );
 
-  execFileSync(
-    drizzleBin,
-    ["generate", "--config", tmpConfigPath],
-    { stdio: "inherit" },
-  );
+  execFileSync(drizzleBin, ["generate", "--config", tmpConfigPath], {
+    stdio: "inherit",
+  });
 
   const originalJournal = JSON.parse(fs.readFileSync(journalPath, "utf8"));
   const tempJournal = JSON.parse(
