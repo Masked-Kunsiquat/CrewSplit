@@ -13,6 +13,9 @@ import {
   TouchableOpacity,
 } from "react-native";
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
+// @ts-expect-error @expo/vector-icons lacks TypeScript definitions
+// eslint-disable-next-line import/no-unresolved
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { theme } from "@ui/theme";
 import {
   Card,
@@ -364,9 +367,13 @@ export default function SettlementSummaryScreen() {
                 onPress={() =>
                   router.push(`/trips/${tripId}/settlements/record`)
                 }
-                style={styles.recordButton}
+                style={styles.recordIconButton}
               >
-                <Text style={styles.recordButtonText}>+ Record</Text>
+                <MaterialCommunityIcons
+                  name="receipt-text-edit"
+                  size={24}
+                  color={theme.colors.primary}
+                />
               </TouchableOpacity>
             )}
           </View>
@@ -736,16 +743,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: theme.spacing.sm,
   },
-  recordButton: {
-    backgroundColor: theme.colors.primary,
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.sm,
-    borderRadius: 8,
-  },
-  recordButtonText: {
-    color: theme.colors.background,
-    fontSize: theme.typography.sm,
-    fontWeight: theme.typography.semibold,
+  recordIconButton: {
+    padding: theme.spacing.xs,
   },
   viewAllButton: {
     marginTop: theme.spacing.sm,
