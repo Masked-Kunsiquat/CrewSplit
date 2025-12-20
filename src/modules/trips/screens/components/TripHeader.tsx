@@ -5,6 +5,8 @@
 
 import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+// @ts-expect-error @expo/vector-icons lacks TypeScript definitions
+import { AntDesign } from "@expo/vector-icons";
 import { theme } from "@ui/theme";
 import type { Trip } from "../../types";
 
@@ -42,7 +44,11 @@ export function TripHeader({ trip, onEdit }: TripHeaderProps) {
         accessibilityLabel="Edit trip details"
         accessibilityHint="Opens the edit screen for this trip"
       >
-        <Text style={styles.editButtonText}>✏️</Text>
+        <AntDesign
+          name="edit"
+          size={18}
+          color={theme.colors.primary}
+        />
       </TouchableOpacity>
     </View>
   );
@@ -87,10 +93,5 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: theme.colors.border,
     alignSelf: "flex-start",
-  },
-  editButtonText: {
-    fontSize: theme.typography.sm,
-    fontWeight: theme.typography.semibold,
-    color: theme.colors.primary,
   },
 });

@@ -13,6 +13,8 @@ import {
   Alert,
   TouchableOpacity,
 } from "react-native";
+// @ts-expect-error @expo/vector-icons lacks TypeScript definitions
+import { AntDesign } from "@expo/vector-icons";
 import { useRouter, useLocalSearchParams, useNavigation } from "expo-router";
 import { theme } from "@ui/theme";
 import {
@@ -346,7 +348,11 @@ function ExpenseDetailsContent({
                 accessibilityLabel="Edit expense"
                 accessibilityHint="Opens the edit expense screen"
               >
-                <Text style={styles.editButtonText}>Edit</Text>
+                <AntDesign
+                  name="edit"
+                  size={18}
+                  color={theme.colors.primary}
+                />
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={() => setEditingExpense(!editingExpense)}
@@ -365,14 +371,13 @@ function ExpenseDetailsContent({
                     : "Shows the delete option"
                 }
               >
-                <Text
-                  style={[
-                    styles.editButtonText,
-                    editingExpense && styles.deleteButtonTextActive,
-                  ]}
-                >
-                  {editingExpense ? "Cancel" : "Delete"}
-                </Text>
+                <AntDesign
+                  name="delete"
+                  size={18}
+                  color={
+                    editingExpense ? theme.colors.text : theme.colors.primary
+                  }
+                />
               </TouchableOpacity>
             </View>
           </View>
@@ -592,17 +597,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: theme.colors.border,
   },
-  editButtonText: {
-    fontSize: theme.typography.sm,
-    fontWeight: theme.typography.semibold,
-    color: theme.colors.primary,
-  },
   deleteButtonActive: {
     backgroundColor: theme.colors.error,
     borderColor: theme.colors.error,
-  },
-  deleteButtonTextActive: {
-    color: theme.colors.text,
   },
   loadingText: {
     fontSize: theme.typography.base,
