@@ -206,47 +206,52 @@ describe("FxRateRepository", () => {
     ]);
   });
 
-  it("getStalenessInfo counts stale API rates older than 7 days", async () => {
+  it("getStalenessInfo counts stale API rates older than 1 day", async () => {
+    const now = new Date();
+    const fresh = new Date(now.getTime() - 12 * 60 * 60 * 1000).toISOString(); // 12 hours ago (fresh)
+    const staleApi = new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000).toISOString(); // 2 days ago (stale)
+    const manualOld = new Date(now.getTime() - 10 * 24 * 60 * 60 * 1000).toISOString(); // 10 days ago (but manual)
+
     mockDb.reset([
       createRateRow({
         id: "fresh",
-        fetchedAt: "2024-01-09T00:00:00.000Z",
+        fetchedAt: fresh,
         source: "frankfurter",
       }),
       createRateRow({
         id: "stale-api",
-        fetchedAt: "2023-12-20T00:00:00.000Z",
+        fetchedAt: staleApi,
         source: "exchangerate-api",
       }),
       createRateRow({
         id: "manual-old",
-        fetchedAt: "2023-12-15T00:00:00.000Z",
+        fetchedAt: manualOld,
         source: "manual",
       }),
     ]);
 
     const info = await FxRateRepository.getStalenessInfo();
     expect(info.totalRates).toBe(3);
-    expect(info.staleRates).toBe(1); // manual excluded
-    expect(info.oldestFetchedAt).toBe("2023-12-15T00:00:00.000Z");
+    expect(info.staleRates).toBe(1); // only stale-api is counted (manual excluded)
+    expect(info.oldestFetchedAt).toBe(manualOld);
   });
 
-  it("getStalenessInfo includes rates exactly 7 days old as stale", async () => {
-    // Edge case: rate fetched exactly 7 days ago should be marked as stale
-    const exactlySevenDaysAgo = new Date(
-      Date.now() - 7 * 24 * 60 * 60 * 1000,
+  it("getStalenessInfo includes rates exactly 1 day old as stale", async () => {
+    // Edge case: rate fetched exactly 1 day ago should be marked as stale
+    const exactlyOneDayAgo = new Date(
+      Date.now() - 1 * 24 * 60 * 60 * 1000,
     ).toISOString();
 
     mockDb.reset([
       createRateRow({
-        id: "exactly-seven-days",
-        fetchedAt: exactlySevenDaysAgo,
+        id: "exactly-one-day",
+        fetchedAt: exactlyOneDayAgo,
         source: "frankfurter",
       }),
     ]);
 
     const info = await FxRateRepository.getStalenessInfo();
-    expect(info.staleRates).toBe(1); // Should be counted as stale (>=7 days)
+    expect(info.staleRates).toBe(1); // Should be counted as stale (>=1 day)
   });
 
   it("archives specific rate by id", async () => {

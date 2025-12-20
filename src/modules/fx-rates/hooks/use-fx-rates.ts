@@ -98,7 +98,7 @@ export function useFxRates() {
   return {
     /** Total number of active rates */
     rateCount: staleness.totalRates,
-    /** Number of stale rates (>7 days old) */
+    /** Number of stale rates (>24 hours old) */
     staleRateCount: staleness.staleRates,
     /** Oldest fetchedAt timestamp */
     oldestUpdate: staleness.oldestFetchedAt,

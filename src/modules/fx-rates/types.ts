@@ -38,5 +38,5 @@ export interface StalenessInfo {
   oldestFetchedAt: string | null;
   totalRates: number;
   staleRates: number;
-  isStale: boolean; // true if any rates are >7 days old
+  isStale: boolean; // true if any rates are >24 hours old
 }
