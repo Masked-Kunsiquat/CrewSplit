@@ -155,26 +155,26 @@ The submit webhook payload may look as the example below:
 Here's an example of how you can implement your server:
 
 ```js server.js
-const crypto = require('crypto');
-const express = require('express');
-const bodyParser = require('body-parser');
-const safeCompare = require('safe-compare');
+const crypto = require("crypto");
+const express = require("express");
+const bodyParser = require("body-parser");
+const safeCompare = require("safe-compare");
 
 const app = express();
-app.use(bodyParser.text({ type: '*/*' }));
-app.post('/webhook', (req, res) => {
-  const expoSignature = req.headers['expo-signature'];
+app.use(bodyParser.text({ type: "*/*" }));
+app.post("/webhook", (req, res) => {
+  const expoSignature = req.headers["expo-signature"];
   // process.env.SECRET_WEBHOOK_KEY has to match SECRET value set with `eas webhook:create` command
-  const hmac = crypto.createHmac('sha1', process.env.SECRET_WEBHOOK_KEY);
+  const hmac = crypto.createHmac("sha1", process.env.SECRET_WEBHOOK_KEY);
   hmac.update(req.body);
-  const hash = `sha1=${hmac.digest('hex')}`;
+  const hash = `sha1=${hmac.digest("hex")}`;
   if (!safeCompare(expoSignature, hash)) {
     res.status(500).send("Signatures didn't match!");
   } else {
     // Do something here.  For example, send a notification to Slack!
     // console.log(req.body);
-    res.send('OK!');
+    res.send("OK!");
   }
 });
-app.listen(8080, () => console.log('Listening on port 8080'));
+app.listen(8080, () => console.log("Listening on port 8080"));
 ```
