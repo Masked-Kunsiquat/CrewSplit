@@ -14,7 +14,7 @@ import {
 } from "react-native";
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
 // @ts-expect-error @expo/vector-icons lacks TypeScript definitions
-// eslint-disable-next-line import/no-unresolved
+
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { theme } from "@ui/theme";
 import {
