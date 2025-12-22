@@ -41,8 +41,11 @@ function AddExpenseScreenContent({ tripId }: { tripId: string }) {
   const { trip, loading: tripLoading } = useTripById(tripId);
   const { participants, loading: participantsLoading } =
     useParticipants(tripId);
-  const { categories, loading: categoriesLoading } =
-    useExpenseCategories(tripId);
+  const {
+    categories,
+    loading: categoriesLoading,
+    error: categoriesError,
+  } = useExpenseCategories(tripId);
 
   const [isCreating, setIsCreating] = useState(false);
 
@@ -86,6 +89,21 @@ function AddExpenseScreenContent({ tripId }: { tripId: string }) {
 
   if (loading) {
     return <LoadingScreen />;
+  }
+
+  // Handle categories error
+  if (categoriesError) {
+    return (
+      <ErrorScreen
+        title="Failed to Load Categories"
+        message={
+          categoriesError.message ||
+          "Unable to load expense categories. Please try again."
+        }
+        actionLabel="Go back"
+        onAction={() => router.back()}
+      />
+    );
   }
 
   if (!trip || participants.length === 0) {

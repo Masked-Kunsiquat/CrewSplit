@@ -26,7 +26,7 @@ import {
   Checkbox,
 } from "@ui/components";
 import { getCategoryIcon } from "@utils/category-icons";
-import { parseCurrency } from "@utils/currency";
+import { parseCurrency, CurrencyUtils } from "@utils/currency";
 import { validateExpenseSplits } from "../utils/validate-splits";
 import {
   buildExpenseSplits,
@@ -112,7 +112,15 @@ export function ExpenseForm({
 
     setDescription(initialValues.description);
     setNotes(initialValues.notes ?? "");
-    setAmount((initialValues.amountMinor / 100).toFixed(2));
+
+    // Convert minor units to major units using currency-aware utility
+    const majorAmount = CurrencyUtils.minorToMajor(
+      initialValues.amountMinor,
+      initialValues.currency,
+    );
+    const decimals = CurrencyUtils.getDecimalPlaces(initialValues.currency);
+    setAmount(majorAmount.toFixed(decimals));
+
     setDate(new Date(initialValues.date));
     setPaidBy(initialValues.paidBy);
     setCategoryId(initialValues.categoryId || "cat-other");
@@ -138,6 +146,8 @@ export function ExpenseForm({
 
       // Pre-populate split values
       const values: Record<string, string> = {};
+      const decimals = CurrencyUtils.getDecimalPlaces(initialValues.currency);
+
       initialValues.splits.forEach((split) => {
         if (split.shareType === "percentage") {
           values[split.participantId] = split.share.toString();
@@ -148,7 +158,12 @@ export function ExpenseForm({
           split.amount !== undefined &&
           split.amount !== null
         ) {
-          values[split.participantId] = (split.amount / 100).toFixed(2);
+          // Convert minor units to major units using currency-aware utility
+          const majorAmount = CurrencyUtils.minorToMajor(
+            split.amount,
+            initialValues.currency,
+          );
+          values[split.participantId] = majorAmount.toFixed(decimals);
         }
       });
       setSplitValues(values);
