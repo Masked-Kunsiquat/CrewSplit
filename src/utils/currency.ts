@@ -39,9 +39,10 @@ const CURRENCY_DECIMALS: Record<string, number> = {
 };
 
 /**
- * Get the number of decimal places for a given currency
- * @param currencyCode - ISO 4217 currency code
- * @returns Number of decimal places (default: 2)
+ * Determine the number of fractional decimal places used by a currency.
+ *
+ * @param currencyCode - ISO 4217 currency code (case-insensitive)
+ * @returns The currency's number of decimal places; defaults to 2 when the code is not recognized
  */
 function getDecimalPlaces(currencyCode: string): number {
   return CURRENCY_DECIMALS[currencyCode.toUpperCase()] ?? 2;

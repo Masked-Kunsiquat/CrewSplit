@@ -14,6 +14,11 @@ import { useExpenseWithSplits } from "../hooks/use-expenses";
 import { useUpdateExpense } from "../hooks/use-expense-mutations";
 import { ExpenseForm, ExpenseFormData } from "../components/ExpenseForm";
 
+/**
+ * Render the edit-expense screen for a trip after validating route parameters.
+ *
+ * @returns A React element that renders an ErrorScreen when the trip or expense ID is missing, or the EditExpenseScreenContent for the specified trip and expense.
+ */
 export default function EditExpenseScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{
@@ -50,6 +55,17 @@ export default function EditExpenseScreen() {
   );
 }
 
+/**
+ * Loads trip, participants, categories, and expense data and renders the edit-expense screen.
+ *
+ * Renders a loading screen while data is loading, an error screen for missing data or category load
+ * failures, and the ExpenseForm populated with the expense's initial values when all required data
+ * is available. Submissions call the update API and navigate back on success; cancel navigates back.
+ *
+ * @param tripId - The trip identifier whose data and participants should be loaded.
+ * @param expenseId - The expense identifier to load and edit.
+ * @returns A React element that displays loading/error states or the populated edit expense form.
+ */
 function EditExpenseScreenContent({
   tripId,
   expenseId,

@@ -13,6 +13,14 @@ import { useExpenseCategories } from "../hooks/use-expense-categories";
 import { addExpense } from "../repository";
 import { ExpenseForm, ExpenseFormData } from "../components/ExpenseForm";
 
+/**
+ * Renders the Add Expense screen for a trip identified by the current route.
+ *
+ * If the route does not contain a valid trip ID, shows an ErrorScreen with a back action to the trips list.
+ * Otherwise, renders AddExpenseScreenContent for the resolved trip ID.
+ *
+ * @returns The screen UI: `ErrorScreen` when the trip ID is missing or invalid, or `AddExpenseScreenContent` for the resolved trip.
+ */
 export default function AddExpenseScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ id?: string | string[] }>();
@@ -35,6 +43,17 @@ export default function AddExpenseScreen() {
   return <AddExpenseScreenContent tripId={normalizedTripId} />;
 }
 
+/**
+ * Render the Add Expense UI for a specific trip and manage its related states and actions.
+ *
+ * Loads trip, participants, and expense categories for `tripId`; shows a loading indicator while data loads,
+ * displays an appropriate error screen if the trip is missing, there are no participants, or categories fail to load,
+ * and otherwise renders the expense form. Updates the native header title when the trip is available,
+ * submits a new expense when the form is submitted, and navigates back on success or cancel.
+ *
+ * @param tripId - The trip identifier used to fetch trip data and associate the created expense
+ * @returns The screen content: a loading indicator, an error screen, or the expense form UI
+ */
 function AddExpenseScreenContent({ tripId }: { tripId: string }) {
   const router = useRouter();
   const navigation = useNavigation();
