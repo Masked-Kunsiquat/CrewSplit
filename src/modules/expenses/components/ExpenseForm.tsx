@@ -107,8 +107,9 @@ export function ExpenseForm({
   const [splitValues, setSplitValues] = useState<Record<string, string>>({});
 
   // Pre-populate form when initial values are provided (edit mode)
+  // Only runs once on mount to avoid resetting form during user edits
   useEffect(() => {
-    if (!initialValues) return;
+    if (mode !== "edit" || !initialValues) return;
 
     setDescription(initialValues.description);
     setNotes(initialValues.notes ?? "");
@@ -168,7 +169,8 @@ export function ExpenseForm({
       });
       setSplitValues(values);
     }
-  }, [initialValues]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mode]); // Only run once on mount - initialValues is intentionally excluded
 
   // Auto-select first participant as payer if not set (add mode only)
   useEffect(() => {
