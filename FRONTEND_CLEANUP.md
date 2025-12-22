@@ -164,22 +164,23 @@
 
 **Move use-device-owner**:
 
-- [ ] Create `src/modules/onboarding/hooks/` directory (if doesn't exist)
-- [ ] Move `src/hooks/use-device-owner.ts` → `src/modules/onboarding/hooks/`
-- [ ] Update imports across codebase
-- [ ] Update `src/modules/onboarding/hooks/index.ts` exports
+- [x] Create `src/modules/onboarding/hooks/` directory (already existed)
+- [x] Move `src/hooks/use-device-owner.ts` → `src/modules/onboarding/hooks/`
+- [x] Update imports across codebase (app/settings.tsx, create-trip-screen.tsx)
+- [x] Update `src/modules/onboarding/hooks/index.ts` exports
 
 **Move use-display-currency**:
 
-- [ ] Decide: Move to `onboarding/hooks/` OR create new `settings/` module
-- [ ] Move `src/hooks/use-display-currency.ts` to chosen location
-- [ ] Update imports across codebase
-- [ ] Update module exports
+- [x] Created new `settings/` module for user preferences
+- [x] Move `src/hooks/use-display-currency.ts` → `src/modules/settings/hooks/`
+- [x] Update imports across codebase (4 screens updated)
+- [x] Created module exports (settings/hooks/index.ts, settings/index.ts)
 
 **Update Global Hooks**:
 
-- [ ] Update `src/hooks/index.ts` to remove relocated hooks
-- [ ] Verify only cross-cutting hooks remain (`use-query`, `use-refresh-control`, `use-mutation`)
+- [x] Update `src/hooks/index.ts` to remove relocated hooks
+- [x] Verified only cross-cutting hooks remain (`use-query`, `use-refresh-control`)
+- [x] Note: `use-mutation` was never in global hooks (belongs in modules)
 
 ### 3.3 Add Common Styles to Theme
 
@@ -351,7 +352,7 @@
 
 **Phase 1**: ✅ **Complete** (All tasks done, tests passing, type-check clean)
 **Phase 2**: ✅ **Complete** (Utilities extracted, components created, screens refactored)
-**Phase 3**: ⚠️ **Partially Complete** (Section 3.1 complete, 3.2 and 3.3 pending)
+**Phase 3**: ⚠️ **Partially Complete** (Sections 3.1 and 3.2 complete, 3.3 pending)
 **Phase 4**: ⬜ Not Started | ⬜ In Progress | ⬜ Complete
 
 **Last Updated**: 2025-12-22
@@ -452,4 +453,37 @@
 - **Type safety improved** - distinct types for suggested payments vs recorded transactions
 - **0 regressions** - all existing functionality preserved
 
-**Remaining Phase 3 Tasks**: Sections 3.2 (Relocate Misplaced Hooks) and 3.3 (Add Common Styles to Theme) are pending.
+---
+
+## Phase 3 Section 3.2 Results
+
+**Completed**: 2025-12-22
+**Time Taken**: ~20 minutes
+
+### Achievements
+
+- ✅ Relocated `use-device-owner` → `onboarding/hooks/`
+  - Hook manages device owner name for auto-adding to new trips
+  - Now properly colocated with onboarding domain
+- ✅ Relocated `use-display-currency` → `settings/hooks/` (new module)
+  - Created new settings/ module for user preferences
+  - Hook used across 4 screens for display currency preference
+- ✅ Updated 5 import statements across codebase
+- ✅ Created module index files for proper exports
+- ✅ Cleaned up global hooks/ directory
+  - Now only contains cross-cutting hooks (use-query, use-refresh-control)
+  - Added documentation note about relocated hooks
+- ✅ Type-check passing with 0 errors
+
+### Commits
+
+- `fca4f8d` - refactor: relocate hooks to appropriate domain modules (Phase 3.2)
+
+### Impact
+
+- **Better module organization** - hooks now in correct domain modules
+- **New settings module** - foundation for future user preferences
+- **Clearer architecture** - global hooks only for cross-cutting concerns
+- **0 regressions** - all existing functionality preserved
+
+**Remaining Phase 3 Tasks**: Section 3.3 (Add Common Styles to Theme) is pending.
