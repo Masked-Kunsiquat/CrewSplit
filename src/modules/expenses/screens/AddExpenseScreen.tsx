@@ -26,6 +26,7 @@ import {
   ParticipantSplitRow,
   SplitValidationSummary,
   SplitType,
+  Checkbox,
 } from "@ui/components";
 import { useTripById } from "../../trips/hooks/use-trips";
 import { useParticipants } from "../../participants/hooks/use-participants";
@@ -34,37 +35,6 @@ import { addExpense } from "../repository";
 import { parseCurrency } from "@utils/currency";
 import { getCategoryIcon } from "@utils/category-icons";
 import { normalizeRouteParam } from "@utils/route-params";
-
-// Checkbox component for Personal Expense toggle
-function Checkbox({
-  checked,
-  onToggle,
-  label,
-  helperText,
-}: {
-  checked: boolean;
-  onToggle: () => void;
-  label: string;
-  helperText?: string;
-}) {
-  return (
-    <View style={styles.checkboxContainer}>
-      <Pressable
-        style={styles.checkboxRow}
-        onPress={onToggle}
-        accessibilityRole="checkbox"
-        accessibilityState={{ checked }}
-        accessibilityLabel={label}
-      >
-        <View style={[styles.checkbox, checked && styles.checkboxChecked]}>
-          {checked && <View style={styles.checkboxInner} />}
-        </View>
-        <Text style={styles.checkboxLabel}>{label}</Text>
-      </Pressable>
-      {helperText && <Text style={styles.checkboxHelper}>{helperText}</Text>}
-    </View>
-  );
-}
 
 export default function AddExpenseScreen() {
   const router = useRouter();
@@ -752,44 +722,6 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.background,
     borderRadius: theme.borderRadius.sm,
     overflow: "hidden",
-  },
-  checkboxContainer: {
-    marginBottom: theme.spacing.md,
-  },
-  checkboxRow: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  checkbox: {
-    width: 24,
-    height: 24,
-    borderRadius: theme.borderRadius.sm,
-    borderWidth: 2,
-    borderColor: theme.colors.border,
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: theme.spacing.md,
-  },
-  checkboxChecked: {
-    borderColor: theme.colors.primary,
-    backgroundColor: theme.colors.primary,
-  },
-  checkboxInner: {
-    width: 12,
-    height: 12,
-    borderRadius: 2,
-    backgroundColor: theme.colors.text,
-  },
-  checkboxLabel: {
-    fontSize: theme.typography.base,
-    color: theme.colors.text,
-    fontWeight: theme.typography.medium,
-  },
-  checkboxHelper: {
-    fontSize: theme.typography.sm,
-    color: theme.colors.textMuted,
-    marginLeft: 40, // Align with label after checkbox
-    marginTop: theme.spacing.xs,
   },
   footer: {
     padding: theme.spacing.lg,
