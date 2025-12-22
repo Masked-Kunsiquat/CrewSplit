@@ -163,13 +163,13 @@ function EditExpenseScreenContent({
       categories={categories}
       initialValues={{
         description: expense.description,
-        notes: expense.notes,
+        notes: expense.notes ?? null,
         amountMinor: expense.originalAmountMinor,
         currency: expense.originalCurrency ?? trip.currency,
         date: expense.date,
         paidBy: expense.paidBy,
         categoryId: expense.categoryId || "cat-other",
-        splits,
+        splits: splits,
       }}
       onSubmit={handleSubmit}
       onCancel={handleCancel}

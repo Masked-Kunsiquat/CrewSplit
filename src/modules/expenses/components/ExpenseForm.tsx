@@ -34,7 +34,6 @@ import {
 } from "../utils/build-expense-splits";
 import type { Participant } from "@modules/participants/types";
 import type { ExpenseCategory } from "../types";
-import type { ExpenseSplit } from "@db/schema/expense-splits";
 
 export interface ExpenseFormData {
   description: string;
@@ -67,7 +66,12 @@ interface ExpenseFormProps {
     date: string;
     paidBy: string;
     categoryId: string;
-    splits: ExpenseSplit[];
+    splits: Array<{
+      participantId: string;
+      shareType: SplitType;
+      share: number;
+      amount?: number | null;
+    }>;
   };
   onSubmit: (data: ExpenseFormData) => Promise<void>;
   onCancel: () => void;
@@ -139,7 +143,11 @@ export function ExpenseForm({
           values[split.participantId] = split.share.toString();
         } else if (split.shareType === "weight") {
           values[split.participantId] = split.share.toString();
-        } else if (split.shareType === "amount" && split.amount !== undefined) {
+        } else if (
+          split.shareType === "amount" &&
+          split.amount !== undefined &&
+          split.amount !== null
+        ) {
           values[split.participantId] = (split.amount / 100).toFixed(2);
         }
       });
