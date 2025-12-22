@@ -8,12 +8,12 @@
 
 ## 📊 Expected Impact
 
-| Metric | Current | After Cleanup | Improvement |
-|--------|---------|---------------|-------------|
-| Total frontend LoC | ~8,000+ | ~6,500 | **-1,500 lines** |
-| Duplicated code | ~1,500 lines | ~100 lines | **-93%** |
-| Settlement modules | 2 confusing | 1 clear | **-50%** |
-| Obsolete code | ~900 lines | 0 | **-100%** |
+| Metric             | Current      | After Cleanup | Improvement      |
+| ------------------ | ------------ | ------------- | ---------------- |
+| Total frontend LoC | ~8,000+      | ~6,500        | **-1,500 lines** |
+| Duplicated code    | ~1,500 lines | ~100 lines    | **-93%**         |
+| Settlement modules | 2 confusing  | 1 clear       | **-50%**         |
+| Obsolete code      | ~900 lines   | 0             | **-100%**        |
 
 ---
 
@@ -126,10 +126,12 @@
 ### 3.1 Merge Settlement Modules (CRITICAL)
 
 **Preparation**:
+
 - [ ] Create detailed migration plan for import paths
 - [ ] Document current usage of both modules
 
 **Merge Structure**:
+
 - [ ] Create new unified structure in `src/modules/settlements/`:
   - [ ] Create `engine/` directory (pure math layer)
   - [ ] Move `settlement/calculate-balances.ts` → `settlements/engine/`
@@ -146,11 +148,13 @@
   - [ ] Merge `__tests__/` directories
 
 **Update Imports**:
+
 - [ ] Search codebase for `@modules/settlement` imports (without 's')
 - [ ] Update all imports to `@modules/settlements`
 - [ ] Update path aliases if needed in `tsconfig.json`
 
 **Cleanup**:
+
 - [ ] Delete old `src/modules/settlement/` directory
 - [ ] Run tests to verify no regressions
 - [ ] Run `npm run type-check`
@@ -159,18 +163,21 @@
 ### 3.2 Relocate Misplaced Hooks
 
 **Move use-device-owner**:
+
 - [ ] Create `src/modules/onboarding/hooks/` directory (if doesn't exist)
 - [ ] Move `src/hooks/use-device-owner.ts` → `src/modules/onboarding/hooks/`
 - [ ] Update imports across codebase
 - [ ] Update `src/modules/onboarding/hooks/index.ts` exports
 
 **Move use-display-currency**:
+
 - [ ] Decide: Move to `onboarding/hooks/` OR create new `settings/` module
 - [ ] Move `src/hooks/use-display-currency.ts` to chosen location
 - [ ] Update imports across codebase
 - [ ] Update module exports
 
 **Update Global Hooks**:
+
 - [ ] Update `src/hooks/index.ts` to remove relocated hooks
 - [ ] Verify only cross-cutting hooks remain (`use-query`, `use-refresh-control`, `use-mutation`)
 
@@ -206,18 +213,21 @@
 ### 4.2 Add Missing Test Directories
 
 **Onboarding Module**:
+
 - [ ] Create `src/modules/onboarding/__tests__/` directory
 - [ ] Add repository tests
 - [ ] Add hook tests
 - [ ] Add service tests (sample trip creation)
 
 **Participants Module**:
+
 - [ ] Create `src/modules/participants/__tests__/` directory
 - [ ] Add repository tests
 - [ ] Add hook tests
 - [ ] Add CRUD operation tests
 
 **Expenses Module**:
+
 - [ ] Create `src/modules/expenses/__tests__/` directory
 - [ ] Add repository tests
 - [ ] Add hook tests
@@ -225,6 +235,7 @@
 - [ ] Add split building utility tests
 
 **Trips Module**:
+
 - [ ] Create `src/modules/trips/__tests__/` directory (module-level)
 - [ ] Add repository tests
 - [ ] Add hook tests
@@ -233,17 +244,20 @@
 ### 4.3 Standardize Utility Usage
 
 **Currency Formatting**:
+
 - [ ] Consolidate `formatCurrency` with `CurrencyUtils.formatMinor`
 - [ ] Move `CurrencyUtils` from `db/mappers/` to `utils/`
 - [ ] Update all currency formatting to use centralized utility
 - [ ] Add backward-compatible exports
 
 **Date Formatting**:
+
 - [ ] Expand `src/utils/date.ts` with `formatDateShort()` and `formatDateLong()`
 - [ ] Replace inline date formatting with utility functions
 - [ ] Standardize date format across all screens
 
 **Error Creation**:
+
 - [ ] Replace manual error augmentation with `createAppError()` utility
 - [ ] Update all error creation in repositories and services
 - [ ] Ensure consistent error code structure
@@ -290,12 +304,14 @@
 ## Completion Criteria
 
 **Phase 1 Complete When**:
+
 - [x] All obsolete files deleted
 - [x] All simple utilities extracted and tested
 - [x] All tests passing
 - [x] No TypeScript errors
 
 **Phase 2 Complete When**:
+
 - [ ] All business logic utilities extracted
 - [ ] LoadingScreen and ErrorScreen components in use
 - [ ] Mutation hook factory implemented
@@ -303,6 +319,7 @@
 - [ ] Screens simplified and readable
 
 **Phase 3 Complete When**:
+
 - [ ] Settlement modules merged successfully
 - [ ] All hooks in correct domain modules
 - [ ] Common styles centralized in theme
@@ -311,6 +328,7 @@
 - [ ] Documentation updated
 
 **Phase 4 Complete When**:
+
 - [ ] ExpenseForm component implemented (if doing)
 - [ ] Test coverage added to all modules
 - [ ] All utilities standardized
@@ -346,6 +364,7 @@
 **Time Taken**: ~2 hours
 
 ### Achievements
+
 - ✅ Deleted 3 obsolete hook files (~900 lines)
 - ✅ Extracted route parameter utility (eliminated 42 lines of duplication)
 - ✅ Created reusable Checkbox component (eliminated 140 lines of duplication)
@@ -354,12 +373,14 @@
 - ✅ Type-check passing with 0 errors
 
 ### Commits
+
 - `08629de` - refactor: delete obsolete hooks.ts files and add route-params utility
 - `8fae7e9` - refactor: use shared normalizeRouteParam utility across screens
 - `92e6e17` - refactor: extract Checkbox component and remove obsolete code
 - `90253e8` - fix: correct import paths for route-params utility
 
 ### Impact
+
 - **~1,082 lines removed** from the codebase
 - **7 screens simplified** with shared utilities
 - **2 expense screens** now using shared Checkbox component

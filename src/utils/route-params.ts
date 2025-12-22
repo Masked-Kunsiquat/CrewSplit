@@ -16,7 +16,7 @@
  * const tripId = normalizeRouteParam(params.id);
  */
 export function normalizeRouteParam(
-  param: string | string[] | undefined
+  param: string | string[] | undefined,
 ): string | null {
   if (!param) return null;
 
