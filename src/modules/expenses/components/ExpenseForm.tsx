@@ -43,12 +43,12 @@ export interface ExpenseFormData {
   date: string;
   paidBy: string;
   categoryId: string;
-  splits: Array<{
+  splits: {
     participantId: string;
     shareType: SplitType;
     share: number;
     amount?: number;
-  }>;
+  }[];
 }
 
 interface ExpenseFormProps {
@@ -66,12 +66,12 @@ interface ExpenseFormProps {
     date: string;
     paidBy: string;
     categoryId: string;
-    splits: Array<{
+    splits: {
       participantId: string;
       shareType: SplitType;
       share: number;
       amount?: number | null;
-    }>;
+    }[];
   };
   onSubmit: (data: ExpenseFormData) => Promise<void>;
   onCancel: () => void;
@@ -227,7 +227,10 @@ export function ExpenseForm({
 
   const handleSubmit = async () => {
     if (!paidBy) {
-      Alert.alert("Missing Information", "Please select who paid for this expense.");
+      Alert.alert(
+        "Missing Information",
+        "Please select who paid for this expense.",
+      );
       return;
     }
 

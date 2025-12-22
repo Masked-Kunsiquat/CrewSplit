@@ -518,21 +518,27 @@
 ### Files Updated by Module
 
 **Expense Module** (4 files):
+
 - AddExpenseScreen, EditExpenseScreen, ExpenseDetailsScreen, ExpensesListScreen
 
 **Participant Module** (2 files):
+
 - ParticipantDetailsScreen, ManageParticipantsScreen
 
 **Settlement Module** (3 files):
+
 - SettlementSummaryScreen, RecordTransactionScreen, TransactionDetailsScreen
 
 **Trip Module** (4 files):
+
 - TripDashboardScreen, TripsListScreen, TripStatisticsScreen, create-trip-screen
 
 **FX-Rate Module** (2 files):
+
 - RateListScreen, ManualRateEntryScreen
 
 **UI Components** (2 files):
+
 - LoadingScreen, ErrorScreen
 
 ---
@@ -584,9 +590,11 @@
 ### Files Modified
 
 **Created**:
+
 - `src/modules/expenses/components/ExpenseForm.tsx` (550 lines)
 
 **Simplified**:
+
 - `src/modules/expenses/screens/AddExpenseScreen.tsx` (541 → 119 lines)
 - `src/modules/expenses/screens/EditExpenseScreen.tsx` (627 → 179 lines)
 
@@ -622,6 +630,7 @@
 ### Impact
 
 **Currency Utilities**:
+
 - **Single source of truth** for currency formatting
 - **Currency-aware** formatting supporting JPY (0 decimals), BHD (3 decimals), etc.
 - **Better organization** - moved from db/mappers/ to utils/
@@ -629,6 +638,7 @@
 - **Reduced duplication** - formatCurrency now uses CurrencyUtils internally
 
 **Date Utilities**:
+
 - **formatDateShort()** - compact format (e.g., "1/15/24")
 - **formatDateLong()** - verbose format (e.g., "Monday, January 15, 2024")
 - **formatDateTime()** - date with time (e.g., "Jan 15, 2024 at 3:30 PM")
@@ -638,11 +648,13 @@
 ### Files Modified
 
 **Currency**:
+
 - `src/utils/currency.ts` - Consolidated utility (now 170 lines)
 - `src/db/mappers/currency-utils.ts` - Backward-compatible re-export (7 lines)
 - `src/utils/__tests__/currency-utils.test.ts` - Moved tests to utils
 
 **Date**:
+
 - `src/utils/date.ts` - Expanded from 25 to 75 lines (3 new functions)
 
 ### Notes
