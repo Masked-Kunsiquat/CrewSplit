@@ -30,7 +30,7 @@ import {
   useSettlement,
   useUpdateSettlement,
 } from "../hooks/use-settlements";
-import { parseCurrency } from "@utils/currency";
+import { parseCurrency, normalizeRouteParam } from "@utils";
 import type { NewSettlementData, SettlementPaymentMethod } from "../types";
 
 export default function RecordTransactionScreen() {
@@ -395,13 +395,6 @@ export default function RecordTransactionScreen() {
       </View>
     </KeyboardAvoidingView>
   );
-}
-
-function normalizeRouteParam(param: string | string[] | undefined) {
-  if (!param) return null;
-  const value = Array.isArray(param) ? param[0] : param;
-  const normalized = value.trim();
-  return normalized.length > 0 ? normalized : null;
 }
 
 const styles = StyleSheet.create({

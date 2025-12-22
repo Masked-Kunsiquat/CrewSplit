@@ -34,6 +34,7 @@ import { useExpenseWithSplits } from "../hooks/use-expenses";
 import { useUpdateExpense } from "../hooks/use-expense-mutations";
 import { parseCurrency } from "@utils/currency";
 import { getCategoryIcon } from "@utils/category-icons";
+import { normalizeRouteParam } from "@utils/route-params";
 
 // Checkbox component for Personal Expense toggle
 function Checkbox({
@@ -73,11 +74,11 @@ export default function EditExpenseScreen() {
     expenseId?: string | string[];
   }>();
   const normalizedTripId = React.useMemo(
-    () => normalizeTripIdParam(params.id),
+    () => normalizeRouteParam(params.id),
     [params.id],
   );
   const normalizedExpenseId = React.useMemo(
-    () => normalizeTripIdParam(params.expenseId),
+    () => normalizeRouteParam(params.expenseId),
     [params.expenseId],
   );
 
@@ -759,13 +760,6 @@ function EditExpenseScreenContent({
       </View>
     </KeyboardAvoidingView>
   );
-}
-
-function normalizeTripIdParam(idParam: string | string[] | undefined) {
-  if (!idParam) return null;
-  const firstValue = Array.isArray(idParam) ? idParam[0] : idParam;
-  const normalized = firstValue.trim();
-  return normalized.length > 0 ? normalized : null;
 }
 
 const styles = StyleSheet.create({

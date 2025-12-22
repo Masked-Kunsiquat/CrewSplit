@@ -17,7 +17,7 @@ import { theme } from "@ui/theme";
 import { Button, ConfirmDialog } from "@ui/components";
 import { useSettlement, useDeleteSettlement } from "../hooks/use-settlements";
 import { useTripById } from "@modules/trips/hooks/use-trips";
-import { formatCurrency } from "@utils/currency";
+import { formatCurrency, normalizeRouteParam } from "@utils";
 
 export default function TransactionDetailsScreen() {
   const router = useRouter();
@@ -196,13 +196,6 @@ export default function TransactionDetailsScreen() {
       />
     </>
   );
-}
-
-function normalizeRouteParam(param: string | string[] | undefined) {
-  if (!param) return null;
-  const value = Array.isArray(param) ? param[0] : param;
-  const normalized = value.trim();
-  return normalized.length > 0 ? normalized : null;
 }
 
 const styles = StyleSheet.create({
