@@ -267,7 +267,12 @@ export function ExpenseForm({
     }
 
     try {
-      const amountMinor = parseCurrency(amount);
+      // Parse amount using currency-aware conversion
+      const currency = initialValues?.currency ?? tripCurrency;
+      const cleaned = amount.replace(/[^0-9.]/g, "");
+      const majorAmount = parseFloat(cleaned) || 0;
+      const amountMinor = CurrencyUtils.majorToMinor(majorAmount, currency);
+
       if (amountMinor <= 0) {
         Alert.alert(
           "Invalid Amount",
