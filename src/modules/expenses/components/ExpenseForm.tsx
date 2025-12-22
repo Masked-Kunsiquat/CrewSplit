@@ -53,7 +53,6 @@ export interface ExpenseFormData {
 
 interface ExpenseFormProps {
   mode: "add" | "edit";
-  tripId: string;
   tripCurrency: string;
   tripStartDate: string;
   participants: Participant[];
@@ -89,7 +88,6 @@ interface ExpenseFormProps {
  * a normalized ExpenseFormData payload.
  *
  * @param props.mode - Either `"add"` to create a new expense or `"edit"` to modify an existing one
- * @param props.tripId - Trip identifier the expense belongs to
  * @param props.tripCurrency - Default currency used for displayed amounts
  * @param props.tripStartDate - Trip start date used as the DatePicker's initial boundary
  * @param props.participants - Array of participants available for payer and split selection
@@ -102,7 +100,6 @@ interface ExpenseFormProps {
  */
 export function ExpenseForm({
   mode,
-  tripId,
   tripCurrency,
   tripStartDate,
   participants,
@@ -112,6 +109,10 @@ export function ExpenseForm({
   onCancel,
   isSubmitting,
 }: ExpenseFormProps) {
+  // Determine the currency to display in the form
+  // In edit mode, use the expense's original currency; in add mode, use trip currency
+  const displayedCurrency = initialValues?.currency ?? tripCurrency;
+
   // Basic expense fields
   const [description, setDescription] = useState("");
   const [notes, setNotes] = useState("");
@@ -410,7 +411,7 @@ export function ExpenseForm({
         <View style={styles.row}>
           <View style={styles.halfColumn}>
             <Input
-              label={`Amount (${tripCurrency})`}
+              label={`Amount (${displayedCurrency})`}
               placeholder="0.00"
               value={amount}
               onChangeText={setAmount}

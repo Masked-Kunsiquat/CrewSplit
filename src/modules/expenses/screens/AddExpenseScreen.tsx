@@ -143,7 +143,6 @@ function AddExpenseScreenContent({ tripId }: { tripId: string }) {
   return (
     <ExpenseForm
       mode="add"
-      tripId={tripId}
       tripCurrency={trip.currency}
       tripStartDate={trip.startDate}
       participants={participants}

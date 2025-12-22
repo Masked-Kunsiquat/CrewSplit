@@ -172,7 +172,6 @@ function EditExpenseScreenContent({
   return (
     <ExpenseForm
       mode="edit"
-      tripId={tripId}
       tripCurrency={trip.currency}
       tripStartDate={trip.startDate}
       participants={participants}
