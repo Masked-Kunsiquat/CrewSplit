@@ -11,9 +11,7 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
-  ActivityIndicator,
   Alert,
-  Pressable,
 } from "react-native";
 import { useRouter, useLocalSearchParams, useNavigation } from "expo-router";
 import { theme } from "@ui/theme";
@@ -39,7 +37,10 @@ import { parseCurrency } from "@utils/currency";
 import { getCategoryIcon } from "@utils/category-icons";
 import { normalizeRouteParam } from "@utils/route-params";
 import { validateExpenseSplits } from "../utils/validate-splits";
-import { buildExpenseSplits, validateSplitTotals } from "../utils/build-expense-splits";
+import {
+  buildExpenseSplits,
+  validateSplitTotals,
+} from "../utils/build-expense-splits";
 
 export default function EditExpenseScreen() {
   const router = useRouter();
@@ -61,9 +62,7 @@ export default function EditExpenseScreen() {
       <ErrorScreen
         title="Invalid Request"
         message={
-          !normalizedTripId
-            ? "No trip ID provided."
-            : "No expense ID provided."
+          !normalizedTripId ? "No trip ID provided." : "No expense ID provided."
         }
         actionLabel="Go back"
         onAction={() => router.back()}

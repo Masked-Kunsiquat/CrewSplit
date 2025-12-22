@@ -9,7 +9,6 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  ActivityIndicator,
   Alert,
 } from "react-native";
 import { useRouter, useLocalSearchParams, useNavigation } from "expo-router";

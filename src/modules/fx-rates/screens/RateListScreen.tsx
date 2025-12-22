@@ -9,7 +9,6 @@ import {
   Text,
   StyleSheet,
   FlatList,
-  ActivityIndicator,
   RefreshControl,
   Alert,
 } from "react-native";

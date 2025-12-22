@@ -9,7 +9,6 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  ActivityIndicator,
   Alert,
   TouchableOpacity,
   Pressable,

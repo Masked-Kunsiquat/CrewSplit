@@ -14,16 +14,10 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  ActivityIndicator,
 } from "react-native";
 import { useLocalSearchParams, useNavigation } from "expo-router";
 import { theme } from "@ui/theme";
-import {
-  Card,
-  Button,
-  LoadingScreen,
-  ErrorScreen,
-} from "@ui/components";
+import { Card, LoadingScreen, ErrorScreen } from "@ui/components";
 import { useTripById } from "../hooks/use-trips";
 import { formatErrorMessage } from "src/utils/format-error";
 

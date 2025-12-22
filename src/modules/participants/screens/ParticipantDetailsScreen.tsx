@@ -9,12 +9,11 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  ActivityIndicator,
   Pressable,
 } from "react-native";
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
 import { theme } from "@ui/theme";
-import { Card, Button, LoadingScreen, ErrorScreen } from "@ui/components";
+import { Card, LoadingScreen, ErrorScreen } from "@ui/components";
 import { useParticipants } from "../hooks/use-participants";
 import { useSettlement } from "@modules/settlement/hooks/use-settlement";
 import { useExpenses } from "@modules/expenses/hooks/use-expenses";

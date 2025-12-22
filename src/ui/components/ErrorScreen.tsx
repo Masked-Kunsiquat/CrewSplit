@@ -47,11 +47,7 @@ export function ErrorScreen({
         <Text style={styles.errorText}>{message}</Text>
         {actionLabel && onAction && (
           <View style={styles.button}>
-            <Button
-              title={actionLabel}
-              onPress={onAction}
-              variant="outline"
-            />
+            <Button title={actionLabel} onPress={onAction} variant="outline" />
           </View>
         )}
       </View>

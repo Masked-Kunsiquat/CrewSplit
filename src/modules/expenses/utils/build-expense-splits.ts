@@ -50,11 +50,7 @@ export function buildExpenseSplits(
     if (splitType === "percentage") {
       const percentage = parseFloat(splitValues[participantId] || "0");
       // Validate percentage is finite and within bounds
-      if (
-        !Number.isFinite(percentage) ||
-        percentage < 0 ||
-        percentage > 100
-      ) {
+      if (!Number.isFinite(percentage) || percentage < 0 || percentage > 100) {
         throw new Error("Each percentage must be between 0 and 100");
       }
       return {
@@ -130,7 +126,10 @@ export function validateSplitTotals(
 
   // Validate amount sum
   if (splitType === "amount") {
-    const totalAmount = splits.reduce((sum, split) => sum + (split.amount || 0), 0);
+    const totalAmount = splits.reduce(
+      (sum, split) => sum + (split.amount || 0),
+      0,
+    );
     if (totalAmount !== expenseAmountMinor) {
       throw new Error("Split amounts must equal expense total");
     }
