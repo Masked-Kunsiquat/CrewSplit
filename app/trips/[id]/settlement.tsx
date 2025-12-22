@@ -3,4 +3,4 @@
  * UI/UX ENGINEER: Route for settlement summary
  */
 
-export { default } from "@modules/settlement/screens/SettlementSummaryScreen";
+export { default } from "@modules/settlements/screens/SettlementSummaryScreen";

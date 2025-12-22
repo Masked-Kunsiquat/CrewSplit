@@ -14,11 +14,11 @@ import {
   getExpenseSplits,
 } from "../../expenses/repository";
 import { getParticipantsForTrip } from "../../participants/repository";
-import { SettlementRepository } from "../../settlements/repository";
-import { calculateBalances } from "../calculate-balances";
-import { optimizeSettlements } from "../optimize-settlements";
+import { SettlementRepository } from "../repository";
+import { calculateBalances } from "../engine/calculate-balances";
+import { optimizeSettlements } from "../engine/optimize-settlements";
 import type { SettlementSummary } from "../types";
-import type { SettlementWithParticipants } from "../../settlements/types";
+import type { SettlementWithParticipants } from "../types";
 import { settlementLogger } from "@utils/logger";
 
 /**

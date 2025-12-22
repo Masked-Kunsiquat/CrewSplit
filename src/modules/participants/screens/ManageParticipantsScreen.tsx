@@ -4,13 +4,7 @@
  */
 
 import React, { useState, useEffect } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  Alert,
-} from "react-native";
+import { View, Text, StyleSheet, ScrollView, Alert } from "react-native";
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
 import { theme } from "@ui/theme";
 import { participantLogger } from "@utils/logger";
@@ -46,7 +40,7 @@ export default function ManageParticipantsScreen() {
 
   if (!tripId) {
     return (
-      <View style={styles.container}>
+      <View style={theme.commonStyles.container}>
         <View style={styles.errorContainer}>
           <Card style={styles.errorCard}>
             <Text style={styles.errorText}>
@@ -165,7 +159,7 @@ function ManageParticipantsContent({
 
   if (error) {
     return (
-      <View style={styles.container}>
+      <View style={theme.commonStyles.container}>
         <View style={styles.errorContainer}>
           <Card style={styles.errorCard}>
             <Text style={styles.errorText}>
@@ -180,7 +174,7 @@ function ManageParticipantsContent({
   }
 
   return (
-    <View style={styles.container}>
+    <View style={theme.commonStyles.container}>
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.content}
@@ -255,10 +249,6 @@ function ManageParticipantsContent({
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
-  },
   scrollView: {
     flex: 1,
   },
@@ -270,11 +260,6 @@ const styles = StyleSheet.create({
     fontSize: theme.typography.xxxl,
     fontWeight: theme.typography.bold,
     color: theme.colors.text,
-  },
-  centerContent: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
   },
   errorContainer: {
     padding: theme.spacing.lg,

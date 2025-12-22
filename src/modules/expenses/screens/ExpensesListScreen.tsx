@@ -1,11 +1,5 @@
 import React, { useEffect, useState } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  Pressable,
-} from "react-native";
+import { View, Text, StyleSheet, ScrollView, Pressable } from "react-native";
 import { useRouter, useLocalSearchParams, useNavigation } from "expo-router";
 import { theme } from "@ui/theme";
 import { Button, Card, LoadingScreen } from "@ui/components";
@@ -82,7 +76,7 @@ export default function ExpensesListScreen() {
 
   if (error) {
     return (
-      <View style={styles.container}>
+      <View style={theme.commonStyles.container}>
         <View style={styles.errorContainer}>
           <Card style={styles.errorCard}>
             <Text style={styles.errorText}>{error.message}</Text>
@@ -93,7 +87,7 @@ export default function ExpensesListScreen() {
   }
 
   return (
-    <View style={styles.container}>
+    <View style={theme.commonStyles.container}>
       {/* Category Filter */}
       {categories.length > 0 && (
         <ScrollView
@@ -204,7 +198,7 @@ export default function ExpensesListScreen() {
         )}
       </ScrollView>
 
-      <View style={styles.footer}>
+      <View style={theme.commonStyles.footer}>
         <Button
           title="Add Expense"
           onPress={() => router.push(`/trips/${tripId}/expenses/add`)}
@@ -216,10 +210,6 @@ export default function ExpensesListScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
-  },
   scrollView: {
     flex: 1,
   },
@@ -233,11 +223,6 @@ const styles = StyleSheet.create({
     fontSize: theme.typography.xxxl,
     fontWeight: theme.typography.bold,
     color: theme.colors.text,
-  },
-  centerContent: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
   },
   errorContainer: {
     padding: theme.spacing.lg,
@@ -302,11 +287,6 @@ const styles = StyleSheet.create({
   expenseMeta: {
     fontSize: theme.typography.sm,
     color: theme.colors.textSecondary,
-  },
-  footer: {
-    padding: theme.spacing.lg,
-    borderTopWidth: 1,
-    borderTopColor: theme.colors.border,
   },
   filterScroll: {
     maxHeight: 48, // Constrain height to prevent extra spacing

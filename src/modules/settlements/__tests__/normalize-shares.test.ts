@@ -3,7 +3,7 @@
  * MODELER: Test all split type calculations
  */
 
-import { normalizeShares } from "../normalize-shares";
+import { normalizeShares } from "../engine/normalize-shares";
 import { ExpenseSplit } from "../../expenses/types";
 
 describe("normalizeShares", () => {

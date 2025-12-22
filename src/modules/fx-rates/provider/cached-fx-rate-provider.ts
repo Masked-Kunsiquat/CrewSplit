@@ -6,7 +6,7 @@
  * Maintains synchronous interface for compatibility with DisplayCurrencyAdapter
  */
 
-import type { FxRateProvider } from "@modules/settlement/service/DisplayCurrencyAdapter";
+import type { FxRateProvider } from "@modules/settlements/service/DisplayCurrencyAdapter";
 import { FxRateRepository } from "../repository";
 import type { FxRateSource } from "@db/schema/fx-rates";
 import { fxLogger } from "@utils/logger";

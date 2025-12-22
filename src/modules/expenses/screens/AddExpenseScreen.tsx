@@ -321,7 +321,7 @@ function AddExpenseScreenContent({ tripId }: { tripId: string }) {
 
   return (
     <KeyboardAvoidingView
-      style={styles.container}
+      style={theme.commonStyles.container}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
       <ScrollView
@@ -453,7 +453,7 @@ function AddExpenseScreenContent({ tripId }: { tripId: string }) {
         </View>
       </ScrollView>
 
-      <View style={styles.footer}>
+      <View style={theme.commonStyles.footer}>
         <Button
           title="Cancel"
           variant="outline"
@@ -474,10 +474,6 @@ function AddExpenseScreenContent({ tripId }: { tripId: string }) {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
-  },
   scrollView: {
     flex: 1,
   },
@@ -497,18 +493,6 @@ const styles = StyleSheet.create({
     height: 24,
     alignItems: "center",
     justifyContent: "center",
-  },
-  centerContent: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    padding: theme.spacing.lg,
-  },
-  errorTitle: {
-    fontSize: theme.typography.xl,
-    fontWeight: theme.typography.bold,
-    color: theme.colors.text,
-    marginBottom: theme.spacing.xs,
   },
   errorText: {
     fontSize: theme.typography.lg,
@@ -552,10 +536,5 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.background,
     borderRadius: theme.borderRadius.sm,
     overflow: "hidden",
-  },
-  footer: {
-    padding: theme.spacing.lg,
-    borderTopWidth: 1,
-    borderTopColor: theme.colors.border,
   },
 });

@@ -9,7 +9,7 @@ import type {
   SettlementSummaryWithDisplay,
   DisplayAmount,
   ParticipantBalanceWithDisplay,
-  SettlementWithDisplay,
+  SuggestedSettlementWithDisplay,
 } from "../types";
 import { cachedFxRateProvider } from "@modules/fx-rates/provider";
 
@@ -144,16 +144,15 @@ export class DisplayCurrencyAdapter {
     );
 
     // Convert settlements
-    const settlements: SettlementWithDisplay[] = settlement.settlements.map(
-      (s) => ({
+    const settlements: SuggestedSettlementWithDisplay[] =
+      settlement.settlements.map((s) => ({
         ...s,
         displayAmount: this.convertAmount(
           tripCurrency,
           s.amount,
           displayCurrency,
         ),
-      }),
-    );
+      }));
 
     return {
       balances,

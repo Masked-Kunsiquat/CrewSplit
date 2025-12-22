@@ -28,7 +28,7 @@ import {
 import { useExpenseWithSplits } from "../hooks/use-expenses";
 import { useExpenseCategories } from "../hooks/use-expense-categories";
 import { useParticipants } from "@modules/participants/hooks/use-participants";
-import { useDisplayCurrency } from "@hooks/use-display-currency";
+import { useDisplayCurrency } from "@modules/settings/hooks/use-display-currency";
 import { formatCurrency } from "@utils/currency";
 import { normalizeRouteParam } from "@utils/route-params";
 import { cachedFxRateProvider } from "@modules/fx-rates/provider";
@@ -305,7 +305,7 @@ function ExpenseDetailsContent({
   };
 
   return (
-    <View style={styles.container}>
+    <View style={theme.commonStyles.container}>
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.content}
@@ -563,21 +563,10 @@ function ExpenseDetailsContent({
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
-  },
   scrollView: {
     flex: 1,
   },
   content: {
-    padding: theme.spacing.lg,
-    gap: theme.spacing.md,
-  },
-  centerContent: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
     padding: theme.spacing.lg,
     gap: theme.spacing.md,
   },
@@ -602,16 +591,6 @@ const styles = StyleSheet.create({
   deleteButtonActive: {
     backgroundColor: theme.colors.error,
     borderColor: theme.colors.error,
-  },
-  loadingText: {
-    fontSize: theme.typography.base,
-    color: theme.colors.textSecondary,
-  },
-  errorTitle: {
-    fontSize: theme.typography.xl,
-    fontWeight: theme.typography.bold,
-    color: theme.colors.error,
-    marginBottom: theme.spacing.sm,
   },
   errorText: {
     fontSize: theme.typography.base,

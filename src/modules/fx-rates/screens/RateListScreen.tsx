@@ -139,7 +139,7 @@ export default function RateListScreen() {
   }
 
   return (
-    <View style={styles.container}>
+    <View style={theme.commonStyles.container}>
       <FlatList
         data={rates}
         keyExtractor={(item) => item.id}
@@ -240,7 +240,7 @@ export default function RateListScreen() {
       />
 
       {rates.length > 0 && (
-        <View style={styles.footer}>
+        <View style={theme.commonStyles.footer}>
           <Button
             title="Add Manual Rate"
             onPress={handleAddManualRate}
@@ -254,15 +254,6 @@ export default function RateListScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
-  },
-  centerContent: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-  },
   listContent: {
     padding: theme.spacing.lg,
     gap: theme.spacing.md,
@@ -382,10 +373,5 @@ const styles = StyleSheet.create({
     textAlign: "center",
     maxWidth: 300,
     lineHeight: 22,
-  },
-  footer: {
-    padding: theme.spacing.lg,
-    borderTopWidth: 1,
-    borderTopColor: theme.colors.border,
   },
 });

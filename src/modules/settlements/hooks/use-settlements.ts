@@ -38,11 +38,11 @@ export function useSettlements(tripId: string | null) {
 }
 
 /**
- * Hook to fetch a single settlement by ID
+ * Hook to fetch a single settlement transaction by ID
  * @param settlementId - Settlement UUID
  * @returns Object with settlement, loading state, error, and refetch function
  */
-export function useSettlement(settlementId: string | null) {
+export function useSettlementById(settlementId: string | null) {
   const {
     data: settlement,
     loading,

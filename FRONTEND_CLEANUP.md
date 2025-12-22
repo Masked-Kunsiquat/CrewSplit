@@ -127,71 +127,72 @@
 
 **Preparation**:
 
-- [ ] Create detailed migration plan for import paths
-- [ ] Document current usage of both modules
+- [x] Create detailed migration plan for import paths
+- [x] Document current usage of both modules
 
 **Merge Structure**:
 
-- [ ] Create new unified structure in `src/modules/settlements/`:
-  - [ ] Create `engine/` directory (pure math layer)
-  - [ ] Move `settlement/calculate-balances.ts` → `settlements/engine/`
-  - [ ] Move `settlement/normalize-shares.ts` → `settlements/engine/`
-  - [ ] Move `settlement/optimize-settlements.ts` → `settlements/engine/`
-  - [ ] Keep `service/` directory (data integration layer)
-  - [ ] Move `settlement/service/SettlementService.ts` → `settlements/service/`
-  - [ ] Move `settlement/service/DisplayCurrencyAdapter.ts` → `settlements/service/`
-  - [ ] Keep existing `repository/` directory (transaction records)
-  - [ ] Merge `hooks/` directories
-  - [ ] Merge `screens/` directories
-  - [ ] Merge `components/` directories
-  - [ ] Merge `types.ts` files
-  - [ ] Merge `__tests__/` directories
+- [x] Create new unified structure in `src/modules/settlements/`:
+  - [x] Create `engine/` directory (pure math layer)
+  - [x] Move `settlement/calculate-balances.ts` → `settlements/engine/`
+  - [x] Move `settlement/normalize-shares.ts` → `settlements/engine/`
+  - [x] Move `settlement/optimize-settlements.ts` → `settlements/engine/`
+  - [x] Keep `service/` directory (data integration layer)
+  - [x] Move `settlement/service/SettlementService.ts` → `settlements/service/`
+  - [x] Move `settlement/service/DisplayCurrencyAdapter.ts` → `settlements/service/`
+  - [x] Keep existing `repository/` directory (transaction records)
+  - [x] Merge `hooks/` directories
+  - [x] Merge `screens/` directories
+  - [x] Merge `components/` directories
+  - [x] Merge `types.ts` files
+  - [x] Merge `__tests__/` directories
 
 **Update Imports**:
 
-- [ ] Search codebase for `@modules/settlement` imports (without 's')
-- [ ] Update all imports to `@modules/settlements`
-- [ ] Update path aliases if needed in `tsconfig.json`
+- [x] Search codebase for `@modules/settlement` imports (without 's')
+- [x] Update all imports to `@modules/settlements`
+- [x] Update path aliases if needed in `tsconfig.json` (not needed - working correctly)
 
 **Cleanup**:
 
-- [ ] Delete old `src/modules/settlement/` directory
-- [ ] Run tests to verify no regressions
-- [ ] Run `npm run type-check`
-- [ ] Update documentation in CLAUDE.md if needed
+- [x] Delete old `src/modules/settlement/` directory
+- [x] Run tests to verify no regressions (83 tests passing)
+- [x] Run `npm run type-check` (0 errors)
+- [x] Update documentation in CLAUDE.md if needed (not needed - path alias already correct)
 
 ### 3.2 Relocate Misplaced Hooks
 
 **Move use-device-owner**:
 
-- [ ] Create `src/modules/onboarding/hooks/` directory (if doesn't exist)
-- [ ] Move `src/hooks/use-device-owner.ts` → `src/modules/onboarding/hooks/`
-- [ ] Update imports across codebase
-- [ ] Update `src/modules/onboarding/hooks/index.ts` exports
+- [x] Create `src/modules/onboarding/hooks/` directory (already existed)
+- [x] Move `src/hooks/use-device-owner.ts` → `src/modules/onboarding/hooks/`
+- [x] Update imports across codebase (app/settings.tsx, create-trip-screen.tsx)
+- [x] Update `src/modules/onboarding/hooks/index.ts` exports
 
 **Move use-display-currency**:
 
-- [ ] Decide: Move to `onboarding/hooks/` OR create new `settings/` module
-- [ ] Move `src/hooks/use-display-currency.ts` to chosen location
-- [ ] Update imports across codebase
-- [ ] Update module exports
+- [x] Created new `settings/` module for user preferences
+- [x] Move `src/hooks/use-display-currency.ts` → `src/modules/settings/hooks/`
+- [x] Update imports across codebase (4 screens updated)
+- [x] Created module exports (settings/hooks/index.ts, settings/index.ts)
 
 **Update Global Hooks**:
 
-- [ ] Update `src/hooks/index.ts` to remove relocated hooks
-- [ ] Verify only cross-cutting hooks remain (`use-query`, `use-refresh-control`, `use-mutation`)
+- [x] Update `src/hooks/index.ts` to remove relocated hooks
+- [x] Verified only cross-cutting hooks remain (`use-query`, `use-refresh-control`)
+- [x] Note: `use-mutation` was never in global hooks (belongs in modules)
 
 ### 3.3 Add Common Styles to Theme
 
-- [ ] Update `src/ui/theme/index.ts` to add `commonStyles` object
-- [ ] Add `container` style (used in 38 files)
-- [ ] Add `centerContent` style (used in 11 files)
-- [ ] Add `footer` style (used in 11 files)
-- [ ] Add `errorTitle` style (used in 8 files)
-- [ ] Add `loadingText` style (used in 8 files)
-- [ ] Add `displayCurrencySmall` style (used in 3 files)
-- [ ] Update screens to use `theme.commonStyles.*` instead of local definitions
-- [ ] Document in theme/README.md (create if needed)
+- [x] Update `src/ui/theme.ts` to add `commonStyles` object
+- [x] Add `container` style (flex: 1, background color)
+- [x] Add `centerContent` style (centered wrapper for loading/error states)
+- [x] Add `footer` style (screen footer with top border)
+- [x] Add `errorTitle` style (error title text)
+- [x] Add `loadingText` style (loading message text)
+- [x] Add `displayCurrencySmall` style (small currency indicator)
+- [x] Update 17 screens to use `theme.commonStyles.*` instead of local definitions
+- [x] Documentation in code comments (inline in theme.ts)
 
 ---
 
@@ -320,12 +321,12 @@
 
 **Phase 3 Complete When**:
 
-- [ ] Settlement modules merged successfully
-- [ ] All hooks in correct domain modules
-- [ ] Common styles centralized in theme
-- [ ] All imports updated and working
-- [ ] No TypeScript errors
-- [ ] Documentation updated
+- [x] Settlement modules merged successfully
+- [x] All hooks in correct domain modules
+- [x] Common styles centralized in theme
+- [x] All imports updated and working
+- [x] No TypeScript errors
+- [x] Documentation updated
 
 **Phase 4 Complete When**:
 
@@ -351,8 +352,8 @@
 
 **Phase 1**: ✅ **Complete** (All tasks done, tests passing, type-check clean)
 **Phase 2**: ✅ **Complete** (Utilities extracted, components created, screens refactored)
-**Phase 3**: ⬜ Not Started | ⬜ In Progress | ⬜ Complete
-**Phase 4**: ⬜ Not Started | ⬜ In Progress | ⬜ Complete
+**Phase 3**: ✅ **Complete** (All sections complete: settlement merge, hooks relocation, common styles)
+**Phase 4**: ⬜ Not Started (Optional improvements)
 
 **Last Updated**: 2025-12-22
 
@@ -416,3 +417,123 @@
 - **Improved consistency** - all loading and error states standardized
 - **Better maintainability** - centralized UI component logic
 - **0 regressions** - all existing functionality preserved
+
+---
+
+## Phase 3 Results (Partial)
+
+**Section 3.1 Completed**: 2025-12-22
+**Time Taken**: ~1.5 hours
+
+### Achievements
+
+- ✅ Merged `settlement/` and `settlements/` modules into unified `settlements/` module
+- ✅ Created clear architectural layers:
+  - `engine/` - Pure math functions (balance calculation, transaction optimization)
+  - `service/` - Data integration layer (SettlementService, DisplayCurrencyAdapter)
+  - `repository/` - Database layer (settlement transaction CRUD)
+  - `hooks/` - React hooks (useSettlement, useSettlementWithDisplay, useSettlements)
+  - `screens/` - UI screens (SettlementSummaryScreen, RecordTransactionScreen, TransactionDetailsScreen)
+- ✅ Resolved type naming conflicts (Settlement → SuggestedSettlement for math types)
+- ✅ Merged types.ts with clear section organization (math types, display types, database types)
+- ✅ Updated all imports across codebase (app routes, fx-rates provider, screens)
+- ✅ All tests passing (83 settlement tests, 6 suites)
+- ✅ Type-check passing with 0 errors
+
+### Commits
+
+- `45e3474` - refactor: merge settlement and settlements modules into unified settlements module
+- `901e841` - fix: resolve type conflicts after settlement module merge
+
+### Impact
+
+- **~568 lines removed** (deleted 751 lines, added 183 lines)
+- **Module confusion eliminated** - single clear settlements module
+- **Better architecture** - clear separation of math, service, and database layers
+- **Type safety improved** - distinct types for suggested payments vs recorded transactions
+- **0 regressions** - all existing functionality preserved
+
+---
+
+## Phase 3 Section 3.2 Results
+
+**Completed**: 2025-12-22
+**Time Taken**: ~20 minutes
+
+### Achievements
+
+- ✅ Relocated `use-device-owner` → `onboarding/hooks/`
+  - Hook manages device owner name for auto-adding to new trips
+  - Now properly colocated with onboarding domain
+- ✅ Relocated `use-display-currency` → `settings/hooks/` (new module)
+  - Created new settings/ module for user preferences
+  - Hook used across 4 screens for display currency preference
+- ✅ Updated 5 import statements across codebase
+- ✅ Created module index files for proper exports
+- ✅ Cleaned up global hooks/ directory
+  - Now only contains cross-cutting hooks (use-query, use-refresh-control)
+  - Added documentation note about relocated hooks
+- ✅ Type-check passing with 0 errors
+
+### Commits
+
+- `fca4f8d` - refactor: relocate hooks to appropriate domain modules (Phase 3.2)
+
+### Impact
+
+- **Better module organization** - hooks now in correct domain modules
+- **New settings module** - foundation for future user preferences
+- **Clearer architecture** - global hooks only for cross-cutting concerns
+- **0 regressions** - all existing functionality preserved
+
+---
+
+## Phase 3 Section 3.3 Results
+
+**Completed**: 2025-12-22
+**Time Taken**: ~30 minutes
+
+### Achievements
+
+- ✅ Added commonStyles object to theme with 6 reusable patterns
+- ✅ Updated 17 screen files across all modules to use theme.commonStyles
+- ✅ Eliminated ~300+ lines of duplicated style definitions
+- ✅ All screens now use consistent styling patterns
+- ✅ Type-check passing with 0 errors
+
+### Commits
+
+- `375013c` - refactor: add commonStyles to theme for code reuse (Phase 3.3 Step 1)
+- `36ac3db` - refactor: update all screens to use theme.commonStyles (Phase 3.3 Step 2)
+
+### Impact
+
+- **~311 lines removed** from the codebase (373 deleted, 62 added)
+- **17 screens updated** to use centralized theme styles
+- **Better consistency** - all container, footer, centerContent, errorTitle, loadingText, and displayCurrencySmall styles now centralized
+- **Improved maintainability** - style changes now affect all screens automatically
+- **0 regressions** - all existing functionality preserved
+
+### Files Updated by Module
+
+**Expense Module** (4 files):
+- AddExpenseScreen, EditExpenseScreen, ExpenseDetailsScreen, ExpensesListScreen
+
+**Participant Module** (2 files):
+- ParticipantDetailsScreen, ManageParticipantsScreen
+
+**Settlement Module** (3 files):
+- SettlementSummaryScreen, RecordTransactionScreen, TransactionDetailsScreen
+
+**Trip Module** (4 files):
+- TripDashboardScreen, TripsListScreen, TripStatisticsScreen, create-trip-screen
+
+**FX-Rate Module** (2 files):
+- RateListScreen, ManualRateEntryScreen
+
+**UI Components** (2 files):
+- LoadingScreen, ErrorScreen
+
+---
+
+**Phase 3 Complete**: All sections finished (3.1 Settlement Merge, 3.2 Hook Relocation, 3.3 Common Styles).

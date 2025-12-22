@@ -9,7 +9,7 @@ import {
   getExpenseSplits,
 } from "../../expenses/repository";
 import { getParticipantsForTrip } from "../../participants/repository";
-import { SettlementRepository } from "../../settlements/repository";
+import { SettlementRepository } from "../repository";
 
 jest.mock("@utils/logger", () => {
   const logger = {

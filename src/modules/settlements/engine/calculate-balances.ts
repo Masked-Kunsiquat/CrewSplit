@@ -4,9 +4,9 @@
  * PURE FUNCTION: No side effects, same inputs → same outputs
  */
 
-import { Expense, ExpenseSplit } from "../expenses/types";
-import { Participant } from "../participants/types";
-import { ParticipantBalance } from "./types";
+import { Expense, ExpenseSplit } from "../../expenses/types";
+import { Participant } from "../../participants/types";
+import { ParticipantBalance } from "../types";
 import { normalizeShares } from "./normalize-shares";
 
 /**

@@ -163,14 +163,14 @@ export default function TripsListScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={theme.commonStyles.container}>
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.content}
         refreshControl={refreshControl}
       >
         {loading && (
-          <View style={styles.centerContent}>
+          <View style={theme.commonStyles.centerContent}>
             <ActivityIndicator size="large" color={theme.colors.primary} />
           </View>
         )}
@@ -252,7 +252,7 @@ export default function TripsListScreen() {
           </View>
         </View>
       ) : (
-        <View style={styles.footer}>
+        <View style={theme.commonStyles.footer}>
           <Button
             title="Create Trip"
             onPress={() => router.push("/trips/create")}
@@ -285,10 +285,6 @@ export default function TripsListScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
-  },
   scrollView: {
     flex: 1,
   },
@@ -308,10 +304,6 @@ const styles = StyleSheet.create({
     fontSize: theme.typography.base,
     color: theme.colors.primary,
     fontWeight: theme.typography.semibold,
-  },
-  centerContent: {
-    alignItems: "center",
-    padding: theme.spacing.xl,
   },
   errorCard: {
     backgroundColor: theme.colors.error,
@@ -395,11 +387,6 @@ const styles = StyleSheet.create({
   tripMeta: {
     fontSize: theme.typography.sm,
     color: theme.colors.textSecondary,
-  },
-  footer: {
-    padding: theme.spacing.lg,
-    borderTopWidth: 1,
-    borderTopColor: theme.colors.border,
   },
   selectionBar: {
     padding: theme.spacing.lg,

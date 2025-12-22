@@ -1,9 +1,113 @@
 /**
  * SETTLEMENTS MODULE - Type Definitions
- * Types for settlement transactions and related business logic
+ * Types for both settlement calculations (math layer) and settlement transactions (database layer)
  */
 
 import { Settlement as DbSettlement } from "@db/schema/settlements";
+
+// ============================================================================
+// SECTION 1: PURE MATH TYPES (Settlement Engine)
+// MODELER: Pure math types for balance calculation
+// ============================================================================
+
+/**
+ * Participant balance for settlement calculation
+ * Tracks total paid vs total owed for each participant
+ */
+export interface ParticipantBalance {
+  participantId: string;
+  participantName: string;
+  netPosition: number; // Positive = owed money, Negative = owes money (in cents)
+  totalPaid: number; // Total amount paid (in cents)
+  totalOwed: number; // Total amount they should pay (in cents)
+}
+
+/**
+ * Suggested settlement payment (pure math result from optimization algorithm)
+ * This is a SUGGESTED payment, not a recorded transaction
+ */
+export interface SuggestedSettlement {
+  from: string; // participantId
+  fromName: string;
+  to: string; // participantId
+  toName: string;
+  amount: number; // In cents
+}
+
+/**
+ * Settlement summary from calculation engine
+ * Includes balances, suggested payments, and expense breakdown
+ */
+export interface SettlementSummary {
+  balances: ParticipantBalance[];
+  settlements: SuggestedSettlement[];
+  totalExpenses: number; // In cents (sum of all three expense types)
+  currency: string;
+
+  // Expense breakdown by type
+  splitExpensesTotal: number; // In cents - expenses included in settlement calculations
+  personalExpensesTotal: number; // In cents - single participant who is also payer (no debt)
+  unsplitExpensesTotal: number; // In cents - expenses with zero participants (needs allocation)
+  unsplitExpensesCount: number; // Count of expenses needing allocation
+  unsplitExpenseIds: string[]; // IDs of expenses needing allocation
+}
+
+// ============================================================================
+// SECTION 2: DISPLAY CURRENCY TYPES
+// DISPLAY INTEGRATION ENGINEER: Display currency conversion
+// ============================================================================
+
+/**
+ * Amount with display currency conversion
+ * Used to show amounts in user's preferred currency
+ */
+export interface DisplayAmount {
+  tripCurrency: string;
+  tripAmount: number; // In cents
+  displayCurrency: string;
+  displayAmount: number; // In cents
+  fxRate: number;
+}
+
+/**
+ * Participant balance with display currency amounts
+ */
+export interface ParticipantBalanceWithDisplay extends ParticipantBalance {
+  displayNetPosition?: DisplayAmount;
+  displayTotalPaid?: DisplayAmount;
+  displayTotalOwed?: DisplayAmount;
+}
+
+/**
+ * Suggested settlement with display currency amount
+ */
+export interface SuggestedSettlementWithDisplay extends SuggestedSettlement {
+  displayAmount?: DisplayAmount;
+}
+
+/**
+ * Settlement summary with display currency
+ */
+export interface SettlementSummaryWithDisplay {
+  balances: ParticipantBalanceWithDisplay[];
+  settlements: SuggestedSettlementWithDisplay[];
+  totalExpenses: number; // In cents (trip currency)
+  currency: string; // Trip currency
+  displayCurrency?: string; // User's preferred display currency
+  displayTotalExpenses?: DisplayAmount;
+
+  // Expense breakdown by type
+  splitExpensesTotal?: number; // In cents
+  personalExpensesTotal?: number; // In cents
+  unsplitExpensesTotal?: number; // In cents
+  unsplitExpensesCount?: number;
+  unsplitExpenseIds?: string[]; // IDs of expenses needing allocation
+}
+
+// ============================================================================
+// SECTION 3: SETTLEMENT TRANSACTION TYPES (Database Layer)
+// LOCAL DATA ENGINEER: Settlement transaction records
+// ============================================================================
 
 /**
  * Settlement transaction (re-exported from database schema)

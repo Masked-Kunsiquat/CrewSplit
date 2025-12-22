@@ -22,8 +22,8 @@ import {
   Input,
   ConfirmDialog,
 } from "@ui/components";
-import { useDisplayCurrency } from "@hooks/use-display-currency";
-import { useDeviceOwner } from "@hooks/use-device-owner";
+import { useDisplayCurrency } from "@modules/settings/hooks/use-display-currency";
+import { useDeviceOwner } from "@modules/onboarding/hooks/use-device-owner";
 import { useFxRates } from "@modules/fx-rates/hooks/use-fx-rates";
 import { useOnboardingState } from "@modules/onboarding/hooks/use-onboarding-state";
 import { useReloadSampleData } from "@modules/onboarding/hooks/use-sample-data";

@@ -4,7 +4,7 @@
  * PURE FUNCTION: Deterministic ordering, no side effects
  */
 
-import { ParticipantBalance, Settlement } from "./types";
+import { ParticipantBalance, SuggestedSettlement } from "../types";
 
 /**
  * Account type for internal tracking during settlement optimization
@@ -31,8 +31,8 @@ interface Account {
  */
 export const optimizeSettlements = (
   balances: ParticipantBalance[],
-): Settlement[] => {
-  const settlements: Settlement[] = [];
+): SuggestedSettlement[] => {
+  const settlements: SuggestedSettlement[] = [];
 
   // Create working copies of accounts with non-zero balances
   const creditors: Account[] = [];
