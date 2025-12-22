@@ -9,7 +9,7 @@ import {
 } from "react-native";
 import { useRouter, useLocalSearchParams, useNavigation } from "expo-router";
 import { theme } from "@ui/theme";
-import { Button, Card } from "@ui/components";
+import { Button, Card, LoadingScreen } from "@ui/components";
 import { useExpenses } from "../hooks/use-expenses";
 import { useExpenseCategories } from "../hooks/use-expense-categories";
 import { useTripById } from "../../trips/hooks/use-trips";
@@ -78,13 +78,7 @@ export default function ExpensesListScreen() {
   }, [headerTitle, navigation]);
 
   if (loading) {
-    return (
-      <View style={styles.container}>
-        <View style={styles.centerContent}>
-          <ActivityIndicator size="large" color={theme.colors.primary} />
-        </View>
-      </View>
-    );
+    return <LoadingScreen />;
   }
 
   if (error) {

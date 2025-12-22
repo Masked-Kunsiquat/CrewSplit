@@ -14,7 +14,12 @@ import {
 } from "react-native";
 import { useRouter, useLocalSearchParams, useNavigation } from "expo-router";
 import { theme } from "@ui/theme";
-import { Button, ConfirmDialog } from "@ui/components";
+import {
+  Button,
+  ConfirmDialog,
+  LoadingScreen,
+  ErrorScreen,
+} from "@ui/components";
 import { useSettlement, useDeleteSettlement } from "../hooks/use-settlements";
 import { useTripById } from "@modules/trips/hooks/use-trips";
 import { formatCurrency } from "@utils/currency";
@@ -69,25 +74,17 @@ export default function TransactionDetailsScreen() {
   };
 
   if (loading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={theme.colors.primary} />
-        <Text style={styles.loadingText}>Loading payment details...</Text>
-      </View>
-    );
+    return <LoadingScreen message="Loading payment details..." />;
   }
 
   if (!settlement) {
     return (
-      <View style={styles.container}>
-        <View style={styles.centerContent}>
-          <Text style={styles.errorTitle}>Payment Not Found</Text>
-          <Text style={styles.errorText}>
-            This payment could not be loaded. It may have been deleted.
-          </Text>
-          <Button title="Go Back" onPress={() => router.back()} />
-        </View>
-      </View>
+      <ErrorScreen
+        title="Payment Not Found"
+        message="This payment could not be loaded. It may have been deleted."
+        actionLabel="Go Back"
+        onAction={() => router.back()}
+      />
     );
   }
 

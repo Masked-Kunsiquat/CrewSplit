@@ -46,12 +46,13 @@ export function ErrorScreen({
         <Text style={styles.errorTitle}>{title}</Text>
         <Text style={styles.errorText}>{message}</Text>
         {actionLabel && onAction && (
-          <Button
-            title={actionLabel}
-            onPress={onAction}
-            variant="outline"
-            style={styles.button}
-          />
+          <View style={styles.button}>
+            <Button
+              title={actionLabel}
+              onPress={onAction}
+              variant="outline"
+            />
+          </View>
         )}
       </View>
     </View>

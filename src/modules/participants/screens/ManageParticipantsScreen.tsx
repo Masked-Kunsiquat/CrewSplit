@@ -21,6 +21,7 @@ import {
   Input,
   ParticipantListRow,
   ConfirmDialog,
+  LoadingScreen,
 } from "@ui/components";
 import { useParticipants } from "../hooks/use-participants";
 import { useTripById } from "@modules/trips/hooks/use-trips";
@@ -160,13 +161,7 @@ function ManageParticipantsContent({
   };
 
   if (loading) {
-    return (
-      <View style={styles.container}>
-        <View style={styles.centerContent}>
-          <ActivityIndicator size="large" color={theme.colors.primary} />
-        </View>
-      </View>
-    );
+    return <LoadingScreen />;
   }
 
   if (error) {

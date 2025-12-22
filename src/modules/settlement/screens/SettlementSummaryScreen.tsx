@@ -20,6 +20,8 @@ import {
   Button,
   NoRateAvailableModal,
   StalenessWarningBanner,
+  LoadingScreen,
+  ErrorScreen,
 } from "@ui/components";
 import { useSettlementWithDisplay } from "../hooks/use-settlement-with-display";
 import { useTripById } from "@modules/trips/hooks/use-trips";
@@ -129,45 +131,29 @@ export default function SettlementSummaryScreen() {
 
   if (!tripId) {
     return (
-      <View style={styles.container}>
-        <View style={styles.centerContent}>
-          <Text style={styles.errorTitle}>Invalid Trip</Text>
-          <Text style={styles.errorText}>
-            Missing trip id. Please select a trip.
-          </Text>
-          <Button title="Back to trips" onPress={() => router.replace("/")} />
-        </View>
-      </View>
+      <ErrorScreen
+        title="Invalid Trip"
+        message="Missing trip id. Please select a trip."
+        actionLabel="Back to trips"
+        onAction={() => router.replace("/")}
+      />
     );
   }
 
   // Loading state
   if (loading) {
-    return (
-      <View style={styles.container}>
-        <View style={styles.centerContent}>
-          <ActivityIndicator size="large" color={theme.colors.primary} />
-          <Text style={styles.loadingText}>Calculating settlements...</Text>
-        </View>
-      </View>
-    );
+    return <LoadingScreen message="Calculating settlements..." />;
   }
 
   // Error state
   if (error) {
     return (
-      <View style={styles.container}>
-        <View style={styles.centerContent}>
-          <Text style={styles.errorTitle}>Error Loading Settlement</Text>
-          <Text style={styles.errorText}>{formatErrorMessage(error)}</Text>
-          <Button
-            title="Retry"
-            onPress={() => {
-              refetchSettlement();
-            }}
-          />
-        </View>
-      </View>
+      <ErrorScreen
+        title="Error Loading Settlement"
+        message={formatErrorMessage(error)}
+        actionLabel="Retry"
+        onAction={() => refetchSettlement()}
+      />
     );
   }
 
