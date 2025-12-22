@@ -127,38 +127,38 @@
 
 **Preparation**:
 
-- [ ] Create detailed migration plan for import paths
-- [ ] Document current usage of both modules
+- [x] Create detailed migration plan for import paths
+- [x] Document current usage of both modules
 
 **Merge Structure**:
 
-- [ ] Create new unified structure in `src/modules/settlements/`:
-  - [ ] Create `engine/` directory (pure math layer)
-  - [ ] Move `settlement/calculate-balances.ts` → `settlements/engine/`
-  - [ ] Move `settlement/normalize-shares.ts` → `settlements/engine/`
-  - [ ] Move `settlement/optimize-settlements.ts` → `settlements/engine/`
-  - [ ] Keep `service/` directory (data integration layer)
-  - [ ] Move `settlement/service/SettlementService.ts` → `settlements/service/`
-  - [ ] Move `settlement/service/DisplayCurrencyAdapter.ts` → `settlements/service/`
-  - [ ] Keep existing `repository/` directory (transaction records)
-  - [ ] Merge `hooks/` directories
-  - [ ] Merge `screens/` directories
-  - [ ] Merge `components/` directories
-  - [ ] Merge `types.ts` files
-  - [ ] Merge `__tests__/` directories
+- [x] Create new unified structure in `src/modules/settlements/`:
+  - [x] Create `engine/` directory (pure math layer)
+  - [x] Move `settlement/calculate-balances.ts` → `settlements/engine/`
+  - [x] Move `settlement/normalize-shares.ts` → `settlements/engine/`
+  - [x] Move `settlement/optimize-settlements.ts` → `settlements/engine/`
+  - [x] Keep `service/` directory (data integration layer)
+  - [x] Move `settlement/service/SettlementService.ts` → `settlements/service/`
+  - [x] Move `settlement/service/DisplayCurrencyAdapter.ts` → `settlements/service/`
+  - [x] Keep existing `repository/` directory (transaction records)
+  - [x] Merge `hooks/` directories
+  - [x] Merge `screens/` directories
+  - [x] Merge `components/` directories
+  - [x] Merge `types.ts` files
+  - [x] Merge `__tests__/` directories
 
 **Update Imports**:
 
-- [ ] Search codebase for `@modules/settlement` imports (without 's')
-- [ ] Update all imports to `@modules/settlements`
-- [ ] Update path aliases if needed in `tsconfig.json`
+- [x] Search codebase for `@modules/settlement` imports (without 's')
+- [x] Update all imports to `@modules/settlements`
+- [x] Update path aliases if needed in `tsconfig.json` (not needed - working correctly)
 
 **Cleanup**:
 
-- [ ] Delete old `src/modules/settlement/` directory
-- [ ] Run tests to verify no regressions
-- [ ] Run `npm run type-check`
-- [ ] Update documentation in CLAUDE.md if needed
+- [x] Delete old `src/modules/settlement/` directory
+- [x] Run tests to verify no regressions (83 tests passing)
+- [x] Run `npm run type-check` (0 errors)
+- [x] Update documentation in CLAUDE.md if needed (not needed - path alias already correct)
 
 ### 3.2 Relocate Misplaced Hooks
 
@@ -351,7 +351,7 @@
 
 **Phase 1**: ✅ **Complete** (All tasks done, tests passing, type-check clean)
 **Phase 2**: ✅ **Complete** (Utilities extracted, components created, screens refactored)
-**Phase 3**: ⬜ Not Started | ⬜ In Progress | ⬜ Complete
+**Phase 3**: ⚠️ **Partially Complete** (Section 3.1 complete, 3.2 and 3.3 pending)
 **Phase 4**: ⬜ Not Started | ⬜ In Progress | ⬜ Complete
 
 **Last Updated**: 2025-12-22
@@ -416,3 +416,40 @@
 - **Improved consistency** - all loading and error states standardized
 - **Better maintainability** - centralized UI component logic
 - **0 regressions** - all existing functionality preserved
+
+---
+
+## Phase 3 Results (Partial)
+
+**Section 3.1 Completed**: 2025-12-22
+**Time Taken**: ~1.5 hours
+
+### Achievements
+
+- ✅ Merged `settlement/` and `settlements/` modules into unified `settlements/` module
+- ✅ Created clear architectural layers:
+  - `engine/` - Pure math functions (balance calculation, transaction optimization)
+  - `service/` - Data integration layer (SettlementService, DisplayCurrencyAdapter)
+  - `repository/` - Database layer (settlement transaction CRUD)
+  - `hooks/` - React hooks (useSettlement, useSettlementWithDisplay, useSettlements)
+  - `screens/` - UI screens (SettlementSummaryScreen, RecordTransactionScreen, TransactionDetailsScreen)
+- ✅ Resolved type naming conflicts (Settlement → SuggestedSettlement for math types)
+- ✅ Merged types.ts with clear section organization (math types, display types, database types)
+- ✅ Updated all imports across codebase (app routes, fx-rates provider, screens)
+- ✅ All tests passing (83 settlement tests, 6 suites)
+- ✅ Type-check passing with 0 errors
+
+### Commits
+
+- `45e3474` - refactor: merge settlement and settlements modules into unified settlements module
+- `901e841` - fix: resolve type conflicts after settlement module merge
+
+### Impact
+
+- **~568 lines removed** (deleted 751 lines, added 183 lines)
+- **Module confusion eliminated** - single clear settlements module
+- **Better architecture** - clear separation of math, service, and database layers
+- **Type safety improved** - distinct types for suggested payments vs recorded transactions
+- **0 regressions** - all existing functionality preserved
+
+**Remaining Phase 3 Tasks**: Sections 3.2 (Relocate Misplaced Hooks) and 3.3 (Add Common Styles to Theme) are pending.
