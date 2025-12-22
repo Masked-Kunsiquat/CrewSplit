@@ -78,6 +78,28 @@ interface ExpenseFormProps {
   isSubmitting: boolean;
 }
 
+/**
+ * Render a reusable form for creating or editing an expense within a trip.
+ *
+ * The form manages local state for basic expense fields (description, notes,
+ * amount, date, payer, category) and split configuration (split type,
+ * personal expense flag, selected participants, per-participant values).
+ * In "edit" mode the form pre-populates fields from `initialValues`. Submission
+ * validates the amount and split configuration before calling `onSubmit` with
+ * a normalized ExpenseFormData payload.
+ *
+ * @param props.mode - Either `"add"` to create a new expense or `"edit"` to modify an existing one
+ * @param props.tripId - Trip identifier the expense belongs to
+ * @param props.tripCurrency - Default currency used for displayed amounts
+ * @param props.tripStartDate - Trip start date used as the DatePicker's initial boundary
+ * @param props.participants - Array of participants available for payer and split selection
+ * @param props.categories - Expense categories used to populate the category picker
+ * @param props.initialValues - Optional expense values to populate the form when editing
+ * @param props.onSubmit - Called with the normalized ExpenseFormData when the user saves the form
+ * @param props.onCancel - Called when the user cancels the form
+ * @param props.isSubmitting - When true, disables inputs and shows submitting state
+ * @returns The rendered expense form as a JSX element
+ */
 export function ExpenseForm({
   mode,
   tripId,
