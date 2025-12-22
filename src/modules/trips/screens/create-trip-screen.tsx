@@ -109,7 +109,7 @@ export default function CreateTripScreen() {
 
   return (
     <KeyboardAvoidingView
-      style={styles.container}
+      style={theme.commonStyles.container}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
       <ScrollView
@@ -185,7 +185,7 @@ export default function CreateTripScreen() {
 
       <View
         style={[
-          styles.footer,
+          theme.commonStyles.footer,
           { paddingBottom: theme.spacing.lg + insets.bottom },
         ]}
       >
@@ -238,10 +238,6 @@ export default function CreateTripScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
-  },
   scrollView: {
     flex: 1,
   },
@@ -297,10 +293,5 @@ const styles = StyleSheet.create({
   clearEmojiText: {
     fontSize: theme.typography.sm,
     color: theme.colors.error,
-  },
-  footer: {
-    padding: theme.spacing.lg,
-    borderTopWidth: 1,
-    borderTopColor: theme.colors.border,
   },
 });

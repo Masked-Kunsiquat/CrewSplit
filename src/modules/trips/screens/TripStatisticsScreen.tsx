@@ -9,12 +9,7 @@
  */
 
 import React, { useEffect } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-} from "react-native";
+import { View, Text, StyleSheet, ScrollView } from "react-native";
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
 import { theme } from "@ui/theme";
 import { Card, LoadingScreen, ErrorScreen } from "@ui/components";
@@ -65,7 +60,7 @@ export default function TripStatisticsScreen() {
   }
 
   return (
-    <View style={styles.container}>
+    <View style={theme.commonStyles.container}>
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.content}
@@ -95,37 +90,17 @@ export default function TripStatisticsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
-  },
   scrollView: {
     flex: 1,
   },
   content: {
     padding: theme.spacing.lg,
   },
-  centerContent: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    padding: theme.spacing.lg,
-  },
-  loadingText: {
-    fontSize: theme.typography.base,
-    color: theme.colors.textSecondary,
-    marginTop: theme.spacing.sm,
-  },
   errorCard: {
     gap: theme.spacing.sm,
     alignItems: "center",
     padding: theme.spacing.lg,
     backgroundColor: theme.colors.surfaceElevated,
-  },
-  errorTitle: {
-    fontSize: theme.typography.lg,
-    fontWeight: theme.typography.semibold,
-    color: theme.colors.error,
   },
   errorText: {
     fontSize: theme.typography.base,

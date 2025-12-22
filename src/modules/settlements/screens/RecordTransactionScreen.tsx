@@ -183,18 +183,18 @@ export default function RecordTransactionScreen() {
 
   if (tripLoading || participantsLoading || (isEditing && settlementLoading)) {
     return (
-      <View style={styles.loadingContainer}>
+      <View style={theme.commonStyles.centerContent}>
         <ActivityIndicator size="large" color={theme.colors.primary} />
-        <Text style={styles.loadingText}>Loading...</Text>
+        <Text style={theme.commonStyles.loadingText}>Loading...</Text>
       </View>
     );
   }
 
   if (settlementError || (isEditing && !settlement)) {
     return (
-      <View style={styles.container}>
-        <View style={styles.centerContent}>
-          <Text style={styles.errorTitle}>Payment Not Found</Text>
+      <View style={theme.commonStyles.container}>
+        <View style={theme.commonStyles.centerContent}>
+          <Text style={theme.commonStyles.errorTitle}>Payment Not Found</Text>
           <Text style={styles.errorText}>
             {settlementError?.message ||
               "The payment could not be loaded. Please try again."}
@@ -207,9 +207,9 @@ export default function RecordTransactionScreen() {
 
   if (!trip) {
     return (
-      <View style={styles.container}>
-        <View style={styles.centerContent}>
-          <Text style={styles.errorTitle}>Trip Not Found</Text>
+      <View style={theme.commonStyles.container}>
+        <View style={theme.commonStyles.centerContent}>
+          <Text style={theme.commonStyles.errorTitle}>Trip Not Found</Text>
           <Text style={styles.errorText}>
             The trip could not be loaded. Please try again.
           </Text>
@@ -221,9 +221,9 @@ export default function RecordTransactionScreen() {
 
   if (participants.length === 0) {
     return (
-      <View style={styles.container}>
-        <View style={styles.centerContent}>
-          <Text style={styles.errorTitle}>No Participants</Text>
+      <View style={theme.commonStyles.container}>
+        <View style={theme.commonStyles.centerContent}>
+          <Text style={theme.commonStyles.errorTitle}>No Participants</Text>
           <Text style={styles.errorText}>
             Add participants to the trip before recording payments.
           </Text>
@@ -282,7 +282,7 @@ export default function RecordTransactionScreen() {
 
   return (
     <KeyboardAvoidingView
-      style={styles.container}
+      style={theme.commonStyles.container}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
       keyboardVerticalOffset={Platform.OS === "ios" ? 64 : 0}
     >
@@ -374,7 +374,7 @@ export default function RecordTransactionScreen() {
         )}
       </ScrollView>
 
-      <View style={styles.footer}>
+      <View style={theme.commonStyles.footer}>
         <Button
           title="Cancel"
           onPress={() => router.back()}
@@ -399,33 +399,6 @@ export default function RecordTransactionScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
-  },
-  loadingContainer: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  loadingText: {
-    marginTop: theme.spacing.md,
-    fontSize: theme.typography.base,
-    color: theme.colors.textSecondary,
-  },
-  centerContent: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: theme.spacing.xl,
-  },
-  errorTitle: {
-    fontSize: theme.typography.xl,
-    fontWeight: "bold",
-    color: theme.colors.text,
-    marginBottom: theme.spacing.sm,
-  },
   errorText: {
     fontSize: theme.typography.base,
     color: theme.colors.textSecondary,
@@ -462,12 +435,5 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.error + "20",
     borderRadius: 8,
     marginBottom: theme.spacing.md,
-  },
-  footer: {
-    padding: theme.spacing.lg,
-    gap: theme.spacing.md,
-    borderTopWidth: 1,
-    borderTopColor: theme.colors.border,
-    backgroundColor: theme.colors.background,
   },
 });

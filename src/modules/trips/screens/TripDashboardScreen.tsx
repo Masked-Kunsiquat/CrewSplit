@@ -37,8 +37,8 @@ export default function TripDashboardScreen() {
 
   if (!tripId) {
     return (
-      <View style={styles.container}>
-        <View style={styles.centerContent}>
+      <View style={theme.commonStyles.container}>
+        <View style={theme.commonStyles.centerContent}>
           <Text style={styles.errorText}>
             Invalid trip. Please select a trip again.
           </Text>
@@ -166,7 +166,7 @@ function TripDashboardScreenContent({ tripId }: { tripId: string }) {
 
   if (tripError) {
     return (
-      <View style={styles.container}>
+      <View style={theme.commonStyles.container}>
         <View style={styles.errorContainer}>
           <Card style={styles.errorCard}>
             <Text style={styles.errorText}>{tripError.message}</Text>
@@ -178,8 +178,8 @@ function TripDashboardScreenContent({ tripId }: { tripId: string }) {
 
   if (loading || !trip) {
     return (
-      <View style={styles.container}>
-        <View style={styles.centerContent}>
+      <View style={theme.commonStyles.container}>
+        <View style={theme.commonStyles.centerContent}>
           <ActivityIndicator size="large" color={theme.colors.primary} />
         </View>
       </View>
@@ -187,7 +187,7 @@ function TripDashboardScreenContent({ tripId }: { tripId: string }) {
   }
 
   return (
-    <View style={styles.container}>
+    <View style={theme.commonStyles.container}>
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.content}
@@ -230,7 +230,7 @@ function TripDashboardScreenContent({ tripId }: { tripId: string }) {
         )}
       </ScrollView>
 
-      <View style={styles.footer}>
+      <View style={theme.commonStyles.footer}>
         <Button
           title="+ Add"
           onPress={() => setAddMenuVisible(true)}
@@ -334,21 +334,12 @@ function TripDashboardScreenContent({ tripId }: { tripId: string }) {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
-  },
   scrollView: {
     flex: 1,
   },
   content: {
     padding: theme.spacing.lg,
     gap: theme.spacing.md,
-  },
-  centerContent: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
   },
   errorContainer: {
     padding: theme.spacing.lg,
@@ -359,11 +350,6 @@ const styles = StyleSheet.create({
   errorText: {
     fontSize: theme.typography.base,
     color: theme.colors.background,
-  },
-  footer: {
-    padding: theme.spacing.lg,
-    borderTopWidth: 1,
-    borderTopColor: theme.colors.border,
   },
   modalOverlay: {
     flex: 1,

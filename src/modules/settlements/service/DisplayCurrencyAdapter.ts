@@ -144,16 +144,15 @@ export class DisplayCurrencyAdapter {
     );
 
     // Convert settlements
-    const settlements: SuggestedSettlementWithDisplay[] = settlement.settlements.map(
-      (s) => ({
+    const settlements: SuggestedSettlementWithDisplay[] =
+      settlement.settlements.map((s) => ({
         ...s,
         displayAmount: this.convertAmount(
           tripCurrency,
           s.amount,
           displayCurrency,
         ),
-      }),
-    );
+      }));
 
     return {
       balances,

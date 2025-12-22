@@ -4,13 +4,7 @@
  */
 
 import React, { useEffect, useState } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  Alert,
-} from "react-native";
+import { View, Text, StyleSheet, ScrollView, Alert } from "react-native";
 import { useRouter, useLocalSearchParams, useNavigation } from "expo-router";
 import { theme } from "@ui/theme";
 import {
@@ -19,7 +13,10 @@ import {
   LoadingScreen,
   ErrorScreen,
 } from "@ui/components";
-import { useSettlementById, useDeleteSettlement } from "../hooks/use-settlements";
+import {
+  useSettlementById,
+  useDeleteSettlement,
+} from "../hooks/use-settlements";
 import { useTripById } from "@modules/trips/hooks/use-trips";
 import { formatCurrency } from "@utils/currency";
 import { normalizeRouteParam } from "@utils/route-params";
@@ -93,7 +90,7 @@ export default function TransactionDetailsScreen() {
   return (
     <>
       <ScrollView
-        style={styles.container}
+        style={theme.commonStyles.container}
         contentContainerStyle={styles.content}
       >
         <View style={styles.section}>
@@ -196,39 +193,6 @@ export default function TransactionDetailsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
-  },
-  loadingContainer: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  loadingText: {
-    marginTop: theme.spacing.md,
-    fontSize: theme.typography.base,
-    color: theme.colors.textSecondary,
-  },
-  centerContent: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: theme.spacing.xl,
-  },
-  errorTitle: {
-    fontSize: theme.typography.xl,
-    fontWeight: "bold",
-    color: theme.colors.text,
-    marginBottom: theme.spacing.sm,
-  },
-  errorText: {
-    fontSize: theme.typography.base,
-    color: theme.colors.textSecondary,
-    textAlign: "center",
-    marginBottom: theme.spacing.lg,
-  },
   content: {
     padding: theme.spacing.lg,
   },

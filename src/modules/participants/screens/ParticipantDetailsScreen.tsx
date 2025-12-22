@@ -4,13 +4,7 @@
  */
 
 import React, { useState, useMemo, useEffect } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  Pressable,
-} from "react-native";
+import { View, Text, StyleSheet, ScrollView, Pressable } from "react-native";
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
 import { theme } from "@ui/theme";
 import { Card, LoadingScreen, ErrorScreen } from "@ui/components";
@@ -300,7 +294,7 @@ function ParticipantDetailsContent({
   };
 
   return (
-    <View style={styles.container}>
+    <View style={theme.commonStyles.container}>
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.content}
@@ -336,7 +330,7 @@ function ParticipantDetailsContent({
                   {formatNetPosition(netPosition, settlement.currency)}
                 </Text>
                 {displayAmounts && (
-                  <Text style={styles.displayCurrencySmall}>
+                  <Text style={theme.commonStyles.displayCurrencySmall}>
                     {formatNetPosition(
                       displayAmounts.netPosition,
                       displayAmounts.currency,
@@ -352,7 +346,7 @@ function ParticipantDetailsContent({
                   {formatCurrency(totalPaid, settlement.currency)}
                 </Text>
                 {displayAmounts && (
-                  <Text style={styles.displayCurrencySmall}>
+                  <Text style={theme.commonStyles.displayCurrencySmall}>
                     {formatCurrency(
                       displayAmounts.totalPaid,
                       displayAmounts.currency,
@@ -368,7 +362,7 @@ function ParticipantDetailsContent({
                   {formatCurrency(totalOwed, settlement.currency)}
                 </Text>
                 {displayAmounts && (
-                  <Text style={styles.displayCurrencySmall}>
+                  <Text style={theme.commonStyles.displayCurrencySmall}>
                     {formatCurrency(
                       displayAmounts.totalOwed,
                       displayAmounts.currency,
@@ -523,7 +517,7 @@ function ParticipantDetailsContent({
                       </Text>
                       {displayAmounts &&
                         expenseDisplayAmounts.has(expense.id) && (
-                          <Text style={styles.displayCurrencySmall}>
+                          <Text style={theme.commonStyles.displayCurrencySmall}>
                             {expenseDisplayAmounts.get(expense.id) !== null
                               ? formatCurrency(
                                   expenseDisplayAmounts.get(expense.id)!,
@@ -577,7 +571,9 @@ function ParticipantDetailsContent({
                         </Text>
                         {displayAmounts &&
                           categoryDisplayAmounts.has(categoryId) && (
-                            <Text style={styles.displayCurrencySmall}>
+                            <Text
+                              style={theme.commonStyles.displayCurrencySmall}
+                            >
                               {categoryDisplayAmounts.get(categoryId) !== null
                                 ? formatCurrency(
                                     categoryDisplayAmounts.get(categoryId)!,
@@ -609,25 +605,6 @@ const styles = StyleSheet.create({
   content: {
     padding: theme.spacing.lg,
     gap: theme.spacing.md,
-  },
-  centerContent: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: theme.spacing.lg,
-    gap: theme.spacing.md,
-  },
-  loadingText: {
-    fontSize: theme.typography.base,
-    color: theme.colors.textSecondary,
-    marginTop: theme.spacing.sm,
-  },
-  errorTitle: {
-    fontSize: theme.typography.xl,
-    fontWeight: theme.typography.bold,
-    color: theme.colors.error,
-    marginBottom: theme.spacing.sm,
-    textAlign: "center",
   },
   errorText: {
     fontSize: theme.typography.base,
@@ -683,14 +660,6 @@ const styles = StyleSheet.create({
     color: theme.colors.text,
     textAlign: "right",
     flex: 1,
-  },
-  displayCurrencySmall: {
-    fontSize: theme.typography.xs,
-    color: theme.colors.textMuted,
-    fontStyle: "italic",
-    textAlign: "right",
-    paddingRight: theme.spacing.xs,
-    flexShrink: 1,
   },
   section: {
     backgroundColor: theme.colors.surfaceElevated,

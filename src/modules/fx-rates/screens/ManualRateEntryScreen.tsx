@@ -112,7 +112,7 @@ export default function ManualRateEntryScreen() {
 
   return (
     <KeyboardAvoidingView
-      style={styles.container}
+      style={theme.commonStyles.container}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
       <ScrollView
@@ -197,7 +197,7 @@ export default function ManualRateEntryScreen() {
         )}
       </ScrollView>
 
-      <View style={styles.footer}>
+      <View style={theme.commonStyles.footer}>
         <Button
           title="Cancel"
           variant="outline"
@@ -231,10 +231,6 @@ export default function ManualRateEntryScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
-  },
   scrollView: {
     flex: 1,
   },
@@ -299,10 +295,5 @@ const styles = StyleSheet.create({
     color: theme.colors.primary,
     flex: 1,
     textAlign: "right",
-  },
-  footer: {
-    padding: theme.spacing.lg,
-    borderTopWidth: 1,
-    borderTopColor: theme.colors.border,
   },
 });

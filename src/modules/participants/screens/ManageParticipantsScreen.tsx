@@ -4,13 +4,7 @@
  */
 
 import React, { useState, useEffect } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  Alert,
-} from "react-native";
+import { View, Text, StyleSheet, ScrollView, Alert } from "react-native";
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
 import { theme } from "@ui/theme";
 import { participantLogger } from "@utils/logger";
@@ -180,7 +174,7 @@ function ManageParticipantsContent({
   }
 
   return (
-    <View style={styles.container}>
+    <View style={theme.commonStyles.container}>
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.content}
@@ -270,11 +264,6 @@ const styles = StyleSheet.create({
     fontSize: theme.typography.xxxl,
     fontWeight: theme.typography.bold,
     color: theme.colors.text,
-  },
-  centerContent: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
   },
   errorContainer: {
     padding: theme.spacing.lg,

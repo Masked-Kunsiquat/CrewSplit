@@ -164,7 +164,7 @@ export default function SettlementSummaryScreen() {
   const hasSplitExpenses = (settlement.splitExpensesTotal ?? 0) > 0;
 
   return (
-    <View style={styles.container}>
+    <View style={theme.commonStyles.container}>
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.content}
@@ -443,7 +443,7 @@ export default function SettlementSummaryScreen() {
         )}
       </ScrollView>
 
-      <View style={styles.footer}>
+      <View style={theme.commonStyles.footer}>
         <Button
           title="Export Trip"
           variant="outline"
@@ -475,21 +475,10 @@ export default function SettlementSummaryScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
-  },
   scrollView: {
     flex: 1,
   },
   content: {
-    padding: theme.spacing.lg,
-    gap: theme.spacing.md,
-  },
-  centerContent: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
     padding: theme.spacing.lg,
     gap: theme.spacing.md,
   },
@@ -513,16 +502,6 @@ const styles = StyleSheet.create({
     color: theme.colors.textMuted,
     fontStyle: "italic",
     paddingRight: theme.spacing.xs,
-  },
-  loadingText: {
-    fontSize: theme.typography.base,
-    color: theme.colors.textSecondary,
-  },
-  errorTitle: {
-    fontSize: theme.typography.xl,
-    fontWeight: theme.typography.bold,
-    color: theme.colors.error,
-    marginBottom: theme.spacing.sm,
   },
   errorText: {
     fontSize: theme.typography.base,
@@ -730,10 +709,5 @@ const styles = StyleSheet.create({
     color: theme.colors.primary,
     fontSize: theme.typography.sm,
     fontWeight: theme.typography.semibold,
-  },
-  footer: {
-    padding: theme.spacing.lg,
-    borderTopWidth: 1,
-    borderTopColor: theme.colors.border,
   },
 });
