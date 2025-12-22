@@ -19,7 +19,7 @@ import {
   LoadingScreen,
   ErrorScreen,
 } from "@ui/components";
-import { useSettlement, useDeleteSettlement } from "../hooks/use-settlements";
+import { useSettlementById, useDeleteSettlement } from "../hooks/use-settlements";
 import { useTripById } from "@modules/trips/hooks/use-trips";
 import { formatCurrency } from "@utils/currency";
 import { normalizeRouteParam } from "@utils/route-params";
@@ -33,7 +33,7 @@ export default function TransactionDetailsScreen() {
   }>();
   const settlementId = normalizeRouteParam(params.settlementId);
 
-  const { settlement, loading } = useSettlement(settlementId ?? null);
+  const { settlement, loading } = useSettlementById(settlementId ?? null);
   const { deleteSettlement, loading: deleting } = useDeleteSettlement();
   const { trip } = useTripById(settlement?.tripId ?? null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);

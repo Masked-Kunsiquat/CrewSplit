@@ -27,7 +27,7 @@ import { useTripById } from "../../trips/hooks/use-trips";
 import { useParticipants } from "../../participants/hooks/use-participants";
 import {
   useCreateSettlement,
-  useSettlement,
+  useSettlementById,
   useUpdateSettlement,
 } from "../hooks/use-settlements";
 import { parseCurrency } from "@utils/currency";
@@ -62,7 +62,7 @@ export default function RecordTransactionScreen() {
     settlement,
     loading: settlementLoading,
     error: settlementError,
-  } = useSettlement(settlementId);
+  } = useSettlementById(settlementId);
   const {
     updateSettlement,
     loading: updating,
