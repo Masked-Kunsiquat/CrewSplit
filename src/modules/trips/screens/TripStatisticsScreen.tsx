@@ -15,7 +15,7 @@ import {
   StyleSheet,
   ScrollView,
 } from "react-native";
-import { useLocalSearchParams, useNavigation } from "expo-router";
+import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
 import { theme } from "@ui/theme";
 import { Card, LoadingScreen, ErrorScreen } from "@ui/components";
 import { useTripById } from "../hooks/use-trips";
@@ -23,6 +23,7 @@ import { formatErrorMessage } from "src/utils/format-error";
 
 export default function TripStatisticsScreen() {
   const navigation = useNavigation();
+  const router = useRouter();
   const { id } = useLocalSearchParams<{ id?: string }>();
   const tripId = id?.trim() || null;
 
@@ -38,7 +39,14 @@ export default function TripStatisticsScreen() {
   }, [trip, navigation]);
 
   if (!tripId) {
-    return <ErrorScreen title="Invalid Trip" message="Invalid trip ID" />;
+    return (
+      <ErrorScreen
+        title="Invalid Trip"
+        message="Invalid trip ID"
+        actionLabel="Back to trips"
+        onAction={() => router.replace("/")}
+      />
+    );
   }
 
   if (loading) {
