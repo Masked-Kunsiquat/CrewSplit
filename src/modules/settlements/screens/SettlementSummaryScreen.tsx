@@ -24,7 +24,7 @@ import {
 } from "@ui/components";
 import { useSettlementWithDisplay } from "../hooks/use-settlement-with-display";
 import { useTripById } from "@modules/trips/hooks/use-trips";
-import { useDisplayCurrency } from "@hooks/use-display-currency";
+import { useDisplayCurrency } from "@modules/settings/hooks/use-display-currency";
 import { formatCurrency } from "@utils/currency";
 import { normalizeRouteParam } from "@utils/route-params";
 import { useRefreshControl } from "@hooks/use-refresh-control";

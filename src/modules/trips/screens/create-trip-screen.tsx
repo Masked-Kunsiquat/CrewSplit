@@ -16,7 +16,7 @@ import { theme } from "@ui/theme";
 import { Button, Input, CurrencyPicker, DateRangePicker } from "@ui/components";
 import { createTrip } from "../repository";
 import { createParticipant } from "../../participants/repository";
-import { useDeviceOwner } from "@hooks/use-device-owner";
+import { useDeviceOwner } from "@modules/onboarding/hooks/use-device-owner";
 import { participantLogger } from "@utils/logger";
 
 const AVATAR_COLORS = [
