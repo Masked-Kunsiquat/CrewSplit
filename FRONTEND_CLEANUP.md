@@ -66,55 +66,55 @@
 
 ### 2.1 Extract Split Validation Utility (~180 lines saved)
 
-- [ ] Create `src/modules/expenses/utils/validate-splits.ts`
-- [ ] Move validation logic from AddExpenseScreen (lines 195-286)
-- [ ] Update AddExpenseScreen to use new utility
-- [ ] Update EditExpenseScreen to use new utility (lines 258-349)
-- [ ] Add unit tests for validation utility
-- [ ] Test in both Add and Edit expense screens
+- [x] Create `src/modules/expenses/utils/validate-splits.ts`
+- [x] Move validation logic from AddExpenseScreen (lines 195-286)
+- [x] Update AddExpenseScreen to use new utility
+- [x] Update EditExpenseScreen to use new utility (lines 258-349)
+- [x] Add unit tests for validation utility
+- [x] Test in both Add and Edit expense screens
 
 ### 2.2 Extract Split Building Utility (~200 lines saved)
 
-- [ ] Create `src/modules/expenses/utils/build-expense-splits.ts`
-- [ ] Move split building logic from AddExpenseScreen (lines 321-412)
-- [ ] Update AddExpenseScreen to use new utility
-- [ ] Update EditExpenseScreen to use new utility (lines 381-474)
-- [ ] Add unit tests for split building utility
-- [ ] Test expense creation/editing with all split types
+- [x] Create `src/modules/expenses/utils/build-expense-splits.ts`
+- [x] Move split building logic from AddExpenseScreen (lines 321-412)
+- [x] Update AddExpenseScreen to use new utility
+- [x] Update EditExpenseScreen to use new utility (lines 381-474)
+- [x] Add unit tests for split building utility
+- [x] Test expense creation/editing with all split types
 
 ### 2.3 Create LoadingScreen Component (~160 lines saved)
 
-- [ ] Create `src/ui/components/LoadingScreen.tsx` with optional message prop
-- [ ] Update AddExpenseScreen (lines 443-450)
-- [ ] Update EditExpenseScreen (lines 510-518)
-- [ ] Update ExpenseDetailsScreen (lines 270-279)
-- [ ] Update ParticipantDetailsScreen (lines 268-277)
-- [ ] Update SettlementSummaryScreen (lines 144-152)
-- [ ] Update TripDashboardScreen (lines 179-186)
-- [ ] Update RecordTransactionScreen (lines 183-190)
-- [ ] Update any other screens with loading pattern
-- [ ] Export from `src/ui/components/index.ts`
+- [x] Create `src/ui/components/LoadingScreen.tsx` with optional message prop
+- [x] Update AddExpenseScreen (lines 443-450)
+- [x] Update EditExpenseScreen (lines 510-518)
+- [x] Update ExpenseDetailsScreen (lines 270-279)
+- [x] Update ParticipantDetailsScreen (lines 268-277)
+- [x] Update SettlementSummaryScreen (lines 144-152)
+- [x] Update TripDashboardScreen (lines 179-186)
+- [x] Update RecordTransactionScreen (lines 183-190)
+- [x] Update any other screens with loading pattern (ExpensesListScreen, ManageParticipantsScreen, RateListScreen, TripStatisticsScreen, TransactionDetailsScreen)
+- [x] Export from `src/ui/components/index.ts`
 
 ### 2.4 Create ErrorScreen Component (~200 lines saved)
 
-- [ ] Create `src/ui/components/ErrorScreen.tsx` with title, message, action props
-- [ ] Update AddExpenseScreen (lines 76-88, 453-469)
-- [ ] Update EditExpenseScreen (lines 537-559)
-- [ ] Update ExpenseDetailsScreen (lines 282-296)
-- [ ] Update ParticipantDetailsScreen (lines 279-294)
-- [ ] Update SettlementSummaryScreen (lines 155-170)
-- [ ] Update RecordTransactionScreen (lines 192-233)
-- [ ] Update any other screens with error pattern
-- [ ] Export from `src/ui/components/index.ts`
+- [x] Create `src/ui/components/ErrorScreen.tsx` with title, message, action props
+- [x] Update AddExpenseScreen (lines 76-88, 453-469)
+- [x] Update EditExpenseScreen (lines 537-559)
+- [x] Update ExpenseDetailsScreen (lines 282-296)
+- [x] Update ParticipantDetailsScreen (lines 279-294)
+- [x] Update SettlementSummaryScreen (lines 155-170)
+- [x] Update RecordTransactionScreen (lines 192-233)
+- [x] Update any other screens with error pattern (TransactionDetailsScreen, TripStatisticsScreen)
+- [x] Export from `src/ui/components/index.ts`
 
 ### 2.5 Create Mutation Hook Factory (~270 lines reduced to ~90)
 
-- [ ] Create `src/hooks/use-mutation.ts` with generic mutation hook
-- [ ] Update `src/modules/trips/hooks/use-trip-mutations.ts` to use factory
-- [ ] Update `src/modules/expenses/hooks/use-expense-mutations.ts` to use factory
-- [ ] Update `src/modules/participants/hooks/use-participant-mutations.ts` to use factory
-- [ ] Add unit tests for mutation hook factory
-- [ ] Test all CRUD operations (create/update/delete) for trips, expenses, participants
+- [ ] Create `src/hooks/use-mutation.ts` with generic mutation hook (SKIPPED - optional)
+- [ ] Update `src/modules/trips/hooks/use-trip-mutations.ts` to use factory (SKIPPED - optional)
+- [ ] Update `src/modules/expenses/hooks/use-expense-mutations.ts` to use factory (SKIPPED - optional)
+- [ ] Update `src/modules/participants/hooks/use-participant-mutations.ts` to use factory (SKIPPED - optional)
+- [ ] Add unit tests for mutation hook factory (SKIPPED - optional)
+- [ ] Test all CRUD operations (create/update/delete) for trips, expenses, participants (SKIPPED - optional)
 
 ---
 
