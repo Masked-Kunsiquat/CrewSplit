@@ -4,7 +4,7 @@
  * PURE FUNCTION: No side effects, deterministic
  */
 
-import { ExpenseSplit } from "../expenses/types";
+import { ExpenseSplit } from "../../expenses/types";
 
 /**
  * Normalize different split types to actual amounts in cents

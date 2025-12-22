@@ -3,8 +3,8 @@
  * MODELER: Test the full settlement calculation pipeline
  */
 
-import { calculateBalances } from "../calculate-balances";
-import { optimizeSettlements } from "../optimize-settlements";
+import { calculateBalances } from "../engine/calculate-balances";
+import { optimizeSettlements } from "../engine/optimize-settlements";
 import { Expense, ExpenseSplit } from "../../expenses/types";
 import { Participant } from "../../participants/types";
 

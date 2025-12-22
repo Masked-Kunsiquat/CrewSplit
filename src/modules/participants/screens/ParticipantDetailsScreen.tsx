@@ -15,7 +15,7 @@ import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
 import { theme } from "@ui/theme";
 import { Card, LoadingScreen, ErrorScreen } from "@ui/components";
 import { useParticipants } from "../hooks/use-participants";
-import { useSettlement } from "@modules/settlement/hooks/use-settlement";
+import { useSettlement } from "@modules/settlements/hooks/use-settlement";
 import { useExpenses } from "@modules/expenses/hooks/use-expenses";
 import { useExpenseCategories } from "@modules/expenses/hooks/use-expense-categories";
 import { useDisplayCurrency } from "@hooks/use-display-currency";

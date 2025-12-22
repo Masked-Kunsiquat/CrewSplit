@@ -3,7 +3,7 @@
  * MODELER: Test greedy settlement optimization algorithm
  */
 
-import { optimizeSettlements } from "../optimize-settlements";
+import { optimizeSettlements } from "../engine/optimize-settlements";
 import { ParticipantBalance } from "../types";
 
 describe("optimizeSettlements", () => {

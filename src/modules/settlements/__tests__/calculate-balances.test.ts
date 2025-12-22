@@ -3,7 +3,7 @@
  * MODELER: Test balance calculation across multiple expenses
  */
 
-import { calculateBalances } from "../calculate-balances";
+import { calculateBalances } from "../engine/calculate-balances";
 import { Expense, ExpenseSplit } from "../../expenses/types";
 import { Participant } from "../../participants/types";
 
