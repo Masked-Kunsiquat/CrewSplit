@@ -22,6 +22,7 @@ import { useExpenseCategories } from "@modules/expenses/hooks/use-expense-catego
 import { useDisplayCurrency } from "@hooks/use-display-currency";
 import { useRefreshControl } from "@hooks/use-refresh-control";
 import { formatCurrency } from "@utils/currency";
+import { normalizeRouteParam } from "@utils/route-params";
 import { getCategoryIcon } from "@utils/category-icons";
 import { cachedFxRateProvider } from "@modules/fx-rates/provider";
 import type { ExpenseSplit } from "@modules/expenses/types";
@@ -36,8 +37,8 @@ export default function ParticipantDetailsScreen() {
     participantId?: string | string[];
   }>();
 
-  const tripId = normalizeParam(params.id);
-  const participantId = normalizeParam(params.participantId);
+  const tripId = normalizeRouteParam(params.id);
+  const participantId = normalizeRouteParam(params.participantId);
 
   if (!tripId || !participantId) {
     return (
@@ -610,13 +611,6 @@ function ParticipantDetailsContent({
       </ScrollView>
     </View>
   );
-}
-
-function normalizeParam(param: string | string[] | undefined): string | null {
-  if (!param) return null;
-  const value = Array.isArray(param) ? param[0] : param;
-  const normalized = value.trim();
-  return normalized.length > 0 ? normalized : null;
 }
 
 const styles = StyleSheet.create({

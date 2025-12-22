@@ -10,6 +10,9 @@ export { Input } from "./Input";
 
 export { Card } from "./Card";
 
+export { Checkbox } from "./Checkbox";
+export type { CheckboxProps } from "./Checkbox";
+
 export { ParticipantChip } from "./ParticipantChip";
 
 export { ParticipantListRow } from "./participant-list-row";

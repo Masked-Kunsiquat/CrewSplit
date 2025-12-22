@@ -25,6 +25,7 @@ import { useSettlementWithDisplay } from "../hooks/use-settlement-with-display";
 import { useTripById } from "@modules/trips/hooks/use-trips";
 import { useDisplayCurrency } from "@hooks/use-display-currency";
 import { formatCurrency } from "@utils/currency";
+import { normalizeRouteParam } from "@utils/route-params";
 import { useRefreshControl } from "@hooks/use-refresh-control";
 import { TripExportModal } from "@modules/trips/components/trip-export-modal";
 import { formatErrorMessage } from "src/utils/format-error";
@@ -43,7 +44,7 @@ export default function SettlementSummaryScreen() {
   const navigation = useNavigation();
   const router = useRouter();
   const params = useLocalSearchParams<{ id?: string | string[] }>();
-  const tripId = normalizeTripId(params.id);
+  const tripId = normalizeRouteParam(params.id);
   const { displayCurrency } = useDisplayCurrency();
   const [exportModalVisible, setExportModalVisible] = useState(false);
   const [rateModalVisible, setRateModalVisible] = useState(false);
@@ -486,13 +487,6 @@ export default function SettlementSummaryScreen() {
       />
     </View>
   );
-}
-
-function normalizeTripId(idParam: string | string[] | undefined) {
-  if (!idParam) return null;
-  const first = Array.isArray(idParam) ? idParam[0] : idParam;
-  const normalized = first.trim();
-  return normalized.length > 0 ? normalized : null;
 }
 
 const styles = StyleSheet.create({

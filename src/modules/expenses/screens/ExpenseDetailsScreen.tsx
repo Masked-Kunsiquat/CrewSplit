@@ -29,6 +29,7 @@ import { useExpenseCategories } from "../hooks/use-expense-categories";
 import { useParticipants } from "@modules/participants/hooks/use-participants";
 import { useDisplayCurrency } from "@hooks/use-display-currency";
 import { formatCurrency } from "@utils/currency";
+import { normalizeRouteParam } from "@utils/route-params";
 import { cachedFxRateProvider } from "@modules/fx-rates/provider";
 import { deleteExpense } from "../repository";
 import { currencyLogger } from "@utils/logger";
@@ -572,13 +573,6 @@ function ExpenseDetailsContent({
       />
     </View>
   );
-}
-
-function normalizeRouteParam(param: string | string[] | undefined) {
-  if (!param) return null;
-  const value = Array.isArray(param) ? param[0] : param;
-  const normalized = value.trim();
-  return normalized.length > 0 ? normalized : null;
 }
 
 const styles = StyleSheet.create({
