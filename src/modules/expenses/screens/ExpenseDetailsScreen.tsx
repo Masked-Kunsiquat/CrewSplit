@@ -9,7 +9,6 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  ActivityIndicator,
   Alert,
   TouchableOpacity,
   Pressable,
@@ -23,6 +22,8 @@ import {
   ConfirmDialog,
   NoRateAvailableModal,
   StalenessWarningBanner,
+  LoadingScreen,
+  ErrorScreen,
 } from "@ui/components";
 import { useExpenseWithSplits } from "../hooks/use-expenses";
 import { useExpenseCategories } from "../hooks/use-expense-categories";
@@ -46,18 +47,17 @@ export default function ExpenseDetailsScreen() {
   const expenseId = normalizeRouteParam(params.expenseId);
 
   if (!tripId || !expenseId) {
-    const message = !tripId
-      ? "Missing trip ID. Please go back and try again."
-      : "Missing expense ID. Please select an expense.";
-
     return (
-      <View style={styles.container}>
-        <View style={styles.centerContent}>
-          <Text style={styles.errorTitle}>Invalid Expense</Text>
-          <Text style={styles.errorText}>{message}</Text>
-          <Button title="Back" onPress={() => router.back()} />
-        </View>
-      </View>
+      <ErrorScreen
+        title="Invalid Expense"
+        message={
+          !tripId
+            ? "Missing trip ID. Please go back and try again."
+            : "Missing expense ID. Please select an expense."
+        }
+        actionLabel="Back"
+        onAction={() => router.back()}
+      />
     );
   }
 
@@ -269,31 +269,18 @@ function ExpenseDetailsContent({
 
   // Loading state
   if (loading) {
-    return (
-      <View style={styles.container}>
-        <View style={styles.centerContent}>
-          <ActivityIndicator size="large" color={theme.colors.primary} />
-          <Text style={styles.loadingText}>Loading expense...</Text>
-        </View>
-      </View>
-    );
+    return <LoadingScreen message="Loading expense..." />;
   }
 
   // Error state
   if (expenseError || !expense) {
     return (
-      <View style={styles.container}>
-        <View style={styles.centerContent}>
-          <Text style={styles.errorTitle}>Error Loading Expense</Text>
-          <Text style={styles.errorText}>
-            {expenseError?.message || "Expense not found"}
-          </Text>
-          <Button
-            title="Back to list"
-            onPress={() => router.replace(`/trips/${tripId}/expenses`)}
-          />
-        </View>
-      </View>
+      <ErrorScreen
+        title="Error Loading Expense"
+        message={expenseError?.message || "Expense not found"}
+        actionLabel="Back to list"
+        onAction={() => router.replace(`/trips/${tripId}/expenses`)}
+      />
     );
   }
 

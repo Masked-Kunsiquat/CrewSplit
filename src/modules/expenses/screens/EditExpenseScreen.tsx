@@ -11,9 +11,7 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
-  ActivityIndicator,
   Alert,
-  Pressable,
 } from "react-native";
 import { useRouter, useLocalSearchParams, useNavigation } from "expo-router";
 import { theme } from "@ui/theme";
@@ -27,6 +25,8 @@ import {
   SplitValidationSummary,
   SplitType,
   Checkbox,
+  LoadingScreen,
+  ErrorScreen,
 } from "@ui/components";
 import { useTripById } from "../../trips/hooks/use-trips";
 import { useParticipants } from "../../participants/hooks/use-participants";
@@ -36,6 +36,11 @@ import { useUpdateExpense } from "../hooks/use-expense-mutations";
 import { parseCurrency } from "@utils/currency";
 import { getCategoryIcon } from "@utils/category-icons";
 import { normalizeRouteParam } from "@utils/route-params";
+import { validateExpenseSplits } from "../utils/validate-splits";
+import {
+  buildExpenseSplits,
+  validateSplitTotals,
+} from "../utils/build-expense-splits";
 
 export default function EditExpenseScreen() {
   const router = useRouter();
@@ -54,17 +59,14 @@ export default function EditExpenseScreen() {
 
   if (!normalizedTripId || !normalizedExpenseId) {
     return (
-      <View style={styles.container}>
-        <View style={styles.centerContent}>
-          <Text style={styles.errorTitle}>Invalid Request</Text>
-          <Text style={styles.errorText}>
-            {!normalizedTripId
-              ? "No trip ID provided."
-              : "No expense ID provided."}
-          </Text>
-          <Button title="Go back" onPress={() => router.back()} />
-        </View>
-      </View>
+      <ErrorScreen
+        title="Invalid Request"
+        message={
+          !normalizedTripId ? "No trip ID provided." : "No expense ID provided."
+        }
+        actionLabel="Go back"
+        onAction={() => router.back()}
+      />
     );
   }
 
@@ -226,100 +228,13 @@ function EditExpenseScreenContent({
     }
   };
 
-  // Validation logic
-  const validateSplits = (): {
-    isValid: boolean;
-    error?: string;
-    current?: number;
-    target?: number;
-  } => {
-    const selectedCount = selectedParticipants.size;
-
-    if (selectedCount === 0) {
-      return { isValid: true }; // Allow zero participants (unallocated expense)
-    }
-
-    const expenseAmountMinor = parseCurrency(amount);
-
-    if (splitType === "equal") {
-      return { isValid: true }; // Equal splits require no validation
-    }
-
-    if (splitType === "weight") {
-      // Validate each weight is a finite positive number
-      for (const pid of selectedParticipants) {
-        const value = parseFloat(splitValues[pid] || "1");
-        if (!Number.isFinite(value) || value <= 0) {
-          return {
-            isValid: false,
-            error: "Weights must be positive numbers",
-          };
-        }
-      }
-      return { isValid: true };
-    }
-
-    if (splitType === "percentage") {
-      // Validate each percentage is finite and within 0-100
-      for (const pid of selectedParticipants) {
-        const value = parseFloat(splitValues[pid] || "0");
-        if (!Number.isFinite(value) || value < 0 || value > 100) {
-          return {
-            isValid: false,
-            error: "Each percentage must be between 0 and 100",
-          };
-        }
-      }
-
-      // Check that percentages sum to 100
-      const total = Array.from(selectedParticipants).reduce((sum, pid) => {
-        const value = parseFloat(splitValues[pid] || "0");
-        return sum + value;
-      }, 0);
-
-      const isValid = Math.abs(total - 100) < 0.01; // Allow small floating point errors
-      return {
-        isValid,
-        error: isValid
-          ? undefined
-          : `Percentages must add up to 100% (currently ${total.toFixed(1)}%)`,
-        current: total,
-        target: 100,
-      };
-    }
-
-    if (splitType === "amount") {
-      // Validate each split amount is finite and non-negative
-      for (const pid of selectedParticipants) {
-        const valueStr = splitValues[pid] || "0";
-        const value = parseCurrency(valueStr);
-        if (!Number.isFinite(value) || value < 0) {
-          return {
-            isValid: false,
-            error: "Split amounts must be non-negative",
-          };
-        }
-      }
-
-      // Check that split amounts sum to expense total
-      const total = Array.from(selectedParticipants).reduce((sum, pid) => {
-        const value = parseCurrency(splitValues[pid] || "0");
-        return sum + value;
-      }, 0);
-
-      const isValid = total === expenseAmountMinor;
-      return {
-        isValid,
-        error: isValid ? undefined : "Split amounts must equal expense total",
-        current: total,
-        target: expenseAmountMinor,
-      };
-    }
-
-    return { isValid: true };
-  };
-
-  const validation = validateSplits();
+  // Validation using extracted utility
+  const validation = validateExpenseSplits(
+    selectedParticipants,
+    splitType,
+    splitValues,
+    amount,
+  );
 
   const handleSave = async () => {
     if (!trip || !paidBy || !expense) {
@@ -348,100 +263,21 @@ function EditExpenseScreenContent({
         return;
       }
 
-      // Build splits based on split type with validation
-      const updatedSplits = Array.from(selectedParticipants).map(
-        (participantId) => {
-          if (splitType === "equal") {
-            return {
-              participantId,
-              share: 1,
-              shareType: "equal" as const,
-            };
-          }
-
-          if (splitType === "percentage") {
-            const percentage = parseFloat(splitValues[participantId] || "0");
-            // Validate percentage is finite and within bounds
-            if (
-              !Number.isFinite(percentage) ||
-              percentage < 0 ||
-              percentage > 100
-            ) {
-              throw new Error("Each percentage must be between 0 and 100");
-            }
-            return {
-              participantId,
-              share: percentage,
-              shareType: "percentage" as const,
-            };
-          }
-
-          if (splitType === "weight") {
-            const weight = parseFloat(splitValues[participantId] || "1");
-            // Validate weight is finite and positive
-            if (!Number.isFinite(weight) || weight <= 0) {
-              throw new Error("Weights must be positive numbers");
-            }
-            return {
-              participantId,
-              share: weight,
-              shareType: "weight" as const,
-            };
-          }
-
-          if (splitType === "amount") {
-            const splitAmount = parseCurrency(
-              splitValues[participantId] || "0",
-            );
-            // Validate amount is finite and non-negative
-            if (!Number.isFinite(splitAmount) || splitAmount < 0) {
-              throw new Error("Split amounts must be non-negative");
-            }
-            return {
-              participantId,
-              share: 0, // Not used for amount type
-              shareType: "amount" as const,
-              amount: splitAmount,
-            };
-          }
-
-          // Fallback (should never reach here)
-          return {
-            participantId,
-            share: 1,
-            shareType: "equal" as const,
-          };
-        },
+      // Build splits using extracted utility
+      const updatedSplits = buildExpenseSplits(
+        selectedParticipants,
+        splitType,
+        splitValues,
       );
 
-      // Additional validation for percentage sum
-      if (splitType === "percentage") {
-        const totalPercentage = updatedSplits.reduce(
-          (sum, split) => sum + split.share,
-          0,
-        );
-        if (Math.abs(totalPercentage - 100) >= 0.01) {
-          Alert.alert(
-            "Invalid Split",
-            `Percentages must add up to 100% (currently ${totalPercentage.toFixed(1)}%)`,
-          );
-          return;
-        }
-      }
-
-      // Additional validation for amount sum
-      if (splitType === "amount") {
-        const totalAmount = updatedSplits.reduce(
-          (sum, split) => sum + (split.amount || 0),
-          0,
-        );
-        if (totalAmount !== amountMinor) {
-          Alert.alert(
-            "Invalid Split",
-            "Split amounts must equal expense total",
-          );
-          return;
-        }
+      // Validate split totals using extracted utility
+      try {
+        validateSplitTotals(updatedSplits, splitType, amountMinor);
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error ? err.message : "Invalid split configuration";
+        Alert.alert("Invalid Split", errorMessage);
+        return;
       }
 
       const result = await update(expenseId, {
@@ -479,53 +315,44 @@ function EditExpenseScreenContent({
     validation.isValid;
 
   if (loading) {
-    return (
-      <View style={styles.container}>
-        <View style={styles.centerContent}>
-          <ActivityIndicator size="large" color={theme.colors.primary} />
-          <Text style={styles.loadingText}>Loading expense...</Text>
-        </View>
-      </View>
-    );
+    return <LoadingScreen message="Loading expense..." />;
   }
 
   // Handle categories error
   if (categoriesError) {
     return (
-      <View style={styles.container}>
-        <View style={styles.centerContent}>
-          <Text style={styles.errorTitle}>Failed to Load Categories</Text>
-          <Text style={styles.errorText}>
-            {categoriesError.message ||
-              "Unable to load expense categories. Please try again."}
-          </Text>
-          <Button title="Go back" onPress={() => router.back()} />
-        </View>
-      </View>
+      <ErrorScreen
+        title="Failed to Load Categories"
+        message={
+          categoriesError.message ||
+          "Unable to load expense categories. Please try again."
+        }
+        actionLabel="Go back"
+        onAction={() => router.back()}
+      />
     );
   }
 
   if (!trip || participants.length === 0 || !expense) {
     return (
-      <View style={styles.container}>
-        <View style={styles.centerContent}>
-          <Text style={styles.errorTitle}>
-            {!trip
-              ? "Trip Not Found"
-              : !expense
-                ? "Expense Not Found"
-                : "No Participants"}
-          </Text>
-          <Text style={styles.errorText}>
-            {!trip
-              ? "The requested trip could not be found."
-              : !expense
-                ? "The requested expense could not be found."
-                : "Add participants to this trip before editing expenses."}
-          </Text>
-          <Button title="Go back" onPress={() => router.back()} />
-        </View>
-      </View>
+      <ErrorScreen
+        title={
+          !trip
+            ? "Trip Not Found"
+            : !expense
+              ? "Expense Not Found"
+              : "No Participants"
+        }
+        message={
+          !trip
+            ? "The requested trip could not be found."
+            : !expense
+              ? "The requested expense could not be found."
+              : "Add participants to this trip before editing expenses."
+        }
+        actionLabel="Go back"
+        onAction={() => router.back()}
+      />
     );
   }
 

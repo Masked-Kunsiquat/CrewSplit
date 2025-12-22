@@ -9,13 +9,12 @@ import {
   Text,
   StyleSheet,
   FlatList,
-  ActivityIndicator,
   RefreshControl,
   Alert,
 } from "react-native";
 import { useRouter, useNavigation } from "expo-router";
 import { theme } from "@ui/theme";
-import { Button, Card } from "@ui/components";
+import { Button, Card, LoadingScreen } from "@ui/components";
 import { useFxRates } from "../hooks/use-fx-rates";
 import { FxRateRepository } from "../repository";
 import type { FxRate } from "../types";
@@ -136,13 +135,7 @@ export default function RateListScreen() {
   const loading = initialLoading || loadingRates;
 
   if (loading) {
-    return (
-      <View style={styles.container}>
-        <View style={styles.centerContent}>
-          <ActivityIndicator size="large" color={theme.colors.primary} />
-        </View>
-      </View>
-    );
+    return <LoadingScreen />;
   }
 
   return (

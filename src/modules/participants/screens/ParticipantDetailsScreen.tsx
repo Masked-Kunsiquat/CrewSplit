@@ -9,12 +9,11 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  ActivityIndicator,
   Pressable,
 } from "react-native";
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
 import { theme } from "@ui/theme";
-import { Card, Button } from "@ui/components";
+import { Card, LoadingScreen, ErrorScreen } from "@ui/components";
 import { useParticipants } from "../hooks/use-participants";
 import { useSettlement } from "@modules/settlement/hooks/use-settlement";
 import { useExpenses } from "@modules/expenses/hooks/use-expenses";
@@ -42,17 +41,16 @@ export default function ParticipantDetailsScreen() {
 
   if (!tripId || !participantId) {
     return (
-      <View style={styles.container}>
-        <View style={styles.centerContent}>
-          <Text style={styles.errorTitle}>Invalid Request</Text>
-          <Text style={styles.errorText}>
-            {!tripId
-              ? "Missing trip ID. Please go back and try again."
-              : "Missing participant ID. Please select a participant."}
-          </Text>
-          <Button title="Back" onPress={() => router.back()} />
-        </View>
-      </View>
+      <ErrorScreen
+        title="Invalid Request"
+        message={
+          !tripId
+            ? "Missing trip ID. Please go back and try again."
+            : "Missing participant ID. Please select a participant."
+        }
+        actionLabel="Back"
+        onAction={() => router.back()}
+      />
     );
   }
 
@@ -267,30 +265,17 @@ function ParticipantDetailsContent({
   const loading = participantsLoading || settlementLoading || expensesLoading;
 
   if (loading) {
-    return (
-      <View style={styles.container}>
-        <View style={styles.centerContent}>
-          <ActivityIndicator size="large" color={theme.colors.primary} />
-          <Text style={styles.loadingText}>Loading participant details...</Text>
-        </View>
-      </View>
-    );
+    return <LoadingScreen message="Loading participant details..." />;
   }
 
   if (!participant) {
     return (
-      <View style={styles.container}>
-        <View style={styles.centerContent}>
-          <Text style={styles.errorTitle}>Participant Not Found</Text>
-          <Text style={styles.errorText}>
-            This participant could not be found in the trip.
-          </Text>
-          <Button
-            title="Back to participants"
-            onPress={() => router.replace(`/trips/${tripId}/participants`)}
-          />
-        </View>
-      </View>
+      <ErrorScreen
+        title="Participant Not Found"
+        message="This participant could not be found in the trip."
+        actionLabel="Back to participants"
+        onAction={() => router.replace(`/trips/${tripId}/participants`)}
+      />
     );
   }
 

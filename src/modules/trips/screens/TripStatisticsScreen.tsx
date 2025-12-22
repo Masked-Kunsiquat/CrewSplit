@@ -14,16 +14,16 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  ActivityIndicator,
 } from "react-native";
-import { useLocalSearchParams, useNavigation } from "expo-router";
+import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
 import { theme } from "@ui/theme";
-import { Card, Button } from "@ui/components";
+import { Card, LoadingScreen, ErrorScreen } from "@ui/components";
 import { useTripById } from "../hooks/use-trips";
 import { formatErrorMessage } from "src/utils/format-error";
 
 export default function TripStatisticsScreen() {
   const navigation = useNavigation();
+  const router = useRouter();
   const { id } = useLocalSearchParams<{ id?: string }>();
   const tripId = id?.trim() || null;
 
@@ -40,36 +40,27 @@ export default function TripStatisticsScreen() {
 
   if (!tripId) {
     return (
-      <View style={styles.container}>
-        <View style={styles.centerContent}>
-          <Text style={styles.errorText}>Invalid trip ID</Text>
-        </View>
-      </View>
+      <ErrorScreen
+        title="Invalid Trip"
+        message="Invalid trip ID"
+        actionLabel="Back to trips"
+        onAction={() => router.replace("/")}
+      />
     );
   }
 
   if (loading) {
-    return (
-      <View style={styles.container}>
-        <View style={styles.centerContent}>
-          <ActivityIndicator size="large" color={theme.colors.primary} />
-          <Text style={styles.loadingText}>Loading trip...</Text>
-        </View>
-      </View>
-    );
+    return <LoadingScreen message="Loading trip..." />;
   }
 
   if (error) {
     return (
-      <View style={styles.container}>
-        <View style={styles.centerContent}>
-          <Card style={styles.errorCard}>
-            <Text style={styles.errorTitle}>Unable to load trip</Text>
-            <Text style={styles.errorText}>{formatErrorMessage(error)}</Text>
-            <Button title="Retry" onPress={refetch} fullWidth />
-          </Card>
-        </View>
-      </View>
+      <ErrorScreen
+        title="Unable to load trip"
+        message={formatErrorMessage(error)}
+        actionLabel="Retry"
+        onAction={refetch}
+      />
     );
   }
 
