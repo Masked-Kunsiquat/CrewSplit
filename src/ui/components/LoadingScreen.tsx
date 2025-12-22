@@ -22,29 +22,11 @@ export interface LoadingScreenProps {
  */
 export function LoadingScreen({ message = "Loading..." }: LoadingScreenProps) {
   return (
-    <View style={styles.container}>
-      <View style={styles.centerContent}>
+    <View style={theme.commonStyles.container}>
+      <View style={theme.commonStyles.centerContent}>
         <ActivityIndicator size="large" color={theme.colors.primary} />
-        <Text style={styles.loadingText}>{message}</Text>
+        <Text style={theme.commonStyles.loadingText}>{message}</Text>
       </View>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
-  },
-  centerContent: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    padding: theme.spacing.lg,
-  },
-  loadingText: {
-    fontSize: theme.typography.base,
-    color: theme.colors.textSecondary,
-    marginTop: theme.spacing.md,
-  },
-});

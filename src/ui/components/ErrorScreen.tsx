@@ -41,9 +41,9 @@ export function ErrorScreen({
   onAction,
 }: ErrorScreenProps) {
   return (
-    <View style={styles.container}>
-      <View style={styles.centerContent}>
-        <Text style={styles.errorTitle}>{title}</Text>
+    <View style={theme.commonStyles.container}>
+      <View style={theme.commonStyles.centerContent}>
+        <Text style={theme.commonStyles.errorTitle}>{title}</Text>
         <Text style={styles.errorText}>{message}</Text>
         {actionLabel && onAction && (
           <View style={styles.button}>
@@ -56,23 +56,6 @@ export function ErrorScreen({
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
-  },
-  centerContent: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    padding: theme.spacing.lg,
-  },
-  errorTitle: {
-    fontSize: theme.typography.xl,
-    fontWeight: theme.typography.bold,
-    color: theme.colors.error,
-    marginBottom: theme.spacing.xs,
-    textAlign: "center",
-  },
   errorText: {
     fontSize: theme.typography.base,
     color: theme.colors.text,
