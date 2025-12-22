@@ -24,7 +24,8 @@ import {
 import { useSettlementWithDisplay } from "../hooks/use-settlement-with-display";
 import { useTripById } from "@modules/trips/hooks/use-trips";
 import { useDisplayCurrency } from "@hooks/use-display-currency";
-import { formatCurrency, normalizeRouteParam } from "@utils";
+import { formatCurrency } from "@utils/currency";
+import { normalizeRouteParam } from "@utils/route-params";
 import { useRefreshControl } from "@hooks/use-refresh-control";
 import { TripExportModal } from "@modules/trips/components/trip-export-modal";
 import { formatErrorMessage } from "src/utils/format-error";

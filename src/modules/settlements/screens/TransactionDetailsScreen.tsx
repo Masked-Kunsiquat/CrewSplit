@@ -17,7 +17,8 @@ import { theme } from "@ui/theme";
 import { Button, ConfirmDialog } from "@ui/components";
 import { useSettlement, useDeleteSettlement } from "../hooks/use-settlements";
 import { useTripById } from "@modules/trips/hooks/use-trips";
-import { formatCurrency, normalizeRouteParam } from "@utils";
+import { formatCurrency } from "@utils/currency";
+import { normalizeRouteParam } from "@utils/route-params";
 
 export default function TransactionDetailsScreen() {
   const router = useRouter();

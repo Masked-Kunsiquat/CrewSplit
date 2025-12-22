@@ -30,7 +30,8 @@ import {
   useSettlement,
   useUpdateSettlement,
 } from "../hooks/use-settlements";
-import { parseCurrency, normalizeRouteParam } from "@utils";
+import { parseCurrency } from "@utils/currency";
+import { normalizeRouteParam } from "@utils/route-params";
 import type { NewSettlementData, SettlementPaymentMethod } from "../types";
 
 export default function RecordTransactionScreen() {
