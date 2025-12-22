@@ -27,6 +27,8 @@ import {
   SplitValidationSummary,
   SplitType,
   Checkbox,
+  LoadingScreen,
+  ErrorScreen,
 } from "@ui/components";
 import { useTripById } from "../../trips/hooks/use-trips";
 import { useParticipants } from "../../participants/hooks/use-participants";
@@ -56,17 +58,16 @@ export default function EditExpenseScreen() {
 
   if (!normalizedTripId || !normalizedExpenseId) {
     return (
-      <View style={styles.container}>
-        <View style={styles.centerContent}>
-          <Text style={styles.errorTitle}>Invalid Request</Text>
-          <Text style={styles.errorText}>
-            {!normalizedTripId
-              ? "No trip ID provided."
-              : "No expense ID provided."}
-          </Text>
-          <Button title="Go back" onPress={() => router.back()} />
-        </View>
-      </View>
+      <ErrorScreen
+        title="Invalid Request"
+        message={
+          !normalizedTripId
+            ? "No trip ID provided."
+            : "No expense ID provided."
+        }
+        actionLabel="Go back"
+        onAction={() => router.back()}
+      />
     );
   }
 
@@ -315,53 +316,44 @@ function EditExpenseScreenContent({
     validation.isValid;
 
   if (loading) {
-    return (
-      <View style={styles.container}>
-        <View style={styles.centerContent}>
-          <ActivityIndicator size="large" color={theme.colors.primary} />
-          <Text style={styles.loadingText}>Loading expense...</Text>
-        </View>
-      </View>
-    );
+    return <LoadingScreen message="Loading expense..." />;
   }
 
   // Handle categories error
   if (categoriesError) {
     return (
-      <View style={styles.container}>
-        <View style={styles.centerContent}>
-          <Text style={styles.errorTitle}>Failed to Load Categories</Text>
-          <Text style={styles.errorText}>
-            {categoriesError.message ||
-              "Unable to load expense categories. Please try again."}
-          </Text>
-          <Button title="Go back" onPress={() => router.back()} />
-        </View>
-      </View>
+      <ErrorScreen
+        title="Failed to Load Categories"
+        message={
+          categoriesError.message ||
+          "Unable to load expense categories. Please try again."
+        }
+        actionLabel="Go back"
+        onAction={() => router.back()}
+      />
     );
   }
 
   if (!trip || participants.length === 0 || !expense) {
     return (
-      <View style={styles.container}>
-        <View style={styles.centerContent}>
-          <Text style={styles.errorTitle}>
-            {!trip
-              ? "Trip Not Found"
-              : !expense
-                ? "Expense Not Found"
-                : "No Participants"}
-          </Text>
-          <Text style={styles.errorText}>
-            {!trip
-              ? "The requested trip could not be found."
-              : !expense
-                ? "The requested expense could not be found."
-                : "Add participants to this trip before editing expenses."}
-          </Text>
-          <Button title="Go back" onPress={() => router.back()} />
-        </View>
-      </View>
+      <ErrorScreen
+        title={
+          !trip
+            ? "Trip Not Found"
+            : !expense
+              ? "Expense Not Found"
+              : "No Participants"
+        }
+        message={
+          !trip
+            ? "The requested trip could not be found."
+            : !expense
+              ? "The requested expense could not be found."
+              : "Add participants to this trip before editing expenses."
+        }
+        actionLabel="Go back"
+        onAction={() => router.back()}
+      />
     );
   }
 

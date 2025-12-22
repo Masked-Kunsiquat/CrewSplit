@@ -27,6 +27,8 @@ import {
   SplitValidationSummary,
   SplitType,
   Checkbox,
+  LoadingScreen,
+  ErrorScreen,
 } from "@ui/components";
 import { useTripById } from "../../trips/hooks/use-trips";
 import { useParticipants } from "../../participants/hooks/use-participants";
@@ -48,15 +50,12 @@ export default function AddExpenseScreen() {
 
   if (!normalizedTripId) {
     return (
-      <View style={styles.container}>
-        <View style={styles.centerContent}>
-          <Text style={styles.errorTitle}>Invalid Trip</Text>
-          <Text style={styles.errorText}>
-            No trip ID provided. Please select a trip first.
-          </Text>
-          <Button title="Back to trips" onPress={() => router.replace("/")} />
-        </View>
-      </View>
+      <ErrorScreen
+        title="Invalid Trip"
+        message="No trip ID provided. Please select a trip first."
+        actionLabel="Back to trips"
+        onAction={() => router.replace("/")}
+      />
     );
   }
 
@@ -251,30 +250,21 @@ function AddExpenseScreenContent({ tripId }: { tripId: string }) {
     validation.isValid;
 
   if (loading) {
-    return (
-      <View style={styles.container}>
-        <View style={styles.centerContent}>
-          <ActivityIndicator size="large" color={theme.colors.primary} />
-        </View>
-      </View>
-    );
+    return <LoadingScreen />;
   }
 
   if (!trip || participants.length === 0) {
     return (
-      <View style={styles.container}>
-        <View style={styles.centerContent}>
-          <Text style={styles.errorTitle}>
-            {!trip ? "Trip Not Found" : "No Participants"}
-          </Text>
-          <Text style={styles.errorText}>
-            {!trip
-              ? "The requested trip could not be found."
-              : "Add participants to this trip before creating expenses."}
-          </Text>
-          <Button title="Back to trip" onPress={() => router.back()} />
-        </View>
-      </View>
+      <ErrorScreen
+        title={!trip ? "Trip Not Found" : "No Participants"}
+        message={
+          !trip
+            ? "The requested trip could not be found."
+            : "Add participants to this trip before creating expenses."
+        }
+        actionLabel="Back to trip"
+        onAction={() => router.back()}
+      />
     );
   }
 
