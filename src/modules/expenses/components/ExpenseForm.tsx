@@ -177,7 +177,7 @@ export function ExpenseForm({
     }
   }, [mode, participants, paidBy]);
 
-  // Handle personal expense toggle
+  // Handle personal expense toggle - auto-select payer when in personal mode
   useEffect(() => {
     if (isPersonalExpense && paidBy) {
       setSelectedParticipants(new Set([paidBy]));
@@ -185,13 +185,6 @@ export function ExpenseForm({
       setSelectedParticipants(new Set());
     }
   }, [isPersonalExpense, paidBy]);
-
-  // Update selection when payer changes in personal expense mode
-  useEffect(() => {
-    if (isPersonalExpense && paidBy) {
-      setSelectedParticipants(new Set([paidBy]));
-    }
-  }, [paidBy, isPersonalExpense]);
 
   const handleToggleParticipant = (participantId: string) => {
     if (isPersonalExpense) return;
