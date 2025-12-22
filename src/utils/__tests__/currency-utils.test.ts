@@ -1,9 +1,9 @@
 /**
- * LOCAL DATA ENGINEER: Currency Utils Tests
+ * UTILITIES: Currency Utils Tests
  * Verify currency-aware conversion functions handle different decimal places
  */
 
-import { CurrencyUtils } from "../currency-utils";
+import { CurrencyUtils } from "../currency";
 
 describe("CurrencyUtils", () => {
   describe("minorToMajor", () => {
