@@ -17,6 +17,7 @@ import { theme } from "../theme";
 export interface PickerOption<T = string> {
   label: string;
   value: T;
+  icon?: React.ReactNode;
 }
 
 interface PickerProps<T = string> {
@@ -89,15 +90,20 @@ export function Picker<T extends string = string>({
         accessibilityLabel={label || "Picker"}
         accessibilityHint={`Currently selected: ${displayText}`}
       >
-        <Text
-          style={[
-            styles.triggerText,
-            !selectedOption && styles.triggerTextPlaceholder,
-            disabled && styles.triggerTextDisabled,
-          ]}
-        >
-          {displayText}
-        </Text>
+        <View style={styles.triggerContent}>
+          {selectedOption?.icon && (
+            <View style={styles.triggerIcon}>{selectedOption.icon}</View>
+          )}
+          <Text
+            style={[
+              styles.triggerText,
+              !selectedOption && styles.triggerTextPlaceholder,
+              disabled && styles.triggerTextDisabled,
+            ]}
+          >
+            {displayText}
+          </Text>
+        </View>
         <Text style={styles.chevron}>▼</Text>
       </Pressable>
 
@@ -135,14 +141,19 @@ export function Picker<T extends string = string>({
                   accessibilityLabel={item.label}
                   accessibilityState={{ selected: item.value === value }}
                 >
-                  <Text
-                    style={[
-                      styles.optionText,
-                      item.value === value && styles.optionTextSelected,
-                    ]}
-                  >
-                    {item.label}
-                  </Text>
+                  <View style={styles.optionContent}>
+                    {item.icon && (
+                      <View style={styles.optionIcon}>{item.icon}</View>
+                    )}
+                    <Text
+                      style={[
+                        styles.optionText,
+                        item.value === value && styles.optionTextSelected,
+                      ]}
+                    >
+                      {item.label}
+                    </Text>
+                  </View>
                   {item.value === value && (
                     <Text style={styles.checkmark}>✓</Text>
                   )}
@@ -186,6 +197,18 @@ const styles = StyleSheet.create({
   },
   triggerDisabled: {
     opacity: 0.5,
+  },
+  triggerContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    flex: 1,
+  },
+  triggerIcon: {
+    width: 24,
+    height: 24,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: theme.spacing.sm,
   },
   triggerText: {
     flex: 1,
@@ -253,6 +276,18 @@ const styles = StyleSheet.create({
   },
   optionSelected: {
     backgroundColor: theme.colors.surfaceElevated,
+  },
+  optionContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    flex: 1,
+  },
+  optionIcon: {
+    width: 24,
+    height: 24,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: theme.spacing.sm,
   },
   optionText: {
     flex: 1,

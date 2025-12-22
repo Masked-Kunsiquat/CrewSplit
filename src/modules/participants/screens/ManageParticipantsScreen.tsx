@@ -73,6 +73,7 @@ function ManageParticipantsContent({
   tripId: string;
   navigation: any;
 }) {
+  const router = useRouter();
   const [newParticipantName, setNewParticipantName] = useState("");
   const [nameError, setNameError] = useState<string | null>(null);
   const [isAdding, setIsAdding] = useState(false);
@@ -138,6 +139,10 @@ function ManageParticipantsContent({
     participantName: string,
   ) => {
     setPendingRemoval({ id: participantId, name: participantName });
+  };
+
+  const handleViewParticipant = (participantId: string) => {
+    router.push(`/trips/${tripId}/participants/${participantId}`);
   };
 
   const confirmRemoveParticipant = async () => {
@@ -228,12 +233,13 @@ function ManageParticipantsContent({
                     id={participant.id}
                     name={participant.name}
                     avatarColor={participant.avatarColor}
+                    onPress={handleViewParticipant}
                     onLongPress={handleDeleteParticipant}
                   />
                 ))}
             </View>
             <Text style={styles.hintText}>
-              Long-press to remove a participant
+              Tap to view details • Long-press to remove
             </Text>
           </Card>
         )}

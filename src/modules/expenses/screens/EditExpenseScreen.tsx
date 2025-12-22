@@ -33,6 +33,7 @@ import { useExpenseCategories } from "../hooks/use-expense-categories";
 import { useExpenseWithSplits } from "../hooks/use-expenses";
 import { useUpdateExpense } from "../hooks/use-expense-mutations";
 import { parseCurrency } from "@utils/currency";
+import { getCategoryIcon } from "@utils/category-icons";
 
 // Checkbox component for Personal Expense toggle
 function Checkbox({
@@ -571,6 +572,37 @@ function EditExpenseScreenContent({
     value: p.id,
   }));
 
+  const categoryOptions: PickerOption<string>[] =
+    categories.length > 0
+      ? categories.map((cat) => ({
+          label: cat.name,
+          value: cat.id,
+          icon: (
+            <View style={styles.categoryIcon}>
+              {getCategoryIcon({
+                categoryName: cat.name,
+                size: 24,
+                color: theme.colors.primary,
+              })}
+            </View>
+          ),
+        }))
+      : [
+          {
+            label: "Other",
+            value: "cat-other",
+            icon: (
+              <View style={styles.categoryIcon}>
+                {getCategoryIcon({
+                  categoryName: "Other",
+                  size: 24,
+                  color: theme.colors.primary,
+                })}
+              </View>
+            ),
+          },
+        ];
+
   // Sort participants alphabetically
   const sortedParticipants = [...participants].sort((a, b) =>
     a.name.localeCompare(b.name),
@@ -643,14 +675,7 @@ function EditExpenseScreenContent({
             <Picker
               label="Category"
               value={categoryId}
-              options={
-                categories.length > 0
-                  ? categories.map((cat) => ({
-                      label: `${cat.emoji} ${cat.name}`,
-                      value: cat.id,
-                    }))
-                  : [{ label: "📝 Other", value: "cat-other" }]
-              }
+              options={categoryOptions}
               onChange={setCategoryId}
               placeholder="Select category"
             />
@@ -761,6 +786,12 @@ const styles = StyleSheet.create({
   },
   halfColumn: {
     flex: 1,
+  },
+  categoryIcon: {
+    width: 24,
+    height: 24,
+    alignItems: "center",
+    justifyContent: "center",
   },
   centerContent: {
     flex: 1,

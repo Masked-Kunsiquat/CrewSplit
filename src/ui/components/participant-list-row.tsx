@@ -75,18 +75,21 @@ interface ParticipantListRowProps {
   /** Avatar color */
   avatarColor?: string;
   /** Callback when long-pressed for delete */
-  onLongPress: (id: string, name: string) => void;
+  onLongPress?: (id: string, name: string) => void;
+  /** Callback when tapped/pressed */
+  onPress?: (id: string, name: string) => void;
 }
 
 /**
  * Simple row component for displaying participants in a list.
- * Shows avatar and name, supports long-press for delete.
+ * Shows avatar and name, supports tap for navigation and long-press for delete.
  *
  * @example
  * <ParticipantListRow
  *   id="p1"
  *   name="Alice"
  *   avatarColor="#FF6B6B"
+ *   onPress={handlePress}
  *   onLongPress={handleDelete}
  * />
  */
@@ -95,6 +98,7 @@ export function ParticipantListRow({
   name,
   avatarColor,
   onLongPress,
+  onPress,
 }: ParticipantListRowProps) {
   const avatarBgColor = avatarColor || theme.colors.primary;
   const textColor = getAccessibleTextColor(avatarBgColor);
@@ -102,10 +106,17 @@ export function ParticipantListRow({
   return (
     <Pressable
       style={({ pressed }) => [styles.row, pressed && styles.rowPressed]}
-      onLongPress={() => onLongPress(id, name)}
+      onPress={onPress ? () => onPress(id, name) : undefined}
+      onLongPress={onLongPress ? () => onLongPress(id, name) : undefined}
       accessibilityRole="button"
-      accessibilityLabel={`${name}, long press to remove`}
-      accessibilityHint="Long press to remove this participant"
+      accessibilityLabel={
+        onPress ? `View ${name} details` : `${name}, long press to remove`
+      }
+      accessibilityHint={
+        onPress
+          ? "Tap to view details, long press to remove"
+          : "Long press to remove this participant"
+      }
     >
       {/* Avatar */}
       <View style={[styles.avatar, { backgroundColor: avatarBgColor }]}>

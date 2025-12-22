@@ -29,15 +29,28 @@ npm test -- --watch      # Run tests in watch mode
 ```bash
 npm run type-check       # TypeScript compilation check (tsc --noEmit)
 npm run lint             # ESLint
+npm run lint -- --fix    # ESLint with auto-fix
 ```
 
 ### Database Migrations
 
 ```bash
-npx drizzle-kit generate # Generate migration files from schema changes
+npx drizzle-kit generate   # Generate migration files from schema changes
+npm run verify-migrations  # Verify migrations.js matches SQL files
 # Migrations auto-apply at app startup via useDbMigrations() hook
 # NEVER manually wipe database - use proper migrations for schema changes
 ```
+
+### Build & Release
+
+The project uses automated GitHub workflows for versioning and releases:
+
+1. **Version bumping**: Update `version` in both `package.json` and `app.json`
+2. **Auto-tagging**: When merged to `main`, the Auto Tag workflow creates a git tag (e.g., `v1.0.3`)
+3. **EAS Build**: Expo's build trigger (configured on expo.dev) starts Android APK build on new tags matching `v*`
+4. **GitHub Release**: The Create Release workflow waits for EAS build completion, then creates GitHub release with APK attached
+
+**Important**: Only version bumps trigger builds. Merging without changing version won't create tags or builds.
 
 ## Architecture Principles
 

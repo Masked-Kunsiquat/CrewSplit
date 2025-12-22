@@ -5,6 +5,7 @@ import { participants } from "@db/schema/participants";
 import { expenses } from "@db/schema/expenses";
 import { expenseSplits } from "@db/schema/expense-splits";
 import { settlements } from "@db/schema/settlements";
+import { expenseCategories } from "@db/schema/expense-categories";
 import { eq } from "drizzle-orm";
 import type { SampleDataTemplateId } from "../types";
 
@@ -14,6 +15,7 @@ interface SampleDataTemplate {
   expenses?: any[];
   expenseSplits?: any[];
   settlements?: any[];
+  categories?: any[];
 }
 
 const sampleDataTemplates: Record<SampleDataTemplateId, SampleDataTemplate> = {
@@ -36,6 +38,7 @@ export class SampleDataService {
       expenses: expenseData,
       expenseSplits: splitData,
       settlements: settlementData,
+      categories: categoryData,
     } = sampleData;
 
     const tripId = trip.id;
@@ -95,15 +98,30 @@ export class SampleDataService {
           isSampleData: true,
           sampleDataTemplateId: templateId,
         });
+
+        // Insert categories only if they're trip-specific (not system categories)
+        // System categories are already seeded programmatically
+        if (categoryData?.length) {
+          const tripSpecificCategories = categoryData.filter(
+            (cat: any) => !cat.isSystem && cat.tripId === tripId,
+          );
+          if (tripSpecificCategories.length > 0) {
+            await tx.insert(expenseCategories).values(tripSpecificCategories);
+          }
+        }
+
         if (participantData?.length) {
           await tx.insert(participants).values(participantData);
         }
+
         if (expenseData?.length) {
           await tx.insert(expenses).values(expenseData);
         }
+
         if (splitData?.length) {
           await tx.insert(expenseSplits).values(splitData);
         }
+
         if (normalizedSettlements?.length) {
           await tx.insert(settlements).values(normalizedSettlements);
         }

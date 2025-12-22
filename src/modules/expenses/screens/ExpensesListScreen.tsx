@@ -15,6 +15,7 @@ import { useExpenseCategories } from "../hooks/use-expense-categories";
 import { useTripById } from "../../trips/hooks/use-trips";
 import { formatCurrency } from "@utils/currency";
 import { useRefreshControl } from "@hooks/use-refresh-control";
+import { getCategoryIcon } from "@utils/category-icons";
 
 export default function ExpensesListScreen() {
   const router = useRouter();
@@ -137,7 +138,13 @@ export default function ExpensesListScreen() {
               onPress={() => setSelectedCategoryId(category.id)}
               accessibilityLabel={`Filter by ${category.name}`}
             >
-              <Text style={styles.filterEmoji}>{category.emoji}</Text>
+              <View style={styles.filterIconContainer}>
+                {getCategoryIcon({
+                  categoryName: category.name,
+                  size: 24,
+                  color: theme.colors.primary,
+                })}
+              </View>
             </Pressable>
           ))}
         </ScrollView>
@@ -175,7 +182,13 @@ export default function ExpensesListScreen() {
                 <View style={styles.expenseHeader}>
                   <View style={styles.expenseTitleRow}>
                     {category && (
-                      <Text style={styles.categoryEmoji}>{category.emoji}</Text>
+                      <View style={styles.categoryIconContainer}>
+                        {getCategoryIcon({
+                          categoryName: category.name,
+                          size: 20,
+                          color: theme.colors.primary,
+                        })}
+                      </View>
                     )}
                     <Text style={styles.expenseTitle}>
                       {expense.description}
@@ -276,8 +289,11 @@ const styles = StyleSheet.create({
     gap: theme.spacing.sm,
     flex: 1,
   },
-  categoryEmoji: {
-    fontSize: 20,
+  categoryIconContainer: {
+    width: 24,
+    height: 24,
+    alignItems: "center",
+    justifyContent: "center",
   },
   expenseTitle: {
     fontSize: theme.typography.lg,
@@ -323,12 +339,14 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   filterChipActive: {
-    backgroundColor: theme.colors.primary,
+    backgroundColor: theme.colors.surfaceElevated,
     borderColor: theme.colors.primary,
   },
-  filterEmoji: {
-    fontSize: 16,
-    lineHeight: 18,
+  filterIconContainer: {
+    width: 24,
+    height: 24,
+    alignItems: "center",
+    justifyContent: "center",
   },
   filterChipText: {
     fontSize: theme.typography.sm,
@@ -337,6 +355,6 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
   filterChipTextActive: {
-    color: theme.colors.background,
+    color: theme.colors.primary,
   },
 });

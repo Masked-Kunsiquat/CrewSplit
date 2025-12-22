@@ -129,6 +129,66 @@ const verifyMigrationState = (): void => {
 };
 
 /**
+ * Seed system expense categories if they don't exist
+ * Drizzle migrations only run DDL, so we seed data programmatically
+ */
+const seedSystemCategories = async (): Promise<void> => {
+  const { expenseCategories } = schema;
+
+  const systemCategories = [
+    {
+      id: "cat-travel",
+      name: "Travel & Transportation",
+      emoji: "✈️",
+      sortOrder: 100,
+    },
+    { id: "cat-food", name: "Food & Drinks", emoji: "🍔", sortOrder: 200 },
+    {
+      id: "cat-leisure",
+      name: "Leisure & Entertainment",
+      emoji: "🎭",
+      sortOrder: 300,
+    },
+    { id: "cat-lodging", name: "Lodging", emoji: "🏨", sortOrder: 400 },
+    { id: "cat-groceries", name: "Groceries", emoji: "🛒", sortOrder: 500 },
+    { id: "cat-insurance", name: "Insurance", emoji: "🛡️", sortOrder: 600 },
+    { id: "cat-shopping", name: "Shopping", emoji: "🛍️", sortOrder: 700 },
+    { id: "cat-other", name: "Other", emoji: "📌", sortOrder: 999 },
+  ];
+
+  const now = new Date().toISOString();
+
+  for (const cat of systemCategories) {
+    try {
+      await db.insert(expenseCategories).values({
+        id: cat.id,
+        name: cat.name,
+        emoji: cat.emoji,
+        tripId: null,
+        isSystem: true,
+        sortOrder: cat.sortOrder,
+        isArchived: false,
+        createdAt: now,
+        updatedAt: now,
+      });
+      migrationLogger.debug(`Seeded category: ${cat.id}`);
+    } catch (err) {
+      // Ignore if category already exists (primary key conflict)
+      if (
+        err instanceof Error &&
+        err.message.includes("UNIQUE constraint failed")
+      ) {
+        migrationLogger.debug(`Category ${cat.id} already exists, skipping`);
+      } else {
+        throw err;
+      }
+    }
+  }
+
+  migrationLogger.info("System categories seeded successfully");
+};
+
+/**
  * React hook to run pending migrations.
  * Blocks UI until all migrations succeed.
  *
@@ -138,6 +198,7 @@ const verifyMigrationState = (): void => {
  * - Failures surface to _layout.tsx for user-visible error
  * - Never auto-wipe data - rely on proper migration files
  * - Migration history is verified against __drizzle_migrations after Drizzle completes
+ * - After migrations, seed system categories programmatically (Drizzle only runs DDL)
  */
 export const useDbMigrations = () => {
   const { success, error } = useMigrations(db, migrations);
@@ -148,6 +209,7 @@ export const useDbMigrations = () => {
   const [migrationStateError, setMigrationStateError] = useState<Error | null>(
     null,
   );
+  const [categoriesSeeded, setCategoriesSeeded] = useState(false);
 
   // Verify migration ordering/state after Drizzle migrations succeed.
   useEffect(() => {
@@ -166,8 +228,29 @@ export const useDbMigrations = () => {
     }
   }, [success, migrationChecked]);
 
+  // Seed system categories after migrations are verified
   useEffect(() => {
-    if (success && migrationVerified && !loggedSuccess.current) {
+    if (success && migrationVerified && !categoriesSeeded) {
+      seedSystemCategories()
+        .then(() => {
+          setCategoriesSeeded(true);
+        })
+        .catch((err) => {
+          migrationLogger.error("Failed to seed system categories", err);
+          setMigrationStateError(
+            err instanceof Error ? err : new Error(String(err)),
+          );
+        });
+    }
+  }, [success, migrationVerified, categoriesSeeded]);
+
+  useEffect(() => {
+    if (
+      success &&
+      migrationVerified &&
+      categoriesSeeded &&
+      !loggedSuccess.current
+    ) {
       migrationLogger.info("Database migrations applied successfully");
       loggedSuccess.current = true;
     }
@@ -179,10 +262,10 @@ export const useDbMigrations = () => {
         loggedError.current = message;
       }
     }
-  }, [success, migrationVerified, error]);
+  }, [success, migrationVerified, categoriesSeeded, error]);
 
   return {
-    success: success && migrationVerified,
+    success: success && migrationVerified && categoriesSeeded,
     error: error || migrationStateError,
   };
 };
