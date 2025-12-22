@@ -26,7 +26,7 @@ import {
   Checkbox,
 } from "@ui/components";
 import { getCategoryIcon } from "@utils/category-icons";
-import { parseCurrency, CurrencyUtils } from "@utils/currency";
+import { CurrencyUtils } from "@utils/currency";
 import { validateExpenseSplits } from "../utils/validate-splits";
 import {
   buildExpenseSplits,
