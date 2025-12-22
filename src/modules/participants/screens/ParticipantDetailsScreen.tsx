@@ -174,6 +174,65 @@ function ParticipantDetailsContent({
     return breakdown;
   }, [expensesPaidBy]);
 
+  // Get current expenses to display based on view mode
+  const currentExpenses =
+    viewMode === "paid-by" ? expensesPaidBy : expensesPartOf;
+
+  // Precompute FX conversions for all expenses to avoid crashes during render
+  const expenseDisplayAmounts = useMemo(() => {
+    if (!displayCurrency) return new Map<string, number | null>();
+
+    const conversions = new Map<string, number | null>();
+    currentExpenses.forEach((expense) => {
+      try {
+        const fxRate = cachedFxRateProvider.getRate(
+          expense.currency,
+          displayCurrency,
+        );
+        const converted = Math.round(expense.convertedAmountMinor * fxRate);
+        // Guard against NaN
+        conversions.set(expense.id, isNaN(converted) ? null : converted);
+      } catch (error) {
+        // Log missing rate for debugging
+        console.warn(
+          `[ParticipantDetails] Missing FX rate: ${expense.currency} -> ${displayCurrency} for expense ${expense.id}`,
+          error,
+        );
+        conversions.set(expense.id, null);
+      }
+    });
+
+    return conversions;
+  }, [currentExpenses, displayCurrency]);
+
+  // Precompute FX conversions for category breakdown
+  const categoryDisplayAmounts = useMemo(() => {
+    if (!displayCurrency) return new Map<string, number | null>();
+
+    const conversions = new Map<string, number | null>();
+    try {
+      const fxRate = cachedFxRateProvider.getRate(
+        settlement.currency,
+        displayCurrency,
+      );
+
+      categoryBreakdown.forEach((amount, categoryId) => {
+        const converted = Math.round(amount * fxRate);
+        // Guard against NaN
+        conversions.set(categoryId, isNaN(converted) ? null : converted);
+      });
+    } catch (error) {
+      // Log missing rate for debugging
+      console.warn(
+        `[ParticipantDetails] Missing FX rate: ${settlement.currency} -> ${displayCurrency} for category breakdown`,
+        error,
+      );
+      // Leave map empty - all conversions will be null
+    }
+
+    return conversions;
+  }, [categoryBreakdown, displayCurrency, settlement.currency]);
+
   // Update native header title
   useEffect(() => {
     if (participant) {
@@ -253,10 +312,6 @@ function ParticipantDetailsContent({
     const sign = amount > 0 ? "+" : "";
     return sign + formatCurrency(amount, currency);
   };
-
-  // Get current expenses to display based on view mode
-  const currentExpenses =
-    viewMode === "paid-by" ? expensesPaidBy : expensesPartOf;
 
   return (
     <View style={styles.container}>
@@ -480,20 +535,17 @@ function ParticipantDetailsContent({
                           expense.currency,
                         )}
                       </Text>
-                      {displayAmounts && (
-                        <Text style={styles.displayCurrencySmall}>
-                          {formatCurrency(
-                            Math.round(
-                              expense.convertedAmountMinor *
-                                cachedFxRateProvider.getRate(
-                                  expense.currency,
+                      {displayAmounts &&
+                        expenseDisplayAmounts.has(expense.id) && (
+                          <Text style={styles.displayCurrencySmall}>
+                            {expenseDisplayAmounts.get(expense.id) !== null
+                              ? formatCurrency(
+                                  expenseDisplayAmounts.get(expense.id)!,
                                   displayAmounts.currency,
-                                ),
-                            ),
-                            displayAmounts.currency,
-                          )}
-                        </Text>
-                      )}
+                                )
+                              : "—"}
+                          </Text>
+                        )}
                     </View>
                   </Pressable>
                 );
@@ -537,20 +589,17 @@ function ParticipantDetailsContent({
                         <Text style={styles.categoryAmount}>
                           {formatCurrency(amount, settlement.currency)}
                         </Text>
-                        {displayAmounts && (
-                          <Text style={styles.displayCurrencySmall}>
-                            {formatCurrency(
-                              Math.round(
-                                amount *
-                                  cachedFxRateProvider.getRate(
-                                    settlement.currency,
+                        {displayAmounts &&
+                          categoryDisplayAmounts.has(categoryId) && (
+                            <Text style={styles.displayCurrencySmall}>
+                              {categoryDisplayAmounts.get(categoryId) !== null
+                                ? formatCurrency(
+                                    categoryDisplayAmounts.get(categoryId)!,
                                     displayAmounts.currency,
-                                  ),
-                              ),
-                              displayAmounts.currency,
-                            )}
-                          </Text>
-                        )}
+                                  )
+                                : "—"}
+                            </Text>
+                          )}
                       </View>
                     </View>
                   );
@@ -683,16 +732,21 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
+    alignItems: "flex-start",
+    gap: theme.spacing.md,
   },
   settlementText: {
     fontSize: theme.typography.base,
     color: theme.colors.text,
     fontWeight: theme.typography.medium,
+    flex: 1,
+    flexWrap: "wrap",
   },
   settlementAmount: {
     fontSize: theme.typography.base,
     fontWeight: theme.typography.semibold,
+    flexShrink: 0,
+    textAlign: "right",
   },
   emptyStateCard: {
     backgroundColor: theme.colors.surface,
