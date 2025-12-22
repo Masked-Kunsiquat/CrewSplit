@@ -40,7 +40,7 @@ export default function ManageParticipantsScreen() {
 
   if (!tripId) {
     return (
-      <View style={styles.container}>
+      <View style={theme.commonStyles.container}>
         <View style={styles.errorContainer}>
           <Card style={styles.errorCard}>
             <Text style={styles.errorText}>
@@ -159,7 +159,7 @@ function ManageParticipantsContent({
 
   if (error) {
     return (
-      <View style={styles.container}>
+      <View style={theme.commonStyles.container}>
         <View style={styles.errorContainer}>
           <Card style={styles.errorCard}>
             <Text style={styles.errorText}>
@@ -249,10 +249,6 @@ function ManageParticipantsContent({
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
-  },
   scrollView: {
     flex: 1,
   },
