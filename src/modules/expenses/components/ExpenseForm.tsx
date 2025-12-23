@@ -491,7 +491,7 @@ export function ExpenseForm({
                 selected={selectedParticipants.has(participant.id)}
                 splitType={splitType}
                 value={splitValues[participant.id] || ""}
-                currency={tripCurrency}
+                currency={displayedCurrency}
                 onToggle={handleToggleParticipant}
                 onValueChange={handleSplitValueChange}
                 disabled={isPersonalExpense}
@@ -505,7 +505,7 @@ export function ExpenseForm({
                 splitType={splitType}
                 current={validation.current}
                 target={validation.target}
-                currency={tripCurrency}
+                currency={displayedCurrency}
                 isValid={validation.isValid}
               />
             )}

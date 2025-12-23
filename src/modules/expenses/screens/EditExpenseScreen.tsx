@@ -117,6 +117,8 @@ function EditExpenseScreenContent({
 
     if (result) {
       router.back();
+    } else {
+      throw new Error("Failed to update expense");
     }
   };
 
