@@ -27,6 +27,7 @@ import {
 } from "@ui/components";
 import { getCategoryIcon } from "@utils/category-icons";
 import { CurrencyUtils } from "@utils/currency";
+import { AppError, createAppError } from "@utils/errors";
 import { validateExpenseSplits } from "../utils/validate-splits";
 import {
   buildExpenseSplits,
@@ -109,6 +110,13 @@ export function ExpenseForm({
   onCancel,
   isSubmitting,
 }: ExpenseFormProps) {
+  const isAppError = (error: unknown): error is AppError =>
+    typeof error === "object" && error !== null && "code" in error;
+  const reportAndAlert = (title: string, error: AppError) => {
+    console.error(title, error);
+    Alert.alert(title, error.message);
+  };
+
   // Determine the currency to display in the form
   // In edit mode, use the expense's original currency; in add mode, use trip currency
   const displayedCurrency = initialValues?.currency ?? tripCurrency;
@@ -260,9 +268,15 @@ export function ExpenseForm({
 
   const handleSubmit = async () => {
     if (!paidBy) {
-      Alert.alert(
+      reportAndAlert(
         "Missing Information",
-        "Please select who paid for this expense.",
+        createAppError(
+          "EXPENSE_PAYER_MISSING",
+          "Please select who paid for this expense.",
+          {
+            details: { mode },
+          },
+        ),
       );
       return;
     }
@@ -275,17 +289,41 @@ export function ExpenseForm({
       const amountMinor = CurrencyUtils.majorToMinor(majorAmount, currency);
 
       if (amountMinor <= 0) {
-        Alert.alert(
+        reportAndAlert(
           "Invalid Amount",
-          "Please enter a valid amount greater than zero.",
+          createAppError(
+            "EXPENSE_AMOUNT_INVALID",
+            "Please enter a valid amount greater than zero.",
+            {
+              details: {
+                amount,
+                amountMinor,
+                currency: displayedCurrency,
+                mode,
+              },
+            },
+          ),
         );
         return;
       }
 
       if (!validation.isValid) {
-        Alert.alert(
+        reportAndAlert(
           "Invalid Split",
-          validation.error || "Please check your split configuration.",
+          createAppError(
+            "EXPENSE_SPLIT_INVALID",
+            validation.error || "Please check your split configuration.",
+            {
+              details: {
+                splitType,
+                current: validation.current,
+                target: validation.target,
+                amount,
+                currency: displayedCurrency,
+                mode,
+              },
+            },
+          ),
         );
         return;
       }
@@ -299,9 +337,23 @@ export function ExpenseForm({
       try {
         validateSplitTotals(splits, splitType, amountMinor);
       } catch (err) {
-        const errorMessage =
-          err instanceof Error ? err.message : "Invalid split configuration";
-        Alert.alert("Invalid Split", errorMessage);
+        const appError = isAppError(err)
+          ? err
+          : createAppError(
+              "EXPENSE_SPLIT_INVALID",
+              err instanceof Error
+                ? err.message
+                : "Invalid split configuration.",
+              {
+                details: {
+                  splitType,
+                  amountMinor,
+                  currency: displayedCurrency,
+                },
+                cause: err,
+              },
+            );
+        Alert.alert("Invalid Split", appError.message);
         return;
       }
 
@@ -316,10 +368,14 @@ export function ExpenseForm({
         splits,
       });
     } catch (error) {
-      console.error("Failed to submit expense", error);
-      const message =
-        error instanceof Error ? error.message : "Failed to save expense";
-      Alert.alert("Error", message);
+      const appError = isAppError(error)
+        ? error
+        : createAppError("EXPENSE_SUBMIT_FAILED", "Failed to save expense.", {
+            details: { mode, currency: displayedCurrency },
+            cause: error,
+          });
+      console.error("Failed to submit expense", appError);
+      Alert.alert("Error", appError.message);
     }
   };
 

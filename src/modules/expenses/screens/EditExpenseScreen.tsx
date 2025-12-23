@@ -7,6 +7,7 @@ import React, { useEffect } from "react";
 import { useRouter, useLocalSearchParams, useNavigation } from "expo-router";
 import { normalizeRouteParam } from "@utils/route-params";
 import { LoadingScreen, ErrorScreen } from "@ui/components";
+import { createAppError } from "@utils/errors";
 import { useTripById } from "../../trips/hooks/use-trips";
 import { useParticipants } from "../../participants/hooks/use-participants";
 import { useExpenseCategories } from "../hooks/use-expense-categories";
@@ -101,7 +102,13 @@ function EditExpenseScreenContent({
 
   const handleSubmit = async (data: ExpenseFormData) => {
     if (!expense) {
-      throw new Error("Expense data not loaded");
+      throw createAppError(
+        "EXPENSE_NOT_LOADED",
+        "Expense data not loaded.",
+        {
+          details: { expenseId, tripId },
+        },
+      );
     }
 
     const result = await update(expenseId, {
@@ -118,7 +125,13 @@ function EditExpenseScreenContent({
     if (result) {
       router.back();
     } else {
-      throw new Error("Failed to update expense");
+      throw createAppError(
+        "EXPENSE_UPDATE_FAILED",
+        "Failed to update expense.",
+        {
+          details: { expenseId, tripId },
+        },
+      );
     }
   };
 
