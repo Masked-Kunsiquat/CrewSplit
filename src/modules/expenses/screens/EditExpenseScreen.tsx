@@ -191,7 +191,7 @@ function EditExpenseScreenContent({
         description: expense.description,
         notes: expense.notes ?? null,
         amountMinor: expense.originalAmountMinor,
-        currency: expense.originalCurrency ?? trip.currency,
+        currency: expense.originalCurrency,
         date: expense.date,
         paidBy: expense.paidBy,
         categoryId: expense.categoryId || "cat-other",
