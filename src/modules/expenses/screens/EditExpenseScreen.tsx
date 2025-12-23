@@ -102,13 +102,9 @@ function EditExpenseScreenContent({
 
   const handleSubmit = async (data: ExpenseFormData) => {
     if (!expense) {
-      throw createAppError(
-        "EXPENSE_NOT_LOADED",
-        "Expense data not loaded.",
-        {
-          details: { expenseId, tripId },
-        },
-      );
+      throw createAppError("EXPENSE_NOT_LOADED", "Expense data not loaded.", {
+        details: { expenseId, tripId },
+      });
     }
 
     const result = await update(expenseId, {
