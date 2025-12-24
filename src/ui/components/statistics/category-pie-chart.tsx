@@ -83,22 +83,23 @@ export const CategoryPieChart: React.FC<CategoryPieChartProps> = ({
           colorKey="color"
         >
           <Pie.Chart innerRadius={innerRadius}>
-            {({ slice }) => {
-              const dataItem = chartData.find(
-                (item) =>
-                  item.value === slice.value && item.label === slice.label
-              );
-              const percentageText = dataItem
-                ? `${Math.round(dataItem.percentage)}%`
-                : "";
+            {showLabels
+              ? ({ slice }) => {
+                  const dataItem = chartData.find(
+                    (item) =>
+                      item.value === slice.value && item.label === slice.label
+                  );
+                  const percentageText = dataItem
+                    ? `${Math.round(dataItem.percentage)}%`
+                    : "";
 
-              return (
-                <>
-                  <Pie.Slice />
-                  {showLabels && <Pie.Label font={font} color="#ffffff" text={percentageText} />}
-                </>
-              );
-            }}
+                  return (
+                    <Pie.Slice>
+                      <Pie.Label font={font} color="#ffffff" text={percentageText} />
+                    </Pie.Slice>
+                  );
+                }
+              : undefined}
           </Pie.Chart>
         </PolarChart>
       </View>
