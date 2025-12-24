@@ -4,7 +4,7 @@
  */
 
 import React from "react";
-import { View, StyleSheet } from "react-native";
+import { View, StyleSheet, Text } from "react-native";
 import { Pie, PolarChart } from "victory-native";
 import { useFont } from "@shopify/react-native-skia";
 import { theme } from "@ui/theme";
@@ -75,29 +75,30 @@ export const CategoryPieChart: React.FC<CategoryPieChartProps> = ({
       accessible
       accessibilityLabel={computedAccessibilityLabel}
     >
-      <PolarChart
-        data={chartData}
-        labelKey="label"
-        valueKey="value"
-        colorKey="color"
-      >
-        <Pie.Chart innerRadius={innerRadius}>
-          {showLabels
-            ? ({ slice }) => {
-                // Find the matching data item to get the percentage
-                const dataItem = chartData.find(
-                  (item) =>
-                    item.value === slice.value && item.label === slice.label
-                );
-                const percentageText = dataItem
-                  ? `${Math.round(dataItem.percentage)}%`
-                  : "";
+      <View style={{ flex: 1, width: size, height: size }}>
+        <PolarChart
+          data={chartData}
+          labelKey="label"
+          valueKey="value"
+          colorKey="color"
+        >
+          <Pie.Chart innerRadius={innerRadius}>
+            {showLabels
+              ? ({ slice }) => {
+                  const dataItem = chartData.find(
+                    (item) =>
+                      item.value === slice.value && item.label === slice.label
+                  );
+                  const percentageText = dataItem
+                    ? `${Math.round(dataItem.percentage)}%`
+                    : "";
 
-                return <Pie.Label font={font} color="white" text={percentageText} />;
-              }
-            : undefined}
-        </Pie.Chart>
-      </PolarChart>
+                  return <Pie.Label font={font} color="#ffffff" text={percentageText} />;
+                }
+              : undefined}
+          </Pie.Chart>
+        </PolarChart>
+      </View>
     </View>
   );
 };
