@@ -46,7 +46,7 @@ export const colors = {
     "#60a5fa", // Light blue
     "#f87171", // Red (matches error)
     "#c084fc", // Violet
-    "#fbbf24", // Yellow
+    "#fde047", // Yellow (bright yellow for contrast)
     "#22d3ee", // Cyan
   ],
 } as const;

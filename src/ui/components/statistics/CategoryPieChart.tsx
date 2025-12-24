@@ -4,7 +4,7 @@
  */
 
 import React from "react";
-import { View, StyleSheet, TouchableOpacity } from "react-native";
+import { View, StyleSheet } from "react-native";
 import { Pie, PolarChart } from "victory-native";
 import { theme } from "../../theme";
 
@@ -66,23 +66,17 @@ export const CategoryPieChart: React.FC<CategoryPieChartProps> = ({
       >
         <Pie.Chart innerRadius={innerRadius}>
           {({ slice }) => {
+            // Use slice index from the original data array
             const sliceIndex = chartData.findIndex(
-              (d) => d.value === slice.value,
+              (d) => d.label === slice.label && d.value === slice.value,
             );
             const percentage =
               sliceIndex !== -1 ? chartData[sliceIndex].percentage : 0;
 
             return (
-              <TouchableOpacity
-                onPress={() => {
-                  if (onSlicePress && sliceIndex !== -1) {
-                    onSlicePress(data[sliceIndex]);
-                  }
-                }}
-                style={styles.slice}
-              >
+              <>
                 {showLabels && <Pie.Label text={`${percentage.toFixed(0)}%`} />}
-              </TouchableOpacity>
+              </>
             );
           }}
         </Pie.Chart>
@@ -95,8 +89,5 @@ const styles = StyleSheet.create({
   container: {
     justifyContent: "center",
     alignItems: "center",
-  },
-  slice: {
-    position: "relative",
   },
 });

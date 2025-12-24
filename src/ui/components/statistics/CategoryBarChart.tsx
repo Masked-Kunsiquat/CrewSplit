@@ -77,15 +77,20 @@ export const CategoryBarChart: React.FC<CategoryBarChartProps> = ({
         }}
       >
         {({ points, chartBounds }) => (
-          <Bar
-            points={points.amount}
-            chartBounds={chartBounds}
-            color={theme.colors.primary}
-            roundedCorners={{
-              topLeft: 4,
-              topRight: 4,
-            }}
-          />
+          <>
+            {points.amount.map((point, index) => (
+              <Bar
+                key={`bar-${index}`}
+                points={[point]}
+                chartBounds={chartBounds}
+                color={chartData[index]?.color || theme.colors.primary}
+                roundedCorners={{
+                  topLeft: 4,
+                  topRight: 4,
+                }}
+              />
+            ))}
+          </>
         )}
       </CartesianChart>
 
