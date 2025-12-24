@@ -22,6 +22,7 @@ import { useTripById } from "../hooks/use-trips";
 import { useStatistics } from "@modules/statistics/hooks/use-statistics";
 import { CurrencyUtils } from "@utils/currency";
 import { formatErrorMessage } from "src/utils/format-error";
+import { getCategoryIcon } from "@utils/category-icons";
 
 export default function TripStatisticsScreen() {
   const navigation = useNavigation();
@@ -167,18 +168,26 @@ export default function TripStatisticsScreen() {
 
                 {/* Legend */}
                 <ChartLegend
-                  items={statistics.categorySpending.map((cat, index) => ({
-                    label: `${cat.categoryEmoji || "📦"} ${cat.categoryName || "Uncategorized"}`,
-                    color:
+                  items={statistics.categorySpending.map((cat, index) => {
+                    const color =
                       theme.colors.chartColors[
                         index % theme.colors.chartColors.length
-                      ],
-                    value: CurrencyUtils.formatMinor(
-                      cat.totalAmount,
-                      statistics.currency,
-                    ),
-                    percentage: cat.percentage,
-                  }))}
+                      ];
+                    return {
+                      label: cat.categoryName || "Uncategorized",
+                      color,
+                      value: CurrencyUtils.formatMinor(
+                        cat.totalAmount,
+                        statistics.currency,
+                      ),
+                      percentage: cat.percentage,
+                      icon: getCategoryIcon({
+                        categoryName: cat.categoryName || "Other",
+                        size: 20,
+                        color,
+                      }),
+                    };
+                  })}
                 />
               </Card>
             )}
