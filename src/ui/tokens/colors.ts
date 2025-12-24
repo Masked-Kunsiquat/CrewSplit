@@ -33,6 +33,22 @@ export const colors = {
   disabled: "#404040",
   hover: "#2d2d2d",
   pressed: "#242424",
+
+  // Chart colors - High contrast colors for data visualization on dark backgrounds
+  chartColors: [
+    "#4a9eff", // Primary blue (matches primary)
+    "#4ade80", // Success green (matches success)
+    "#f472b6", // Pink
+    "#fbbf24", // Amber (matches warning)
+    "#a78bfa", // Purple
+    "#34d399", // Emerald
+    "#fb923c", // Orange
+    "#60a5fa", // Light blue
+    "#f87171", // Red (matches error)
+    "#c084fc", // Violet
+    "#fbbf24", // Yellow
+    "#22d3ee", // Cyan
+  ],
 } as const;
 
 export type ColorToken = keyof typeof colors;
