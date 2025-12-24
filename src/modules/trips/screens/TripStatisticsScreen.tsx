@@ -12,7 +12,12 @@ import { View, Text, StyleSheet, ScrollView } from "react-native";
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
 import { theme } from "@ui/theme";
 import { Card, LoadingScreen, ErrorScreen } from "@ui/components";
-import { StatsSummaryCard } from "@ui/components/statistics";
+import {
+  StatsSummaryCard,
+  CategoryBarChart,
+  CategoryPieChart,
+  ChartLegend,
+} from "@ui/components/statistics";
 import { useTripById } from "../hooks/use-trips";
 import { useStatistics } from "@modules/statistics/hooks/use-statistics";
 import { CurrencyUtils } from "@utils/currency";
@@ -126,35 +131,55 @@ export default function TripStatisticsScreen() {
             {hasCategories && (
               <Card style={styles.section}>
                 <Text style={styles.sectionTitle}>Spending by Category</Text>
-                {statistics.categorySpending.map((cat, index) => {
-                  const color =
-                    theme.colors.chartColors[
-                      index % theme.colors.chartColors.length
-                    ];
-                  return (
-                    <View key={cat.categoryId || index} style={styles.categoryRow}>
-                      <View style={styles.categoryLeft}>
-                        <View
-                          style={[
-                            styles.colorIndicator,
-                            { backgroundColor: color },
-                          ]}
-                        />
-                        <Text style={styles.categoryLabel}>
-                          {cat.categoryEmoji || "📦"} {cat.categoryName || "Uncategorized"}
-                        </Text>
-                      </View>
-                      <View style={styles.categoryRight}>
-                        <Text style={styles.categoryAmount}>
-                          {CurrencyUtils.formatMinor(cat.totalAmount, statistics.currency)}
-                        </Text>
-                        <Text style={styles.categoryPercentage}>
-                          {cat.percentage.toFixed(1)}%
-                        </Text>
-                      </View>
-                    </View>
-                  );
-                })}
+
+                {/* Bar Chart */}
+                <CategoryBarChart
+                  data={statistics.categorySpending.map((cat, index) => ({
+                    categoryName: cat.categoryName || "Uncategorized",
+                    amount: cat.totalAmount,
+                    emoji: cat.categoryEmoji || undefined,
+                    color:
+                      theme.colors.chartColors[
+                        index % theme.colors.chartColors.length
+                      ],
+                  }))}
+                  height={300}
+                />
+
+                {/* Pie Chart */}
+                <View style={styles.chartContainer}>
+                  <CategoryPieChart
+                    data={statistics.categorySpending.map((cat, index) => ({
+                      categoryName: cat.categoryName || "Uncategorized",
+                      amount: cat.totalAmount,
+                      percentage: cat.percentage,
+                      emoji: cat.categoryEmoji || undefined,
+                      color:
+                        theme.colors.chartColors[
+                          index % theme.colors.chartColors.length
+                        ],
+                    }))}
+                    size={200}
+                    innerRadius={60}
+                    showLabels={false}
+                  />
+                </View>
+
+                {/* Legend */}
+                <ChartLegend
+                  items={statistics.categorySpending.map((cat, index) => ({
+                    label: `${cat.categoryEmoji || "📦"} ${cat.categoryName || "Uncategorized"}`,
+                    color:
+                      theme.colors.chartColors[
+                        index % theme.colors.chartColors.length
+                      ],
+                    value: CurrencyUtils.formatMinor(
+                      cat.totalAmount,
+                      statistics.currency,
+                    ),
+                    percentage: cat.percentage,
+                  }))}
+                />
               </Card>
             )}
 
@@ -229,42 +254,9 @@ const styles = StyleSheet.create({
     color: theme.colors.text,
     marginBottom: theme.spacing.xs,
   },
-  categoryRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
+  chartContainer: {
     alignItems: "center",
-    padding: theme.spacing.md,
-    backgroundColor: theme.colors.surface,
-    borderRadius: 8,
-  },
-  categoryLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: theme.spacing.sm,
-    flex: 1,
-  },
-  categoryRight: {
-    alignItems: "flex-end",
-    gap: 2,
-  },
-  colorIndicator: {
-    width: 12,
-    height: 12,
-    borderRadius: 2,
-  },
-  categoryLabel: {
-    fontSize: theme.typography.base,
-    color: theme.colors.text,
-    flex: 1,
-  },
-  categoryAmount: {
-    fontSize: theme.typography.base,
-    fontWeight: theme.typography.bold,
-    color: theme.colors.text,
-  },
-  categoryPercentage: {
-    fontSize: theme.typography.sm,
-    color: theme.colors.textSecondary,
+    paddingVertical: theme.spacing.md,
   },
   participantRow: {
     flexDirection: "row",
