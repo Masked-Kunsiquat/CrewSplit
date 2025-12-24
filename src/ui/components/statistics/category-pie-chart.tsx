@@ -6,6 +6,7 @@
 import React from "react";
 import { View, StyleSheet } from "react-native";
 import { Pie, PolarChart } from "victory-native";
+import { useFont } from "@shopify/react-native-skia";
 import { theme } from "@ui/theme";
 
 export interface CategoryPieData {
@@ -37,6 +38,12 @@ export const CategoryPieChart: React.FC<CategoryPieChartProps> = ({
   innerRadius = 0,
   accessibilityLabel,
 }) => {
+  // Load font for labels - use a font from node_modules
+  const font = useFont(
+    require("@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/Feather.ttf"),
+    14
+  );
+
   // Don't render if no data
   if (!data || data.length === 0) {
     return null;
@@ -52,6 +59,11 @@ export const CategoryPieChart: React.FC<CategoryPieChartProps> = ({
     percentage: item.percentage,
     originalData: item,
   }));
+
+  // Don't render until font is loaded
+  if (!font) {
+    return null;
+  }
 
   const computedAccessibilityLabel =
     accessibilityLabel ||
@@ -69,22 +81,23 @@ export const CategoryPieChart: React.FC<CategoryPieChartProps> = ({
         valueKey="value"
         colorKey="color"
       >
-        <Pie.Chart innerRadius={innerRadius}>
-          {({ slice }) => {
-            // Use slice index from the original data array
-            const sliceIndex = chartData.findIndex(
-              (d) => d.label === slice.label && d.value === slice.value,
-            );
-            const percentage =
-              sliceIndex !== -1 ? chartData[sliceIndex].percentage : 0;
+        {({ slice }) => {
+          // Find the matching data item to get the percentage
+          const dataItem = chartData.find(
+            (item) => item.value === slice.value && item.label === slice.label
+          );
+          const percentageText = dataItem
+            ? `${Math.round(dataItem.percentage)}%`
+            : "";
 
-            return (
-              <>
-                {showLabels && <Pie.Label text={`${percentage.toFixed(0)}%`} />}
-              </>
-            );
-          }}
-        </Pie.Chart>
+          return (
+            <Pie.Slice>
+              {showLabels && percentageText && (
+                <Pie.Label font={font} color="white" text={percentageText} />
+              )}
+            </Pie.Slice>
+          );
+        }}
       </PolarChart>
     </View>
   );
