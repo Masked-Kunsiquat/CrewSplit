@@ -9,6 +9,7 @@ import { CartesianChart, Bar, useChartPressState } from "victory-native";
 import { Circle, RoundedRect, Text as SkiaText, useFont } from "@shopify/react-native-skia";
 import { useDerivedValue } from "react-native-reanimated";
 import { theme } from "../../theme";
+import { CurrencyUtils } from "@utils/currency";
 
 export interface CategoryBarData {
   categoryName: string;
@@ -22,6 +23,7 @@ interface CategoryBarChartProps {
   height?: number;
   onBarPress?: (category: CategoryBarData) => void;
   accessibilityLabel?: string;
+  currency?: string;
 }
 
 /**
@@ -33,6 +35,7 @@ export const CategoryBarChart: React.FC<CategoryBarChartProps> = ({
   height = 300,
   onBarPress,
   accessibilityLabel,
+  currency = "USD",
 }) => {
   const font = useFont(
     require("../../../../assets/fonts/Roboto-Medium.ttf"),
@@ -41,22 +44,23 @@ export const CategoryBarChart: React.FC<CategoryBarChartProps> = ({
 
   const { state, isActive } = useChartPressState({ x: 0, y: { amount: 0 } });
 
-  // Transform data for Victory Native
+  // Transform data for Victory Native with pre-formatted currency
   const chartData = data.map((item, index) => ({
     x: index,
     label: item.emoji || item.categoryName,
     amount: item.amount,
+    formattedAmount: CurrencyUtils.formatMinor(item.amount, currency),
     color:
       item.color ||
       theme.colors.chartColors[index % theme.colors.chartColors.length],
   }));
 
-  // Derived tooltip text
+  // Derived tooltip text (use pre-formatted currency to avoid worklet issues)
   const tooltipText = useDerivedValue(() => {
     const index = Math.round(state.x.value.value);
     const item = chartData[index];
     if (!item) return "";
-    return `${item.label}: ${item.amount}`;
+    return `${item.label}: ${item.formattedAmount}`;
   }, [state, chartData]);
 
   const computedAccessibilityLabel =

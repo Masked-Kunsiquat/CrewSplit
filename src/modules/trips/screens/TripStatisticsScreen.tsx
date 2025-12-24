@@ -231,6 +231,7 @@ export default function TripStatisticsScreen() {
                       color: theme.colors.chartColors[index % theme.colors.chartColors.length],
                     }))}
                     height={250}
+                    currency={statistics.currency}
                     accessibilityLabel={`Participant spending bar chart with ${statistics.participantSpending.length} participants`}
                   />
                 </View>
