@@ -10,6 +10,14 @@ import { formatCurrency } from "@utils/currency";
 import { useRefreshControl } from "@hooks/use-refresh-control";
 import { getCategoryIcon } from "@utils/category-icons";
 
+/**
+ * Render the expenses list screen for a trip, including filters, pull-to-refresh, and navigation.
+ *
+ * Displays loading and error states, a horizontal category filter bar, a scrollable list of expenses
+ * (filtered by provided IDs and selected category), and a footer button to add a new expense.
+ *
+ * @returns A React element representing the expenses list screen UI.
+ */
 export default function ExpensesListScreen() {
   const router = useRouter();
   const navigation = useNavigation();

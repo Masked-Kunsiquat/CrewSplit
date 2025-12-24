@@ -20,6 +20,18 @@ import { formatErrorMessage } from "src/utils/format-error";
 import { getCategoryIcon } from "@utils/category-icons";
 import { useRefreshControl } from "@hooks/use-refresh-control";
 
+/**
+ * Screen component that displays statistics for a trip, including total spent,
+ * spending by category, and spending by participant.
+ *
+ * Renders loading and error states, an empty-state when no expenses exist,
+ * a summary card with aggregate metrics, a category breakdown with percentages,
+ * and a participant list whose rows navigate to the participant detail screen.
+ * Supports pull-to-refresh and updates the native header title to include the
+ * trip name when available.
+ *
+ * @returns The React element for the Trip Statistics screen.
+ */
 export default function TripStatisticsScreen() {
   const navigation = useNavigation();
   const router = useRouter();

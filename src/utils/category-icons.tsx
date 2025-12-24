@@ -20,8 +20,10 @@ interface CategoryIconProps {
 }
 
 /**
- * Get a consistent color for a category name
- * Maps category names to theme chart colors for visual consistency
+ * Map a category name to a consistent chart color.
+ *
+ * @param categoryName - Category name to map to a chart color
+ * @returns A color string from the theme's chart colors associated with `categoryName`; if the category is unknown, returns the last chart color as a fallback
  */
 export function getCategoryColor(categoryName: string): string {
   const categories = [
@@ -47,9 +49,14 @@ export function getCategoryColor(categoryName: string): string {
 }
 
 /**
- * Get the appropriate icon component for a category name
- * This replaces the emoji-based system with vector icons
- * If no color is provided, uses the consistent category color
+ * Return a JSX icon element that represents the provided category.
+ *
+ * If `color` is omitted, the icon color is derived from the category's chart color.
+ *
+ * @param categoryName - The name of the category to map to an icon
+ * @param size - Icon size in pixels (default: 20)
+ * @param color - Optional color override for the icon
+ * @returns A JSX.Element representing the icon for the category
  */
 export function getCategoryIcon({
   categoryName,

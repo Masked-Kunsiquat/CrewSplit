@@ -53,6 +53,13 @@ export default function ParticipantDetailsScreen() {
   );
 }
 
+/**
+ * Renders the Participant Details view for a given trip and participant, showing the participant's financial summary, settlement actions, expenses (paid-by and part-of views), and category breakdown.
+ *
+ * @param tripId - The trip identifier used to fetch participants, expenses, and settlement data.
+ * @param participantId - The participant identifier whose details are displayed.
+ * @returns The JSX element for the participant details screen.
+ */
 function ParticipantDetailsContent({
   tripId,
   participantId,
