@@ -1,11 +1,10 @@
 /**
- * UI/UX ENGINEER: Trip Statistics Screen (Stubbed)
+ * UI/UX ENGINEER: Trip Statistics Screen
  *
- * This screen will eventually display trip insights and breakdowns including:
+ * Displays trip insights and breakdowns including:
  * - Spending by category
- * - Spending over time
  * - Per-participant statistics
- * - Currency breakdown
+ * - Visual charts and breakdowns
  */
 
 import React, { useEffect } from "react";
@@ -13,7 +12,10 @@ import { View, Text, StyleSheet, ScrollView } from "react-native";
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
 import { theme } from "@ui/theme";
 import { Card, LoadingScreen, ErrorScreen } from "@ui/components";
+import { StatsSummaryCard } from "@ui/components/statistics";
 import { useTripById } from "../hooks/use-trips";
+import { useStatistics } from "@modules/statistics/hooks/use-statistics";
+import { formatCurrency } from "@utils/currency";
 import { formatErrorMessage } from "src/utils/format-error";
 
 export default function TripStatisticsScreen() {
@@ -22,7 +24,13 @@ export default function TripStatisticsScreen() {
   const { id } = useLocalSearchParams<{ id?: string }>();
   const tripId = id?.trim() || null;
 
-  const { trip, loading, error, refetch } = useTripById(tripId);
+  const { trip, loading: tripLoading, error: tripError, refetch: refetchTrip } = useTripById(tripId);
+  const {
+    statistics,
+    isLoading: statsLoading,
+    error: statsError,
+    refetch: refetchStats,
+  } = useStatistics(tripId);
 
   // Update native header title
   useEffect(() => {
@@ -44,20 +52,39 @@ export default function TripStatisticsScreen() {
     );
   }
 
-  if (loading) {
-    return <LoadingScreen message="Loading trip..." />;
+  // Show loading state while either trip or statistics are loading
+  if (tripLoading || statsLoading) {
+    return <LoadingScreen message="Loading statistics..." />;
   }
 
-  if (error) {
+  // Show error if trip failed to load
+  if (tripError) {
     return (
       <ErrorScreen
         title="Unable to load trip"
-        message={formatErrorMessage(error)}
+        message={formatErrorMessage(tripError)}
         actionLabel="Retry"
-        onAction={refetch}
+        onAction={refetchTrip}
       />
     );
   }
+
+  // Show error if statistics failed to load
+  if (statsError) {
+    return (
+      <ErrorScreen
+        title="Unable to load statistics"
+        message={formatErrorMessage(statsError)}
+        actionLabel="Retry"
+        onAction={refetchStats}
+      />
+    );
+  }
+
+  // Check if there are no expenses (empty state)
+  const hasExpenses = statistics.totalCost > 0;
+  const hasCategories = statistics.categorySpending.length > 0;
+  const hasParticipants = statistics.participantSpending.length > 0;
 
   return (
     <View style={theme.commonStyles.container}>
@@ -65,25 +92,98 @@ export default function TripStatisticsScreen() {
         style={styles.scrollView}
         contentContainerStyle={styles.content}
       >
-        <Card style={styles.comingSoonCard}>
-          <Text style={styles.comingSoonIcon}>📊</Text>
-          <Text style={styles.comingSoonTitle}>Statistics Coming Soon</Text>
-          <Text style={styles.comingSoonBody}>
-            This feature will be added in a future release. You'll be able to
-            view:
-          </Text>
-          <View style={styles.featureList}>
-            <Text style={styles.featureItem}>
-              • Spending breakdown by category
+        {!hasExpenses ? (
+          <Card style={styles.emptyCard}>
+            <Text style={styles.emptyIcon}>📊</Text>
+            <Text style={styles.emptyTitle}>No Expenses Yet</Text>
+            <Text style={styles.emptyBody}>
+              Add expenses to this trip to see spending statistics and
+              breakdowns.
             </Text>
-            <Text style={styles.featureItem}>• Expense trends over time</Text>
-            <Text style={styles.featureItem}>
-              • Per-participant spending insights
-            </Text>
-            <Text style={styles.featureItem}>• Currency distribution</Text>
-            <Text style={styles.featureItem}>• Export and sharing options</Text>
-          </View>
-        </Card>
+          </Card>
+        ) : (
+          <>
+            {/* Summary Stats */}
+            <StatsSummaryCard
+              title="Trip Overview"
+              stats={[
+                {
+                  label: "Total Spent",
+                  value: formatCurrency(statistics.totalCost, statistics.currency),
+                },
+                {
+                  label: "Categories",
+                  value: statistics.categorySpending.length.toString(),
+                },
+                {
+                  label: "Participants",
+                  value: statistics.participantSpending.length.toString(),
+                },
+              ]}
+            />
+
+            {/* Category Breakdown */}
+            {hasCategories && (
+              <Card style={styles.section}>
+                <Text style={styles.sectionTitle}>Spending by Category</Text>
+                {statistics.categorySpending.map((cat, index) => {
+                  const color =
+                    theme.colors.chartColors[
+                      index % theme.colors.chartColors.length
+                    ];
+                  return (
+                    <View key={cat.categoryId || index} style={styles.categoryRow}>
+                      <View style={styles.categoryLeft}>
+                        <View
+                          style={[
+                            styles.colorIndicator,
+                            { backgroundColor: color },
+                          ]}
+                        />
+                        <Text style={styles.categoryLabel}>
+                          {cat.categoryEmoji || "📦"} {cat.categoryName || "Uncategorized"}
+                        </Text>
+                      </View>
+                      <View style={styles.categoryRight}>
+                        <Text style={styles.categoryAmount}>
+                          {formatCurrency(cat.totalAmount, statistics.currency)}
+                        </Text>
+                        <Text style={styles.categoryPercentage}>
+                          {cat.percentage.toFixed(1)}%
+                        </Text>
+                      </View>
+                    </View>
+                  );
+                })}
+              </Card>
+            )}
+
+            {/* Participant Spending */}
+            {hasParticipants && (
+              <Card style={styles.section}>
+                <Text style={styles.sectionTitle}>Spending by Participant</Text>
+                {statistics.participantSpending.map((participant) => (
+                  <View
+                    key={participant.participantId}
+                    style={styles.participantRow}
+                  >
+                    <Text style={styles.participantName}>
+                      {participant.participantName}
+                    </Text>
+                    <View style={styles.participantStats}>
+                      <Text style={styles.participantAmount}>
+                        {formatCurrency(participant.totalPaid, statistics.currency)}
+                      </Text>
+                      <Text style={styles.participantPercentage}>
+                        {participant.percentage.toFixed(1)}%
+                      </Text>
+                    </View>
+                  </View>
+                ))}
+              </Card>
+            )}
+          </>
+        )}
       </ScrollView>
     </View>
   );
@@ -95,48 +195,102 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: theme.spacing.lg,
+    gap: theme.spacing.md,
   },
-  errorCard: {
-    gap: theme.spacing.sm,
-    alignItems: "center",
-    padding: theme.spacing.lg,
-    backgroundColor: theme.colors.surfaceElevated,
-  },
-  errorText: {
-    fontSize: theme.typography.base,
-    color: theme.colors.textSecondary,
-    textAlign: "center",
-  },
-  comingSoonCard: {
+  emptyCard: {
     backgroundColor: theme.colors.surfaceElevated,
     alignItems: "center",
     padding: theme.spacing.xl,
   },
-  comingSoonIcon: {
+  emptyIcon: {
     fontSize: 64,
     marginBottom: theme.spacing.md,
   },
-  comingSoonTitle: {
+  emptyTitle: {
     fontSize: theme.typography.xl,
     fontWeight: theme.typography.bold,
     color: theme.colors.text,
     marginBottom: theme.spacing.sm,
     textAlign: "center",
   },
-  comingSoonBody: {
+  emptyBody: {
     fontSize: theme.typography.base,
     color: theme.colors.textSecondary,
-    marginBottom: theme.spacing.lg,
     textAlign: "center",
     lineHeight: 22,
   },
-  featureList: {
-    alignSelf: "stretch",
+  section: {
     gap: theme.spacing.sm,
+    backgroundColor: theme.colors.surfaceElevated,
   },
-  featureItem: {
+  sectionTitle: {
+    fontSize: theme.typography.lg,
+    fontWeight: theme.typography.semibold,
+    color: theme.colors.text,
+    marginBottom: theme.spacing.xs,
+  },
+  categoryRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: theme.spacing.md,
+    backgroundColor: theme.colors.surface,
+    borderRadius: 8,
+  },
+  categoryLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: theme.spacing.sm,
+    flex: 1,
+  },
+  categoryRight: {
+    alignItems: "flex-end",
+    gap: 2,
+  },
+  colorIndicator: {
+    width: 12,
+    height: 12,
+    borderRadius: 2,
+  },
+  categoryLabel: {
     fontSize: theme.typography.base,
+    color: theme.colors.text,
+    flex: 1,
+  },
+  categoryAmount: {
+    fontSize: theme.typography.base,
+    fontWeight: theme.typography.bold,
+    color: theme.colors.text,
+  },
+  categoryPercentage: {
+    fontSize: theme.typography.sm,
     color: theme.colors.textSecondary,
-    lineHeight: 22,
+  },
+  participantRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: theme.spacing.md,
+    backgroundColor: theme.colors.surface,
+    borderRadius: 8,
+  },
+  participantName: {
+    fontSize: theme.typography.base,
+    fontWeight: theme.typography.semibold,
+    color: theme.colors.text,
+    flex: 1,
+  },
+  participantStats: {
+    alignItems: "flex-end",
+    gap: 2,
+  },
+  participantAmount: {
+    fontSize: theme.typography.base,
+    fontWeight: theme.typography.bold,
+    color: theme.colors.text,
+  },
+  participantPercentage: {
+    fontSize: theme.typography.sm,
+    color: theme.colors.textSecondary,
   },
 });

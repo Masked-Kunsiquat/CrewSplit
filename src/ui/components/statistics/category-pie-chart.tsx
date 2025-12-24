@@ -37,6 +37,11 @@ export const CategoryPieChart: React.FC<CategoryPieChartProps> = ({
   innerRadius = 0,
   accessibilityLabel,
 }) => {
+  // Don't render if no data
+  if (!data || data.length === 0) {
+    return null;
+  }
+
   // Transform data for Victory Native
   const chartData = data.map((item, index) => ({
     value: item.amount,
