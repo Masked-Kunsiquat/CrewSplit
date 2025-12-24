@@ -6,8 +6,7 @@
 import type { ExpenseWithCategory } from "../../repository";
 import type { Participant } from "@modules/participants";
 import type { TripStatistics } from "../../types";
-
-let computeStatistics: typeof import("../StatisticsService").computeStatistics;
+import { computeStatistics } from "../StatisticsService";
 
 const mockCalculateCategorySpending = jest.fn();
 const mockCalculateParticipantSpending = jest.fn();
@@ -15,11 +14,11 @@ const mockGetExpensesWithCategories = jest.fn();
 const mockGetTripCurrency = jest.fn();
 const mockGetParticipantsForTrip = jest.fn();
 
-const mockTripLogger = {
-  debug: jest.fn(),
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
+let mockTripLogger: {
+  debug: jest.Mock;
+  info: jest.Mock;
+  warn: jest.Mock;
+  error: jest.Mock;
 };
 
 jest.mock("../../engine/calculate-category-spending", () => ({
@@ -43,9 +42,15 @@ jest.mock("@modules/participants/repository", () => ({
     mockGetParticipantsForTrip(...args),
 }));
 
-jest.mock("@utils/logger", () => ({
-  tripLogger: mockTripLogger,
-}));
+jest.mock("@utils/logger", () => {
+  mockTripLogger = {
+    debug: jest.fn(),
+    info: jest.fn(),
+    warn: jest.fn(),
+    error: jest.fn(),
+  };
+  return { tripLogger: mockTripLogger };
+});
 
 const createExpense = (
   overrides: Partial<ExpenseWithCategory> = {},
@@ -89,10 +94,6 @@ const createDeferred = <T>() => {
 };
 
 describe("StatisticsService.computeStatistics", () => {
-  beforeAll(async () => {
-    ({ computeStatistics } = await import("../StatisticsService"));
-  });
-
   beforeEach(() => {
     jest.clearAllMocks();
   });
