@@ -84,7 +84,11 @@ export const calculateCategorySpending = (
     if (a.categoryName !== b.categoryName) {
       return a.categoryName.localeCompare(b.categoryName);
     }
-    return String(a.categoryId).localeCompare(String(b.categoryId));
+    // Handle null categoryIds explicitly for deterministic ordering
+    if (a.categoryId === null && b.categoryId === null) return 0;
+    if (a.categoryId === null) return 1; // null comes last
+    if (b.categoryId === null) return -1; // null comes last
+    return a.categoryId.localeCompare(b.categoryId);
   });
 
   return totals;
