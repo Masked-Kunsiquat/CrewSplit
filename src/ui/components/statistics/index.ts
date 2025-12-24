@@ -7,15 +7,15 @@
  * Reusable summary card for displaying key trip statistics.
  * Supports 2-column and grid layouts with optional press handlers.
  */
-export { StatsSummaryCard } from "./StatsSummaryCard";
-export type { StatItem } from "./StatsSummaryCard";
+export { StatsSummaryCard } from "./stats-summary-card";
+export type { StatItem } from "./stats-summary-card";
 
 /**
  * Interactive bar chart for visualizing category spending.
  * Uses Victory Native with theme colors and touch interaction.
  */
-export { CategoryBarChart } from "./CategoryBarChart";
-export type { CategoryBarData } from "./CategoryBarChart";
+export { CategoryBarChart } from "./category-bar-chart";
+export type { CategoryBarData } from "./category-bar-chart";
 
 /**
  * Pie/donut chart for category spending visualization.
@@ -28,12 +28,12 @@ export type { CategoryPieData } from "./category-pie-chart";
  * Legend component for chart visualizations.
  * Displays color indicators with labels and optional values.
  */
-export { ChartLegend } from "./ChartLegend";
-export type { ChartLegendItem } from "./ChartLegend";
+export { ChartLegend } from "./chart-legend";
+export type { ChartLegendItem } from "./chart-legend";
 
 /**
  * List row for displaying participant balances with status indicators.
  * Shows avatar, name, balance with color coding, and optional Owes/Owed/Settled status.
  */
-export { ParticipantBalanceRow } from "./ParticipantBalanceRow";
-export type { ParticipantBalanceRowProps } from "./ParticipantBalanceRow";
+export { ParticipantBalanceRow } from "./participant-balance-row";
+export type { ParticipantBalanceRowProps } from "./participant-balance-row";
