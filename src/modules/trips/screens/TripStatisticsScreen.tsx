@@ -12,7 +12,7 @@ import { View, Text, StyleSheet, ScrollView, Pressable } from "react-native";
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
 import { theme } from "@ui/theme";
 import { Card, LoadingScreen, ErrorScreen } from "@ui/components";
-import { StatsSummaryCard } from "@ui/components/statistics";
+import { StatsSummaryCard, CategoryPieChart, CategoryBarChart } from "@ui/components/statistics";
 import { useTripById } from "../hooks/use-trips";
 import { useStatistics } from "@modules/statistics/hooks/use-statistics";
 import { CurrencyUtils } from "@utils/currency";
@@ -156,42 +156,64 @@ export default function TripStatisticsScreen() {
             {hasCategories && (
               <Card style={styles.section}>
                 <Text style={styles.sectionTitle}>Spending by Category</Text>
-                {statistics.categorySpending.map((cat, index) => {
-                  const color =
-                    theme.colors.chartColors[
-                      index % theme.colors.chartColors.length
-                    ];
-                  return (
-                    <View
-                      key={cat.categoryId || index}
-                      style={styles.categoryRow}
-                    >
-                      <View style={styles.categoryLeft}>
-                        <View style={styles.categoryIconContainer}>
-                          {getCategoryIcon({
-                            categoryName: cat.categoryName || "Other",
-                            size: 20,
-                            color,
-                          })}
+
+                {/* Pie Chart */}
+                <View style={styles.chartContainer}>
+                  <CategoryPieChart
+                    data={statistics.categorySpending.map((cat, index) => ({
+                      categoryName: cat.categoryName || "Uncategorized",
+                      amount: cat.totalAmount,
+                      percentage: cat.percentage,
+                      color: theme.colors.chartColors[index % theme.colors.chartColors.length],
+                      emoji: cat.categoryEmoji || undefined,
+                    }))}
+                    size={250}
+                    showLabels={true}
+                    innerRadius={60}
+                    accessibilityLabel={`Category spending pie chart with ${statistics.categorySpending.length} categories`}
+                  />
+                </View>
+
+                {/* Category List */}
+                <View style={styles.categoryList}>
+                  {statistics.categorySpending.map((cat, index) => {
+                    const color =
+                      theme.colors.chartColors[
+                        index % theme.colors.chartColors.length
+                      ];
+                    return (
+                      <View
+                        key={cat.categoryId || index}
+                        style={styles.categoryRow}
+                      >
+                        <View style={styles.categoryLeft}>
+                          <View style={[styles.colorDot, { backgroundColor: color }]} />
+                          <View style={styles.categoryIconContainer}>
+                            {getCategoryIcon({
+                              categoryName: cat.categoryName || "Other",
+                              size: 20,
+                              color,
+                            })}
+                          </View>
+                          <Text style={styles.categoryLabel}>
+                            {cat.categoryName || "Uncategorized"}
+                          </Text>
                         </View>
-                        <Text style={styles.categoryLabel}>
-                          {cat.categoryName || "Uncategorized"}
-                        </Text>
+                        <View style={styles.categoryRight}>
+                          <Text style={styles.categoryAmount}>
+                            {CurrencyUtils.formatMinor(
+                              cat.totalAmount,
+                              statistics.currency,
+                            )}
+                          </Text>
+                          <Text style={styles.categoryPercentage}>
+                            {formatPercentage(cat.percentage)}%
+                          </Text>
+                        </View>
                       </View>
-                      <View style={styles.categoryRight}>
-                        <Text style={styles.categoryAmount}>
-                          {CurrencyUtils.formatMinor(
-                            cat.totalAmount,
-                            statistics.currency,
-                          )}
-                        </Text>
-                        <Text style={styles.categoryPercentage}>
-                          {formatPercentage(cat.percentage)}%
-                        </Text>
-                      </View>
-                    </View>
-                  );
-                })}
+                    );
+                  })}
+                </View>
               </Card>
             )}
 
@@ -199,34 +221,57 @@ export default function TripStatisticsScreen() {
             {hasParticipants && (
               <Card style={styles.section}>
                 <Text style={styles.sectionTitle}>Spending by Participant</Text>
-                {statistics.participantSpending.map((participant) => (
-                  <Pressable
-                    key={participant.participantId}
-                    style={styles.participantRow}
-                    accessibilityRole="button"
-                    accessibilityLabel={`View participant ${participant.participantName}`}
-                    onPress={() =>
-                      router.push(
-                        `/trips/${tripId}/participants/${participant.participantId}`,
-                      )
-                    }
-                  >
-                    <Text style={styles.participantName}>
-                      {participant.participantName}
-                    </Text>
-                    <View style={styles.participantStats}>
-                      <Text style={styles.participantAmount}>
-                        {CurrencyUtils.formatMinor(
-                          participant.totalPaid,
-                          statistics.currency,
-                        )}
-                      </Text>
-                      <Text style={styles.participantPercentage}>
-                        {formatPercentage(participant.percentage)}%
-                      </Text>
-                    </View>
-                  </Pressable>
-                ))}
+
+                {/* Bar Chart */}
+                <View style={styles.chartContainer}>
+                  <CategoryBarChart
+                    data={statistics.participantSpending.map((participant, index) => ({
+                      categoryName: participant.participantName,
+                      amount: participant.totalPaid,
+                      color: theme.colors.chartColors[index % theme.colors.chartColors.length],
+                    }))}
+                    height={250}
+                    accessibilityLabel={`Participant spending bar chart with ${statistics.participantSpending.length} participants`}
+                  />
+                </View>
+
+                {/* Participant List */}
+                <View style={styles.participantList}>
+                  {statistics.participantSpending.map((participant, index) => {
+                    const color = theme.colors.chartColors[index % theme.colors.chartColors.length];
+                    return (
+                      <Pressable
+                        key={participant.participantId}
+                        style={styles.participantRow}
+                        accessibilityRole="button"
+                        accessibilityLabel={`View participant ${participant.participantName}`}
+                        onPress={() =>
+                          router.push(
+                            `/trips/${tripId}/participants/${participant.participantId}`,
+                          )
+                        }
+                      >
+                        <View style={styles.participantLeft}>
+                          <View style={[styles.colorDot, { backgroundColor: color }]} />
+                          <Text style={styles.participantName}>
+                            {participant.participantName}
+                          </Text>
+                        </View>
+                        <View style={styles.participantStats}>
+                          <Text style={styles.participantAmount}>
+                            {CurrencyUtils.formatMinor(
+                              participant.totalPaid,
+                              statistics.currency,
+                            )}
+                          </Text>
+                          <Text style={styles.participantPercentage}>
+                            {formatPercentage(participant.percentage)}%
+                          </Text>
+                        </View>
+                      </Pressable>
+                    );
+                  })}
+                </View>
               </Card>
             )}
           </>
@@ -276,6 +321,15 @@ const styles = StyleSheet.create({
     color: theme.colors.text,
     marginBottom: theme.spacing.xs,
   },
+  chartContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: theme.spacing.lg,
+    marginBottom: theme.spacing.md,
+  },
+  categoryList: {
+    gap: theme.spacing.sm,
+  },
   categoryRow: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -314,6 +368,14 @@ const styles = StyleSheet.create({
     fontSize: theme.typography.sm,
     color: theme.colors.textSecondary,
   },
+  colorDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  participantList: {
+    gap: theme.spacing.sm,
+  },
   participantRow: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -321,6 +383,12 @@ const styles = StyleSheet.create({
     padding: theme.spacing.md,
     backgroundColor: theme.colors.surface,
     borderRadius: 8,
+  },
+  participantLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: theme.spacing.sm,
+    flex: 1,
   },
   participantName: {
     fontSize: theme.typography.base,
