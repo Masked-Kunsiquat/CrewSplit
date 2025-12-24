@@ -21,6 +21,18 @@ import { getCategoryIcon } from "@utils/category-icons";
 import { useRefreshControl } from "@hooks/use-refresh-control";
 
 /**
+ * Simple hash function for consistent color assignment based on category name
+ */
+function hashCategoryName(name: string): number {
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = (hash << 5) - hash + name.charCodeAt(i);
+    hash = hash & hash; // Convert to 32bit integer
+  }
+  return Math.abs(hash) % theme.colors.chartColors.length;
+}
+
+/**
  * Screen component that displays statistics for a trip, including total spent,
  * spending by category, and spending by participant.
  *
@@ -160,11 +172,10 @@ export default function TripStatisticsScreen() {
                 {/* Pie Chart */}
                 <View style={styles.chartContainer}>
                   <CategoryPieChart
-                    data={statistics.categorySpending.map((cat, index) => ({
+                    data={statistics.categorySpending.map((cat) => ({
                       categoryName: cat.categoryName || "Uncategorized",
                       amount: cat.totalAmount,
                       percentage: cat.percentage,
-                      color: theme.colors.chartColors[index % theme.colors.chartColors.length],
                       emoji: cat.categoryEmoji || undefined,
                     }))}
                     size={250}
@@ -177,10 +188,8 @@ export default function TripStatisticsScreen() {
                 {/* Category List */}
                 <View style={styles.categoryList}>
                   {statistics.categorySpending.map((cat, index) => {
-                    const color =
-                      theme.colors.chartColors[
-                        index % theme.colors.chartColors.length
-                      ];
+                    const colorIndex = hashCategoryName(cat.categoryName || "Uncategorized");
+                    const color = theme.colors.chartColors[colorIndex];
                     return (
                       <View
                         key={cat.categoryId || index}

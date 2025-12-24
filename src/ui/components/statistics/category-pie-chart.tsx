@@ -49,16 +49,31 @@ export const CategoryPieChart: React.FC<CategoryPieChartProps> = ({
     return null;
   }
 
+  // Simple hash function for consistent color assignment
+  const hashString = (str: string): number => {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      hash = (hash << 5) - hash + str.charCodeAt(i);
+      hash = hash & hash; // Convert to 32bit integer
+    }
+    return Math.abs(hash);
+  };
+
   // Transform data for Victory Native
-  const chartData = data.map((item, index) => ({
-    value: item.amount,
-    color:
-      item.color ||
-      theme.colors.chartColors[index % theme.colors.chartColors.length],
-    label: item.emoji || item.categoryName,
-    percentage: item.percentage,
-    originalData: item,
-  }));
+  const chartData = data.map((item) => {
+    // Use category name to deterministically pick a color
+    const colorIndex = item.color
+      ? theme.colors.chartColors.indexOf(item.color)
+      : hashString(item.categoryName) % theme.colors.chartColors.length;
+
+    return {
+      value: item.amount,
+      color: item.color || theme.colors.chartColors[colorIndex],
+      label: item.emoji || item.categoryName,
+      percentage: item.percentage,
+      originalData: item,
+    };
+  });
 
   // Don't render until font is loaded
   if (!font) {
