@@ -15,7 +15,7 @@ import { Card, LoadingScreen, ErrorScreen } from "@ui/components";
 import { StatsSummaryCard } from "@ui/components/statistics";
 import { useTripById } from "../hooks/use-trips";
 import { useStatistics } from "@modules/statistics/hooks/use-statistics";
-import { formatCurrency } from "@utils/currency";
+import { CurrencyUtils } from "@utils/currency";
 import { formatErrorMessage } from "src/utils/format-error";
 
 export default function TripStatisticsScreen() {
@@ -109,7 +109,7 @@ export default function TripStatisticsScreen() {
               stats={[
                 {
                   label: "Total Spent",
-                  value: formatCurrency(statistics.totalCost, statistics.currency),
+                  value: CurrencyUtils.formatMinor(statistics.totalCost, statistics.currency),
                 },
                 {
                   label: "Categories",
@@ -146,7 +146,7 @@ export default function TripStatisticsScreen() {
                       </View>
                       <View style={styles.categoryRight}>
                         <Text style={styles.categoryAmount}>
-                          {formatCurrency(cat.totalAmount, statistics.currency)}
+                          {CurrencyUtils.formatMinor(cat.totalAmount, statistics.currency)}
                         </Text>
                         <Text style={styles.categoryPercentage}>
                           {cat.percentage.toFixed(1)}%
@@ -172,7 +172,7 @@ export default function TripStatisticsScreen() {
                     </Text>
                     <View style={styles.participantStats}>
                       <Text style={styles.participantAmount}>
-                        {formatCurrency(participant.totalPaid, statistics.currency)}
+                        {CurrencyUtils.formatMinor(participant.totalPaid, statistics.currency)}
                       </Text>
                       <Text style={styles.participantPercentage}>
                         {participant.percentage.toFixed(1)}%
