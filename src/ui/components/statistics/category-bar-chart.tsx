@@ -4,8 +4,10 @@
  */
 
 import React from "react";
-import { View, Text, StyleSheet } from "react-native";
+import { View, StyleSheet } from "react-native";
 import { CartesianChart, Bar, useChartPressState } from "victory-native";
+import { Circle, RoundedRect, Text as SkiaText, useFont } from "@shopify/react-native-skia";
+import { useDerivedValue } from "react-native-reanimated";
 import { theme } from "../../theme";
 
 export interface CategoryBarData {
@@ -32,29 +34,30 @@ export const CategoryBarChart: React.FC<CategoryBarChartProps> = ({
   onBarPress,
   accessibilityLabel,
 }) => {
+  const font = useFont(
+    require("../../../../assets/fonts/Roboto-Medium.ttf"),
+    14
+  );
+
   const { state, isActive } = useChartPressState({ x: 0, y: { amount: 0 } });
 
   // Transform data for Victory Native
   const chartData = data.map((item, index) => ({
-    x: item.emoji || item.categoryName,
+    x: index,
+    label: item.emoji || item.categoryName,
     amount: item.amount,
     color:
       item.color ||
       theme.colors.chartColors[index % theme.colors.chartColors.length],
-    originalData: item,
   }));
 
-  // Handle bar press
-  React.useEffect(() => {
-    if (isActive && state && onBarPress) {
-      const xValue =
-        typeof state.x.value === "number" ? state.x.value : state.x.value.value;
-      const index = Math.round(xValue);
-      if (index >= 0 && index < data.length) {
-        onBarPress(data[index]);
-      }
-    }
-  }, [isActive, state, onBarPress, data]);
+  // Derived tooltip text
+  const tooltipText = useDerivedValue(() => {
+    const index = Math.round(state.x.value.value);
+    const item = chartData[index];
+    if (!item) return "";
+    return `${item.label}: ${item.amount}`;
+  }, [state, chartData]);
 
   const computedAccessibilityLabel =
     accessibilityLabel ||
@@ -75,6 +78,7 @@ export const CategoryBarChart: React.FC<CategoryBarChartProps> = ({
           lineColor: theme.colors.border,
           tickCount: 5,
         }}
+        chartPressState={state}
       >
         {({ points, chartBounds }) => (
           <>
@@ -90,36 +94,35 @@ export const CategoryBarChart: React.FC<CategoryBarChartProps> = ({
                 }}
               />
             ))}
+            {isActive && font && (
+              <>
+                <Circle
+                  cx={state.x.position}
+                  cy={state.y.amount.position}
+                  r={8}
+                  color={theme.colors.primary}
+                  opacity={0.8}
+                />
+                <RoundedRect
+                  x={chartBounds.left + 10}
+                  y={chartBounds.top + 10}
+                  width={150}
+                  height={30}
+                  r={4}
+                  color={theme.colors.surfaceElevated}
+                />
+                <SkiaText
+                  x={chartBounds.left + 20}
+                  y={chartBounds.top + 28}
+                  text={tooltipText}
+                  font={font}
+                  color={theme.colors.text}
+                />
+              </>
+            )}
           </>
         )}
       </CartesianChart>
-
-      {/* Active bar indicator */}
-      {isActive && state && (
-        <View style={styles.tooltip}>
-          <Text style={styles.tooltipText}>
-            {
-              chartData[
-                Math.round(
-                  typeof state.x.value === "number"
-                    ? state.x.value
-                    : state.x.value.value,
-                )
-              ]?.x
-            }
-            :{" "}
-            {
-              chartData[
-                Math.round(
-                  typeof state.x.value === "number"
-                    ? state.x.value
-                    : state.x.value.value,
-                )
-              ]?.amount
-            }
-          </Text>
-        </View>
-      )}
     </View>
   );
 };
@@ -127,20 +130,5 @@ export const CategoryBarChart: React.FC<CategoryBarChartProps> = ({
 const styles = StyleSheet.create({
   container: {
     width: "100%",
-    position: "relative",
-  },
-  tooltip: {
-    position: "absolute",
-    top: 8,
-    right: 8,
-    backgroundColor: theme.colors.surfaceElevated,
-    padding: theme.spacing.xs,
-    borderRadius: theme.borderRadius.sm,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-  },
-  tooltipText: {
-    fontSize: theme.typography.sm,
-    color: theme.colors.text,
   },
 });

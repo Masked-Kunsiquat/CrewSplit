@@ -4,7 +4,7 @@
  */
 
 import React from "react";
-import { View, StyleSheet, Text } from "react-native";
+import { View, StyleSheet } from "react-native";
 import { Pie, PolarChart } from "victory-native";
 import { useFont } from "@shopify/react-native-skia";
 import { theme } from "@ui/theme";
