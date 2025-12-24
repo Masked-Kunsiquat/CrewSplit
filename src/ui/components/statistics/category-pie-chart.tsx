@@ -6,7 +6,7 @@
 import React from "react";
 import { View, StyleSheet } from "react-native";
 import { Pie, PolarChart } from "victory-native";
-import { theme } from "../../theme";
+import { theme } from "@ui/theme";
 
 export interface CategoryPieData {
   categoryName: string;

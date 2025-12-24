@@ -21,8 +21,8 @@ export type { CategoryBarData } from "./CategoryBarChart";
  * Pie/donut chart for category spending visualization.
  * Supports configurable inner radius and percentage labels.
  */
-export { CategoryPieChart } from "./CategoryPieChart";
-export type { CategoryPieData } from "./CategoryPieChart";
+export { CategoryPieChart } from "./category-pie-chart";
+export type { CategoryPieData } from "./category-pie-chart";
 
 /**
  * Legend component for chart visualizations.
