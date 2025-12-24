@@ -89,8 +89,8 @@ const createDeferred = <T>() => {
 };
 
 describe("StatisticsService.computeStatistics", () => {
-  beforeAll(() => {
-    ({ computeStatistics } = require("../StatisticsService"));
+  beforeAll(async () => {
+    ({ computeStatistics } = await import("../StatisticsService"));
   });
 
   beforeEach(() => {
