@@ -31,6 +31,7 @@ import { useParticipants } from "@modules/participants/hooks/use-participants";
 import { useDisplayCurrency } from "@modules/settings/hooks/use-display-currency";
 import { formatCurrency } from "@utils/currency";
 import { normalizeRouteParam } from "@utils/route-params";
+import { getCategoryIcon } from "@utils/category-icons";
 import { cachedFxRateProvider } from "@modules/fx-rates/provider";
 import { deleteExpense } from "../repository";
 import { currencyLogger } from "@utils/logger";
@@ -64,6 +65,17 @@ export default function ExpenseDetailsScreen() {
   return <ExpenseDetailsContent tripId={tripId} expenseId={expenseId} />;
 }
 
+/**
+ * Render the expense details screen for a specific trip expense.
+ *
+ * Displays the expense amounts (original, converted to trip currency, and optional display currency),
+ * participant split details, metadata (paid by, date, category, notes), and UI for editing or deleting the expense.
+ * Handles pull-to-refresh, FX rate staleness and recovery (modal to fetch/enter rates), and delete confirmation.
+ *
+ * @param tripId - The trip identifier containing the expense
+ * @param expenseId - The expense identifier to display
+ * @returns The React element tree for the Expense Details screen
+ */
 function ExpenseDetailsContent({
   tripId,
   expenseId,
@@ -111,18 +123,14 @@ function ExpenseDetailsContent({
     refetchParticipants,
   ]);
 
-  // Update native header title with category emoji
+  // Update native header title
   useEffect(() => {
     if (expense) {
-      const category = categories.find((c) => c.id === expense.categoryId);
-      const title = category
-        ? `${expense.description}  •  ${category.emoji}`
-        : expense.description;
       navigation.setOptions({
-        title,
+        title: expense.description,
       });
     }
-  }, [expense, categories, navigation]);
+  }, [expense, navigation]);
 
   // Map participant IDs to names
   const participantMap = useMemo(() => {
@@ -442,9 +450,19 @@ function ExpenseDetailsContent({
 
           <View style={styles.metaRow}>
             <Text style={styles.metaLabel}>Category:</Text>
-            <Text style={styles.metaValue}>
-              {expenseCategory?.name || "Uncategorized"}
-            </Text>
+            <View style={styles.categoryValueRow}>
+              {expenseCategory && (
+                <View style={styles.categoryIconContainer}>
+                  {getCategoryIcon({
+                    categoryName: expenseCategory.name,
+                    size: 20,
+                  })}
+                </View>
+              )}
+              <Text style={styles.metaValue}>
+                {expenseCategory?.name || "Uncategorized"}
+              </Text>
+            </View>
           </View>
 
           {expense.notes ? (
@@ -674,6 +692,17 @@ const styles = StyleSheet.create({
     fontSize: theme.typography.base,
     color: theme.colors.text,
     fontWeight: theme.typography.medium,
+  },
+  categoryValueRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: theme.spacing.xs,
+  },
+  categoryIconContainer: {
+    width: 20,
+    height: 20,
+    alignItems: "center",
+    justifyContent: "center",
   },
   linkText: {
     color: theme.colors.primary,

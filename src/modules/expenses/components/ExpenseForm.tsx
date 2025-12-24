@@ -81,23 +81,16 @@ interface ExpenseFormProps {
 /**
  * Render a reusable form for creating or editing an expense within a trip.
  *
- * The form manages local state for basic expense fields (description, notes,
- * amount, date, payer, category) and split configuration (split type,
- * personal expense flag, selected participants, per-participant values).
- * In "edit" mode the form pre-populates fields from `initialValues`. Submission
- * validates the amount and split configuration before calling `onSubmit` with
- * a normalized ExpenseFormData payload.
+ * Supports add and edit modes, pre-populates fields when editing, validates
+ * the amount and participant splits, and calls `onSubmit` with a normalized
+ * ExpenseFormData payload when the user saves.
  *
- * @param props.mode - Either `"add"` to create a new expense or `"edit"` to modify an existing one
- * @param props.tripCurrency - Default currency used for displayed amounts
- * @param props.tripStartDate - Trip start date used as the DatePicker's initial boundary
- * @param props.participants - Array of participants available for payer and split selection
- * @param props.categories - Expense categories used to populate the category picker
- * @param props.initialValues - Optional expense values to populate the form when editing
- * @param props.onSubmit - Called with the normalized ExpenseFormData when the user saves the form
- * @param props.onCancel - Called when the user cancels the form
- * @param props.isSubmitting - When true, disables inputs and shows submitting state
- * @returns The rendered expense form as a JSX element
+ * @param mode - Either `"add"` to create a new expense or `"edit"` to modify an existing one
+ * @param initialValues - Optional expense values used to populate the form when editing
+ * @param onSubmit - Called with the normalized ExpenseFormData when the user saves the form
+ * @param onCancel - Called when the user cancels the form
+ * @param isSubmitting - When true, disables inputs and shows submitting state
+ * @returns The expense form UI as a JSX element
  */
 export function ExpenseForm({
   mode,
@@ -409,7 +402,6 @@ export function ExpenseForm({
               {getCategoryIcon({
                 categoryName: cat.name,
                 size: 24,
-                color: theme.colors.primary,
               })}
             </View>
           ),
@@ -423,7 +415,6 @@ export function ExpenseForm({
                 {getCategoryIcon({
                   categoryName: "Other",
                   size: 24,
-                  color: theme.colors.primary,
                 })}
               </View>
             ),

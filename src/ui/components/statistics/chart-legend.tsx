@@ -12,6 +12,7 @@ export interface ChartLegendItem {
   color: string;
   value?: string;
   percentage?: number;
+  icon?: React.ReactNode;
 }
 
 interface ChartLegendProps {
@@ -43,9 +44,13 @@ export const ChartLegend: React.FC<ChartLegendProps> = ({
           accessible
           accessibilityLabel={`${item.label}: ${item.value || item.percentage ? `${item.value || `${item.percentage}%`}` : ""}`}
         >
-          <View
-            style={[styles.colorIndicator, { backgroundColor: item.color }]}
-          />
+          {item.icon ? (
+            <View style={styles.iconContainer}>{item.icon}</View>
+          ) : (
+            <View
+              style={[styles.colorIndicator, { backgroundColor: item.color }]}
+            />
+          )}
           <Text style={styles.label} numberOfLines={1}>
             {item.label}
           </Text>
@@ -81,6 +86,12 @@ const styles = StyleSheet.create({
     width: 12,
     height: 12,
     borderRadius: 2,
+  },
+  iconContainer: {
+    width: 20,
+    height: 20,
+    alignItems: "center",
+    justifyContent: "center",
   },
   label: {
     fontSize: theme.typography.sm,
