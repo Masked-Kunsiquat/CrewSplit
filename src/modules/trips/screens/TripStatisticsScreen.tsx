@@ -8,7 +8,7 @@
  */
 
 import React, { useEffect } from "react";
-import { View, Text, StyleSheet, ScrollView } from "react-native";
+import { View, Text, StyleSheet, ScrollView, Pressable } from "react-native";
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
 import { theme } from "@ui/theme";
 import { Card, LoadingScreen, ErrorScreen } from "@ui/components";
@@ -18,6 +18,7 @@ import { useStatistics } from "@modules/statistics/hooks/use-statistics";
 import { CurrencyUtils } from "@utils/currency";
 import { formatErrorMessage } from "src/utils/format-error";
 import { getCategoryIcon } from "@utils/category-icons";
+import { useRefreshControl } from "@hooks/use-refresh-control";
 
 export default function TripStatisticsScreen() {
   const navigation = useNavigation();
@@ -37,6 +38,9 @@ export default function TripStatisticsScreen() {
     error: statsError,
     refetch: refetchStats,
   } = useStatistics(tripId);
+
+  // Pull-to-refresh support
+  const refreshControl = useRefreshControl([refetchTrip, refetchStats]);
 
   // Update native header title
   useEffect(() => {
@@ -97,6 +101,7 @@ export default function TripStatisticsScreen() {
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.content}
+        refreshControl={refreshControl}
       >
         {!hasExpenses ? (
           <Card style={styles.emptyCard}>
@@ -179,9 +184,14 @@ export default function TripStatisticsScreen() {
               <Card style={styles.section}>
                 <Text style={styles.sectionTitle}>Spending by Participant</Text>
                 {statistics.participantSpending.map((participant) => (
-                  <View
+                  <Pressable
                     key={participant.participantId}
                     style={styles.participantRow}
+                    onPress={() =>
+                      router.push(
+                        `/trips/${tripId}/participants/${participant.participantId}`,
+                      )
+                    }
                   >
                     <Text style={styles.participantName}>
                       {participant.participantName}
@@ -197,7 +207,7 @@ export default function TripStatisticsScreen() {
                         {participant.percentage.toFixed(1)}%
                       </Text>
                     </View>
-                  </View>
+                  </Pressable>
                 ))}
               </Card>
             )}
