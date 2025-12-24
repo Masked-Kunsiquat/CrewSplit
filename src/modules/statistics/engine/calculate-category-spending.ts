@@ -3,8 +3,18 @@
  * MODELER: Pure math, no UI assumptions
  */
 
-import type { Expense, ExpenseCategory } from "@modules/expenses";
 import type { CategorySpending } from "../types";
+
+interface ExpenseForCategorySpending {
+  categoryId?: string | null;
+  convertedAmountMinor: number;
+}
+
+interface CategoryReference {
+  id: string;
+  name: string;
+  emoji: string | null;
+}
 
 interface CategoryAccumulator {
   categoryId: string | null;
@@ -17,10 +27,10 @@ interface CategoryAccumulator {
 const UNCATEGORIZED_KEY = "__uncategorized__";
 
 export const calculateCategorySpending = (
-  expenses: Expense[],
-  categories: ExpenseCategory[],
+  expenses: ExpenseForCategorySpending[],
+  categories: CategoryReference[],
 ): CategorySpending[] => {
-  const categoryById = new Map<string, ExpenseCategory>();
+  const categoryById = new Map<string, CategoryReference>();
   for (const category of categories) {
     categoryById.set(category.id, category);
   }

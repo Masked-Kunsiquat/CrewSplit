@@ -3,9 +3,13 @@
  * MODELER: Pure math, no UI assumptions
  */
 
-import type { Expense } from "@modules/expenses";
 import type { Participant } from "@modules/participants";
 import type { ParticipantSpending } from "../types";
+
+interface ExpenseForParticipantSpending {
+  paidBy: string;
+  convertedAmountMinor: number;
+}
 
 interface ParticipantAccumulator {
   participantId: string;
@@ -14,7 +18,7 @@ interface ParticipantAccumulator {
 }
 
 export const calculateParticipantSpending = (
-  expenses: Expense[],
+  expenses: ExpenseForParticipantSpending[],
   participants: Participant[],
 ): ParticipantSpending[] => {
   const spendingByParticipant = new Map<string, ParticipantAccumulator>();
