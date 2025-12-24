@@ -78,7 +78,7 @@ const createParticipant = (
   avatarColor: overrides.avatarColor,
 });
 
-const createDeferred = <T,>() => {
+const createDeferred = <T>() => {
   let resolve!: (value: T) => void;
   let reject!: (reason?: unknown) => void;
   const promise = new Promise<T>((res, rej) => {
@@ -131,10 +131,22 @@ describe("StatisticsService.computeStatistics", () => {
     mockGetParticipantsForTrip.mockResolvedValue(participants);
 
     mockCalculateParticipantSpending.mockReturnValue([
-      { participantId: "p1", participantName: "Alex", totalPaid: 2000, percentage: 80 },
+      {
+        participantId: "p1",
+        participantName: "Alex",
+        totalPaid: 2000,
+        percentage: 80,
+      },
     ]);
     mockCalculateCategorySpending.mockReturnValue([
-      { categoryId: "cat-1", categoryName: "Food", categoryEmoji: "F", totalAmount: 2000, expenseCount: 2, percentage: 80 },
+      {
+        categoryId: "cat-1",
+        categoryName: "Food",
+        categoryEmoji: "F",
+        totalAmount: 2000,
+        expenseCount: 2,
+        percentage: 80,
+      },
     ]);
 
     const dependencies = {
@@ -155,10 +167,22 @@ describe("StatisticsService.computeStatistics", () => {
       totalCost: 2500,
       currency: "USD",
       participantSpending: [
-        { participantId: "p1", participantName: "Alex", totalPaid: 2000, percentage: 80 },
+        {
+          participantId: "p1",
+          participantName: "Alex",
+          totalPaid: 2000,
+          percentage: 80,
+        },
       ],
       categorySpending: [
-        { categoryId: "cat-1", categoryName: "Food", categoryEmoji: "F", totalAmount: 2000, expenseCount: 2, percentage: 80 },
+        {
+          categoryId: "cat-1",
+          categoryName: "Food",
+          categoryEmoji: "F",
+          totalAmount: 2000,
+          expenseCount: 2,
+          percentage: 80,
+        },
       ],
     });
     expect(new Date(result.timestamp).toISOString()).toBe(result.timestamp);

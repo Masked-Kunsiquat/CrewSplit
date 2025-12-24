@@ -96,8 +96,10 @@ describe("calculateCategorySpending", () => {
   it("returns an empty list when there are no expenses", () => {
     // Arrange
     const categories = [createCategory("c1", "Food")];
-    const expenses: { categoryId?: string | null; convertedAmountMinor: number }[] =
-      [];
+    const expenses: {
+      categoryId?: string | null;
+      convertedAmountMinor: number;
+    }[] = [];
 
     // Act
     const result = calculateCategorySpending(expenses, categories);

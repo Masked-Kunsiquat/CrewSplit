@@ -20,7 +20,8 @@ jest.mock("expo-router", () => ({
   useFocusEffect: jest.fn(),
 }));
 
-const flushPromises = () => new Promise<void>((resolve) => setImmediate(resolve));
+const flushPromises = () =>
+  new Promise<void>((resolve) => setImmediate(resolve));
 
 const createStatistics = (
   overrides: Partial<TripStatistics> = {},
@@ -32,7 +33,7 @@ const createStatistics = (
   timestamp: overrides.timestamp ?? "2024-01-01T00:00:00.000Z",
 });
 
-const createDeferred = <T,>() => {
+const createDeferred = <T>() => {
   let resolve!: (value: T) => void;
   let reject!: (reason?: unknown) => void;
   const promise = new Promise<T>((res, rej) => {
@@ -142,9 +143,9 @@ describe("useStatistics", () => {
     expect(mockComputeStatistics).not.toHaveBeenCalled();
     expect(result?.statistics.totalCost).toBe(0);
     expect(result?.statistics.currency).toBe("USD");
-    expect(
-      new Date(result?.statistics.timestamp ?? "").toISOString(),
-    ).toBe(result?.statistics.timestamp);
+    expect(new Date(result?.statistics.timestamp ?? "").toISOString()).toBe(
+      result?.statistics.timestamp,
+    );
 
     harness.rerender(null);
     await act(async () => {
