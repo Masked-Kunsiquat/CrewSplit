@@ -65,6 +65,17 @@ export default function ExpenseDetailsScreen() {
   return <ExpenseDetailsContent tripId={tripId} expenseId={expenseId} />;
 }
 
+/**
+ * Render the expense details screen for a specific trip expense.
+ *
+ * Displays the expense amounts (original, converted to trip currency, and optional display currency),
+ * participant split details, metadata (paid by, date, category, notes), and UI for editing or deleting the expense.
+ * Handles pull-to-refresh, FX rate staleness and recovery (modal to fetch/enter rates), and delete confirmation.
+ *
+ * @param tripId - The trip identifier containing the expense
+ * @param expenseId - The expense identifier to display
+ * @returns The React element tree for the Expense Details screen
+ */
 function ExpenseDetailsContent({
   tripId,
   expenseId,
