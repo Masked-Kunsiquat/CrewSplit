@@ -30,8 +30,11 @@ interface StatisticsServiceDependencies {
 
 const buildCategoryReferences = (
   expenses: ExpenseWithCategory[],
-): Array<{ id: string; name: string; emoji: string | null }> => {
-  const categories = new Map<string, { id: string; name: string; emoji: string | null }>();
+): { id: string; name: string; emoji: string | null }[] => {
+  const categories = new Map<
+    string,
+    { id: string; name: string; emoji: string | null }
+  >();
 
   for (const expense of expenses) {
     if (!expense.categoryId || !expense.categoryName) continue;
@@ -59,11 +62,10 @@ export const computeStatistics = async (
     throw error;
   }
 
-  const statisticsRepository =
-    dependencies.statisticsRepository ?? {
-      getExpensesWithCategories,
-      getTripCurrency,
-    };
+  const statisticsRepository = dependencies.statisticsRepository ?? {
+    getExpensesWithCategories,
+    getTripCurrency,
+  };
   const participantRepository = dependencies.participantRepository ?? {
     getParticipantsForTrip,
   };

@@ -56,7 +56,10 @@ export const getExpensesWithCategories = async (
       updatedAt: expensesTable.updatedAt,
     })
     .from(expensesTable)
-    .leftJoin(expenseCategories, eq(expensesTable.categoryId, expenseCategories.id))
+    .leftJoin(
+      expenseCategories,
+      eq(expensesTable.categoryId, expenseCategories.id),
+    )
     .where(eq(expensesTable.tripId, tripId));
 
   if (!rows.length) {
