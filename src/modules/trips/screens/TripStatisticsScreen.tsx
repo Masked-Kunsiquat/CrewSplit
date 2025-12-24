@@ -187,6 +187,8 @@ export default function TripStatisticsScreen() {
                   <Pressable
                     key={participant.participantId}
                     style={styles.participantRow}
+                    accessibilityRole="button"
+                    accessibilityLabel={`View participant ${participant.participantName}`}
                     onPress={() =>
                       router.push(
                         `/trips/${tripId}/participants/${participant.participantId}`,
