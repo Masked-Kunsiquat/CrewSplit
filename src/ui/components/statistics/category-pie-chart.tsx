@@ -38,10 +38,10 @@ export const CategoryPieChart: React.FC<CategoryPieChartProps> = ({
   innerRadius = 0,
   accessibilityLabel,
 }) => {
-  // Load font for labels - use a font from node_modules
+  // Load font for labels
   const font = useFont(
-    require("@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/Feather.ttf"),
-    14
+    require("../../../../assets/fonts/Roboto-Medium.ttf"),
+    12
   );
 
   // Don't render if no data
