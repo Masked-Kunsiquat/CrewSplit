@@ -129,7 +129,6 @@ export default function ExpensesListScreen() {
                 {getCategoryIcon({
                   categoryName: category.name,
                   size: 24,
-                  color: theme.colors.primary,
                 })}
               </View>
             </Pressable>
@@ -173,7 +172,6 @@ export default function ExpensesListScreen() {
                         {getCategoryIcon({
                           categoryName: category.name,
                           size: 20,
-                          color: theme.colors.primary,
                         })}
                       </View>
                     )}

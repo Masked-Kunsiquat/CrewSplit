@@ -25,7 +25,12 @@ export default function TripStatisticsScreen() {
   const { id } = useLocalSearchParams<{ id?: string }>();
   const tripId = id?.trim() || null;
 
-  const { trip, loading: tripLoading, error: tripError, refetch: refetchTrip } = useTripById(tripId);
+  const {
+    trip,
+    loading: tripLoading,
+    error: tripError,
+    refetch: refetchTrip,
+  } = useTripById(tripId);
   const {
     statistics,
     isLoading: statsLoading,
@@ -110,7 +115,10 @@ export default function TripStatisticsScreen() {
               stats={[
                 {
                   label: "Total Spent",
-                  value: CurrencyUtils.formatMinor(statistics.totalCost, statistics.currency),
+                  value: CurrencyUtils.formatMinor(
+                    statistics.totalCost,
+                    statistics.currency,
+                  ),
                 },
                 {
                   label: "Categories",
@@ -133,7 +141,10 @@ export default function TripStatisticsScreen() {
                       index % theme.colors.chartColors.length
                     ];
                   return (
-                    <View key={cat.categoryId || index} style={styles.categoryRow}>
+                    <View
+                      key={cat.categoryId || index}
+                      style={styles.categoryRow}
+                    >
                       <View style={styles.categoryLeft}>
                         <View style={styles.categoryIconContainer}>
                           {getCategoryIcon({
@@ -177,7 +188,10 @@ export default function TripStatisticsScreen() {
                     </Text>
                     <View style={styles.participantStats}>
                       <Text style={styles.participantAmount}>
-                        {CurrencyUtils.formatMinor(participant.totalPaid, statistics.currency)}
+                        {CurrencyUtils.formatMinor(
+                          participant.totalPaid,
+                          statistics.currency,
+                        )}
                       </Text>
                       <Text style={styles.participantPercentage}>
                         {participant.percentage.toFixed(1)}%

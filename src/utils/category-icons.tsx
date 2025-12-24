@@ -60,11 +60,7 @@ export function getCategoryIcon({
   switch (categoryName) {
     case "Travel & Transportation":
       return (
-        <MaterialCommunityIcons
-          name="airplane"
-          size={size}
-          color={iconColor}
-        />
+        <MaterialCommunityIcons name="airplane" size={size} color={iconColor} />
       );
     case "Food & Drinks":
       return (

@@ -494,7 +494,6 @@ function ParticipantDetailsContent({
                           {getCategoryIcon({
                             categoryName,
                             size: 20,
-                            color: theme.colors.primary,
                           })}
                         </View>
                         <Text
@@ -560,7 +559,6 @@ function ParticipantDetailsContent({
                           {getCategoryIcon({
                             categoryName,
                             size: 20,
-                            color: theme.colors.primary,
                           })}
                         </View>
                         <Text style={styles.categoryName}>{categoryName}</Text>

@@ -409,7 +409,6 @@ export function ExpenseForm({
               {getCategoryIcon({
                 categoryName: cat.name,
                 size: 24,
-                color: theme.colors.primary,
               })}
             </View>
           ),
@@ -423,7 +422,6 @@ export function ExpenseForm({
                 {getCategoryIcon({
                   categoryName: "Other",
                   size: 24,
-                  color: theme.colors.primary,
                 })}
               </View>
             ),
