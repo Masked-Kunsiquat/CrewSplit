@@ -51,11 +51,33 @@ export class ImportService {
     }
 
     // Read file content
-    const content = await FileSystem.readAsStringAsync(result.assets[0].uri, {
+    const fileUri = result.assets[0].uri;
+    const fileName = result.assets[0].name || "unknown";
+    const content = await FileSystem.readAsStringAsync(fileUri, {
       encoding: FileSystem.EncodingType.UTF8,
     });
 
-    const exportData = JSON.parse(content);
+    // Parse JSON with error handling
+    let exportData: any;
+    try {
+      exportData = JSON.parse(content);
+    } catch (error) {
+      // Provide context for JSON parsing errors
+      const preview =
+        content.length > 100 ? `${content.slice(0, 100)}...` : content;
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown parsing error";
+
+      throw new InvalidExportFileError(
+        `Failed to parse JSON from file "${fileName}": ${errorMessage}`,
+        {
+          fileName,
+          fileUri,
+          contentPreview: preview,
+          originalError: errorMessage,
+        },
+      );
+    }
 
     return this.importFromData(exportData, conflictResolution, options);
   }
