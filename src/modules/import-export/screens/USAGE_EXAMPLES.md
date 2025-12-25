@@ -4,20 +4,54 @@ This document provides examples of how to use the Import/Export UI screens in Cr
 
 ## ImportExportScreen
 
-The `ImportExportScreen` is a dedicated screen for import/export operations. It can be accessed from the main menu or settings.
+The `ImportExportScreen` is a dedicated screen for import/export operations. It can be accessed from the main menu or settings using expo-router's file-based routing.
 
-### Basic Usage
+### Basic Usage with File-Based Routing
+
+Create a route file at `app/import-export.tsx` (or `app/(tabs)/import-export.tsx` if using tab navigation):
 
 ```typescript
-// In your app navigation (e.g., app/_layout.tsx or routing setup)
+// app/import-export.tsx
 import { ImportExportScreen } from '@modules/import-export';
 
-// Then use it in your navigation structure
-<Stack.Screen
-  name="import-export"
-  component={ImportExportScreen}
-  options={{ title: "Import & Export" }}
-/>
+// Expo Router automatically uses the default export as the screen component
+export default ImportExportScreen;
+
+// Optional: Configure screen options
+export const options = {
+  title: "Import & Export",
+  headerShown: true,
+};
+```
+
+### Navigating to Import/Export Screen
+
+Use expo-router's navigation to push to the screen:
+
+```typescript
+import { useRouter } from 'expo-router';
+import { Link } from 'expo-router';
+
+// Option 1: Using router.push()
+function SettingsMenu() {
+  const router = useRouter();
+
+  return (
+    <Button
+      title="Import/Export"
+      onPress={() => router.push('/import-export')}
+    />
+  );
+}
+
+// Option 2: Using Link component
+function SettingsMenu() {
+  return (
+    <Link href="/import-export" asChild>
+      <Button title="Import/Export" />
+    </Link>
+  );
+}
 ```
 
 ### Navigation with Trip Context
