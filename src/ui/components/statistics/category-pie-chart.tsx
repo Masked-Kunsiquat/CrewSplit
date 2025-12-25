@@ -6,6 +6,7 @@
 import React from "react";
 import { View, StyleSheet } from "react-native";
 import { Pie, PolarChart } from "victory-native";
+import { useFont } from "@shopify/react-native-skia";
 import { theme } from "@ui/theme";
 
 export interface CategoryPieData {
@@ -37,6 +38,12 @@ export const CategoryPieChart: React.FC<CategoryPieChartProps> = ({
   innerRadius = 0,
   accessibilityLabel,
 }) => {
+  // Load font for labels
+  const font = useFont(
+    require("../../../../assets/fonts/Roboto-Medium.ttf"),
+    12,
+  );
+
   // Don't render if no data
   if (!data || data.length === 0) {
     return null;
@@ -53,6 +60,11 @@ export const CategoryPieChart: React.FC<CategoryPieChartProps> = ({
     originalData: item,
   }));
 
+  // Don't render until font is loaded
+  if (!font) {
+    return null;
+  }
+
   const computedAccessibilityLabel =
     accessibilityLabel ||
     `Category spending pie chart with ${data.length} categories`;
@@ -63,29 +75,16 @@ export const CategoryPieChart: React.FC<CategoryPieChartProps> = ({
       accessible
       accessibilityLabel={computedAccessibilityLabel}
     >
-      <PolarChart
-        data={chartData}
-        labelKey="label"
-        valueKey="value"
-        colorKey="color"
-      >
-        <Pie.Chart innerRadius={innerRadius}>
-          {({ slice }) => {
-            // Use slice index from the original data array
-            const sliceIndex = chartData.findIndex(
-              (d) => d.label === slice.label && d.value === slice.value,
-            );
-            const percentage =
-              sliceIndex !== -1 ? chartData[sliceIndex].percentage : 0;
-
-            return (
-              <>
-                {showLabels && <Pie.Label text={`${percentage.toFixed(0)}%`} />}
-              </>
-            );
-          }}
-        </Pie.Chart>
-      </PolarChart>
+      <View style={{ flex: 1, width: size, height: size }}>
+        <PolarChart
+          data={chartData}
+          labelKey="label"
+          valueKey="value"
+          colorKey="color"
+        >
+          <Pie.Chart innerRadius={innerRadius} />
+        </PolarChart>
+      </View>
     </View>
   );
 };

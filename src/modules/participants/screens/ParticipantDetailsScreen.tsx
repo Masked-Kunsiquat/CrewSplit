@@ -20,6 +20,8 @@ import { getCategoryIcon } from "@utils/category-icons";
 import { cachedFxRateProvider } from "@modules/fx-rates/provider";
 import type { ExpenseSplit } from "@modules/expenses/types";
 import { getExpenseSplits } from "@modules/expenses/repository";
+import { useSettlements } from "@modules/settlements/hooks/use-settlements";
+import { TransactionRow } from "@modules/settlements/components/TransactionRow";
 
 type ViewMode = "paid-by" | "part-of";
 
@@ -91,12 +93,19 @@ function ParticipantDetailsContent({
     refetch: refetchExpenses,
   } = useExpenses(tripId);
   const { categories } = useExpenseCategories(tripId);
+  const {
+    settlements: recordedSettlements,
+    loading: settlementsLoading,
+    error: settlementsError,
+    refetch: refetchSettlements,
+  } = useSettlements(tripId);
 
   // Pull-to-refresh
   const refreshControl = useRefreshControl([
     refetchParticipants,
     refetchSettlement,
     refetchExpenses,
+    refetchSettlements,
   ]);
 
   // Find the participant
@@ -119,6 +128,26 @@ function ParticipantDetailsContent({
       ),
     [settlement.settlements, participantId],
   );
+
+  const participantTransactions = useMemo(
+    () =>
+      recordedSettlements.filter(
+        (transaction) =>
+          transaction.fromParticipantId === participantId ||
+          transaction.toParticipantId === participantId,
+      ),
+    [recordedSettlements, participantId],
+  );
+
+  const sortedTransactions = useMemo(
+    () =>
+      [...participantTransactions].sort(
+        (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
+      ),
+    [participantTransactions],
+  );
+
+  const visibleTransactions = sortedTransactions.slice(0, 3);
 
   // Load expense splits for all expenses
   useEffect(() => {
@@ -431,6 +460,63 @@ function ParticipantDetailsContent({
           )}
         </Card>
 
+        {/* Transactions */}
+        <Card style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Transactions</Text>
+            {participantTransactions.length > 0 && (
+              <Pressable
+                onPress={() => router.push(`/trips/${tripId}/settlement`)}
+                accessibilityRole="button"
+                accessibilityLabel="View all transactions"
+              >
+                <Text style={styles.sectionLink}>View all</Text>
+              </Pressable>
+            )}
+          </View>
+          {settlementsLoading && (
+            <Text style={styles.sectionHelper}>Loading transactions...</Text>
+          )}
+          {!settlementsLoading && settlementsError && (
+            <Text style={styles.sectionHelper}>
+              {settlementsError.message || "Failed to load transactions."}
+            </Text>
+          )}
+          {!settlementsLoading &&
+            !settlementsError &&
+            participantTransactions.length === 0 && (
+              <Text style={styles.sectionHelper}>
+                No payments recorded for this participant yet.
+              </Text>
+            )}
+          {!settlementsLoading &&
+            !settlementsError &&
+            participantTransactions.length > 0 &&
+            visibleTransactions.map((transaction) => (
+              <TransactionRow
+                key={transaction.id}
+                settlement={transaction}
+                onPress={() =>
+                  router.push(`/trips/${tripId}/settlements/${transaction.id}`)
+                }
+              />
+            ))}
+          {!settlementsLoading &&
+            !settlementsError &&
+            participantTransactions.length > visibleTransactions.length && (
+              <Pressable
+                style={styles.sectionFooterLink}
+                onPress={() => router.push(`/trips/${tripId}/settlement`)}
+                accessibilityRole="button"
+                accessibilityLabel="View all transactions"
+              >
+                <Text style={styles.sectionLink}>
+                  View all {participantTransactions.length} transactions →
+                </Text>
+              </Pressable>
+            )}
+        </Card>
+
         {/* Expenses Section */}
         <Card style={styles.section}>
           <View style={styles.expenseHeaderContainer}>
@@ -675,6 +761,24 @@ const styles = StyleSheet.create({
     fontWeight: theme.typography.semibold,
     color: theme.colors.text,
     marginBottom: theme.spacing.xs,
+  },
+  sectionHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: theme.spacing.sm,
+  },
+  sectionLink: {
+    fontSize: theme.typography.sm,
+    color: theme.colors.primary,
+    fontWeight: theme.typography.semibold,
+  },
+  sectionHelper: {
+    fontSize: theme.typography.sm,
+    color: theme.colors.textSecondary,
+  },
+  sectionFooterLink: {
+    paddingTop: theme.spacing.xs,
   },
   settlementList: {
     gap: theme.spacing.sm,
