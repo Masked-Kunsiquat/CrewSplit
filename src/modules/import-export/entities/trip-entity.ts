@@ -110,15 +110,11 @@ export const tripEntity: ExportableEntity<Trip> = {
 
             result.successCount++;
           } else if (context.conflictResolution === "generate_new_ids") {
-            result.errors.push({
-              recordId: record.id,
-              recordIndex: i,
-              message:
-                "generate_new_ids strategy not yet implemented for trips",
-              code: "NOT_IMPLEMENTED",
-            });
-            result.errorCount++;
-            continue;
+            const error = new Error(
+              `Conflict resolution strategy 'generate_new_ids' is not yet implemented for entity 'trips'`,
+            ) as Error & { code: string };
+            error.code = "NOT_IMPLEMENTED";
+            throw error;
           }
         } else {
           // No conflict - insert new record
