@@ -3,6 +3,14 @@
  * Defines interfaces for extensible entity registration and data exchange
  */
 
+import { db } from "@db/client";
+
+/**
+ * Transaction type from Drizzle ORM
+ * This is the type of the `tx` parameter in db.transaction((tx) => {...})
+ */
+export type Transaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
+
 /**
  * Entity scope determines when/how entity data is exported
  * - global: Always exported (user settings, system categories, FX rates)
@@ -40,6 +48,9 @@ export interface ImportContext {
 
   /** Dry run - validate without writing to database */
   dryRun: boolean;
+
+  /** Database transaction (required for rollback on error) */
+  tx?: Transaction;
 }
 
 /**

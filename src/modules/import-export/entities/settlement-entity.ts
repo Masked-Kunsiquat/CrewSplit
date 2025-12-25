@@ -75,6 +75,9 @@ export const settlementEntity: ExportableEntity<Settlement> = {
       return result; // Validation only
     }
 
+    // Use transaction if provided, otherwise fall back to global db
+    const dbClient = context.tx ?? db;
+
     // Validate foreign key references if enabled
     if (context.validateForeignKeys) {
       const tripIds = [...new Set(records.map((r) => r.tripId))];
@@ -91,14 +94,14 @@ export const settlementEntity: ExportableEntity<Settlement> = {
       ];
 
       // Check trips
-      const existingTrips = await db
+      const existingTrips = await dbClient
         .select({ id: tripsTable.id })
         .from(tripsTable)
         .where(inArray(tripsTable.id, tripIds));
       const existingTripIdSet = new Set(existingTrips.map((t) => t.id));
 
       // Check participants
-      const existingParticipants = await db
+      const existingParticipants = await dbClient
         .select({ id: participantsTable.id })
         .from(participantsTable)
         .where(inArray(participantsTable.id, participantIds));
@@ -109,7 +112,7 @@ export const settlementEntity: ExportableEntity<Settlement> = {
       // Check expense splits (only if there are non-null expenseSplitIds)
       let existingExpenseSplitIdSet = new Set<string>();
       if (expenseSplitIds.length > 0) {
-        const existingExpenseSplits = await db
+        const existingExpenseSplits = await dbClient
           .select({ id: expenseSplitsTable.id })
           .from(expenseSplitsTable)
           .where(inArray(expenseSplitsTable.id, expenseSplitIds as string[]));
@@ -181,7 +184,7 @@ export const settlementEntity: ExportableEntity<Settlement> = {
 
       try {
         // Check for ID conflicts
-        const existing = await db
+        const existing = await dbClient
           .select()
           .from(settlementsTable)
           .where(eq(settlementsTable.id, record.id))
@@ -194,7 +197,7 @@ export const settlementEntity: ExportableEntity<Settlement> = {
             continue;
           } else if (context.conflictResolution === "replace") {
             // Update existing record
-            await db
+            await dbClient
               .update(settlementsTable)
               .set({
                 tripId: record.tripId,
@@ -226,7 +229,7 @@ export const settlementEntity: ExportableEntity<Settlement> = {
           }
         } else {
           // No conflict - insert new record
-          await db.insert(settlementsTable).values(record);
+          await dbClient.insert(settlementsTable).values(record);
           result.successCount++;
         }
       } catch (error) {

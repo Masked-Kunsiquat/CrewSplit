@@ -72,6 +72,9 @@ export const expenseEntity: ExportableEntity<Expense> = {
       return result; // Validation only
     }
 
+    // Use transaction if provided, otherwise fall back to global db
+    const dbClient = context.tx ?? db;
+
     // Validate foreign key references if enabled
     if (context.validateForeignKeys) {
       const tripIds = [...new Set(records.map((r) => r.tripId))];
@@ -85,14 +88,14 @@ export const expenseEntity: ExportableEntity<Expense> = {
       ];
 
       // Check trips
-      const existingTrips = await db
+      const existingTrips = await dbClient
         .select({ id: tripsTable.id })
         .from(tripsTable)
         .where(inArray(tripsTable.id, tripIds));
       const existingTripIdSet = new Set(existingTrips.map((t) => t.id));
 
       // Check participants
-      const existingParticipants = await db
+      const existingParticipants = await dbClient
         .select({ id: participantsTable.id })
         .from(participantsTable)
         .where(inArray(participantsTable.id, participantIds));
@@ -103,7 +106,7 @@ export const expenseEntity: ExportableEntity<Expense> = {
       // Check categories (if any)
       let existingCategoryIdSet = new Set<string>();
       if (categoryIds.length > 0) {
-        const existingCategories = await db
+        const existingCategories = await dbClient
           .select({ id: expenseCategoriesTable.id })
           .from(expenseCategoriesTable)
           .where(inArray(expenseCategoriesTable.id, categoryIds));
@@ -161,7 +164,7 @@ export const expenseEntity: ExportableEntity<Expense> = {
 
       try {
         // Check for ID conflicts
-        const existing = await db
+        const existing = await dbClient
           .select()
           .from(expensesTable)
           .where(eq(expensesTable.id, record.id))
@@ -174,7 +177,7 @@ export const expenseEntity: ExportableEntity<Expense> = {
             continue;
           } else if (context.conflictResolution === "replace") {
             // Update existing record
-            await db
+            await dbClient
               .update(expensesTable)
               .set({
                 tripId: record.tripId,
@@ -208,7 +211,7 @@ export const expenseEntity: ExportableEntity<Expense> = {
           }
         } else {
           // No conflict - insert new record
-          await db.insert(expensesTable).values(record);
+          await dbClient.insert(expensesTable).values(record);
           result.successCount++;
         }
       } catch (error) {

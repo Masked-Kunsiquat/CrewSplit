@@ -133,16 +133,18 @@ export class ImportService {
     }
 
     // Phase 4: Import in transaction (all or nothing)
-    const context: ImportContext = {
-      conflictResolution,
-      validateForeignKeys: options?.validateForeignKeys ?? true,
-      dryRun: options?.dryRun ?? false,
-    };
-
     const results: ImportResult[] = [];
 
     // Import in transaction for atomicity
     await db.transaction(async (tx) => {
+      // Create context with transaction
+      const context: ImportContext = {
+        conflictResolution,
+        validateForeignKeys: options?.validateForeignKeys ?? true,
+        dryRun: options?.dryRun ?? false,
+        tx, // Pass transaction for rollback support
+      };
+
       // Import in dependency order (parents before children)
       for (const entity of entities) {
         const records = validatedData.data[entity.name] ?? [];

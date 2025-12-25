@@ -82,12 +82,15 @@ export const expenseCategoryEntity: ExportableEntity<ExpenseCategory> = {
       return result; // Validation only
     }
 
+    // Use transaction if provided, otherwise fall back to global db
+    const dbClient = context.tx ?? db;
+
     for (let i = 0; i < records.length; i++) {
       const record = records[i];
 
       try {
         // Check for ID conflicts
-        const existing = await db
+        const existing = await dbClient
           .select()
           .from(expenseCategoriesTable)
           .where(eq(expenseCategoriesTable.id, record.id))
@@ -107,7 +110,7 @@ export const expenseCategoryEntity: ExportableEntity<ExpenseCategory> = {
             continue;
           } else if (context.conflictResolution === "replace") {
             // Update existing record (non-system categories only)
-            await db
+            await dbClient
               .update(expenseCategoriesTable)
               .set({
                 name: record.name,
@@ -134,7 +137,7 @@ export const expenseCategoryEntity: ExportableEntity<ExpenseCategory> = {
           }
         } else {
           // No conflict - insert new record
-          await db.insert(expenseCategoriesTable).values(record);
+          await dbClient.insert(expenseCategoriesTable).values(record);
           result.successCount++;
         }
       } catch (error) {

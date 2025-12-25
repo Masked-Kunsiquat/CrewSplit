@@ -72,10 +72,13 @@ export const participantEntity: ExportableEntity<Participant> = {
       return result; // Validation only
     }
 
+    // Use transaction if provided, otherwise fall back to global db
+    const dbClient = context.tx ?? db;
+
     // Validate foreign key references if enabled
     if (context.validateForeignKeys) {
       const tripIds = [...new Set(records.map((r) => r.tripId))];
-      const existingTrips = await db
+      const existingTrips = await dbClient
         .select({ id: tripsTable.id })
         .from(tripsTable)
         .where(inArray(tripsTable.id, tripIds));
@@ -107,7 +110,7 @@ export const participantEntity: ExportableEntity<Participant> = {
 
       try {
         // Check for ID conflicts
-        const existing = await db
+        const existing = await dbClient
           .select()
           .from(participantsTable)
           .where(eq(participantsTable.id, record.id))
@@ -120,7 +123,7 @@ export const participantEntity: ExportableEntity<Participant> = {
             continue;
           } else if (context.conflictResolution === "replace") {
             // Update existing record
-            await db
+            await dbClient
               .update(participantsTable)
               .set({
                 tripId: record.tripId,
@@ -144,7 +147,7 @@ export const participantEntity: ExportableEntity<Participant> = {
           }
         } else {
           // No conflict - insert new record
-          await db.insert(participantsTable).values(record);
+          await dbClient.insert(participantsTable).values(record);
           result.successCount++;
         }
       } catch (error) {

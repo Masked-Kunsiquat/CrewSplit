@@ -80,20 +80,23 @@ export const expenseSplitEntity: ExportableEntity<ExpenseSplit> = {
       return result; // Validation only
     }
 
+    // Use transaction if provided, otherwise fall back to global db
+    const dbClient = context.tx ?? db;
+
     // Validate foreign key references if enabled
     if (context.validateForeignKeys) {
       const expenseIds = [...new Set(records.map((r) => r.expenseId))];
       const participantIds = [...new Set(records.map((r) => r.participantId))];
 
       // Check expenses
-      const existingExpenses = await db
+      const existingExpenses = await dbClient
         .select({ id: expensesTable.id })
         .from(expensesTable)
         .where(inArray(expensesTable.id, expenseIds));
       const existingExpenseIdSet = new Set(existingExpenses.map((e) => e.id));
 
       // Check participants
-      const existingParticipants = await db
+      const existingParticipants = await dbClient
         .select({ id: participantsTable.id })
         .from(participantsTable)
         .where(inArray(participantsTable.id, participantIds));
@@ -138,7 +141,7 @@ export const expenseSplitEntity: ExportableEntity<ExpenseSplit> = {
 
       try {
         // Check for ID conflicts
-        const existing = await db
+        const existing = await dbClient
           .select()
           .from(expenseSplitsTable)
           .where(eq(expenseSplitsTable.id, record.id))
@@ -151,7 +154,7 @@ export const expenseSplitEntity: ExportableEntity<ExpenseSplit> = {
             continue;
           } else if (context.conflictResolution === "replace") {
             // Update existing record
-            await db
+            await dbClient
               .update(expenseSplitsTable)
               .set({
                 expenseId: record.expenseId,
@@ -177,7 +180,7 @@ export const expenseSplitEntity: ExportableEntity<ExpenseSplit> = {
           }
         } else {
           // No conflict - insert new record
-          await db.insert(expenseSplitsTable).values(record);
+          await dbClient.insert(expenseSplitsTable).values(record);
           result.successCount++;
         }
       } catch (error) {

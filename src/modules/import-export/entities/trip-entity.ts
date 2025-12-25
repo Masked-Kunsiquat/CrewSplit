@@ -70,12 +70,15 @@ export const tripEntity: ExportableEntity<Trip> = {
       return result; // Validation only
     }
 
+    // Use transaction if provided, otherwise fall back to global db
+    const dbClient = context.tx ?? db;
+
     for (let i = 0; i < records.length; i++) {
       const record = records[i];
 
       try {
         // Check for ID conflicts
-        const existing = await db
+        const existing = await dbClient
           .select()
           .from(tripsTable)
           .where(eq(tripsTable.id, record.id))
@@ -88,7 +91,7 @@ export const tripEntity: ExportableEntity<Trip> = {
             continue;
           } else if (context.conflictResolution === "replace") {
             // Update existing record
-            await db
+            await dbClient
               .update(tripsTable)
               .set({
                 name: record.name,
@@ -119,7 +122,7 @@ export const tripEntity: ExportableEntity<Trip> = {
           }
         } else {
           // No conflict - insert new record
-          await db.insert(tripsTable).values(record);
+          await dbClient.insert(tripsTable).values(record);
           result.successCount++;
         }
       } catch (error) {

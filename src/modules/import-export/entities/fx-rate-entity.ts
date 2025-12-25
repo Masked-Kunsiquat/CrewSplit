@@ -64,12 +64,15 @@ export const fxRateEntity: ExportableEntity<FxRate> = {
       return result; // Validation only
     }
 
+    // Use transaction if provided, otherwise fall back to global db
+    const dbClient = context.tx ?? db;
+
     for (let i = 0; i < records.length; i++) {
       const record = records[i];
 
       try {
         // Check for ID conflicts
-        const existing = await db
+        const existing = await dbClient
           .select()
           .from(fxRatesTable)
           .where(eq(fxRatesTable.id, record.id))
@@ -82,7 +85,7 @@ export const fxRateEntity: ExportableEntity<FxRate> = {
             continue;
           } else if (context.conflictResolution === "replace") {
             // Update existing record
-            await db
+            await dbClient
               .update(fxRatesTable)
               .set({
                 baseCurrency: record.baseCurrency,
@@ -111,7 +114,7 @@ export const fxRateEntity: ExportableEntity<FxRate> = {
           }
         } else {
           // No conflict - insert new record
-          await db.insert(fxRatesTable).values(record);
+          await dbClient.insert(fxRatesTable).values(record);
           result.successCount++;
         }
       } catch (error) {
