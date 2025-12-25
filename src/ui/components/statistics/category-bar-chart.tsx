@@ -6,7 +6,12 @@
 import React from "react";
 import { View, StyleSheet } from "react-native";
 import { CartesianChart, Bar, useChartPressState } from "victory-native";
-import { Circle, RoundedRect, Text as SkiaText, useFont } from "@shopify/react-native-skia";
+import {
+  Circle,
+  RoundedRect,
+  Text as SkiaText,
+  useFont,
+} from "@shopify/react-native-skia";
 import { useDerivedValue } from "react-native-reanimated";
 import { theme } from "../../theme";
 import { CurrencyUtils } from "@utils/currency";
@@ -39,7 +44,7 @@ export const CategoryBarChart: React.FC<CategoryBarChartProps> = ({
 }) => {
   const font = useFont(
     require("../../../../assets/fonts/Roboto-Medium.ttf"),
-    14
+    14,
   );
 
   const { state, isActive } = useChartPressState({ x: 0, y: { amount: 0 } });

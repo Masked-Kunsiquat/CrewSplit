@@ -41,7 +41,7 @@ export const CategoryPieChart: React.FC<CategoryPieChartProps> = ({
   // Load font for labels
   const font = useFont(
     require("../../../../assets/fonts/Roboto-Medium.ttf"),
-    12
+    12,
   );
 
   // Don't render if no data

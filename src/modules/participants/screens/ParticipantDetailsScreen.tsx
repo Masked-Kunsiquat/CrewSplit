@@ -497,9 +497,7 @@ function ParticipantDetailsContent({
                 key={transaction.id}
                 settlement={transaction}
                 onPress={() =>
-                  router.push(
-                    `/trips/${tripId}/settlements/${transaction.id}`,
-                  )
+                  router.push(`/trips/${tripId}/settlements/${transaction.id}`)
                 }
               />
             ))}

@@ -12,7 +12,11 @@ import { View, Text, StyleSheet, ScrollView, Pressable } from "react-native";
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
 import { theme } from "@ui/theme";
 import { Card, LoadingScreen, ErrorScreen } from "@ui/components";
-import { StatsSummaryCard, CategoryPieChart, CategoryBarChart } from "@ui/components/statistics";
+import {
+  StatsSummaryCard,
+  CategoryPieChart,
+  CategoryBarChart,
+} from "@ui/components/statistics";
 import { useTripById } from "../hooks/use-trips";
 import { useStatistics } from "@modules/statistics/hooks/use-statistics";
 import { CurrencyUtils } from "@utils/currency";
@@ -164,7 +168,10 @@ export default function TripStatisticsScreen() {
                       categoryName: cat.categoryName || "Uncategorized",
                       amount: cat.totalAmount,
                       percentage: cat.percentage,
-                      color: theme.colors.chartColors[index % theme.colors.chartColors.length],
+                      color:
+                        theme.colors.chartColors[
+                          index % theme.colors.chartColors.length
+                        ],
                       emoji: cat.categoryEmoji || undefined,
                     }))}
                     size={250}
@@ -187,7 +194,12 @@ export default function TripStatisticsScreen() {
                         style={styles.categoryRow}
                       >
                         <View style={styles.categoryLeft}>
-                          <View style={[styles.colorDot, { backgroundColor: color }]} />
+                          <View
+                            style={[
+                              styles.colorDot,
+                              { backgroundColor: color },
+                            ]}
+                          />
                           <View style={styles.categoryIconContainer}>
                             {getCategoryIcon({
                               categoryName: cat.categoryName || "Other",
@@ -225,11 +237,16 @@ export default function TripStatisticsScreen() {
                 {/* Bar Chart */}
                 <View style={styles.chartContainer}>
                   <CategoryBarChart
-                    data={statistics.participantSpending.map((participant, index) => ({
-                      categoryName: participant.participantName,
-                      amount: participant.totalPaid,
-                      color: theme.colors.chartColors[index % theme.colors.chartColors.length],
-                    }))}
+                    data={statistics.participantSpending.map(
+                      (participant, index) => ({
+                        categoryName: participant.participantName,
+                        amount: participant.totalPaid,
+                        color:
+                          theme.colors.chartColors[
+                            index % theme.colors.chartColors.length
+                          ],
+                      }),
+                    )}
                     height={250}
                     currency={statistics.currency}
                     accessibilityLabel={`Participant spending bar chart with ${statistics.participantSpending.length} participants`}
@@ -239,7 +256,10 @@ export default function TripStatisticsScreen() {
                 {/* Participant List */}
                 <View style={styles.participantList}>
                   {statistics.participantSpending.map((participant, index) => {
-                    const color = theme.colors.chartColors[index % theme.colors.chartColors.length];
+                    const color =
+                      theme.colors.chartColors[
+                        index % theme.colors.chartColors.length
+                      ];
                     return (
                       <Pressable
                         key={participant.participantId}
@@ -253,7 +273,12 @@ export default function TripStatisticsScreen() {
                         }
                       >
                         <View style={styles.participantLeft}>
-                          <View style={[styles.colorDot, { backgroundColor: color }]} />
+                          <View
+                            style={[
+                              styles.colorDot,
+                              { backgroundColor: color },
+                            ]}
+                          />
                           <Text style={styles.participantName}>
                             {participant.participantName}
                           </Text>
