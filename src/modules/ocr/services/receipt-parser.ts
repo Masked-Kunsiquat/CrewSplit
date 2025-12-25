@@ -39,14 +39,10 @@ const CURRENCY_SYMBOLS: Record<string, string> = {
  * Ordered by priority - try "Total" patterns first
  */
 const AMOUNT_PATTERNS = [
-  // Total with label (any variant): "Total $123.45", "Take-Out Total 123.45", etc.
-  /(?:take-?out\s+)?(?:total|balance|amount\s+due|grand\s+total)[\s:]*\$?\s*(\d{1,3}(?:[,\s]\d{3})*\.\d{2})/i,
-  // Subtotal (fallback if no Total found)
-  /(?:subtotal|sub\s*total|sub-total)[\s:]*\$?\s*(\d{1,3}(?:[,\s]\d{3})*\.\d{2})/i,
-  // Amount on its own line after Total label (handle multi-line)
-  /(?:take-?out\s+)?(?:total|balance|amount\s+due)[\s:]*\n[\s]*(\d{1,3}(?:[,\s]\d{3})*\.\d{2})/i,
-  // Any number with 2 decimal places near "total" keyword (relaxed for OCR errors)
-  /total[^\d]{0,20}(\d{1,3}(?:[,\s]\d{3})*\.\d{2})/i,
+  // Total with label - very relaxed (up to 200 chars including newlines)
+  /(?:take-?out\s+)?(?:total|balance|amount\s+due|grand\s+total)[\s\S]{0,200}?(\d{1,3}(?:[,\s]\d{3})*\.\d{2})/i,
+  // Subtotal (fallback if no Total found) - also very relaxed
+  /(?:subtotal|sub\s*total|sub-total)[\s\S]{0,200}?(\d{1,3}(?:[,\s]\d{3})*\.\d{2})/i,
   // Currency symbol followed by amount
   /\$\s*(\d{1,3}(?:[,\s]\d{3})*\.\d{2})\b/,
   // Amount with currency code: "123.45 USD"
@@ -113,24 +109,70 @@ function extractMerchant(lines: string[]): string | null {
  * Returns amount in minor units (cents)
  */
 function extractAmount(text: string): number | null {
-  for (const pattern of AMOUNT_PATTERNS) {
-    const match = text.match(pattern);
-    if (match) {
-      // Extract the numeric part (always in match[1] now)
-      const amountStr = match[1];
-      if (!amountStr || !/\d/.test(amountStr)) continue;
+  // DEBUG: Log pattern attempts
+  console.log("[OCR Parser] Attempting amount extraction...");
 
-      // Clean amount: remove spaces and commas
-      const cleaned = amountStr.replace(/[\s,]/g, "");
+  for (let i = 0; i < AMOUNT_PATTERNS.length; i++) {
+    const pattern = AMOUNT_PATTERNS[i];
 
-      // Parse to float
-      const amountFloat = parseFloat(cleaned);
-      if (isNaN(amountFloat) || amountFloat <= 0) continue;
+    // Use matchAll to get ALL matches, then take the last one
+    // This helps when "Total" appears multiple times (e.g., in suggested gratuity section)
+    const matches = Array.from(text.matchAll(new RegExp(pattern, "gi")));
 
-      // Convert to minor units (cents) - round to avoid floating point issues
-      return Math.round(amountFloat * 100);
+    console.log(
+      `[OCR Parser] Pattern ${i}: ${matches.length > 0 ? `${matches.length} MATCH(ES)` : "no match"}`,
+    );
+
+    if (matches.length > 0) {
+      // Try matches from last to first (prioritize final total over suggested gratuity)
+      for (let j = matches.length - 1; j >= 0; j--) {
+        const match = matches[j];
+        console.log(`[OCR Parser] Trying match ${j + 1}/${matches.length}`);
+        console.log(`[OCR Parser] Full match: "${match[0].substring(0, 100)}..."`);
+        console.log(`[OCR Parser] Captured group [1]: "${match[1]}"`);
+
+        // Extract the numeric part (always in match[1] now)
+        const amountStr = match[1];
+        if (!amountStr || !/\d/.test(amountStr)) {
+          console.log(
+            `[OCR Parser] Skipping - amountStr invalid: "${amountStr}"`,
+          );
+          continue;
+        }
+
+        // Clean amount: remove spaces and commas
+        const cleaned = amountStr.replace(/[\s,]/g, "");
+        console.log(`[OCR Parser] Cleaned amount: "${cleaned}"`);
+
+        // Parse to float
+        const amountFloat = parseFloat(cleaned);
+        if (isNaN(amountFloat) || amountFloat <= 0) {
+          console.log(
+            `[OCR Parser] Skipping - invalid float: ${amountFloat}`,
+          );
+          continue;
+        }
+
+        // Validate it's not a percentage match (e.g., "18% = 74.93")
+        const fullMatch = match[0];
+        if (fullMatch.includes("%") || fullMatch.includes("=")) {
+          console.log(
+            `[OCR Parser] Skipping - looks like percentage/calculation: "${fullMatch.substring(0, 50)}"`,
+          );
+          continue;
+        }
+
+        // Convert to minor units (cents) - round to avoid floating point issues
+        const result = Math.round(amountFloat * 100);
+        console.log(
+          `[OCR Parser] SUCCESS - Extracted amount: ${result} cents`,
+        );
+        return result;
+      }
     }
   }
+
+  console.log("[OCR Parser] No amount pattern matched");
   return null;
 }
 
