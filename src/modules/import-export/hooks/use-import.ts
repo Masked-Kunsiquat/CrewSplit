@@ -6,11 +6,16 @@
 import { useState, useCallback } from "react";
 import { ImportService } from "../service/ImportService";
 import { ImportResult, ConflictStrategy } from "../core/types";
-import { Alert } from "react-native";
 
 interface ImportOptions {
   validateForeignKeys?: boolean;
   dryRun?: boolean;
+}
+
+interface AlertState {
+  visible: boolean;
+  title: string;
+  message: string;
 }
 
 interface UseImportReturn {
@@ -44,6 +49,12 @@ interface UseImportReturn {
 
   /** Clear error and results */
   clearState: () => void;
+
+  /** Alert dialog state (for themed alerts) */
+  alert: AlertState;
+
+  /** Dismiss alert dialog */
+  dismissAlert: () => void;
 }
 
 /**
@@ -54,6 +65,19 @@ export function useImport(): UseImportReturn {
   const [isImporting, setIsImporting] = useState(false);
   const [results, setResults] = useState<ImportResult[] | null>(null);
   const [error, setError] = useState<Error | null>(null);
+  const [alert, setAlert] = useState<AlertState>({
+    visible: false,
+    title: "",
+    message: "",
+  });
+
+  const showAlert = useCallback((title: string, message: string) => {
+    setAlert({ visible: true, title, message });
+  }, []);
+
+  const dismissAlert = useCallback(() => {
+    setAlert((prev) => ({ ...prev, visible: false }));
+  }, []);
 
   const importFromFile = useCallback(
     async (
@@ -78,22 +102,20 @@ export function useImport(): UseImportReturn {
 
         // Show success message
         if (summary.hasErrors) {
-          Alert.alert(
+          showAlert(
             "Import Completed with Warnings",
             `Imported ${summary.successCount} of ${summary.totalRecords} records.\n\n` +
               `Skipped: ${summary.skippedCount}\n` +
               `Errors: ${summary.errorCount}\n\n` +
               `Check the import results for details.`,
-            [{ text: "OK" }],
           );
         } else {
-          Alert.alert(
+          showAlert(
             "Import Successful",
             `Successfully imported ${summary.successCount} record(s).\n` +
               (summary.skippedCount > 0
                 ? `\nSkipped ${summary.skippedCount} duplicate(s).`
                 : ""),
-            [{ text: "OK" }],
           );
         }
       } catch (err) {
@@ -102,16 +124,15 @@ export function useImport(): UseImportReturn {
         setError(importError);
 
         // Show error alert
-        Alert.alert(
+        showAlert(
           "Import Failed",
           importError.message || "An unknown error occurred during import.",
-          [{ text: "OK" }],
         );
       } finally {
         setIsImporting(false);
       }
     },
-    [],
+    [showAlert],
   );
 
   const previewImport = useCallback(async (exportData: any) => {
@@ -144,5 +165,7 @@ export function useImport(): UseImportReturn {
     results,
     error,
     clearState,
+    alert,
+    dismissAlert,
   };
 }

@@ -5,11 +5,16 @@
 
 import { useState, useCallback } from "react";
 import { ExportService } from "../service/ExportService";
-import { Alert } from "react-native";
 
 interface ExportOptions {
   includeSampleData?: boolean;
   includeArchivedData?: boolean;
+}
+
+interface AlertState {
+  visible: boolean;
+  title: string;
+  message: string;
 }
 
 interface UseExportReturn {
@@ -27,6 +32,12 @@ interface UseExportReturn {
 
   /** Clear error state */
   clearError: () => void;
+
+  /** Alert dialog state (for themed alerts) */
+  alert: AlertState;
+
+  /** Dismiss alert dialog */
+  dismissAlert: () => void;
 }
 
 /**
@@ -36,6 +47,19 @@ interface UseExportReturn {
 export function useExport(): UseExportReturn {
   const [isExporting, setIsExporting] = useState(false);
   const [error, setError] = useState<Error | null>(null);
+  const [alert, setAlert] = useState<AlertState>({
+    visible: false,
+    title: "",
+    message: "",
+  });
+
+  const showAlert = useCallback((title: string, message: string) => {
+    setAlert({ visible: true, title, message });
+  }, []);
+
+  const dismissAlert = useCallback(() => {
+    setAlert((prev) => ({ ...prev, visible: false }));
+  }, []);
 
   const exportTrip = useCallback(
     async (tripId: string, options?: ExportOptions) => {
@@ -47,10 +71,9 @@ export function useExport(): UseExportReturn {
         await service.exportTrip(tripId, options);
 
         // Show success message
-        Alert.alert(
+        showAlert(
           "Export Successful",
           "Trip data has been exported. You can now share the file with others.",
-          [{ text: "OK" }],
         );
       } catch (err) {
         const exportError =
@@ -58,47 +81,47 @@ export function useExport(): UseExportReturn {
         setError(exportError);
 
         // Show error alert
-        Alert.alert(
+        showAlert(
           "Export Failed",
           exportError.message || "An unknown error occurred during export.",
-          [{ text: "OK" }],
         );
       } finally {
         setIsExporting(false);
       }
     },
-    [],
+    [showAlert],
   );
 
-  const exportFullDatabase = useCallback(async (options?: ExportOptions) => {
-    setIsExporting(true);
-    setError(null);
+  const exportFullDatabase = useCallback(
+    async (options?: ExportOptions) => {
+      setIsExporting(true);
+      setError(null);
 
-    try {
-      const service = new ExportService();
-      await service.exportFullDatabase(options);
+      try {
+        const service = new ExportService();
+        await service.exportFullDatabase(options);
 
-      // Show success message
-      Alert.alert(
-        "Backup Successful",
-        "Your complete database has been exported. Keep this file safe for backup purposes.",
-        [{ text: "OK" }],
-      );
-    } catch (err) {
-      const exportError =
-        err instanceof Error ? err : new Error("Export failed");
-      setError(exportError);
+        // Show success message
+        showAlert(
+          "Backup Successful",
+          "Your complete database has been exported. Keep this file safe for backup purposes.",
+        );
+      } catch (err) {
+        const exportError =
+          err instanceof Error ? err : new Error("Export failed");
+        setError(exportError);
 
-      // Show error alert
-      Alert.alert(
-        "Backup Failed",
-        exportError.message || "An unknown error occurred during backup.",
-        [{ text: "OK" }],
-      );
-    } finally {
-      setIsExporting(false);
-    }
-  }, []);
+        // Show error alert
+        showAlert(
+          "Backup Failed",
+          exportError.message || "An unknown error occurred during backup.",
+        );
+      } finally {
+        setIsExporting(false);
+      }
+    },
+    [showAlert],
+  );
 
   const clearError = useCallback(() => {
     setError(null);
@@ -110,5 +133,7 @@ export function useExport(): UseExportReturn {
     isExporting,
     error,
     clearError,
+    alert,
+    dismissAlert,
   };
 }

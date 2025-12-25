@@ -5,6 +5,7 @@
 
 import * as FileSystem from "expo-file-system/legacy";
 import * as Sharing from "expo-sharing";
+import { Platform } from "react-native";
 import { entityRegistry } from "../core/registry";
 import { ExportContext, ExportFile } from "../core/types";
 
@@ -105,13 +106,42 @@ export class ExportService {
       context,
       exportData.metadata.tripName,
     );
+    const fileContent = JSON.stringify(exportData, null, 2);
+
+    // On Android, offer to save directly using SAF (Storage Access Framework)
+    // This lets users choose where to save (Downloads, Google Drive, etc.)
+    if (Platform.OS === "android") {
+      try {
+        const permissions =
+          await FileSystem.StorageAccessFramework.requestDirectoryPermissionsAsync();
+
+        if (permissions.granted) {
+          // User selected a directory - save directly
+          const fileUri =
+            await FileSystem.StorageAccessFramework.createFileAsync(
+              permissions.directoryUri,
+              fileName,
+              "application/json",
+            );
+
+          await FileSystem.writeAsStringAsync(fileUri, fileContent, {
+            encoding: FileSystem.EncodingType.UTF8,
+          });
+
+          return fileUri;
+        }
+      } catch {
+        // User cancelled or SAF not available - fall back to share
+        console.log("SAF save cancelled or unavailable, falling back to share");
+      }
+    }
+
+    // Fallback: Write to temp directory and share
     const fileUri = `${FileSystem.documentDirectory}${fileName}`;
 
-    await FileSystem.writeAsStringAsync(
-      fileUri,
-      JSON.stringify(exportData, null, 2),
-      { encoding: FileSystem.EncodingType.UTF8 },
-    );
+    await FileSystem.writeAsStringAsync(fileUri, fileContent, {
+      encoding: FileSystem.EncodingType.UTF8,
+    });
 
     // Share file (if sharing is available)
     if (await Sharing.isAvailableAsync()) {
