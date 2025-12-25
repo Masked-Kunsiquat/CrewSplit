@@ -47,7 +47,11 @@ export class ImportService {
     });
 
     if (result.canceled) {
-      throw new Error("Import cancelled by user");
+      const error = new Error("Import cancelled by user") as Error & {
+        code: string;
+      };
+      error.code = "IMPORT_CANCELLED";
+      throw error;
     }
 
     // Read file content
