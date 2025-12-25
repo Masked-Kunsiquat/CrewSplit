@@ -104,7 +104,8 @@ export const tripEntity: ExportableEntity<Trip> = {
                 isSampleData: record.isSampleData,
                 sampleDataTemplateId: record.sampleDataTemplateId,
                 isArchived: record.isArchived,
-                updatedAt: new Date().toISOString(),
+                createdAt: record.createdAt,
+                updatedAt: record.updatedAt,
               })
               .where(eq(tripsTable.id, record.id));
 

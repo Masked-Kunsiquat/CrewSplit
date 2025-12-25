@@ -89,6 +89,13 @@ export const expenseCategoryEntity: ExportableEntity<ExpenseCategory> = {
       const record = records[i];
 
       try {
+        // Reject any incoming record with isSystem=true
+        // Imports cannot create or promote system categories
+        if (record.isSystem === true) {
+          result.skippedCount++;
+          continue;
+        }
+
         // Check for ID conflicts
         const existing = await dbClient
           .select()
@@ -110,16 +117,19 @@ export const expenseCategoryEntity: ExportableEntity<ExpenseCategory> = {
             continue;
           } else if (context.conflictResolution === "replace") {
             // Update existing record (non-system categories only)
+            // Preserve existing row's isSystem value (don't allow imports to promote to system)
+            // Preserve original timestamps for data integrity
             await dbClient
               .update(expenseCategoriesTable)
               .set({
                 name: record.name,
                 emoji: record.emoji,
                 tripId: record.tripId,
-                isSystem: record.isSystem,
+                // isSystem is intentionally omitted - preserve existing value
                 sortOrder: record.sortOrder,
                 isArchived: record.isArchived,
-                updatedAt: new Date().toISOString(),
+                createdAt: record.createdAt,
+                updatedAt: record.updatedAt,
               })
               .where(eq(expenseCategoriesTable.id, record.id));
 
@@ -217,6 +227,14 @@ export const expenseCategoryEntity: ExportableEntity<ExpenseCategory> = {
           field: "isSystem",
           message: `isSystem must be a boolean (record ${i})`,
           code: "INVALID_TYPE",
+        });
+      } else if (record.isSystem === true) {
+        // Reject records with isSystem=true (imports cannot create/promote system categories)
+        errors.push({
+          recordIndex: i,
+          field: "isSystem",
+          message: `isSystem cannot be true for imported records (record ${i})`,
+          code: "INVALID_VALUE",
         });
       }
 

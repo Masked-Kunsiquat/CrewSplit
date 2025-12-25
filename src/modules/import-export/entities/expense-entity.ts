@@ -193,7 +193,8 @@ export const expenseEntity: ExportableEntity<Expense> = {
                 categoryId: record.categoryId,
                 category: record.category,
                 date: record.date,
-                updatedAt: new Date().toISOString(),
+                createdAt: record.createdAt,
+                updatedAt: record.updatedAt,
               })
               .where(eq(expensesTable.id, record.id));
 

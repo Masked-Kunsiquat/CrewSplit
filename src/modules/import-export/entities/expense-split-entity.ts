@@ -162,7 +162,8 @@ export const expenseSplitEntity: ExportableEntity<ExpenseSplit> = {
                 share: record.share,
                 shareType: record.shareType,
                 amount: record.amount,
-                updatedAt: new Date().toISOString(),
+                createdAt: record.createdAt,
+                updatedAt: record.updatedAt,
               })
               .where(eq(expenseSplitsTable.id, record.id));
 

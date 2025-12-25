@@ -96,7 +96,8 @@ export const fxRateEntity: ExportableEntity<FxRate> = {
                 priority: record.priority,
                 metadata: record.metadata,
                 isArchived: record.isArchived,
-                updatedAt: new Date().toISOString(),
+                createdAt: record.createdAt,
+                updatedAt: record.updatedAt,
               })
               .where(eq(fxRatesTable.id, record.id));
 

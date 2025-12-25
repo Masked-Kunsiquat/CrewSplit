@@ -123,13 +123,15 @@ export const participantEntity: ExportableEntity<Participant> = {
             continue;
           } else if (context.conflictResolution === "replace") {
             // Update existing record
+            // Preserve original timestamps for data integrity
             await dbClient
               .update(participantsTable)
               .set({
                 tripId: record.tripId,
                 name: record.name,
                 avatarColor: record.avatarColor,
-                updatedAt: new Date().toISOString(),
+                createdAt: record.createdAt,
+                updatedAt: record.updatedAt,
               })
               .where(eq(participantsTable.id, record.id));
 

@@ -211,7 +211,8 @@ export const settlementEntity: ExportableEntity<Settlement> = {
                 date: record.date,
                 description: record.description,
                 paymentMethod: record.paymentMethod,
-                updatedAt: new Date().toISOString(),
+                createdAt: record.createdAt,
+                updatedAt: record.updatedAt,
               })
               .where(eq(settlementsTable.id, record.id));
 
