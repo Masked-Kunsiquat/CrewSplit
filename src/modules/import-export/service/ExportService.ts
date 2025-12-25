@@ -3,7 +3,7 @@
  * High-level export orchestration for trip and full database exports
  */
 
-import * as FileSystem from "expo-file-system";
+import * as FileSystem from "expo-file-system/legacy";
 import * as Sharing from "expo-sharing";
 import { entityRegistry } from "../core/registry";
 import { ExportContext, ExportFile } from "../core/types";
@@ -43,12 +43,10 @@ export class ExportService {
    * @param options - Export options
    * @returns File URI of exported JSON file
    */
-  async exportFullDatabase(
-    options?: {
-      includeSampleData?: boolean;
-      includeArchivedData?: boolean;
-    },
-  ): Promise<string> {
+  async exportFullDatabase(options?: {
+    includeSampleData?: boolean;
+    includeArchivedData?: boolean;
+  }): Promise<string> {
     const context: ExportContext = {
       scope: "full_database",
       includeSampleData: options?.includeSampleData ?? false,
@@ -103,7 +101,10 @@ export class ExportService {
     };
 
     // Write to file
-    const fileName = this.generateFileName(context, exportData.metadata.tripName);
+    const fileName = this.generateFileName(
+      context,
+      exportData.metadata.tripName,
+    );
     const fileUri = `${FileSystem.documentDirectory}${fileName}`;
 
     await FileSystem.writeAsStringAsync(

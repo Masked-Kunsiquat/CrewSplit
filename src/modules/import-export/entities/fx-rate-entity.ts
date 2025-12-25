@@ -3,7 +3,7 @@
  */
 
 import { db } from "@db/client";
-import { fxRates as fxRatesTable, FxRate, NewFxRate } from "@db/schema/fx-rates";
+import { fxRates as fxRatesTable, FxRate } from "@db/schema/fx-rates";
 import { eq, and } from "drizzle-orm";
 import {
   ExportableEntity,
@@ -47,7 +47,10 @@ export const fxRateEntity: ExportableEntity<FxRate> = {
     return rows.sort((a, b) => a.id.localeCompare(b.id));
   },
 
-  async import(records: FxRate[], context: ImportContext): Promise<ImportResult> {
+  async import(
+    records: FxRate[],
+    context: ImportContext,
+  ): Promise<ImportResult> {
     const result: ImportResult = {
       entityName: "fxRates",
       totalRecords: records.length,
@@ -307,7 +310,7 @@ export const fxRateEntity: ExportableEntity<FxRate> = {
         } else {
           try {
             JSON.parse(record.metadata);
-          } catch (e) {
+          } catch {
             errors.push({
               recordIndex: i,
               field: "metadata",

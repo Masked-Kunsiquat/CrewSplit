@@ -6,7 +6,6 @@ import { db } from "@db/client";
 import {
   participants as participantsTable,
   Participant,
-  NewParticipant,
 } from "@db/schema/participants";
 import { trips as tripsTable } from "@db/schema/trips";
 import { eq, and, inArray } from "drizzle-orm";
@@ -17,7 +16,11 @@ import {
   ImportResult,
   ValidationError,
 } from "../core/types";
-import { validateRequired, validateUUID, validateISODate } from "../core/validators";
+import {
+  validateRequired,
+  validateUUID,
+  validateISODate,
+} from "../core/validators";
 
 export const participantEntity: ExportableEntity<Participant> = {
   name: "participants",

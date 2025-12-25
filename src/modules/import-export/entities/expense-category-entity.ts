@@ -6,7 +6,6 @@ import { db } from "@db/client";
 import {
   expenseCategories as expenseCategoriesTable,
   ExpenseCategory,
-  NewExpenseCategory,
 } from "@db/schema/expense-categories";
 import { eq, and, or, isNull } from "drizzle-orm";
 import {
@@ -16,7 +15,11 @@ import {
   ImportResult,
   ValidationError,
 } from "../core/types";
-import { validateRequired, validateUUID, validateISODate } from "../core/validators";
+import {
+  validateRequired,
+  validateUUID,
+  validateISODate,
+} from "../core/validators";
 
 export const expenseCategoryEntity: ExportableEntity<ExpenseCategory> = {
   name: "expenseCategories",

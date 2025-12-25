@@ -6,11 +6,10 @@ import { db } from "@db/client";
 import {
   expenseSplits as expenseSplitsTable,
   ExpenseSplit,
-  NewExpenseSplit,
 } from "@db/schema/expense-splits";
 import { expenses as expensesTable } from "@db/schema/expenses";
 import { participants as participantsTable } from "@db/schema/participants";
-import { eq, and, inArray } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import {
   ExportableEntity,
   ExportContext,
@@ -18,7 +17,11 @@ import {
   ImportResult,
   ValidationError,
 } from "../core/types";
-import { validateRequired, validateUUID, validateISODate } from "../core/validators";
+import {
+  validateRequired,
+  validateUUID,
+  validateISODate,
+} from "../core/validators";
 
 export const expenseSplitEntity: ExportableEntity<ExpenseSplit> = {
   name: "expenseSplits",

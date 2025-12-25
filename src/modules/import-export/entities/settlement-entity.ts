@@ -6,7 +6,6 @@ import { db } from "@db/client";
 import {
   settlements as settlementsTable,
   Settlement,
-  NewSettlement,
 } from "@db/schema/settlements";
 import { trips as tripsTable } from "@db/schema/trips";
 import { participants as participantsTable } from "@db/schema/participants";

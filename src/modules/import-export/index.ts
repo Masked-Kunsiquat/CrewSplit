@@ -30,7 +30,9 @@ export function initializeImportExport(): void {
   entityRegistry.register(fxRateEntity);
   entityRegistry.register(settlementEntity);
 
-  console.log(`Import/Export system initialized: ${entityRegistry.size} entities registered`);
+  console.log(
+    `Import/Export system initialized: ${entityRegistry.size} entities registered`,
+  );
 }
 
 // Public API exports

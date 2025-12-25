@@ -3,11 +3,7 @@
  */
 
 import { db } from "@db/client";
-import {
-  expenses as expensesTable,
-  Expense,
-  NewExpense,
-} from "@db/schema/expenses";
+import { expenses as expensesTable, Expense } from "@db/schema/expenses";
 import { trips as tripsTable } from "@db/schema/trips";
 import { participants as participantsTable } from "@db/schema/participants";
 import { expenseCategories as expenseCategoriesTable } from "@db/schema/expense-categories";
@@ -59,7 +55,10 @@ export const expenseEntity: ExportableEntity<Expense> = {
     return rows.sort((a, b) => a.id.localeCompare(b.id));
   },
 
-  async import(records: Expense[], context: ImportContext): Promise<ImportResult> {
+  async import(
+    records: Expense[],
+    context: ImportContext,
+  ): Promise<ImportResult> {
     const result: ImportResult = {
       entityName: "expenses",
       totalRecords: records.length,
@@ -79,7 +78,9 @@ export const expenseEntity: ExportableEntity<Expense> = {
       const participantIds = [...new Set(records.map((r) => r.paidBy))];
       const categoryIds = [
         ...new Set(
-          records.map((r) => r.categoryId).filter((id): id is string => id !== null),
+          records
+            .map((r) => r.categoryId)
+            .filter((id): id is string => id !== null),
         ),
       ];
 
@@ -134,7 +135,10 @@ export const expenseEntity: ExportableEntity<Expense> = {
           });
         }
 
-        if (record.categoryId && !existingCategoryIdSet.has(record.categoryId)) {
+        if (
+          record.categoryId &&
+          !existingCategoryIdSet.has(record.categoryId)
+        ) {
           result.errorCount++;
           result.errors.push({
             recordId: record.id,

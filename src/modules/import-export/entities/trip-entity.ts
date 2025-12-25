@@ -3,7 +3,7 @@
  */
 
 import { db } from "@db/client";
-import { trips as tripsTable, Trip, NewTrip } from "@db/schema/trips";
+import { trips as tripsTable, Trip } from "@db/schema/trips";
 import { eq, and } from "drizzle-orm";
 import {
   ExportableEntity,
@@ -165,11 +165,7 @@ export const tripEntity: ExportableEntity<Trip> = {
       }
 
       // Validate startDate
-      const startDateError = validateRequired(
-        record.startDate,
-        "startDate",
-        i,
-      );
+      const startDateError = validateRequired(record.startDate, "startDate", i);
       if (startDateError) {
         errors.push({
           recordIndex: i,
@@ -261,11 +257,7 @@ export const tripEntity: ExportableEntity<Trip> = {
       }
 
       // Validate createdAt
-      const createdAtError = validateRequired(
-        record.createdAt,
-        "createdAt",
-        i,
-      );
+      const createdAtError = validateRequired(record.createdAt, "createdAt", i);
       if (createdAtError) {
         errors.push({
           recordIndex: i,
@@ -290,11 +282,7 @@ export const tripEntity: ExportableEntity<Trip> = {
       }
 
       // Validate updatedAt
-      const updatedAtError = validateRequired(
-        record.updatedAt,
-        "updatedAt",
-        i,
-      );
+      const updatedAtError = validateRequired(record.updatedAt, "updatedAt", i);
       if (updatedAtError) {
         errors.push({
           recordIndex: i,

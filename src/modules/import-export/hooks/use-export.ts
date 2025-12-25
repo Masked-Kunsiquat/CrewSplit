@@ -44,7 +44,7 @@ export function useExport(): UseExportReturn {
 
       try {
         const service = new ExportService();
-        const fileUri = await service.exportTrip(tripId, options);
+        await service.exportTrip(tripId, options);
 
         // Show success message
         Alert.alert(
@@ -76,7 +76,7 @@ export function useExport(): UseExportReturn {
 
     try {
       const service = new ExportService();
-      const fileUri = await service.exportFullDatabase(options);
+      await service.exportFullDatabase(options);
 
       // Show success message
       Alert.alert(

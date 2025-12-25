@@ -16,10 +16,9 @@ import { InvalidExportFileError } from "./errors";
 export function validateJsonStructure(data: any): ExportFile {
   // Check if data is an object
   if (!data || typeof data !== "object" || Array.isArray(data)) {
-    throw new InvalidExportFileError(
-      "Export file must be a JSON object",
-      { received: typeof data },
-    );
+    throw new InvalidExportFileError("Export file must be a JSON object", {
+      received: typeof data,
+    });
   }
 
   // Check required top-level fields
@@ -55,21 +54,16 @@ export function validateJsonStructure(data: any): ExportFile {
   }
 
   // Validate data object
-  if (
-    !data.data ||
-    typeof data.data !== "object" ||
-    Array.isArray(data.data)
-  ) {
+  if (!data.data || typeof data.data !== "object" || Array.isArray(data.data)) {
     throw new InvalidExportFileError("data must be an object");
   }
 
   // Validate each entity data is an array
   for (const [entityName, entityData] of Object.entries(data.data)) {
     if (!Array.isArray(entityData)) {
-      throw new InvalidExportFileError(
-        `data.${entityName} must be an array`,
-        { received: typeof entityData },
-      );
+      throw new InvalidExportFileError(`data.${entityName} must be an array`, {
+        received: typeof entityData,
+      });
     }
   }
 
@@ -149,7 +143,11 @@ export function validateUUID(
     return `${fieldName} must be a string (record ${recordIndex})`;
   }
   // Basic UUID validation (not strict RFC 4122)
-  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value)) {
+  if (
+    !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+      value,
+    )
+  ) {
     return `${fieldName} must be a valid UUID (record ${recordIndex})`;
   }
   return null;
