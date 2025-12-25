@@ -447,10 +447,7 @@ export const expenseEntity: ExportableEntity<Expense> = {
         typeof record.originalAmountMinor === "number" &&
         typeof record.convertedAmountMinor === "number"
       ) {
-        if (
-          record.fxRateToTrip === null ||
-          record.fxRateToTrip === undefined
-        ) {
+        if (record.fxRateToTrip === null || record.fxRateToTrip === undefined) {
           // No FX rate means same currency - amounts must match
           if (record.convertedAmountMinor !== record.originalAmountMinor) {
             errors.push({

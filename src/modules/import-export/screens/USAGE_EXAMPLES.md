@@ -12,7 +12,7 @@ Create a route file at `app/import-export.tsx` (or `app/(tabs)/import-export.tsx
 
 ```typescript
 // app/import-export.tsx
-import { ImportExportScreen } from '@modules/import-export';
+import { ImportExportScreen } from "@modules/import-export";
 
 // Expo Router automatically uses the default export as the screen component
 export default ImportExportScreen;
@@ -83,6 +83,7 @@ function TripDashboard({ tripId }: { tripId: string }) {
 ### Features Available
 
 **Export Section:**
+
 - Export Current Trip (only visible when `tripId` param is provided)
 - Export Full Database (always available)
 - Options:
@@ -90,10 +91,12 @@ function TripDashboard({ tripId }: { tripId: string }) {
   - Include Archived Data (toggle)
 
 **Import Section:**
+
 - Import from File (opens file picker)
 - Warning message about duplicate handling
 
 **Loading States:**
+
 - Shows spinner overlay during operations
 - Disables all buttons during operations
 - Success/error alerts are handled by the hooks
