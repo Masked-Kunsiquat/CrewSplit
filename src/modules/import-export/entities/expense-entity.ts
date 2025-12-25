@@ -211,6 +211,14 @@ export const expenseEntity: ExportableEntity<Expense> = {
           result.successCount++;
         }
       } catch (error) {
+        // Re-throw configuration errors immediately (don't continue)
+        if (
+          error instanceof Error &&
+          (error as Error & { code?: string }).code === "NOT_IMPLEMENTED"
+        ) {
+          throw error;
+        }
+
         result.errorCount++;
         result.errors.push({
           recordId: record.id,
@@ -431,6 +439,41 @@ export const expenseEntity: ExportableEntity<Expense> = {
           message: `convertedAmountMinor must be non-negative (record ${i})`,
           code: "INVALID_VALUE",
         });
+      }
+
+      // Cross-field validation: Currency conversion consistency
+      // Only perform if all required fields have been validated and exist
+      if (
+        typeof record.originalAmountMinor === "number" &&
+        typeof record.convertedAmountMinor === "number"
+      ) {
+        if (
+          record.fxRateToTrip === null ||
+          record.fxRateToTrip === undefined
+        ) {
+          // No FX rate means same currency - amounts must match
+          if (record.convertedAmountMinor !== record.originalAmountMinor) {
+            errors.push({
+              recordIndex: i,
+              field: "convertedAmountMinor",
+              message: `convertedAmountMinor must equal originalAmountMinor when fxRateToTrip is null (record ${i})`,
+              code: "INVALID_VALUE",
+            });
+          }
+        } else if (typeof record.fxRateToTrip === "number") {
+          // FX rate present - check conversion formula
+          const expectedConverted = Math.round(
+            record.originalAmountMinor * record.fxRateToTrip,
+          );
+          if (record.convertedAmountMinor !== expectedConverted) {
+            errors.push({
+              recordIndex: i,
+              field: "convertedAmountMinor",
+              message: `convertedAmountMinor inconsistent with fxRateToTrip and originalAmountMinor (record ${i})`,
+              code: "INVALID_VALUE",
+            });
+          }
+        }
       }
 
       // Validate paidBy

@@ -229,6 +229,14 @@ export const settlementEntity: ExportableEntity<Settlement> = {
           result.successCount++;
         }
       } catch (error) {
+        // Re-throw configuration errors immediately (don't continue)
+        if (
+          error instanceof Error &&
+          (error as Error & { code?: string }).code === "NOT_IMPLEMENTED"
+        ) {
+          throw error;
+        }
+
         result.errorCount++;
         result.errors.push({
           recordId: record.id,
