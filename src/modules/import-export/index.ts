@@ -4,6 +4,7 @@
  */
 
 import { entityRegistry } from "./core/registry";
+import { importExportLogger } from "@utils/logger";
 
 // Import all entity definitions
 import { tripEntity } from "./entities/trip-entity";
@@ -14,12 +15,24 @@ import { expenseSplitEntity } from "./entities/expense-split-entity";
 import { fxRateEntity } from "./entities/fx-rate-entity";
 import { settlementEntity } from "./entities/settlement-entity";
 
+// Idempotency guard to prevent duplicate registration
+let initialized = false;
+
 /**
  * Initialize import/export system
  * Registers all entities in the registry
  * Call this at app startup (in _layout.tsx or root provider)
+ * Safe to call multiple times - only initializes once
  */
 export function initializeImportExport(): void {
+  // Early return if already initialized
+  if (initialized) {
+    importExportLogger.debug(
+      "Import/Export system already initialized, skipping",
+    );
+    return;
+  }
+
   // Register entities in any order (registry handles dependency sorting)
   // Order doesn't matter here - the registry will sort by dependencies
   entityRegistry.register(tripEntity);
@@ -30,9 +43,12 @@ export function initializeImportExport(): void {
   entityRegistry.register(fxRateEntity);
   entityRegistry.register(settlementEntity);
 
-  console.log(
-    `Import/Export system initialized: ${entityRegistry.size} entities registered`,
-  );
+  // Mark as initialized
+  initialized = true;
+
+  importExportLogger.info("Import/Export system initialized", {
+    registeredCount: entityRegistry.size,
+  });
 }
 
 // Public API exports

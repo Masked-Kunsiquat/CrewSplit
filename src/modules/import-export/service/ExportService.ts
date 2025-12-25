@@ -8,6 +8,7 @@ import * as Sharing from "expo-sharing";
 import { Platform } from "react-native";
 import { entityRegistry } from "../core/registry";
 import { ExportContext, ExportFile } from "../core/types";
+import { importExportLogger } from "@utils/logger";
 
 /**
  * Export service - handles trip and full database exports
@@ -144,12 +145,23 @@ export class ExportService {
     });
 
     // Share file (if sharing is available)
+    // Wrap in try-catch to handle user cancellation and platform errors gracefully
+    // Export is still successful even if sharing fails
     if (await Sharing.isAvailableAsync()) {
-      await Sharing.shareAsync(fileUri, {
-        mimeType: "application/json",
-        dialogTitle: "Export CrewSplit Data",
-        UTI: "public.json",
-      });
+      try {
+        await Sharing.shareAsync(fileUri, {
+          mimeType: "application/json",
+          dialogTitle: "Export CrewSplit Data",
+          UTI: "public.json",
+        });
+      } catch (error) {
+        // User cancelled or sharing failed - this is not an export failure
+        // Log but don't throw, as the file was successfully created
+        importExportLogger.warn("File sharing cancelled or failed", {
+          error: error instanceof Error ? error.message : "Unknown error",
+          fileUri,
+        });
+      }
     }
 
     return fileUri;

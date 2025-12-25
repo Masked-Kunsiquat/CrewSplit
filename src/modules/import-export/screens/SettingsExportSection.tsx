@@ -3,7 +3,7 @@
  * Compact component for embedding backup/restore functionality in Settings screen
  */
 
-import React from "react";
+import React, { useRef, useEffect } from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { theme } from "@ui/theme";
 import { Button, Card } from "@ui/components";
@@ -44,15 +44,43 @@ export function SettingsExportSection({
   onExportComplete,
   onImportComplete,
 }: SettingsExportSectionProps) {
-  const { exportFullDatabase, isExporting } = useExport();
-  const { importFromFile, isImporting } = useImport();
+  const { exportFullDatabase, isExporting, error: exportError } = useExport();
+  const { importFromFile, isImporting, error: importError } = useImport();
+
+  // Track when operations were in progress to detect completion
+  const wasExportingRef = useRef(false);
+  const wasImportingRef = useRef(false);
+
+  // Detect successful export completion
+  useEffect(() => {
+    // If was exporting and now finished, check for success
+    if (wasExportingRef.current && !isExporting) {
+      // Only call callback if no error occurred
+      if (!exportError) {
+        onExportComplete?.();
+      }
+    }
+    wasExportingRef.current = isExporting;
+  }, [isExporting, exportError, onExportComplete]);
+
+  // Detect successful import completion
+  useEffect(() => {
+    // If was importing and now finished, check for success
+    if (wasImportingRef.current && !isImporting) {
+      // Only call callback if no error occurred
+      if (!importError) {
+        onImportComplete?.();
+      }
+    }
+    wasImportingRef.current = isImporting;
+  }, [isImporting, importError, onImportComplete]);
 
   const handleBackup = async () => {
     await exportFullDatabase({
       includeSampleData: false,
       includeArchivedData: true,
     });
-    onExportComplete?.();
+    // Callback is called by useEffect when operation completes successfully
   };
 
   const handleRestore = async () => {
@@ -60,7 +88,7 @@ export function SettingsExportSection({
       validateForeignKeys: true,
       dryRun: false,
     });
-    onImportComplete?.();
+    // Callback is called by useEffect when operation completes successfully
   };
 
   const isOperating = isExporting || isImporting;
