@@ -11,6 +11,7 @@ import {
   ActivityIndicator,
   ViewStyle,
   TextStyle,
+  View,
 } from "react-native";
 import { theme } from "../theme";
 
@@ -30,6 +31,8 @@ interface ButtonProps {
   disabled?: boolean;
   loading?: boolean;
   fullWidth?: boolean;
+  icon?: React.ReactNode;
+  iconPosition?: "left" | "right";
   accessibilityLabel?: string;
   accessibilityHint?: string;
   testID?: string;
@@ -43,6 +46,8 @@ export const Button: React.FC<ButtonProps> = ({
   disabled = false,
   loading = false,
   fullWidth = false,
+  icon,
+  iconPosition = "left",
   accessibilityLabel,
   accessibilityHint,
   testID,
@@ -81,7 +86,15 @@ export const Button: React.FC<ButtonProps> = ({
           }
         />
       ) : (
-        <Text style={textStyle}>{title}</Text>
+        <View style={styles.contentRow}>
+          {icon && iconPosition === "left" && (
+            <View style={styles.iconLeft}>{icon}</View>
+          )}
+          <Text style={textStyle}>{title}</Text>
+          {icon && iconPosition === "right" && (
+            <View style={styles.iconRight}>{icon}</View>
+          )}
+        </View>
       )}
     </TouchableOpacity>
   );
@@ -96,6 +109,17 @@ const styles = StyleSheet.create({
   },
   fullWidth: {
     width: "100%",
+  },
+  contentRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: theme.spacing.sm,
+  },
+  iconLeft: {
+    marginRight: -theme.spacing.xs,
+  },
+  iconRight: {
+    marginLeft: -theme.spacing.xs,
   },
 
   // Variants

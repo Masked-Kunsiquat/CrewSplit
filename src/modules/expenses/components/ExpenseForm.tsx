@@ -12,7 +12,9 @@ import {
   KeyboardAvoidingView,
   Platform,
   Alert,
+  Linking,
 } from "react-native";
+import { MaterialIcons } from "@expo/vector-icons";
 import { theme } from "@ui/theme";
 import {
   Button,
@@ -33,6 +35,7 @@ import {
   buildExpenseSplits,
   validateSplitTotals,
 } from "../utils/build-expense-splits";
+import { useReceiptScanner } from "@modules/ocr/hooks/use-receipt-scanner";
 import type { Participant } from "@modules/participants/types";
 import type { ExpenseCategory } from "../types";
 
@@ -109,6 +112,9 @@ export function ExpenseForm({
     console.error(title, error);
     Alert.alert(title, error.message);
   };
+
+  // OCR receipt scanning
+  const { scanReceipt, isScanning } = useReceiptScanner();
 
   // Determine the currency to display in the form
   // In edit mode, use the expense's original currency; in add mode, use trip currency
@@ -258,6 +264,75 @@ export function ExpenseForm({
     splitValues,
     amount,
   );
+
+  /**
+   * Handle OCR receipt scanning
+   * Captures receipt image, extracts text, and auto-fills form fields
+   */
+  const handleScanReceipt = async () => {
+    const result = await scanReceipt("camera");
+
+    if (!result.success) {
+      // Handle errors with user-friendly messages
+      if (result.error?.includes("permission")) {
+        Alert.alert(
+          "Camera Permission Required",
+          "CrewSplit needs camera access to scan receipts. You can enable it in Settings.",
+          [
+            { text: "Cancel", style: "cancel" },
+            {
+              text: "Open Settings",
+              onPress: () => {
+                if (Platform.OS === "ios") {
+                  Linking.openURL("app-settings:");
+                } else {
+                  Linking.openSettings();
+                }
+              },
+            },
+          ],
+        );
+      } else if (result.error?.includes("cancel")) {
+        // Silent fail - user intentionally cancelled
+        return;
+      } else {
+        Alert.alert(
+          "Could Not Read Receipt",
+          result.error ||
+            "Unable to extract expense details. Please enter manually or try again.",
+          [
+            { text: "Enter Manually", style: "cancel" },
+            { text: "Try Again", onPress: handleScanReceipt },
+          ],
+        );
+      }
+      return;
+    }
+
+    // Auto-fill form with parsed data
+    const { data } = result;
+
+    if (data.merchant) {
+      setDescription(data.merchant);
+    }
+
+    if (data.totalAmountMinor) {
+      const currency = data.currency || tripCurrency;
+      const majorAmount = CurrencyUtils.minorToMajor(
+        data.totalAmountMinor,
+        currency,
+      );
+      const decimals = CurrencyUtils.getDecimalPlaces(currency);
+      setAmount(majorAmount.toFixed(decimals));
+    }
+
+    if (data.date) {
+      setDate(new Date(data.date));
+    }
+
+    // TODO: If data.currency differs from tripCurrency, show currency selector
+    // For now, only auto-fill amount if currencies match
+  };
 
   const handleSubmit = async () => {
     if (!paidBy) {
@@ -435,21 +510,51 @@ export function ExpenseForm({
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"
       >
-        <Input
-          label="What was this?"
-          placeholder="e.g., Dinner at Marina"
-          value={description}
-          onChangeText={setDescription}
-          autoFocus={mode === "add"}
-          editable={!isSubmitting}
-        />
+        <View style={styles.descriptionRow}>
+          <View style={styles.descriptionInputContainer}>
+            <Input
+              label="What was this?"
+              placeholder="e.g., Dinner at Marina"
+              value={description}
+              onChangeText={setDescription}
+              autoFocus={mode === "add" && !isScanning}
+              editable={!isSubmitting && !isScanning}
+            />
+          </View>
+
+          {mode === "add" && (
+            <View style={styles.scanButtonContainer}>
+              <Text style={styles.scanButtonLabel}>or</Text>
+              <Button
+                title={isScanning ? "Scanning..." : "Scan"}
+                variant="secondary"
+                size="sm"
+                onPress={handleScanReceipt}
+                disabled={isSubmitting || isScanning}
+                loading={isScanning}
+                icon={
+                  !isScanning ? (
+                    <MaterialIcons
+                      name="camera-alt"
+                      size={18}
+                      color={theme.colors.primary}
+                    />
+                  ) : undefined
+                }
+                iconPosition="left"
+                accessibilityLabel="Scan receipt with camera"
+                accessibilityHint="Capture receipt to auto-fill expense details"
+              />
+            </View>
+          )}
+        </View>
 
         <Input
           label="Notes (optional)"
           placeholder="Add a note or receipt details"
           value={notes}
           onChangeText={setNotes}
-          editable={!isSubmitting}
+          editable={!isSubmitting && !isScanning}
           multiline
           numberOfLines={3}
           style={styles.notesInput}
@@ -463,7 +568,7 @@ export function ExpenseForm({
               value={amount}
               onChangeText={setAmount}
               keyboardType="decimal-pad"
-              editable={!isSubmitting}
+              editable={!isSubmitting && !isScanning}
             />
           </View>
 
@@ -592,6 +697,21 @@ const styles = StyleSheet.create({
   content: {
     padding: theme.spacing.lg,
     gap: theme.spacing.md,
+  },
+  descriptionRow: {
+    gap: theme.spacing.md,
+  },
+  descriptionInputContainer: {
+    flex: 1,
+  },
+  scanButtonContainer: {
+    alignItems: "center",
+    gap: theme.spacing.xs,
+  },
+  scanButtonLabel: {
+    fontSize: theme.typography.xs,
+    color: theme.colors.textMuted,
+    textAlign: "center",
   },
   row: {
     flexDirection: "row",
