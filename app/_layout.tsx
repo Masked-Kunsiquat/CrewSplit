@@ -10,6 +10,7 @@ import { useDbMigrations } from "@db/client";
 import { cachedFxRateProvider } from "@modules/fx-rates/provider";
 import { useFxSync } from "@modules/fx-rates/hooks";
 import { useOnboardingState } from "@modules/onboarding/hooks/use-onboarding-state";
+import { initializeImportExport } from "@modules/import-export";
 import { colors, spacing, typography } from "@ui/tokens";
 import { fxLogger } from "@utils/logger";
 
@@ -69,7 +70,7 @@ export default function RootLayout() {
     },
   });
 
-  // Initialize FX rate provider after migrations complete
+  // Initialize FX rate provider and import/export system after migrations complete
   useEffect(() => {
     if (success && !fxInitialized) {
       fxLogger.info("Initializing FX rate provider");
@@ -78,6 +79,9 @@ export default function RootLayout() {
         .then(() => {
           setFxInitialized(true);
           fxLogger.info("FX rate provider initialized successfully");
+
+          // Initialize import/export entity registry
+          initializeImportExport();
         })
         .catch((err) => {
           // Don't block app startup on FX initialization failure
@@ -85,6 +89,9 @@ export default function RootLayout() {
           setFxError(err);
           // Allow app to continue even if FX init fails
           setFxInitialized(true);
+
+          // Still initialize import/export
+          initializeImportExport();
         });
     }
   }, [success, fxInitialized]);
@@ -155,6 +162,12 @@ export default function RootLayout() {
         }}
       />
       <Stack.Screen name="settings" />
+      <Stack.Screen
+        name="import-export"
+        options={{
+          title: "Import & Export",
+        }}
+      />
       <Stack.Screen name="onboarding" options={{ headerShown: false }} />
     </Stack>
   );

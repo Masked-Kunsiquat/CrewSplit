@@ -27,6 +27,7 @@ import { useDeviceOwner } from "@modules/onboarding/hooks/use-device-owner";
 import { useFxRates } from "@modules/fx-rates/hooks/use-fx-rates";
 import { useOnboardingState } from "@modules/onboarding/hooks/use-onboarding-state";
 import { useReloadSampleData } from "@modules/onboarding/hooks/use-sample-data";
+import { SettingsExportSection } from "@modules/import-export";
 import Constants from "expo-constants";
 
 /**
@@ -272,6 +273,8 @@ export default function SettingsScreen() {
             fullWidth
           />
         </Card>
+
+        <SettingsExportSection />
 
         <Card style={styles.section}>
           <Text style={styles.sectionTitle}>Onboarding & Sample Data</Text>

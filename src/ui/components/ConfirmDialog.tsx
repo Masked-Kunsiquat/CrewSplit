@@ -17,6 +17,8 @@ export type ConfirmDialogProps = {
   onConfirm: () => void;
   confirmVariant?: ButtonVariant;
   loading?: boolean;
+  /** Hide cancel button (for simple alerts) */
+  hideCancelButton?: boolean;
 };
 
 /**
@@ -27,6 +29,7 @@ export type ConfirmDialogProps = {
  * @param onConfirm - Called when the confirm action is pressed
  * @param confirmVariant - Button variant for the confirm action
  * @param loading - When `true`, disables the confirm button and shows a working label
+ * @param hideCancelButton - When `true`, only shows confirm button (for simple alerts)
  * @returns The confirmation dialog element to render in the component tree
  */
 export function ConfirmDialog({
@@ -38,6 +41,7 @@ export function ConfirmDialog({
   onConfirm,
   confirmVariant = "primary",
   loading,
+  hideCancelButton = false,
 }: ConfirmDialogProps) {
   return (
     <Modal
@@ -53,13 +57,7 @@ export function ConfirmDialog({
         <View style={styles.card}>
           <Text style={styles.title}>{title}</Text>
           <Text style={styles.message}>{message}</Text>
-          <View style={styles.actions}>
-            <Button
-              title="Cancel"
-              variant="ghost"
-              onPress={onCancel}
-              fullWidth
-            />
+          {hideCancelButton ? (
             <Button
               title={loading ? "Working..." : confirmLabel}
               onPress={onConfirm}
@@ -67,7 +65,23 @@ export function ConfirmDialog({
               fullWidth
               disabled={loading}
             />
-          </View>
+          ) : (
+            <View style={styles.actions}>
+              <Button
+                title="Cancel"
+                variant="ghost"
+                onPress={onCancel}
+                fullWidth
+              />
+              <Button
+                title={loading ? "Working..." : confirmLabel}
+                onPress={onConfirm}
+                variant={confirmVariant}
+                fullWidth
+                disabled={loading}
+              />
+            </View>
+          )}
         </View>
       </View>
     </Modal>
