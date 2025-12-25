@@ -5,17 +5,9 @@
 
 import { useState } from "react";
 import * as ImagePicker from "expo-image-picker";
+import { recognizeText } from "@infinitered/react-native-mlkit-text-recognition";
 import { parseReceiptText } from "../services/receipt-parser";
 import type { ParsedReceiptData, ScanResult } from "../types";
-
-// Lazy import to avoid crashes if module not available
-let TextRecognition: any;
-try {
-  TextRecognition =
-    require("@infinitered/react-native-mlkit-text-recognition").default;
-} catch (e) {
-  console.warn("ML Kit Text Recognition not available:", e);
-}
 
 /**
  * Hook for scanning receipts with OCR
@@ -38,15 +30,6 @@ export function useReceiptScanner() {
     setIsScanning(true);
 
     try {
-      // Check if ML Kit is available
-      if (!TextRecognition) {
-        return {
-          success: false,
-          error:
-            "OCR module not available. Please rebuild the app with: npx expo run:android",
-        };
-      }
-
       // Request permissions
       const permissionResult =
         source === "camera"
@@ -84,7 +67,7 @@ export function useReceiptScanner() {
       const imageUri = result.assets[0].uri;
 
       // Perform OCR text recognition
-      const ocrResult = await TextRecognition.recognize(imageUri);
+      const ocrResult = await recognizeText(imageUri);
 
       if (!ocrResult || !ocrResult.text) {
         return {
