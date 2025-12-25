@@ -36,16 +36,21 @@ const CURRENCY_SYMBOLS: Record<string, string> = {
 /**
  * Regex patterns for amount detection
  * Matches various formats: $123.45, 123.45, 123,45, etc.
+ * Ordered by priority - try "Total" patterns first
  */
 const AMOUNT_PATTERNS = [
-  // Total with label: "Total: $123.45" or "TOTAL 123.45"
-  /(?:total|amount|sum)[\s:]*([€£¥₹₽₩\$]?)\s*(\d{1,3}(?:[,\s]\d{3})*(?:[.,]\d{2})?)/i,
-  // Currency symbol followed by amount: "$123.45"
-  /([€£¥₹₽₩\$])\s*(\d{1,3}(?:[,\s]\d{3})*(?:[.,]\d{2})?)/,
+  // Total with label (any variant): "Total $123.45", "Take-Out Total 123.45", etc.
+  /(?:take-?out\s+)?(?:total|balance|amount\s+due|grand\s+total)[\s:]*\$?\s*(\d{1,3}(?:[,\s]\d{3})*\.\d{2})/i,
+  // Subtotal (fallback if no Total found)
+  /(?:subtotal|sub\s*total|sub-total)[\s:]*\$?\s*(\d{1,3}(?:[,\s]\d{3})*\.\d{2})/i,
+  // Amount on its own line after Total label (handle multi-line)
+  /(?:take-?out\s+)?(?:total|balance|amount\s+due)[\s:]*\n[\s]*(\d{1,3}(?:[,\s]\d{3})*\.\d{2})/i,
+  // Any number with 2 decimal places near "total" keyword (relaxed for OCR errors)
+  /total[^\d]{0,20}(\d{1,3}(?:[,\s]\d{3})*\.\d{2})/i,
+  // Currency symbol followed by amount
+  /\$\s*(\d{1,3}(?:[,\s]\d{3})*\.\d{2})\b/,
   // Amount with currency code: "123.45 USD"
-  /(\d{1,3}(?:[,\s]\d{3})*(?:[.,]\d{2})?)\s*([A-Z]{3})/,
-  // Standalone amount (last resort): "123.45"
-  /\b(\d{1,3}(?:[,\s]\d{3})*[.,]\d{2})\b/,
+  /(\d{1,3}(?:[,\s]\d{3})*\.\d{2})\s*([A-Z]{3})\b/,
 ];
 
 /**
@@ -111,15 +116,14 @@ function extractAmount(text: string): number | null {
   for (const pattern of AMOUNT_PATTERNS) {
     const match = text.match(pattern);
     if (match) {
-      // Extract the numeric part (could be in match[1] or match[2])
-      const amountStr =
-        match[2] && /\d/.test(match[2]) ? match[2] : match[1];
+      // Extract the numeric part (always in match[1] now)
+      const amountStr = match[1];
       if (!amountStr || !/\d/.test(amountStr)) continue;
 
-      // Clean amount: remove spaces, convert comma to period
-      const cleaned = amountStr.replace(/[\s,]/g, "").replace(",", ".");
+      // Clean amount: remove spaces and commas
+      const cleaned = amountStr.replace(/[\s,]/g, "");
 
-      // Parse to cents
+      // Parse to float
       const amountFloat = parseFloat(cleaned);
       if (isNaN(amountFloat) || amountFloat <= 0) continue;
 
@@ -135,9 +139,14 @@ function extractAmount(text: string): number | null {
  * Checks for currency symbols and ISO codes
  */
 function extractCurrency(text: string): string | null {
-  // Check for currency symbols
+  // Check for $ symbol first (most common in US)
+  if (text.includes("$")) {
+    return "USD";
+  }
+
+  // Check for other currency symbols
   for (const [symbol, code] of Object.entries(CURRENCY_SYMBOLS)) {
-    if (text.includes(symbol)) {
+    if (symbol !== "$" && text.includes(symbol)) {
       return code;
     }
   }

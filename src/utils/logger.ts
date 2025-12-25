@@ -24,7 +24,8 @@ export type LogContext =
   | "onboarding"
   | "import-export"
   | "ui"
-  | "dev";
+  | "dev"
+  | "ocr";
 
 interface LoggerConfig {
   /** Show debug logs in development */
@@ -62,6 +63,7 @@ const CONTEXT_EMOJI: Record<LogContext, string> = {
   "import-export": "📤",
   ui: "🎨",
   dev: "🔧",
+  ocr: "📷",
 };
 
 class Logger {
@@ -349,3 +351,4 @@ export const onboardingLogger = logger.createContextLogger("onboarding");
 export const importExportLogger = logger.createContextLogger("import-export");
 export const uiLogger = logger.createContextLogger("ui");
 export const devLogger = logger.createContextLogger("dev");
+export const ocrLogger = logger.createContextLogger("ocr");

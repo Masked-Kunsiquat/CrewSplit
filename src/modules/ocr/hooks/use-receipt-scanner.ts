@@ -7,6 +7,7 @@ import { useState } from "react";
 import * as ImagePicker from "expo-image-picker";
 import { recognizeText } from "@infinitered/react-native-mlkit-text-recognition";
 import { parseReceiptText } from "../services/receipt-parser";
+import { ocrLogger } from "@utils/logger";
 import type { ParsedReceiptData, ScanResult } from "../types";
 
 /**
@@ -76,11 +77,28 @@ export function useReceiptScanner() {
         };
       }
 
+      // DEBUG: Log raw OCR output
+      ocrLogger.debug("=== OCR RAW TEXT ===");
+      ocrLogger.debug(ocrResult.text);
+      ocrLogger.debug("===================");
+
       // Parse the OCR text into structured receipt data
       const parsedData = parseReceiptText(ocrResult.text);
 
+      // DEBUG: Log parsed data
+      ocrLogger.debug("=== PARSED DATA ===");
+      ocrLogger.debug(`Merchant: ${parsedData.merchant}`);
+      ocrLogger.debug(`Amount (minor): ${parsedData.totalAmountMinor}`);
+      ocrLogger.debug(`Currency: ${parsedData.currency}`);
+      ocrLogger.debug(`Date: ${parsedData.date}`);
+      ocrLogger.debug(`Confidence: ${parsedData.confidence}`);
+      ocrLogger.debug("==================");
+
       // Check if we got useful data
       if (parsedData.confidence < 0.3) {
+        ocrLogger.warn(
+          "Low confidence scan - consider adjusting parser heuristics",
+        );
         return {
           success: false,
           error: "Could not extract receipt information. Please enter manually.",

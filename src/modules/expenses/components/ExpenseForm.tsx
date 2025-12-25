@@ -267,17 +267,43 @@ export function ExpenseForm({
 
   /**
    * Handle OCR receipt scanning
+   * Shows action sheet to choose camera or gallery, then processes the receipt
+   */
+  const handleScanReceipt = () => {
+    Alert.alert(
+      "Scan Receipt",
+      "Choose how to capture your receipt",
+      [
+        {
+          text: "Take Photo",
+          onPress: () => performScan("camera"),
+        },
+        {
+          text: "Choose from Gallery",
+          onPress: () => performScan("gallery"),
+        },
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+      ],
+      { cancelable: true },
+    );
+  };
+
+  /**
+   * Perform the actual scan operation
    * Captures receipt image, extracts text, and auto-fills form fields
    */
-  const handleScanReceipt = async () => {
-    const result = await scanReceipt("camera");
+  const performScan = async (source: "camera" | "gallery") => {
+    const result = await scanReceipt(source);
 
     if (!result.success) {
       // Handle errors with user-friendly messages
       if (result.error?.includes("permission")) {
         Alert.alert(
-          "Camera Permission Required",
-          "CrewSplit needs camera access to scan receipts. You can enable it in Settings.",
+          `${source === "camera" ? "Camera" : "Gallery"} Permission Required`,
+          `CrewSplit needs ${source === "camera" ? "camera" : "photo library"} access to scan receipts. You can enable it in Settings.`,
           [
             { text: "Cancel", style: "cancel" },
             {
