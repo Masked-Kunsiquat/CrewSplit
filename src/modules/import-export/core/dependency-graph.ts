@@ -82,14 +82,15 @@ export function topologicalSort(
 }
 
 /**
- * Get import order (reverse of export order)
- * Children must be imported before parents to avoid FK constraint violations
+ * Get import order (same as topological sort)
+ * Parents must be imported before children to satisfy FK constraints.
+ * topologicalSort already returns the correct import order (parents first).
  *
  * @param entities - Array of exportable entities
- * @returns Entities in reverse dependency order (children before parents)
+ * @returns Entities in dependency order (parents before children)
  */
 export function getImportOrder(
   entities: ExportableEntity[],
 ): ExportableEntity[] {
-  return topologicalSort(entities).slice().reverse();
+  return topologicalSort(entities);
 }

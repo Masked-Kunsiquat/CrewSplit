@@ -22,7 +22,13 @@ export function validateJsonStructure(data: any): ExportFile {
   }
 
   // Check required top-level fields
-  const requiredFields = ["version", "exportedAt", "scope", "data"];
+  const requiredFields = [
+    "version",
+    "exportedAt",
+    "appVersion",
+    "scope",
+    "data",
+  ];
   for (const field of requiredFields) {
     if (!(field in data)) {
       throw new InvalidExportFileError(`Missing required field: ${field}`);
@@ -32,6 +38,11 @@ export function validateJsonStructure(data: any): ExportFile {
   // Validate version
   if (typeof data.version !== "string" || !data.version) {
     throw new InvalidExportFileError("version must be a non-empty string");
+  }
+
+  // Validate appVersion
+  if (typeof data.appVersion !== "string" || !data.appVersion) {
+    throw new InvalidExportFileError("appVersion must be a non-empty string");
   }
 
   // Validate exportedAt (ISO 8601 timestamp)

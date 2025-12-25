@@ -9,6 +9,7 @@ import {
 } from "@db/schema/settlements";
 import { trips as tripsTable } from "@db/schema/trips";
 import { participants as participantsTable } from "@db/schema/participants";
+import { expenseSplits as expenseSplitsTable } from "@db/schema/expense-splits";
 import { eq, and, inArray } from "drizzle-orm";
 import {
   ExportableEntity,
@@ -26,7 +27,7 @@ import {
 
 export const settlementEntity: ExportableEntity<Settlement> = {
   name: "settlements",
-  dependencies: ["trips", "participants"],
+  dependencies: ["trips", "participants", "expenseSplits"],
   scope: "trip", // Settlements are trip-scoped
 
   async export(context: ExportContext): Promise<Settlement[]> {
@@ -83,6 +84,11 @@ export const settlementEntity: ExportableEntity<Settlement> = {
           ...records.map((r) => r.toParticipantId),
         ]),
       ];
+      const expenseSplitIds = [
+        ...new Set(
+          records.map((r) => r.expenseSplitId).filter((id) => id !== null),
+        ),
+      ];
 
       // Check trips
       const existingTrips = await db
@@ -99,6 +105,18 @@ export const settlementEntity: ExportableEntity<Settlement> = {
       const existingParticipantIdSet = new Set(
         existingParticipants.map((p) => p.id),
       );
+
+      // Check expense splits (only if there are non-null expenseSplitIds)
+      let existingExpenseSplitIdSet = new Set<string>();
+      if (expenseSplitIds.length > 0) {
+        const existingExpenseSplits = await db
+          .select({ id: expenseSplitsTable.id })
+          .from(expenseSplitsTable)
+          .where(inArray(expenseSplitsTable.id, expenseSplitIds as string[]));
+        existingExpenseSplitIdSet = new Set(
+          existingExpenseSplits.map((es) => es.id),
+        );
+      }
 
       for (let i = 0; i < records.length; i++) {
         const record = records[i];
@@ -132,6 +150,21 @@ export const settlementEntity: ExportableEntity<Settlement> = {
             recordIndex: i,
             field: "toParticipantId",
             message: `Foreign key violation: participant '${record.toParticipantId}' not found`,
+            code: "MISSING_FK",
+          });
+        }
+
+        // Check expenseSplitId (only if present)
+        if (
+          record.expenseSplitId &&
+          !existingExpenseSplitIdSet.has(record.expenseSplitId)
+        ) {
+          result.errorCount++;
+          result.errors.push({
+            recordId: record.id,
+            recordIndex: i,
+            field: "expenseSplitId",
+            message: `Foreign key violation: expense split '${record.expenseSplitId}' not found`,
             code: "MISSING_FK",
           });
         }
