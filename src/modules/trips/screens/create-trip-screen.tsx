@@ -14,10 +14,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import EmojiPicker from "rn-emoji-keyboard";
 import { theme } from "@ui/theme";
 import { Button, Input, CurrencyPicker, DateRangePicker } from "@ui/components";
-import { useCreateTrip } from "../hooks/use-trip-mutations";
-import { useAddParticipant } from "../../participants/hooks/use-participant-mutations";
+import { useCreateTripWithOwner } from "../hooks/use-trip-mutations";
 import { useDeviceOwner } from "@modules/onboarding/hooks/use-device-owner";
-import { participantLogger } from "@utils/logger";
 
 const AVATAR_COLORS = [
   "#FF6B6B",
@@ -42,8 +40,8 @@ export default function CreateTripScreen() {
   const [emojiPickerOpen, setEmojiPickerOpen] = useState(false);
   const insets = useSafeAreaInsets();
 
-  const { create: createTripMutation, loading: isCreating } = useCreateTrip();
-  const { add: addParticipantMutation } = useAddParticipant();
+  const { create: createTripWithOwner, loading: isCreating } =
+    useCreateTripWithOwner();
 
   // Set dynamic header title
   useEffect(() => {
@@ -75,31 +73,18 @@ export default function CreateTripScreen() {
     }
 
     try {
-      const trip = await createTripMutation({
+      // Create trip with device owner as first participant
+      // Uses TripService.createTripWithOwner for atomic operation
+      const { trip } = await createTripWithOwner({
         name: name.trim(),
         currencyCode: currency,
         description: description.trim() || undefined,
         startDate: startDate.toISOString(),
         endDate: endDate?.toISOString() || undefined,
         emoji,
+        deviceOwnerName: deviceOwnerName || "Me",
+        deviceOwnerAvatarColor: AVATAR_COLORS[0], // First color for device owner
       });
-
-      // Auto-add device owner as first participant if name is set
-      if (deviceOwnerName) {
-        try {
-          await addParticipantMutation({
-            tripId: trip.id,
-            name: deviceOwnerName,
-            avatarColor: AVATAR_COLORS[0], // First color for device owner
-          });
-        } catch (error) {
-          participantLogger.warn(
-            "Failed to add device owner as participant",
-            error,
-          );
-          // Don't fail trip creation if participant add fails
-        }
-      }
 
       router.replace(`/trips/${trip.id}`);
     } catch (error) {
