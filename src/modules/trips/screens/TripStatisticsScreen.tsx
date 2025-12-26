@@ -20,6 +20,7 @@ import {
 import { useTripById } from "../hooks/use-trips";
 import { useStatistics } from "@modules/statistics/hooks/use-statistics";
 import { CurrencyUtils } from "@utils/currency";
+import { formatPercentage } from "@utils/formatting";
 import { formatErrorMessage } from "src/utils/format-error";
 import { getCategoryIcon } from "@utils/category-icons";
 import { useRefreshControl } from "@hooks/use-refresh-control";
@@ -41,10 +42,6 @@ export default function TripStatisticsScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id?: string }>();
   const tripId = id?.trim() || null;
-  const formatPercentage = (value: unknown) => {
-    const numericValue = Number(value);
-    return Number.isFinite(numericValue) ? numericValue.toFixed(1) : "-";
-  };
 
   const {
     trip,
@@ -219,7 +216,7 @@ export default function TripStatisticsScreen() {
                             )}
                           </Text>
                           <Text style={styles.categoryPercentage}>
-                            {formatPercentage(cat.percentage)}%
+                            {formatPercentage(cat.percentage)}
                           </Text>
                         </View>
                       </View>
@@ -291,7 +288,7 @@ export default function TripStatisticsScreen() {
                             )}
                           </Text>
                           <Text style={styles.participantPercentage}>
-                            {formatPercentage(participant.percentage)}%
+                            {formatPercentage(participant.percentage)}
                           </Text>
                         </View>
                       </Pressable>

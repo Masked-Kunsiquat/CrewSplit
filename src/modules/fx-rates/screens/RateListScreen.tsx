@@ -16,6 +16,7 @@ import { useRouter, useNavigation } from "expo-router";
 import { theme } from "@ui/theme";
 import { Button, Card, LoadingScreen } from "@ui/components";
 import { useFxRates, useAllFxRates } from "../hooks/use-fx-rates";
+import { formatFxRate } from "@utils/formatting";
 
 /**
  * Format timestamp as relative time (e.g., "2 days ago")
@@ -133,7 +134,7 @@ export default function RateListScreen() {
                   <Text style={styles.arrowText}>→</Text>
                   <Text style={styles.currencyText}>{item.quoteCurrency}</Text>
                 </View>
-                <Text style={styles.rateValue}>{item.rate.toFixed(4)}</Text>
+                <Text style={styles.rateValue}>{formatFxRate(item.rate)}</Text>
               </View>
 
               <View style={styles.rateMetadata}>

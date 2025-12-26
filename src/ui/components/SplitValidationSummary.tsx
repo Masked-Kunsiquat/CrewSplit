@@ -7,6 +7,7 @@ import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { theme } from "@ui/theme";
 import { formatCurrency } from "@utils/currency";
+import { formatPercentage } from "@utils/formatting";
 import type { SplitType } from "./ParticipantSplitRow";
 
 interface SplitValidationSummaryProps {
@@ -47,7 +48,7 @@ export function SplitValidationSummary({
 
   const getDisplayText = () => {
     if (splitType === "percentage") {
-      return `${current.toFixed(1)}/${target}%`;
+      return `${formatPercentage(current, false)}/${target}%`;
     }
     if (splitType === "amount" && currency) {
       return `${formatCurrency(current, currency)}/${formatCurrency(target, currency)}`;

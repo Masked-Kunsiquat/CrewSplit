@@ -4,6 +4,8 @@
  */
 
 import { parseCurrency } from "@utils/currency";
+import { isValidPercentageSum } from "@utils/validation";
+import { formatPercentage } from "@utils/formatting";
 import type { SplitType } from "@ui/components";
 
 export interface ExpenseSplit {
@@ -117,9 +119,9 @@ export function validateSplitTotals(
   // Validate percentage sum
   if (splitType === "percentage") {
     const totalPercentage = splits.reduce((sum, split) => sum + split.share, 0);
-    if (Math.abs(totalPercentage - 100) >= 0.01) {
+    if (!isValidPercentageSum(totalPercentage)) {
       throw new Error(
-        `Percentages must add up to 100% (currently ${totalPercentage.toFixed(1)}%)`,
+        `Percentages must add up to 100% (currently ${formatPercentage(totalPercentage)})`,
       );
     }
   }
