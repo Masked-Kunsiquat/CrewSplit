@@ -6,5 +6,11 @@
 
 export * from "./types";
 export * from "./hooks";
-// TODO: Queries will be exported once implemented
-export * from "./repository";
+
+// Query functions (read-only) are exported for cross-module use
+// Mutations should use hooks/service layer
+export {
+  getExpensesForTrip,
+  getExpenseById,
+  getExpenseSplits,
+} from "./repository";

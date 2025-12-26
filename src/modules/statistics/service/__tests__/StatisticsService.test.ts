@@ -5,7 +5,6 @@
 
 import type { ExpenseWithCategory } from "../../repository";
 import type { Participant } from "@modules/participants";
-import type { TripStatistics } from "../../types";
 import { computeStatistics } from "../StatisticsService";
 
 const mockCalculateCategorySpending = jest.fn();
@@ -37,7 +36,7 @@ jest.mock("../../repository", () => ({
   getTripCurrency: (...args: unknown[]) => mockGetTripCurrency(...args),
 }));
 
-jest.mock("@modules/participants/repository", () => ({
+jest.mock("@modules/participants", () => ({
   getParticipantsForTrip: (...args: unknown[]) =>
     mockGetParticipantsForTrip(...args),
 }));
@@ -164,7 +163,7 @@ describe("StatisticsService.computeStatistics", () => {
     const result = await computeStatistics("trip-1", dependencies);
 
     // Assert
-    expect(result).toMatchObject<TripStatistics>({
+    expect(result).toMatchObject({
       totalCost: 2500,
       currency: "USD",
       participantSpending: [

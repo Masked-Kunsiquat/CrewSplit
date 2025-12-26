@@ -4,11 +4,8 @@
  */
 
 import { computeSettlement } from "../service/SettlementService";
-import {
-  getExpensesForTrip,
-  getExpenseSplits,
-} from "../../expenses/repository";
-import { getParticipantsForTrip } from "../../participants/repository";
+import { getExpensesForTrip, getExpenseSplits } from "@modules/expenses";
+import { getParticipantsForTrip } from "@modules/participants";
 import { SettlementRepository } from "../repository";
 
 jest.mock("@utils/logger", () => {
@@ -21,12 +18,12 @@ jest.mock("@utils/logger", () => {
   return { settlementLogger: logger };
 });
 
-jest.mock("../../expenses/repository", () => ({
+jest.mock("@modules/expenses", () => ({
   getExpensesForTrip: jest.fn(),
   getExpenseSplits: jest.fn(),
 }));
 
-jest.mock("../../participants/repository", () => ({
+jest.mock("@modules/participants", () => ({
   getParticipantsForTrip: jest.fn(),
 }));
 

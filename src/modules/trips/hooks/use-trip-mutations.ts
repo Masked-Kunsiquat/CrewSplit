@@ -8,7 +8,7 @@
 import { useState, useCallback } from "react";
 import * as TripService from "../service/TripService";
 import { TripRepository } from "../repository";
-import { ParticipantRepository } from "../../participants/repository";
+import { ParticipantRepository } from "@modules/participants";
 import type { Trip, CreateTripInput, UpdateTripInput } from "../types";
 import type { CreateTripWithOwnerInput } from "../service/TripService";
 import { tripLogger } from "@utils/logger";
