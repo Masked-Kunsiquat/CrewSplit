@@ -28,7 +28,7 @@ export function useAddExpense() {
   const [error, setError] = useState<Error | null>(null);
 
   const add = useCallback(
-    async (input: CreateExpenseInput): Promise<Expense | null> => {
+    async (input: CreateExpenseInput): Promise<Expense> => {
       try {
         setLoading(true);
         setError(null);
@@ -39,7 +39,7 @@ export function useAddExpense() {
           err instanceof Error ? err : new Error("Failed to create expense");
         expenseLogger.error("Failed to add expense", error);
         setError(error);
-        return null;
+        throw error; // Re-throw so caller can handle
       } finally {
         setLoading(false);
       }
@@ -62,7 +62,7 @@ export function useUpdateExpense() {
     async (
       id: string,
       updates: UpdateExpenseInput,
-    ): Promise<Expense | null> => {
+    ): Promise<Expense> => {
       try {
         setLoading(true);
         setError(null);
@@ -73,7 +73,7 @@ export function useUpdateExpense() {
           err instanceof Error ? err : new Error("Failed to update expense");
         expenseLogger.error("Failed to update expense", error);
         setError(error);
-        return null;
+        throw error; // Re-throw so caller can handle
       } finally {
         setLoading(false);
       }
@@ -102,6 +102,7 @@ export function useDeleteExpense() {
         err instanceof Error ? err : new Error("Failed to delete expense");
       expenseLogger.error("Failed to delete expense", error);
       setError(error);
+      throw error; // Re-throw so caller can handle
     } finally {
       setLoading(false);
     }

@@ -107,8 +107,11 @@ function ExpenseDetailsContent({
     refetch: refetchParticipants,
   } = useParticipants(tripId);
   const { categories } = useExpenseCategories(tripId);
-  const { remove: deleteExpenseMutation, loading: isDeleting } =
-    useDeleteExpense();
+  const {
+    remove: deleteExpenseMutation,
+    loading: isDeleting,
+    error: deleteError,
+  } = useDeleteExpense();
 
   // FX rate staleness detection and refresh
   const {
@@ -236,6 +239,16 @@ function ExpenseDetailsContent({
     setConversionError(displayAmountsResult.error);
   }, [displayAmountsResult.error]);
 
+  // Show alert when deletion fails
+  useEffect(() => {
+    if (deleteError) {
+      Alert.alert(
+        "Deletion Failed",
+        deleteError.message || "Failed to delete expense",
+      );
+    }
+  }, [deleteError]);
+
   const loading = expenseLoading || participantsLoading;
 
   // Show modal when conversion error occurs
@@ -304,10 +317,14 @@ function ExpenseDetailsContent({
   const confirmDelete = async () => {
     setShowDeleteConfirm(false);
 
-    await deleteExpenseMutation(expenseId);
-    // Note: Hook swallows errors internally. Navigate back on completion.
-    // TODO: Improve hook to provide success/failure feedback
-    router.back();
+    try {
+      await deleteExpenseMutation(expenseId);
+      // Only navigate back if deletion succeeded
+      router.back();
+    } catch (error) {
+      // Error is already set in hook state and will be shown via useEffect Alert
+      // No need to handle here - the useEffect will show the Alert
+    }
   };
 
   return (

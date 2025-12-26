@@ -79,7 +79,7 @@ function AddExpenseScreenContent({ tripId }: { tripId: string }) {
 
   const handleSubmit = async (data: ExpenseFormData) => {
     try {
-      const newExpense = await addExpenseMutation({
+      await addExpenseMutation({
         tripId,
         description: data.description,
         notes: data.notes,
@@ -91,11 +91,8 @@ function AddExpenseScreenContent({ tripId }: { tripId: string }) {
         splits: data.splits,
       });
 
-      if (newExpense) {
-        router.back();
-      } else {
-        throw new Error("Failed to create expense");
-      }
+      // Success - navigate back
+      router.back();
     } catch (error) {
       throw error; // Let ExpenseForm handle the error display
     }
