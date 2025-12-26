@@ -92,15 +92,16 @@ export default function CreateTripScreen() {
 
     // Auto-add device owner as first participant if name is set
     if (deviceOwnerName) {
-      const participant = await addParticipantMutation({
-        tripId: trip.id,
-        name: deviceOwnerName,
-        avatarColor: AVATAR_COLORS[0], // First color for device owner
-      });
-
-      if (!participant) {
+      try {
+        await addParticipantMutation({
+          tripId: trip.id,
+          name: deviceOwnerName,
+          avatarColor: AVATAR_COLORS[0], // First color for device owner
+        });
+      } catch (error) {
         participantLogger.warn(
-          "Failed to add device owner as participant - hook returned null",
+          "Failed to add device owner as participant",
+          error,
         );
         // Don't fail trip creation if participant add fails
       }

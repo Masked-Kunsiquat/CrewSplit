@@ -91,7 +91,11 @@ function ManageParticipantsContent({
     loading: isAdding,
     error: addError,
   } = useAddParticipant();
-  const { remove: removeParticipantMutation } = useRemoveParticipant();
+  const {
+    remove: removeParticipantMutation,
+    loading: isRemoving,
+    error: removeError,
+  } = useRemoveParticipant();
 
   // Pull-to-refresh support
   const refreshControl = useRefreshControl([refetchTrip, refetchParticipants]);
@@ -105,6 +109,16 @@ function ManageParticipantsContent({
     }
   }, [trip, navigation]);
 
+  // Show alert when removal fails
+  useEffect(() => {
+    if (removeError) {
+      Alert.alert(
+        "Removal Failed",
+        removeError.message || "Failed to remove participant",
+      );
+    }
+  }, [removeError]);
+
   const handleAddParticipant = async () => {
     if (isAdding) return;
     if (!newParticipantName.trim()) {
@@ -116,19 +130,22 @@ function ManageParticipantsContent({
     const avatarColor =
       AVATAR_COLORS[Math.floor(Math.random() * AVATAR_COLORS.length)];
 
-    const newParticipant = await addParticipantMutation({
-      tripId,
-      name: newParticipantName.trim(),
-      avatarColor,
-    });
+    try {
+      await addParticipantMutation({
+        tripId,
+        name: newParticipantName.trim(),
+        avatarColor,
+      });
 
-    if (newParticipant) {
+      // Success - refresh and clear form
       refetchParticipants();
       setNewParticipantName("");
       setNameError(null);
-    } else {
-      // addError contains the original error with context
-      const errorMessage = addError?.message || "Failed to add participant";
+    } catch (error) {
+      // Error is already set in hook state
+      // Show alert with the error message
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to add participant";
       Alert.alert("Error", errorMessage);
     }
   };
@@ -146,14 +163,15 @@ function ManageParticipantsContent({
 
   const confirmRemoveParticipant = async () => {
     if (!pendingRemoval) return;
+
     try {
       await removeParticipantMutation(pendingRemoval.id);
+      // Success - refresh participants and close dialog
       refetchParticipants();
-    } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
-      participantLogger.error("Failed to delete participant", err);
-      Alert.alert("Error", `Failed to remove participant: ${message}`);
-    } finally {
+      setPendingRemoval(null);
+    } catch (error) {
+      // Error is already set in hook state and will be shown via useEffect Alert
+      // Close the dialog so user can see the error alert
       setPendingRemoval(null);
     }
   };
@@ -248,6 +266,7 @@ function ManageParticipantsContent({
         confirmVariant="danger"
         onCancel={() => setPendingRemoval(null)}
         onConfirm={confirmRemoveParticipant}
+        loading={isRemoving}
       />
     </View>
   );
