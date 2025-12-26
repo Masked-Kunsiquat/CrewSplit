@@ -6,4 +6,7 @@
 
 export * from "./types";
 export * from "./hooks";
-// Repository layer is internal - use hooks for data access
+
+// Query functions (read-only) are exported for cross-module use
+// Mutations should use hooks/service layer
+export { getParticipantsForTrip, getParticipantById } from "./repository";

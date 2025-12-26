@@ -9,11 +9,8 @@
  * - Returns both suggested settlements (from expenses) and recorded settlements
  */
 
-import {
-  getExpensesForTrip,
-  getExpenseSplits,
-} from "../../expenses/repository";
-import { getParticipantsForTrip } from "../../participants/repository";
+import { getExpensesForTrip, getExpenseSplits } from "@modules/expenses";
+import { getParticipantsForTrip } from "@modules/participants";
 import { SettlementRepository } from "../repository";
 import { calculateBalances } from "../engine/calculate-balances";
 import { optimizeSettlements } from "../engine/optimize-settlements";
