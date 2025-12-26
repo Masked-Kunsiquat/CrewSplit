@@ -21,6 +21,7 @@ import {
   UpdateExpenseInput,
 } from "../types";
 import { expenseLogger } from "@utils/logger";
+import { computeConversion } from "../engine";
 
 const mapSplit = (
   row: typeof expenseSplitsTable.$inferSelect,
@@ -46,43 +47,48 @@ const getTripCurrency = async (tripId: string): Promise<string> => {
   return rows[0].currencyCode;
 };
 
-const computeConversion = (
+/**
+ * Wrapper around the pure computeConversion function that adds logging.
+ * Business logic lives in the engine layer - this is just orchestration.
+ */
+const computeConversionWithLogging = (
   originalAmountMinor: number,
   originalCurrency: string,
   tripCurrencyCode: string,
   providedRate?: number | null,
   providedConverted?: number,
 ): { convertedAmountMinor: number; fxRateToTrip: number | null } => {
-  if (originalCurrency === tripCurrencyCode) {
-    expenseLogger.debug("No currency conversion needed", {
+  try {
+    const result = computeConversion({
+      originalAmountMinor,
+      originalCurrency,
+      tripCurrencyCode,
+      providedRate,
+      providedConverted,
+    });
+
+    if (result.fxRateToTrip === null) {
+      expenseLogger.debug("No currency conversion needed", {
+        originalCurrency,
+        tripCurrency: tripCurrencyCode,
+      });
+    } else {
+      expenseLogger.debug("Currency converted", {
+        originalCurrency,
+        tripCurrency: tripCurrencyCode,
+        fxRate: result.fxRateToTrip,
+      });
+    }
+
+    return result;
+  } catch (error) {
+    expenseLogger.error("Currency conversion failed", {
       originalCurrency,
       tripCurrency: tripCurrencyCode,
+      error: error instanceof Error ? error.message : String(error),
     });
-    return { convertedAmountMinor: originalAmountMinor, fxRateToTrip: null };
+    throw error;
   }
-
-  if (providedRate === undefined || providedRate === null) {
-    expenseLogger.error("Missing FX rate for currency conversion", {
-      originalCurrency,
-      tripCurrency: tripCurrencyCode,
-    });
-    throw new Error(
-      "fxRateToTrip is required when expense currency differs from trip currency",
-    );
-  }
-  if (providedRate <= 0) {
-    expenseLogger.error("Invalid FX rate", { fxRate: providedRate });
-    throw new Error("fxRateToTrip must be positive");
-  }
-
-  const converted =
-    providedConverted ?? Math.round(originalAmountMinor * providedRate);
-  expenseLogger.debug("Currency converted", {
-    originalCurrency,
-    tripCurrency: tripCurrencyCode,
-    fxRate: providedRate,
-  });
-  return { convertedAmountMinor: converted, fxRateToTrip: providedRate };
 };
 
 const mapExpenseRow = (row: ExpenseRow): Expense => mapExpenseFromDb(row);
@@ -106,7 +112,7 @@ export const addExpense = async (
   expenseData: CreateExpenseInput,
 ): Promise<Expense> => {
   const tripCurrencyCode = await getTripCurrency(expenseData.tripId);
-  const { convertedAmountMinor, fxRateToTrip } = computeConversion(
+  const { convertedAmountMinor, fxRateToTrip } = computeConversionWithLogging(
     expenseData.originalAmountMinor,
     expenseData.originalCurrency,
     tripCurrencyCode,
@@ -244,7 +250,7 @@ export const updateExpense = async (
   const originalCurrency = patch.originalCurrency ?? existing.originalCurrency;
   const originalAmountMinor =
     patch.originalAmountMinor ?? existing.originalAmountMinor;
-  const { convertedAmountMinor, fxRateToTrip } = computeConversion(
+  const { convertedAmountMinor, fxRateToTrip } = computeConversionWithLogging(
     originalAmountMinor,
     originalCurrency,
     tripCurrencyCode,
