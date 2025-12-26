@@ -22,7 +22,7 @@ import { createAppError } from "@utils/errors";
  * Validates and formats a single date string
  * @param dateString - ISO 8601 date string to parse
  * @returns Formatted date string (MM/DD/YY)
- * @throws Error with code "INVALID_DATE_FORMAT" if date is invalid
+ * @throws Error with code "INVALID_INPUT" if date is invalid
  */
 function formatSingleDate(dateString: string): string {
   const date = new Date(dateString);

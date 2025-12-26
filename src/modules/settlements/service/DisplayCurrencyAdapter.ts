@@ -52,7 +52,7 @@ export class StubFxRateProvider implements FxRateProvider {
 
     if (rate === undefined) {
       throw createAppError(
-        "MISSING_FX_RATE",
+        "FX_RATE_NOT_FOUND",
         `No exchange rate available for ${fromCurrency} to ${toCurrency}. ` +
           `Please set a manual rate using setRate() or implement a live FX provider.`,
         {
