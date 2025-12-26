@@ -25,6 +25,7 @@ import {
   LoadingScreen,
   ErrorScreen,
 } from "@ui/components";
+import { formatFxRate } from "@utils/formatting";
 import { useExpenseWithSplits } from "../hooks/use-expenses";
 import { useExpenseCategories } from "../hooks/use-expense-categories";
 import { useDeleteExpense } from "../hooks/use-expense-mutations";
@@ -435,7 +436,7 @@ function ExpenseDetailsContent({
             <View style={styles.fxRateRow}>
               <Text style={styles.fxRateText}>
                 Exchange rate: 1 {expense.originalCurrency} ={" "}
-                {expense.fxRateToTrip.toFixed(4)} {expense.currency}
+                {formatFxRate(expense.fxRateToTrip)} {expense.currency}
               </Text>
             </View>
           )}

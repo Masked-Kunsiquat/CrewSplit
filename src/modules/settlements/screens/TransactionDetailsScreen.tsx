@@ -20,6 +20,7 @@ import {
 import { useTripById } from "@modules/trips/hooks/use-trips";
 import { formatCurrency } from "@utils/currency";
 import { normalizeRouteParam } from "@utils/route-params";
+import { formatFxRate } from "@utils/formatting";
 
 export default function TransactionDetailsScreen() {
   const router = useRouter();
@@ -108,7 +109,7 @@ export default function TransactionDetailsScreen() {
                 settlement.convertedAmountMinor,
                 trip.currencyCode,
               )}{" "}
-              (Rate: {settlement.fxRateToTrip.toFixed(4)})
+              (Rate: {formatFxRate(settlement.fxRateToTrip)})
             </Text>
           )}
         </View>

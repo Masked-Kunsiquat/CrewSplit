@@ -32,6 +32,7 @@ import {
 } from "../hooks/use-settlements";
 import { parseCurrency } from "@utils/currency";
 import { normalizeRouteParam } from "@utils/route-params";
+import { formatAmountInput } from "@utils/formatting";
 import type { NewSettlementData, SettlementPaymentMethod } from "../types";
 
 export default function RecordTransactionScreen() {
@@ -103,7 +104,7 @@ export default function RecordTransactionScreen() {
 
   useEffect(() => {
     if (!settlement || hasInitialized) return;
-    setAmount((settlement.originalAmountMinor / 100).toFixed(2));
+    setAmount(formatAmountInput(settlement.originalAmountMinor));
     setCurrency(settlement.originalCurrency);
     setFromParticipantId(settlement.fromParticipantId);
     setToParticipantId(settlement.toParticipantId);
