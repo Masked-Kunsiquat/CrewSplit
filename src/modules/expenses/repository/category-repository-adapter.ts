@@ -7,7 +7,7 @@
 
 import { db } from "@db/client";
 import { expenseCategories } from "@db/schema/expense-categories";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import type { ICategoryRepository } from "../service/ExpenseService";
 
 export class CategoryRepositoryAdapter implements ICategoryRepository {
@@ -15,7 +15,12 @@ export class CategoryRepositoryAdapter implements ICategoryRepository {
     const rows = await db
       .select({ id: expenseCategories.id })
       .from(expenseCategories)
-      .where(eq(expenseCategories.id, id))
+      .where(
+        and(
+          eq(expenseCategories.id, id),
+          eq(expenseCategories.isArchived, false),
+        ),
+      )
       .limit(1);
 
     return rows.length > 0;
