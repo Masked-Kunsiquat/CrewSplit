@@ -321,7 +321,7 @@ function ExpenseDetailsContent({
       await deleteExpenseMutation(expenseId);
       // Only navigate back if deletion succeeded
       router.back();
-    } catch (error) {
+    } catch {
       // Error is already set in hook state and will be shown via useEffect Alert
       // No need to handle here - the useEffect will show the Alert
     }

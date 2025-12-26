@@ -72,7 +72,7 @@ function TripDashboardScreenContent({ tripId }: { tripId: string }) {
     refetch: refetchExpenses,
   } = useExpenses(tripId);
 
-  const { update: updateTripMutation, loading: isUpdating } = useUpdateTrip();
+  const { update: updateTripMutation } = useUpdateTrip();
   const { remove: deleteTripMutation, error: deleteError } = useDeleteTrip();
 
   const refetchFunctions = useMemo(
@@ -178,7 +178,7 @@ function TripDashboardScreenContent({ tripId }: { tripId: string }) {
       await deleteTripMutation(tripId);
       // Success - navigate to trips list
       router.replace("/");
-    } catch (error) {
+    } catch {
       // Error is already set in hook state and will be shown via useEffect Alert
       // Reset isDeleting immediately so UI reflects failure
       setIsDeleting(false);

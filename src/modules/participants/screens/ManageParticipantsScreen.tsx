@@ -7,7 +7,6 @@ import React, { useState, useEffect } from "react";
 import { View, Text, StyleSheet, ScrollView, Alert } from "react-native";
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
 import { theme } from "@ui/theme";
-import { participantLogger } from "@utils/logger";
 import {
   Button,
   Card,
@@ -86,11 +85,8 @@ function ManageParticipantsContent({
     refetch: refetchParticipants,
   } = useParticipants(tripId);
 
-  const {
-    add: addParticipantMutation,
-    loading: isAdding,
-    error: addError,
-  } = useAddParticipant();
+  const { add: addParticipantMutation, loading: isAdding } =
+    useAddParticipant();
   const {
     remove: removeParticipantMutation,
     loading: isRemoving,
@@ -169,7 +165,7 @@ function ManageParticipantsContent({
       // Success - refresh participants and close dialog
       refetchParticipants();
       setPendingRemoval(null);
-    } catch (error) {
+    } catch {
       // Error is already set in hook state and will be shown via useEffect Alert
       // Close the dialog so user can see the error alert
       setPendingRemoval(null);

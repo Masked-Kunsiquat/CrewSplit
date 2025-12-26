@@ -3,7 +3,7 @@
  * UI/UX ENGINEER: Screen for creating new expenses
  */
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { useRouter, useLocalSearchParams, useNavigation } from "expo-router";
 import { normalizeRouteParam } from "@utils/route-params";
 import { LoadingScreen, ErrorScreen } from "@ui/components";
