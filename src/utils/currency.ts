@@ -135,10 +135,30 @@ export const CurrencyUtils = {
   },
 
   /**
-   * Apply FX rate conversion
-   * @param amountMinor - Amount in cents (source currency)
-   * @param fxRate - Exchange rate to target currency
-   * @returns Converted amount in cents (target currency), rounded
+   * Converts an amount between currencies using a given exchange rate.
+   *
+   * Uses Math.round() for deterministic rounding to nearest cent.
+   * This is the single source of truth for FX conversions throughout the app.
+   *
+   * @param amountMinor - Amount in minor units (cents) in source currency
+   * @param fxRate - Exchange rate from source to target currency (targetCurrency / sourceCurrency)
+   * @returns Converted amount in minor units (cents) in target currency
+   *
+   * @example
+   * // Convert $10.00 (USD) to EUR at rate 0.92
+   * CurrencyUtils.convertWithFxRate(1000, 0.92) // 920 (€9.20)
+   *
+   * @example
+   * // Convert €11.00 (EUR) to USD at rate 1.08695652
+   * CurrencyUtils.convertWithFxRate(1100, 1.08695652) // 1196 ($11.96)
+   *
+   * @example
+   * // Edge case: negative amounts (refunds)
+   * CurrencyUtils.convertWithFxRate(-500, 1.1) // -550
+   *
+   * @example
+   * // Edge case: zero amount
+   * CurrencyUtils.convertWithFxRate(0, 1.5) // 0
    */
   convertWithFxRate(amountMinor: number, fxRate: number): number {
     return Math.round(amountMinor * fxRate);
