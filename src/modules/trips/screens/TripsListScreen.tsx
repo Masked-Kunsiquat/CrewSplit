@@ -16,6 +16,7 @@ import { useBulkDeleteTrips } from "../hooks/use-trip-mutations";
 import { useRefreshControl } from "@hooks/use-refresh-control";
 import { SampleTripBadge } from "@modules/onboarding/components/SampleTripBadge";
 import { TripExportModal } from "../components/trip-export-modal";
+import { createAppError } from "@utils/errors";
 
 /**
  * Validates and formats a single date string
@@ -27,11 +28,10 @@ function formatSingleDate(dateString: string): string {
   const date = new Date(dateString);
 
   if (isNaN(date.getTime())) {
-    const error = new Error(`Invalid date format: "${dateString}"`) as Error & {
-      code: string;
-    };
-    error.code = "INVALID_DATE_FORMAT";
-    throw error;
+    throw createAppError(
+      "INVALID_INPUT",
+      `Invalid date format: "${dateString}"`,
+    );
   }
 
   return `${(date.getMonth() + 1).toString().padStart(2, "0")}/${date.getDate().toString().padStart(2, "0")}/${date.getFullYear().toString().slice(-2)}`;

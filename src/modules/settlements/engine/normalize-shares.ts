@@ -6,6 +6,7 @@
 
 import { ExpenseSplit } from "../../expenses/types";
 import { isValidPercentageSum } from "@utils/validation";
+import { createAppError } from "@utils/errors";
 
 /**
  * Epsilon for fractional part equality comparison.
@@ -91,7 +92,10 @@ export const normalizeShares = (
 
   // Validate all splits have the same type
   if (!splits.every((s) => s.shareType === shareType)) {
-    throw new Error("All splits for an expense must have the same shareType");
+    throw createAppError(
+      "INVALID_INPUT",
+      "All splits for an expense must have the same shareType",
+    );
   }
 
   // Deterministic normalization must not depend on caller-provided split ordering
@@ -128,7 +132,10 @@ export const normalizeShares = (
       break;
 
     default:
-      throw new Error(`Unknown share type: ${shareType}`);
+      throw createAppError(
+        "INVALID_INPUT",
+        `Unknown share type: ${shareType}`,
+      );
   }
 
   const normalized = new Array<number>(splits.length);
@@ -165,7 +172,10 @@ function normalizePercentage(splits: ExpenseSplit[], total: number): number[] {
 
   // Allow small floating-point tolerance
   if (!isValidPercentageSum(totalPercentage)) {
-    throw new Error(`Percentages must sum to 100, got ${totalPercentage}`);
+    throw createAppError(
+      "INVALID_INPUT",
+      `Percentages must sum to 100, got ${totalPercentage}`,
+    );
   }
 
   // Calculate exact amounts (may have fractional cents)
@@ -206,7 +216,7 @@ function normalizeWeight(splits: ExpenseSplit[], total: number): number[] {
   const totalWeight = splits.reduce((sum, s) => sum + s.share, 0);
 
   if (totalWeight <= 0) {
-    throw new Error("Total weight must be positive");
+    throw createAppError("INVALID_INPUT", "Total weight must be positive");
   }
 
   // Calculate exact amounts
@@ -250,7 +260,8 @@ function normalizeAmount(splits: ExpenseSplit[], total: number): number[] {
     (s) => s.amount === undefined || s.amount === null,
   );
   if (missingAmounts.length > 0) {
-    throw new Error(
+    throw createAppError(
+      "INVALID_INPUT",
       `All splits must have explicit amounts; found ${missingAmounts.length} missing amount(s)`,
     );
   }
@@ -259,7 +270,8 @@ function normalizeAmount(splits: ExpenseSplit[], total: number): number[] {
   const sum = amounts.reduce((acc, a) => acc + a, 0);
 
   if (sum !== total) {
-    throw new Error(
+    throw createAppError(
+      "INVALID_INPUT",
       `Split amounts must sum to expense total. Expected ${total}, got ${sum}`,
     );
   }

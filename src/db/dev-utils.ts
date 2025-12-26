@@ -7,6 +7,7 @@
  */
 
 import { deleteDatabaseSync } from "expo-sqlite";
+import { createAppError } from "@utils/errors";
 
 /**
  * DEVELOPMENT ONLY: Deletes the entire database
@@ -27,7 +28,10 @@ import { deleteDatabaseSync } from "expo-sqlite";
  */
 export function resetDatabase(): void {
   if (!__DEV__) {
-    throw new Error("resetDatabase() can only be called in development mode");
+    throw createAppError(
+      "OPERATION_FAILED",
+      "resetDatabase() can only be called in development mode",
+    );
   }
 
   try {
@@ -47,7 +51,8 @@ export function resetDatabase(): void {
  */
 export function logMigrationInfo(db: any): void {
   if (!__DEV__) {
-    throw new Error(
+    throw createAppError(
+      "OPERATION_FAILED",
       "logMigrationInfo() can only be called in development mode",
     );
   }
