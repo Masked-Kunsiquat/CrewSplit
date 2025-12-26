@@ -27,10 +27,11 @@ export interface ConversionResult {
  * Computes currency conversion for an expense.
  *
  * Rules:
- * 1. If currencies match: no conversion needed, fxRateToTrip = null
+ * 1. If currencies match (case-insensitive): no conversion needed, fxRateToTrip = null
  * 2. If currencies differ: fxRateToTrip is required and must be positive
  * 3. Converted amount is either providedConverted or Math.round(originalAmountMinor * providedRate)
  * 4. All amounts are in minor units (cents)
+ * 5. Currency codes are normalized to uppercase for comparison
  *
  * @throws {Error} If currencies differ and fxRateToTrip is missing or invalid
  */
@@ -43,8 +44,12 @@ export function computeConversion(input: ConversionInput): ConversionResult {
     providedConverted,
   } = input;
 
+  // Normalize currency codes to uppercase for comparison (case-insensitive)
+  const normalizedOriginal = originalCurrency.toUpperCase();
+  const normalizedTrip = tripCurrencyCode.toUpperCase();
+
   // Case 1: Same currency - no conversion needed
-  if (originalCurrency === tripCurrencyCode) {
+  if (normalizedOriginal === normalizedTrip) {
     return {
       convertedAmountMinor: originalAmountMinor,
       fxRateToTrip: null,

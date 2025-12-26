@@ -309,18 +309,35 @@ describe("computeConversion", () => {
       });
     });
 
-    it("should handle currency codes case-sensitively", () => {
+    it("should handle currency codes case-insensitively", () => {
       const input: ConversionInput = {
         originalAmountMinor: 5000,
         originalCurrency: "usd",
         tripCurrencyCode: "USD",
-        providedRate: 1.0,
       };
 
-      // Different case = different currency
+      // Different case = same currency (normalized to uppercase)
       const result = computeConversion(input);
 
-      expect(result.fxRateToTrip).toBe(1.0); // Should treat as conversion
+      expect(result).toEqual({
+        convertedAmountMinor: 5000,
+        fxRateToTrip: null, // Same currency, no conversion
+      });
+    });
+
+    it("should normalize mixed case currency codes", () => {
+      const input: ConversionInput = {
+        originalAmountMinor: 3000,
+        originalCurrency: "EuR",
+        tripCurrencyCode: "eur",
+      };
+
+      const result = computeConversion(input);
+
+      expect(result).toEqual({
+        convertedAmountMinor: 3000,
+        fxRateToTrip: null, // Same currency after normalization
+      });
     });
   });
 
