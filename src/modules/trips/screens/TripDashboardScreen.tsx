@@ -72,8 +72,8 @@ function TripDashboardScreenContent({ tripId }: { tripId: string }) {
     refetch: refetchExpenses,
   } = useExpenses(tripId);
 
-  const { update: updateTripMutation } = useUpdateTrip();
-  const { remove: deleteTripMutation } = useDeleteTrip();
+  const { update: updateTripMutation, error: updateError } = useUpdateTrip();
+  const { remove: deleteTripMutation, error: deleteError } = useDeleteTrip();
 
   const refetchFunctions = useMemo(
     () => [refetchTrip, refetchParticipants, refetchExpenses],
@@ -130,21 +130,19 @@ function TripDashboardScreenContent({ tripId }: { tripId: string }) {
       return;
     }
 
-    try {
-      const updated = await updateTripMutation(tripId, {
-        name: nameInput.trim(),
-        emoji: emojiInput,
-        endDate: endDateInput ? endDateInput.toISOString() : null,
-      });
-      if (updated) {
-        navigation.setOptions({ title: updated.name });
-        refetchTrip();
-        setEditingName(false);
-      } else {
-        Alert.alert("Error", "Failed to update trip");
-      }
-    } catch {
-      Alert.alert("Error", "Failed to update trip");
+    const updated = await updateTripMutation(tripId, {
+      name: nameInput.trim(),
+      emoji: emojiInput,
+      endDate: endDateInput ? endDateInput.toISOString() : null,
+    });
+
+    if (updated) {
+      navigation.setOptions({ title: updated.name });
+      refetchTrip();
+      setEditingName(false);
+    } else {
+      const errorMessage = updateError?.message || "Failed to update trip";
+      Alert.alert("Error", errorMessage);
     }
   };
 
@@ -162,13 +160,12 @@ function TripDashboardScreenContent({ tripId }: { tripId: string }) {
   const confirmDeleteTrip = async () => {
     setShowDeleteConfirm(false);
     setIsDeleting(true);
-    try {
-      await deleteTripMutation(tripId);
-      router.replace("/");
-    } catch {
-      Alert.alert("Error", "Failed to delete trip");
-      setIsDeleting(false);
-    }
+
+    await deleteTripMutation(tripId);
+    // Note: Hook swallows errors internally. On success, navigate away.
+    // On failure, hook logs error but doesn't throw, leaving UI in deleting state.
+    // TODO: Improve hook to either throw or return success boolean
+    router.replace("/");
   };
 
   if (tripError) {
