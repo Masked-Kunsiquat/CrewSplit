@@ -303,12 +303,11 @@ function ExpenseDetailsContent({
 
   const confirmDelete = async () => {
     setShowDeleteConfirm(false);
-    try {
-      await deleteExpenseMutation(expenseId);
-      router.back();
-    } catch {
-      Alert.alert("Error", "Failed to delete expense");
-    }
+
+    await deleteExpenseMutation(expenseId);
+    // Note: Hook swallows errors internally. Navigate back on completion.
+    // TODO: Improve hook to provide success/failure feedback
+    router.back();
   };
 
   return (
