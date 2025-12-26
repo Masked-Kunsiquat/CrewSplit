@@ -15,11 +15,7 @@
  */
 
 import { computeConversion } from "../engine";
-import type {
-  Expense,
-  CreateExpenseInput,
-  UpdateExpenseInput,
-} from "../types";
+import type { Expense, CreateExpenseInput, UpdateExpenseInput } from "../types";
 import { expenseLogger } from "@utils/logger";
 import * as Crypto from "expo-crypto";
 
@@ -278,8 +274,7 @@ export async function updateExpense(
     originalAmountMinor,
     originalCurrency,
     tripCurrencyCode: trip.currencyCode,
-    providedRate:
-      patch.fxRateToTrip ?? existing.fxRateToTrip ?? undefined,
+    providedRate: patch.fxRateToTrip ?? existing.fxRateToTrip ?? undefined,
     providedConverted:
       patch.convertedAmountMinor ?? existing.convertedAmountMinor,
   });

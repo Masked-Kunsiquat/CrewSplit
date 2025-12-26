@@ -14,6 +14,20 @@
  */
 
 // Mock the computeConversion engine function BEFORE imports
+import {
+  createExpense,
+  updateExpense,
+  deleteExpense,
+  type IExpenseRepository,
+  type ITripRepository,
+  type ICategoryRepository,
+} from "../ExpenseService";
+import type {
+  Expense,
+  CreateExpenseInput,
+  UpdateExpenseInput,
+} from "../../types";
+
 const mockComputeConversion = jest.fn();
 jest.mock("../../engine", () => ({
   computeConversion: (...args: unknown[]) => mockComputeConversion(...args),
@@ -41,16 +55,6 @@ jest.mock("@utils/logger", () => {
 jest.mock("expo-crypto", () => ({
   randomUUID: jest.fn(() => "test-expense-id"),
 }));
-
-import {
-  createExpense,
-  updateExpense,
-  deleteExpense,
-  type IExpenseRepository,
-  type ITripRepository,
-  type ICategoryRepository,
-} from "../ExpenseService";
-import type { Expense, CreateExpenseInput, UpdateExpenseInput } from "../../types";
 
 /**
  * Factory function for creating mock expense repository
@@ -741,10 +745,9 @@ describe("ExpenseService", () => {
           code: "TRIP_NOT_FOUND",
         });
 
-        expect(mockExpenseLogger.error).toHaveBeenCalledWith(
-          "Trip not found",
-          { tripId: "invalid-trip" },
-        );
+        expect(mockExpenseLogger.error).toHaveBeenCalledWith("Trip not found", {
+          tripId: "invalid-trip",
+        });
       });
 
       it("should throw CATEGORY_NOT_FOUND error when category does not exist", async () => {
@@ -1417,10 +1420,9 @@ describe("ExpenseService", () => {
           code: "TRIP_NOT_FOUND",
         });
 
-        expect(mockExpenseLogger.error).toHaveBeenCalledWith(
-          "Trip not found",
-          { tripId: "invalid-trip" },
-        );
+        expect(mockExpenseLogger.error).toHaveBeenCalledWith("Trip not found", {
+          tripId: "invalid-trip",
+        });
       });
 
       it("should throw CATEGORY_NOT_FOUND error when updating to invalid category", async () => {
@@ -1630,10 +1632,9 @@ describe("ExpenseService", () => {
           "Deleting expense via service",
           { expenseId: "expense-1" },
         );
-        expect(mockExpenseLogger.info).toHaveBeenCalledWith(
-          "Expense deleted",
-          { expenseId: "expense-1" },
-        );
+        expect(mockExpenseLogger.info).toHaveBeenCalledWith("Expense deleted", {
+          expenseId: "expense-1",
+        });
       });
 
       it("should not throw error when deleting non-existent expense", async () => {

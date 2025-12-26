@@ -11,7 +11,9 @@ import { eq } from "drizzle-orm";
 import type { ITripRepository } from "../service/ExpenseService";
 
 export class TripRepositoryAdapter implements ITripRepository {
-  async getById(id: string): Promise<{ id: string; currencyCode: string } | null> {
+  async getById(
+    id: string,
+  ): Promise<{ id: string; currencyCode: string } | null> {
     const rows = await db
       .select({ id: tripsTable.id, currencyCode: tripsTable.currencyCode })
       .from(tripsTable)
