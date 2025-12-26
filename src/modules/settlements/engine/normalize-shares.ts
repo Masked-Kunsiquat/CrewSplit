@@ -132,10 +132,7 @@ export const normalizeShares = (
       break;
 
     default:
-      throw createAppError(
-        "INVALID_INPUT",
-        `Unknown share type: ${shareType}`,
-      );
+      throw createAppError("INVALID_INPUT", `Unknown share type: ${shareType}`);
   }
 
   const normalized = new Array<number>(splits.length);

@@ -5,7 +5,6 @@
  */
 
 const fs = require("fs");
-const path = require("path");
 const glob = require("glob");
 
 // Common error patterns and their replacements

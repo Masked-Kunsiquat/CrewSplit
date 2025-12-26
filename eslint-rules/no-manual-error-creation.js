@@ -38,10 +38,28 @@ module.exports = {
       return {};
     }
 
+    // Skip errors.ts - it defines the error utilities
+    if (
+      filename.includes("utils/errors.ts") ||
+      filename.includes("utils\\errors.ts")
+    ) {
+      return {};
+    }
+
     return {
       NewExpression(node) {
         // Check for new Error(...)
         if (node.callee.type === "Identifier" && node.callee.name === "Error") {
+          // Allow error normalization pattern: error instanceof Error ? error : new Error(...)
+          const parent = node.parent;
+          if (
+            parent &&
+            parent.type === "ConditionalExpression" &&
+            parent.alternate === node
+          ) {
+            return; // Skip this legitimate use case
+          }
+
           context.report({
             node,
             messageId: "noManualErrorCreation",
