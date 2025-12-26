@@ -16,18 +16,58 @@ interface Account {
 }
 
 /**
- * Minimize transactions using greedy algorithm
- * Always matches largest creditor with largest debtor
+ * Minimizes settlement transactions using greedy algorithm.
+ *
+ * Finds the minimal set of transactions needed to settle all debts by repeatedly
+ * matching the largest creditor with the largest debtor. This greedy approach produces
+ * a near-optimal solution (typically N-1 transactions for N participants with non-zero balances).
  *
  * Algorithm:
  * 1. Separate participants into creditors (owed money) and debtors (owe money)
- * 2. Sort both by absolute value descending, then by ID for determinism
+ * 2. Sort both by absolute value descending, then by participantId for determinism
  * 3. Match largest creditor with largest debtor
  * 4. Create settlement for min(creditor amount, abs(debtor amount))
- * 5. Repeat until all balanced (net positions sum to zero)
+ * 5. Update remaining amounts and move to next pair
+ * 6. Repeat until all balanced
  *
- * @param balances - Participant balances (must be pre-calculated)
- * @returns Minimal list of settlements, deterministically ordered
+ * @param balances - Participant balances (must be pre-calculated via calculateBalances)
+ *
+ * @precondition balances must be from calculateBalances (sum of netPositions = 0)
+ * @precondition All balance amounts must be integers (cents)
+ * @precondition participantId and participantName must be defined for all balances
+ *
+ * @postcondition Sum of all settlement amounts equals sum of positive netPositions
+ * @postcondition Number of transactions ≤ (number of non-zero balances - 1)
+ * @postcondition Each transaction has amount > 0
+ * @postcondition Deterministic output: same balances always produce same settlements
+ * @postcondition Settlement order is deterministic (based on participantId sort)
+ *
+ * @invariant Total money transferred: sum(settlements.amount) === sum(creditor amounts)
+ * @invariant All settlement amounts are positive integers
+ * @invariant No participant appears twice as 'from' or twice as 'to'
+ * @invariant Greedy pairing: largest creditor always paired with largest debtor first
+ *
+ * @returns Minimal list of suggested settlements, deterministically ordered
+ *
+ * @example
+ * const balances = [
+ *   { participantId: 'p1', participantName: 'Alice', netPosition: 1000, totalPaid: 2000, totalOwed: 1000 },
+ *   { participantId: 'p2', participantName: 'Bob', netPosition: -600, totalPaid: 0, totalOwed: 600 },
+ *   { participantId: 'p3', participantName: 'Charlie', netPosition: -400, totalPaid: 0, totalOwed: 400 }
+ * ];
+ * const settlements = optimizeSettlements(balances);
+ * // Result: 2 transactions instead of 4 possible
+ * // [
+ * //   { from: 'p2', to: 'p1', amount: 600 },
+ * //   { from: 'p3', to: 'p1', amount: 400 }
+ * // ]
+ *
+ * @example
+ * // Zero balances are skipped
+ * const balances = [
+ *   { participantId: 'p1', participantName: 'Alice', netPosition: 0, totalPaid: 500, totalOwed: 500 }
+ * ];
+ * optimizeSettlements(balances); // [] - no settlements needed
  */
 export const optimizeSettlements = (
   balances: ParticipantBalance[],

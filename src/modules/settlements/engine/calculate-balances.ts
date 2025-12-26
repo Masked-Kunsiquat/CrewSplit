@@ -11,17 +11,55 @@ import { normalizeShares } from "./normalize-shares";
 import { createAppError } from "@utils/errors";
 
 /**
- * Calculate net positions for all participants in a trip
- * Net position = total paid - total owed
+ * Calculates net positions for all participants in a trip.
+ *
+ * Net position = total paid - total owed:
  * - Positive: participant is owed money (creditor)
  * - Negative: participant owes money (debtor)
  * - Zero: participant is settled
  *
- * @param expenses - All expenses for the trip
+ * Processes all expenses and their splits to determine who paid what and who owes what.
+ * Validates that all participants and payers exist before processing.
+ *
+ * @param expenses - All expenses for the trip (uses amount and paidBy fields)
  * @param splits - All expense splits (must include all splits for all expenses)
- * @param participants - All participants
+ * @param participants - All participants in the trip
+ *
+ * @precondition All splits.participantId must reference valid participant IDs
+ * @precondition All expenses.paidBy must reference valid participant IDs
+ * @precondition expenses and splits must be for the same set of expenseIds
+ * @precondition All expense amounts must be non-negative integers (cents)
+ *
+ * @postcondition Sum of all netPosition values equals zero (balanced)
+ * @postcondition Array length equals participants.length
+ * @postcondition Results sorted by participantId (deterministic order)
+ * @postcondition Each participant appears exactly once in results
+ * @postcondition totalPaid and totalOwed are non-negative for all participants
+ *
+ * @invariant Conservation of money: sum(netPositions) === 0
+ * @invariant For each expense: sum(split amounts) === expense.amount
+ * @invariant Deterministic output: same inputs always produce same results
+ *
+ * @throws {AppError} INVALID_PARTICIPANT_IDS - If splits reference non-existent participants
+ * @throws {AppError} INVALID_PARTICIPANT_IDS - If expenses reference non-existent payers
+ *
  * @returns Array of participant balances, sorted by participantId for determinism
- * @throws Error with code 'INVALID_PARTICIPANT_IDS' if splits reference non-existent participants
+ *
+ * @example
+ * const participants = [
+ *   { id: 'p1', name: 'Alice' },
+ *   { id: 'p2', name: 'Bob' }
+ * ];
+ * const expenses = [
+ *   { id: 'e1', amount: 1000, paidBy: 'p1' }
+ * ];
+ * const splits = [
+ *   { expenseId: 'e1', participantId: 'p1', shareType: 'equal', share: 1 },
+ *   { expenseId: 'e1', participantId: 'p2', shareType: 'equal', share: 1 }
+ * ];
+ * const balances = calculateBalances(expenses, splits, participants);
+ * // balances[0]: { participantId: 'p1', netPosition: 500, totalPaid: 1000, totalOwed: 500 }
+ * // balances[1]: { participantId: 'p2', netPosition: -500, totalPaid: 0, totalOwed: 500 }
  */
 export const calculateBalances = (
   expenses: Expense[],

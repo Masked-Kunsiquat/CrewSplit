@@ -17,14 +17,62 @@ import { isValidPercentageSum } from "@utils/validation";
 const FRACTION_EQUALITY_EPSILON = 0.0000001;
 
 /**
- * Normalize different split types to actual amounts in cents
- * Handles rounding by distributing remainders to ensure sum equals total
+ * Normalizes expense splits to absolute amounts in minor currency units (cents).
  *
- * @param splits - Array of splits for a single expense
- * @param expenseAmount - Total expense amount in cents
- * @returns Array of normalized amounts (one per split) that sum to expenseAmount
+ * Converts different share types (equal, percentage, weight, amount) into exact amounts
+ * that sum to the total expense amount. Uses largest remainder method to distribute
+ * rounding errors deterministically.
  *
- * @throws Error if splits are invalid (e.g., percentages > 100, amounts don't sum)
+ * @param splits - Array of expense splits (all must have matching shareType)
+ * @param expenseAmount - Total expense amount in minor units (cents)
+ *
+ * @precondition All splits must have the same shareType
+ * @precondition For percentage splits: sum must equal 100 ± PERCENTAGE_TOLERANCE
+ * @precondition For weight splits: all weights must be positive (> 0)
+ * @precondition For amount splits: sum must exactly equal expenseAmount
+ * @precondition expenseAmount must be a non-negative integer
+ *
+ * @postcondition Returned amounts sum exactly to expenseAmount
+ * @postcondition All returned amounts are non-negative integers
+ * @postcondition Return array length equals splits.length
+ * @postcondition Order matches input split order (stable mapping)
+ * @postcondition Function is deterministic: same inputs always produce same outputs
+ *
+ * @invariant Total amount conservation: sum(returned amounts) === expenseAmount
+ * @invariant No participant receives negative amount
+ * @invariant Deterministic rounding: remainder distribution by participantId sort order
+ *
+ * @throws {Error} MIXED_SHARE_TYPES - If splits have different shareType values
+ * @throws {Error} INVALID_PERCENTAGE_SUM - If percentages don't sum to ~100
+ * @throws {Error} INVALID_WEIGHT - If any weight is non-positive or non-finite
+ * @throws {Error} AMOUNT_MISMATCH - If amounts don't sum to expenseAmount
+ * @throws {Error} UNKNOWN_SHARE_TYPE - If shareType is not recognized
+ *
+ * @returns Array of normalized amounts (in cents), one per split, in same order as input
+ *
+ * @example
+ * // Equal split
+ * const splits = [
+ *   { participantId: 'p1', shareType: 'equal', share: 1 },
+ *   { participantId: 'p2', shareType: 'equal', share: 1 },
+ * ];
+ * normalizeShares(splits, 1001); // [501, 500] - remainder goes to first by ID
+ *
+ * @example
+ * // Percentage split
+ * const splits = [
+ *   { participantId: 'p1', shareType: 'percentage', share: 60 },
+ *   { participantId: 'p2', shareType: 'percentage', share: 40 },
+ * ];
+ * normalizeShares(splits, 1000); // [600, 400]
+ *
+ * @example
+ * // Weight split
+ * const splits = [
+ *   { participantId: 'p1', shareType: 'weight', share: 2 },
+ *   { participantId: 'p2', shareType: 'weight', share: 1 },
+ * ];
+ * normalizeShares(splits, 900); // [600, 300]
  */
 export const normalizeShares = (
   splits: ExpenseSplit[],
