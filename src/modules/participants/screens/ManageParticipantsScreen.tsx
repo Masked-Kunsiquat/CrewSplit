@@ -7,7 +7,6 @@ import React, { useState, useEffect } from "react";
 import { View, Text, StyleSheet, ScrollView, Alert } from "react-native";
 import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
 import { theme } from "@ui/theme";
-import { participantLogger } from "@utils/logger";
 import {
   Button,
   Card,
@@ -17,8 +16,11 @@ import {
   LoadingScreen,
 } from "@ui/components";
 import { useParticipants } from "../hooks/use-participants";
+import {
+  useAddParticipant,
+  useRemoveParticipant,
+} from "../hooks/use-participant-mutations";
 import { useTripById } from "@modules/trips/hooks/use-trips";
-import { createParticipant, deleteParticipant } from "../repository";
 import { useRefreshControl } from "@hooks/use-refresh-control";
 
 // Predefined avatar colors for new participants
@@ -70,7 +72,6 @@ function ManageParticipantsContent({
   const router = useRouter();
   const [newParticipantName, setNewParticipantName] = useState("");
   const [nameError, setNameError] = useState<string | null>(null);
-  const [isAdding, setIsAdding] = useState(false);
   const [pendingRemoval, setPendingRemoval] = useState<{
     id: string;
     name: string;
@@ -84,6 +85,14 @@ function ManageParticipantsContent({
     refetch: refetchParticipants,
   } = useParticipants(tripId);
 
+  const { add: addParticipantMutation, loading: isAdding } =
+    useAddParticipant();
+  const {
+    remove: removeParticipantMutation,
+    loading: isRemoving,
+    error: removeError,
+  } = useRemoveParticipant();
+
   // Pull-to-refresh support
   const refreshControl = useRefreshControl([refetchTrip, refetchParticipants]);
 
@@ -96,6 +105,16 @@ function ManageParticipantsContent({
     }
   }, [trip, navigation]);
 
+  // Show alert when removal fails
+  useEffect(() => {
+    if (removeError) {
+      Alert.alert(
+        "Removal Failed",
+        removeError.message || "Failed to remove participant",
+      );
+    }
+  }, [removeError]);
+
   const handleAddParticipant = async () => {
     if (isAdding) return;
     if (!newParticipantName.trim()) {
@@ -103,28 +122,27 @@ function ManageParticipantsContent({
       return;
     }
 
-    setIsAdding(true);
-    try {
-      // Pick a random color
-      const avatarColor =
-        AVATAR_COLORS[Math.floor(Math.random() * AVATAR_COLORS.length)];
+    // Pick a random color
+    const avatarColor =
+      AVATAR_COLORS[Math.floor(Math.random() * AVATAR_COLORS.length)];
 
-      await createParticipant({
+    try {
+      await addParticipantMutation({
         tripId,
         name: newParticipantName.trim(),
         avatarColor,
       });
 
+      // Success - refresh and clear form
       refetchParticipants();
       setNewParticipantName("");
       setNameError(null);
-    } catch (err) {
-      Alert.alert(
-        "Error",
-        err instanceof Error ? err.message : "Failed to add participant",
-      );
-    } finally {
-      setIsAdding(false);
+    } catch (error) {
+      // Error is already set in hook state
+      // Show alert with the error message
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to add participant";
+      Alert.alert("Error", errorMessage);
     }
   };
 
@@ -141,14 +159,15 @@ function ManageParticipantsContent({
 
   const confirmRemoveParticipant = async () => {
     if (!pendingRemoval) return;
+
     try {
-      await deleteParticipant(pendingRemoval.id);
+      await removeParticipantMutation(pendingRemoval.id);
+      // Success - refresh participants and close dialog
       refetchParticipants();
-    } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
-      participantLogger.error("Failed to delete participant", err);
-      Alert.alert("Error", `Failed to remove participant: ${message}`);
-    } finally {
+      setPendingRemoval(null);
+    } catch {
+      // Error is already set in hook state and will be shown via useEffect Alert
+      // Close the dialog so user can see the error alert
       setPendingRemoval(null);
     }
   };
@@ -243,6 +262,7 @@ function ManageParticipantsContent({
         confirmVariant="danger"
         onCancel={() => setPendingRemoval(null)}
         onConfirm={confirmRemoveParticipant}
+        loading={isRemoving}
       />
     </View>
   );

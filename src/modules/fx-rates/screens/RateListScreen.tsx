@@ -3,7 +3,7 @@
  * View existing exchange rates with source, age, and refresh functionality
  */
 
-import React, { useState, useEffect } from "react";
+import React, { useEffect } from "react";
 import {
   View,
   Text,
@@ -15,10 +15,7 @@ import {
 import { useRouter, useNavigation } from "expo-router";
 import { theme } from "@ui/theme";
 import { Button, Card, LoadingScreen } from "@ui/components";
-import { useFxRates } from "../hooks/use-fx-rates";
-import { FxRateRepository } from "../repository";
-import type { FxRate } from "../types";
-import { fxLogger } from "@utils/logger";
+import { useFxRates, useAllFxRates } from "../hooks/use-fx-rates";
 
 /**
  * Format timestamp as relative time (e.g., "2 days ago")
@@ -80,8 +77,11 @@ export default function RateListScreen() {
     loading: initialLoading,
   } = useFxRates();
 
-  const [rates, setRates] = useState<FxRate[]>([]);
-  const [loadingRates, setLoadingRates] = useState(true);
+  const {
+    rates,
+    loading: loadingRates,
+    refetch: refetchRates,
+  } = useAllFxRates();
 
   // Set header title
   useEffect(() => {
@@ -90,33 +90,10 @@ export default function RateListScreen() {
     });
   }, [navigation]);
 
-  // Load all rates
-  const loadRates = async () => {
-    setLoadingRates(true);
-    try {
-      const allRates = await FxRateRepository.getAllActiveRates();
-      // Sort by most recently fetched first
-      const sorted = allRates.sort(
-        (a, b) =>
-          new Date(b.fetchedAt).getTime() - new Date(a.fetchedAt).getTime(),
-      );
-      setRates(sorted);
-    } catch (error) {
-      fxLogger.error("Failed to load exchange rates", error);
-      Alert.alert("Error", "Failed to load exchange rates. Please try again.");
-    } finally {
-      setLoadingRates(false);
-    }
-  };
-
-  useEffect(() => {
-    loadRates();
-  }, []);
-
   const handleRefresh = async () => {
     try {
       await refreshRates();
-      await loadRates();
+      await refetchRates();
       Alert.alert("Success", "Exchange rates updated successfully.");
     } catch (error) {
       Alert.alert(

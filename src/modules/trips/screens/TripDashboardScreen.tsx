@@ -18,9 +18,9 @@ import { useRouter, useLocalSearchParams, useNavigation } from "expo-router";
 import { theme } from "@ui/theme";
 import { Button, Card, ConfirmDialog } from "@ui/components";
 import { useTripById } from "../hooks/use-trips";
+import { useUpdateTrip, useDeleteTrip } from "../hooks/use-trip-mutations";
 import { useParticipants } from "../../participants/hooks/use-participants";
 import { useExpenses } from "../../expenses/hooks/use-expenses";
-import { updateTrip, deleteTrip } from "../repository";
 import { useRefreshControl } from "@hooks/use-refresh-control";
 import {
   TripHeader,
@@ -72,6 +72,9 @@ function TripDashboardScreenContent({ tripId }: { tripId: string }) {
     refetch: refetchExpenses,
   } = useExpenses(tripId);
 
+  const { update: updateTripMutation } = useUpdateTrip();
+  const { remove: deleteTripMutation, error: deleteError } = useDeleteTrip();
+
   const refetchFunctions = useMemo(
     () => [refetchTrip, refetchParticipants, refetchExpenses],
     [refetchTrip, refetchParticipants, refetchExpenses],
@@ -97,6 +100,16 @@ function TripDashboardScreenContent({ tripId }: { tripId: string }) {
       });
     }
   }, [trip, navigation]);
+
+  // Show alert when deletion fails
+  useEffect(() => {
+    if (deleteError) {
+      Alert.alert(
+        "Deletion Failed",
+        deleteError.message || "Failed to delete trip",
+      );
+    }
+  }, [deleteError]);
 
   const loading = tripLoading || participantsLoading || expensesLoading;
 
@@ -128,16 +141,21 @@ function TripDashboardScreenContent({ tripId }: { tripId: string }) {
     }
 
     try {
-      const updated = await updateTrip(tripId, {
+      const updated = await updateTripMutation(tripId, {
         name: nameInput.trim(),
         emoji: emojiInput,
         endDate: endDateInput ? endDateInput.toISOString() : null,
       });
+
+      // Success - update UI and close edit mode
       navigation.setOptions({ title: updated.name });
       refetchTrip();
       setEditingName(false);
-    } catch {
-      Alert.alert("Error", "Failed to update trip");
+    } catch (error) {
+      // Use caught error directly, not stale hook state
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to update trip";
+      Alert.alert("Error", errorMessage);
     }
   };
 
@@ -155,11 +173,14 @@ function TripDashboardScreenContent({ tripId }: { tripId: string }) {
   const confirmDeleteTrip = async () => {
     setShowDeleteConfirm(false);
     setIsDeleting(true);
+
     try {
-      await deleteTrip(tripId);
+      await deleteTripMutation(tripId);
+      // Success - navigate to trips list
       router.replace("/");
     } catch {
-      Alert.alert("Error", "Failed to delete trip");
+      // Error is already set in hook state and will be shown via useEffect Alert
+      // Reset isDeleting immediately so UI reflects failure
       setIsDeleting(false);
     }
   };

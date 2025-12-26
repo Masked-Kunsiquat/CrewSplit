@@ -12,6 +12,7 @@ import { useParticipants } from "../hooks/use-participants";
 import { useSettlement } from "@modules/settlements/hooks/use-settlement";
 import { useExpenses } from "@modules/expenses/hooks/use-expenses";
 import { useExpenseCategories } from "@modules/expenses/hooks/use-expense-categories";
+import { useGetExpenseSplits } from "@modules/expenses/hooks/use-expense-mutations";
 import { useDisplayCurrency } from "@modules/settings/hooks/use-display-currency";
 import { useRefreshControl } from "@hooks/use-refresh-control";
 import { formatCurrency } from "@utils/currency";
@@ -19,7 +20,6 @@ import { normalizeRouteParam } from "@utils/route-params";
 import { getCategoryIcon } from "@utils/category-icons";
 import { cachedFxRateProvider } from "@modules/fx-rates/provider";
 import type { ExpenseSplit } from "@modules/expenses/types";
-import { getExpenseSplits } from "@modules/expenses/repository";
 import { useSettlements } from "@modules/settlements/hooks/use-settlements";
 import { TransactionRow } from "@modules/settlements/components/TransactionRow";
 
@@ -99,6 +99,7 @@ function ParticipantDetailsContent({
     error: settlementsError,
     refetch: refetchSettlements,
   } = useSettlements(tripId);
+  const { getSplits } = useGetExpenseSplits();
 
   // Pull-to-refresh
   const refreshControl = useRefreshControl([
@@ -157,7 +158,7 @@ function ParticipantDetailsContent({
       const splitsMap = new Map<string, ExpenseSplit[]>();
       await Promise.all(
         expenses.map(async (expense) => {
-          const splits = await getExpenseSplits(expense.id);
+          const splits = await getSplits(expense.id);
           splitsMap.set(expense.id, splits);
         }),
       );
@@ -174,7 +175,7 @@ function ParticipantDetailsContent({
     return () => {
       cancelled = true;
     };
-  }, [expenses]);
+  }, [expenses, getSplits]);
 
   // Filter expenses paid by this participant
   const expensesPaidBy = useMemo(

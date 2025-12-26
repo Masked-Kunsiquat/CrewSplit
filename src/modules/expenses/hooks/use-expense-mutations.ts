@@ -5,8 +5,18 @@
  */
 
 import { useState, useCallback } from "react";
-import { addExpense, updateExpense, deleteExpense } from "../repository";
-import type { Expense, CreateExpenseInput, UpdateExpenseInput } from "../types";
+import {
+  addExpense,
+  updateExpense,
+  deleteExpense,
+  getExpenseSplits,
+} from "../repository";
+import type {
+  Expense,
+  CreateExpenseInput,
+  UpdateExpenseInput,
+  ExpenseSplit,
+} from "../types";
 import { expenseLogger } from "@utils/logger";
 
 /**
@@ -18,7 +28,7 @@ export function useAddExpense() {
   const [error, setError] = useState<Error | null>(null);
 
   const add = useCallback(
-    async (input: CreateExpenseInput): Promise<Expense | null> => {
+    async (input: CreateExpenseInput): Promise<Expense> => {
       try {
         setLoading(true);
         setError(null);
@@ -29,7 +39,7 @@ export function useAddExpense() {
           err instanceof Error ? err : new Error("Failed to create expense");
         expenseLogger.error("Failed to add expense", error);
         setError(error);
-        return null;
+        throw error; // Re-throw so caller can handle
       } finally {
         setLoading(false);
       }
@@ -49,10 +59,7 @@ export function useUpdateExpense() {
   const [error, setError] = useState<Error | null>(null);
 
   const update = useCallback(
-    async (
-      id: string,
-      updates: UpdateExpenseInput,
-    ): Promise<Expense | null> => {
+    async (id: string, updates: UpdateExpenseInput): Promise<Expense> => {
       try {
         setLoading(true);
         setError(null);
@@ -63,7 +70,7 @@ export function useUpdateExpense() {
           err instanceof Error ? err : new Error("Failed to update expense");
         expenseLogger.error("Failed to update expense", error);
         setError(error);
-        return null;
+        throw error; // Re-throw so caller can handle
       } finally {
         setLoading(false);
       }
@@ -92,10 +99,43 @@ export function useDeleteExpense() {
         err instanceof Error ? err : new Error("Failed to delete expense");
       expenseLogger.error("Failed to delete expense", error);
       setError(error);
+      throw error; // Re-throw so caller can handle
     } finally {
       setLoading(false);
     }
   }, []);
 
   return { remove, loading, error };
+}
+
+/**
+ * Hook for fetching expense splits for an expense
+ */
+export function useGetExpenseSplits() {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+
+  const getSplits = useCallback(
+    async (expenseId: string): Promise<ExpenseSplit[]> => {
+      try {
+        setLoading(true);
+        setError(null);
+        const splits = await getExpenseSplits(expenseId);
+        return splits;
+      } catch (err) {
+        const error =
+          err instanceof Error
+            ? err
+            : new Error("Failed to fetch expense splits");
+        expenseLogger.error("Failed to get expense splits", error);
+        setError(error);
+        return [];
+      } finally {
+        setLoading(false);
+      }
+    },
+    [],
+  );
+
+  return { getSplits, loading, error };
 }

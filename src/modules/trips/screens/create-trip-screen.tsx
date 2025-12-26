@@ -14,8 +14,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import EmojiPicker from "rn-emoji-keyboard";
 import { theme } from "@ui/theme";
 import { Button, Input, CurrencyPicker, DateRangePicker } from "@ui/components";
-import { createTrip } from "../repository";
-import { createParticipant } from "../../participants/repository";
+import { useCreateTrip } from "../hooks/use-trip-mutations";
+import { useAddParticipant } from "../../participants/hooks/use-participant-mutations";
 import { useDeviceOwner } from "@modules/onboarding/hooks/use-device-owner";
 import { participantLogger } from "@utils/logger";
 
@@ -37,11 +37,13 @@ export default function CreateTripScreen() {
   const [currency, setCurrency] = useState<string | null>("USD");
   const [startDate, setStartDate] = useState(new Date());
   const [endDate, setEndDate] = useState<Date | null>(null);
-  const [isCreating, setIsCreating] = useState(false);
   const [dateError, setDateError] = useState<string | null>(null);
   const [emoji, setEmoji] = useState<string | undefined>(undefined);
   const [emojiPickerOpen, setEmojiPickerOpen] = useState(false);
   const insets = useSafeAreaInsets();
+
+  const { create: createTripMutation, loading: isCreating } = useCreateTrip();
+  const { add: addParticipantMutation } = useAddParticipant();
 
   // Set dynamic header title
   useEffect(() => {
@@ -72,9 +74,8 @@ export default function CreateTripScreen() {
       return;
     }
 
-    setIsCreating(true);
     try {
-      const trip = await createTrip({
+      const trip = await createTripMutation({
         name: name.trim(),
         currencyCode: currency,
         description: description.trim() || undefined,
@@ -86,7 +87,7 @@ export default function CreateTripScreen() {
       // Auto-add device owner as first participant if name is set
       if (deviceOwnerName) {
         try {
-          await createParticipant({
+          await addParticipantMutation({
             tripId: trip.id,
             name: deviceOwnerName,
             avatarColor: AVATAR_COLORS[0], // First color for device owner
@@ -101,9 +102,11 @@ export default function CreateTripScreen() {
       }
 
       router.replace(`/trips/${trip.id}`);
-    } catch {
-      Alert.alert("Error", "Failed to create trip");
-      setIsCreating(false);
+    } catch (error) {
+      // Use the caught error directly, not stale hook state
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to create trip";
+      Alert.alert("Error", errorMessage);
     }
   };
 

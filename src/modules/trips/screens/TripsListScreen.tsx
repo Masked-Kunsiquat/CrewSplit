@@ -12,9 +12,9 @@ import { useRouter, useNavigation } from "expo-router";
 import { theme } from "@ui/theme";
 import { Button, Card, ConfirmDialog } from "@ui/components";
 import { useTrips } from "../hooks/use-trips";
+import { useDeleteTrip } from "../hooks/use-trip-mutations";
 import { useRefreshControl } from "@hooks/use-refresh-control";
 import { SampleTripBadge } from "@modules/onboarding/components/SampleTripBadge";
-import { deleteTrip } from "../repository";
 import { TripExportModal } from "../components/trip-export-modal";
 
 /**
@@ -69,6 +69,8 @@ export default function TripsListScreen() {
   const [exportTripId, setExportTripId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+  const { remove: deleteTripMutation } = useDeleteTrip();
 
   const selectedCount = selectedIds.size;
   const selectedTripIds = useMemo(() => Array.from(selectedIds), [selectedIds]);
@@ -150,7 +152,7 @@ export default function TripsListScreen() {
     setDeleting(true);
     try {
       for (const id of selectedTripIds) {
-        await deleteTrip(id);
+        await deleteTripMutation(id);
       }
       setSelectedIds(new Set());
       await refetch();

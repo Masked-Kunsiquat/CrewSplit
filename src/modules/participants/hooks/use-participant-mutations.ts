@@ -24,9 +24,7 @@ export function useAddParticipant() {
   const [error, setError] = useState<Error | null>(null);
 
   const add = useCallback(
-    async (
-      participant: CreateParticipantInput,
-    ): Promise<Participant | null> => {
+    async (participant: CreateParticipantInput): Promise<Participant> => {
       try {
         setLoading(true);
         setError(null);
@@ -37,7 +35,7 @@ export function useAddParticipant() {
           err instanceof Error ? err : new Error("Failed to add participant");
         participantLogger.error("Failed to create participant", error);
         setError(error);
-        return null;
+        throw error; // Re-throw so caller can handle
       } finally {
         setLoading(false);
       }
@@ -59,7 +57,7 @@ export function useUpdateParticipant() {
     async (
       id: string,
       updates: UpdateParticipantInput,
-    ): Promise<Participant | null> => {
+    ): Promise<Participant> => {
       try {
         setLoading(true);
         setError(null);
@@ -72,7 +70,7 @@ export function useUpdateParticipant() {
             : new Error("Failed to update participant");
         participantLogger.error("Failed to update participant", error);
         setError(error);
-        return null;
+        throw error; // Re-throw so caller can handle
       } finally {
         setLoading(false);
       }
@@ -101,6 +99,7 @@ export function useRemoveParticipant() {
         err instanceof Error ? err : new Error("Failed to remove participant");
       participantLogger.error("Failed to delete participant", error);
       setError(error);
+      throw error; // Re-throw so caller can handle
     } finally {
       setLoading(false);
     }

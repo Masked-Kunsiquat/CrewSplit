@@ -107,7 +107,7 @@ function EditExpenseScreenContent({
       });
     }
 
-    const result = await update(expenseId, {
+    await update(expenseId, {
       description: data.description,
       notes: data.notes,
       originalAmountMinor: data.amountMinor,
@@ -118,17 +118,8 @@ function EditExpenseScreenContent({
       splits: data.splits,
     });
 
-    if (result) {
-      router.back();
-    } else {
-      throw createAppError(
-        "EXPENSE_UPDATE_FAILED",
-        "Failed to update expense.",
-        {
-          details: { expenseId, tripId },
-        },
-      );
-    }
+    // Success - navigate back
+    router.back();
   };
 
   const handleCancel = () => {

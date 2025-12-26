@@ -3,14 +3,14 @@
  * UI/UX ENGINEER: Screen for creating new expenses
  */
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { useRouter, useLocalSearchParams, useNavigation } from "expo-router";
 import { normalizeRouteParam } from "@utils/route-params";
 import { LoadingScreen, ErrorScreen } from "@ui/components";
 import { useTripById } from "../../trips/hooks/use-trips";
 import { useParticipants } from "../../participants/hooks/use-participants";
 import { useExpenseCategories } from "../hooks/use-expense-categories";
-import { addExpense } from "../repository";
+import { useAddExpense } from "../hooks/use-expense-mutations";
 import { ExpenseForm, ExpenseFormData } from "../components/ExpenseForm";
 
 /**
@@ -66,7 +66,7 @@ function AddExpenseScreenContent({ tripId }: { tripId: string }) {
     error: categoriesError,
   } = useExpenseCategories(tripId);
 
-  const [isCreating, setIsCreating] = useState(false);
+  const { add: addExpenseMutation, loading: isCreating } = useAddExpense();
 
   // Update native header title
   useEffect(() => {
@@ -78,9 +78,8 @@ function AddExpenseScreenContent({ tripId }: { tripId: string }) {
   }, [trip, navigation]);
 
   const handleSubmit = async (data: ExpenseFormData) => {
-    setIsCreating(true);
     try {
-      await addExpense({
+      await addExpenseMutation({
         tripId,
         description: data.description,
         notes: data.notes,
@@ -92,11 +91,10 @@ function AddExpenseScreenContent({ tripId }: { tripId: string }) {
         splits: data.splits,
       });
 
+      // Success - navigate back
       router.back();
     } catch (error) {
       throw error; // Let ExpenseForm handle the error display
-    } finally {
-      setIsCreating(false);
     }
   };
 
