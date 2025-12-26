@@ -342,6 +342,17 @@ export async function deleteExpense(
     throw new Error("expenseRepository dependency is required");
   }
 
+  // Check if expense exists before attempting deletion
+  const existing = await expenseRepository.getById(expenseId);
+  if (!existing) {
+    expenseLogger.error("Expense not found on delete", { expenseId });
+    const error = new Error(`Expense not found: ${expenseId}`) as Error & {
+      code: string;
+    };
+    error.code = "EXPENSE_NOT_FOUND";
+    throw error;
+  }
+
   expenseLogger.debug("Deleting expense via service", { expenseId });
 
   await expenseRepository.delete(expenseId);

@@ -1618,6 +1618,9 @@ describe("ExpenseService", () => {
       it("should delete expense successfully", async () => {
         // Arrange
         const mockExpenseRepo = createMockExpenseRepository({
+          getById: jest
+            .fn()
+            .mockResolvedValue({ id: "expense-1", tripId: "trip-1" }),
           delete: jest.fn().mockResolvedValue(undefined),
         });
 
@@ -1627,6 +1630,7 @@ describe("ExpenseService", () => {
         });
 
         // Assert
+        expect(mockExpenseRepo.getById).toHaveBeenCalledWith("expense-1");
         expect(mockExpenseRepo.delete).toHaveBeenCalledWith("expense-1");
         expect(mockExpenseLogger.debug).toHaveBeenCalledWith(
           "Deleting expense via service",
@@ -1636,21 +1640,30 @@ describe("ExpenseService", () => {
           expenseId: "expense-1",
         });
       });
+    });
 
-      it("should not throw error when deleting non-existent expense", async () => {
+    describe("error handling", () => {
+      it("should throw EXPENSE_NOT_FOUND when expense does not exist", async () => {
         // Arrange
         const mockExpenseRepo = createMockExpenseRepository({
-          delete: jest.fn().mockResolvedValue(undefined),
+          getById: jest.fn().mockResolvedValue(null),
         });
 
-        // Act & Assert - should not throw
+        // Act & Assert
         await expect(
           deleteExpense("non-existent", {
             expenseRepository: mockExpenseRepo,
           }),
-        ).resolves.toBeUndefined();
+        ).rejects.toMatchObject({
+          message: "Expense not found: non-existent",
+          code: "EXPENSE_NOT_FOUND",
+        });
 
-        expect(mockExpenseRepo.delete).toHaveBeenCalledWith("non-existent");
+        expect(mockExpenseRepo.getById).toHaveBeenCalledWith("non-existent");
+        expect(mockExpenseLogger.error).toHaveBeenCalledWith(
+          "Expense not found on delete",
+          { expenseId: "non-existent" },
+        );
       });
     });
   });

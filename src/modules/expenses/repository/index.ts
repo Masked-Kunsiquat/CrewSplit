@@ -57,6 +57,10 @@ export const addExpense = async (
 
 /**
  * Query function - Get all expenses for a trip
+ *
+ * NOTE: Query functions (read operations) remain in the repository layer
+ * as they don't require orchestration or cross-module coordination.
+ * Only mutations (create/update/delete) go through the service layer.
  */
 export const getExpensesForTrip = async (
   tripId: string,
@@ -74,6 +78,8 @@ export const getExpensesForTrip = async (
 
 /**
  * Query function - Get expense by ID
+ *
+ * NOTE: Query functions remain in repository layer (no service layer needed).
  */
 export const getExpenseById = async (id: string): Promise<Expense | null> => {
   return expenseRepositoryImpl.getById(id);
@@ -104,6 +110,8 @@ export const deleteExpense = async (id: string): Promise<void> => {
 
 /**
  * Query function - Get expense splits
+ *
+ * NOTE: Query functions remain in repository layer (no service layer needed).
  */
 export const getExpenseSplits = async (
   expenseId: string,
