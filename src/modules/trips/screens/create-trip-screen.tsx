@@ -42,8 +42,11 @@ export default function CreateTripScreen() {
   const [emojiPickerOpen, setEmojiPickerOpen] = useState(false);
   const insets = useSafeAreaInsets();
 
-  const { create: createTripMutation, loading: isCreating, error: createError } =
-    useCreateTrip();
+  const {
+    create: createTripMutation,
+    loading: isCreating,
+    error: createError,
+  } = useCreateTrip();
   const { add: addParticipantMutation } = useAddParticipant();
 
   // Set dynamic header title

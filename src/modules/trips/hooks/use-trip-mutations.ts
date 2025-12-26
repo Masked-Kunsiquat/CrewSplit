@@ -15,25 +15,22 @@ export function useCreateTrip() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
-  const create = useCallback(
-    async (trip: CreateTripInput): Promise<Trip> => {
-      try {
-        setLoading(true);
-        setError(null);
-        const newTrip = await createTrip(trip);
-        return newTrip;
-      } catch (err) {
-        const error =
-          err instanceof Error ? err : new Error("Failed to create trip");
-        tripLogger.error("Failed to create trip", error);
-        setError(error);
-        throw error; // Re-throw so caller can handle
-      } finally {
-        setLoading(false);
-      }
-    },
-    [],
-  );
+  const create = useCallback(async (trip: CreateTripInput): Promise<Trip> => {
+    try {
+      setLoading(true);
+      setError(null);
+      const newTrip = await createTrip(trip);
+      return newTrip;
+    } catch (err) {
+      const error =
+        err instanceof Error ? err : new Error("Failed to create trip");
+      tripLogger.error("Failed to create trip", error);
+      setError(error);
+      throw error; // Re-throw so caller can handle
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   return { create, loading, error };
 }

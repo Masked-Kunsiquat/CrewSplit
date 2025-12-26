@@ -59,10 +59,7 @@ export function useUpdateExpense() {
   const [error, setError] = useState<Error | null>(null);
 
   const update = useCallback(
-    async (
-      id: string,
-      updates: UpdateExpenseInput,
-    ): Promise<Expense> => {
+    async (id: string, updates: UpdateExpenseInput): Promise<Expense> => {
       try {
         setLoading(true);
         setError(null);

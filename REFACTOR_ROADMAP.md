@@ -20,6 +20,7 @@ This document contains GitHub issues for the post-MVP codebase hardening initiat
 8 screen files bypass the hook abstraction layer and directly import repository functions, creating tight coupling between UI and data layer.
 
 **Violations:**
+
 - `src/modules/participants/screens/ParticipantDetailsScreen.tsx:22` - imports from expenses repository
 - `src/modules/trips/screens/TripDashboardScreen.tsx:23` - direct repository access
 - `src/modules/expenses/screens/AddExpenseScreen.tsx:13` - direct repository access
@@ -55,6 +56,7 @@ export function useExpenseMutations() {
 ```
 
 **Tasks:**
+
 - [ ] Create `src/modules/expenses/hooks/use-expense-mutations.ts`
 - [ ] Create `src/modules/trips/hooks/use-trip-mutations.ts`
 - [ ] Create `src/modules/participants/hooks/use-participant-mutations.ts`
@@ -63,11 +65,13 @@ export function useExpenseMutations() {
 - [ ] Test each screen to verify functionality unchanged
 
 **Success Criteria:**
+
 - [ ] Zero screen files import from `*/repository` directories
 - [ ] All mutation operations go through hooks
 - [ ] No behavioral changes (app works identically)
 
 **Testing:**
+
 - Manually test each affected screen
 - Verify loading states work correctly
 - Verify error handling preserves existing behavior
@@ -84,6 +88,7 @@ export function useExpenseMutations() {
 Currency conversion business logic lives in `src/modules/expenses/repository/index.ts:49-86`, making it impossible to test without database access.
 
 **Current Code:**
+
 ```typescript
 // Lines 49-86 in repository/index.ts
 const computeConversion = (
@@ -101,6 +106,7 @@ const computeConversion = (
 Move to pure function in engine layer.
 
 **Tasks:**
+
 - [ ] Create `src/modules/expenses/engine/` directory
 - [ ] Create `src/modules/expenses/engine/compute-conversion.ts` with pure function
 - [ ] Create `src/modules/expenses/engine/__tests__/compute-conversion.test.ts`
@@ -109,6 +115,7 @@ Move to pure function in engine layer.
 - [ ] Verify existing integration tests still pass
 
 **Implementation:**
+
 ```typescript
 // src/modules/expenses/engine/compute-conversion.ts
 export interface ConversionInput {
@@ -124,7 +131,9 @@ export interface ConversionResult {
   fxRateToTrip: number | null;
 }
 
-export function computeExpenseConversion(input: ConversionInput): ConversionResult {
+export function computeExpenseConversion(
+  input: ConversionInput,
+): ConversionResult {
   if (input.originalCurrency === input.tripCurrency) {
     return {
       convertedAmountMinor: input.originalAmountMinor,
@@ -134,12 +143,14 @@ export function computeExpenseConversion(input: ConversionInput): ConversionResu
 
   if (input.fxRate == null) {
     throw createAppError(
-      'MISSING_FX_RATE',
-      `Exchange rate required for ${input.originalCurrency} → ${input.tripCurrency}`
+      "MISSING_FX_RATE",
+      `Exchange rate required for ${input.originalCurrency} → ${input.tripCurrency}`,
     );
   }
 
-  const converted = input.providedConverted ?? Math.round(input.originalAmountMinor * input.fxRate);
+  const converted =
+    input.providedConverted ??
+    Math.round(input.originalAmountMinor * input.fxRate);
   return {
     convertedAmountMinor: converted,
     fxRateToTrip: input.fxRate,
@@ -148,6 +159,7 @@ export function computeExpenseConversion(input: ConversionInput): ConversionResu
 ```
 
 **Success Criteria:**
+
 - [ ] Conversion logic is pure function with zero dependencies
 - [ ] 100% test coverage on conversion logic
 - [ ] Repository simplified to orchestration only
@@ -165,6 +177,7 @@ export function computeExpenseConversion(input: ConversionInput): ConversionResu
 `Math.round(amount * fxRate)` pattern duplicated in 6+ locations, risking logic drift.
 
 **Locations:**
+
 1. `src/utils/currency.ts:144` - exists but underused
 2. `src/modules/settlements/service/DisplayCurrencyAdapter.ts:85`
 3. `src/modules/expenses/repository/index.ts:79`
@@ -176,6 +189,7 @@ export function computeExpenseConversion(input: ConversionInput): ConversionResu
 Create single utility and replace all usages.
 
 **Tasks:**
+
 - [ ] Create `src/utils/conversion.ts` (or enhance existing `currency.ts`)
 - [ ] Define `convertCurrency(amountMinor: number, fxRate: number): number`
 - [ ] Add JSDoc with deterministic rounding guarantee
@@ -184,6 +198,7 @@ Create single utility and replace all usages.
 - [ ] Optional: Add ESLint rule to prevent future inline conversions
 
 **Implementation:**
+
 ```typescript
 // src/utils/conversion.ts
 /**
@@ -204,6 +219,7 @@ export function convertCurrency(amountMinor: number, fxRate: number): number {
 ```
 
 **ESLint Rule (Optional):**
+
 ```js
 // .eslintrc.js
 rules: {
@@ -218,6 +234,7 @@ rules: {
 ```
 
 **Success Criteria:**
+
 - [ ] Single source of truth for currency conversion
 - [ ] All 6+ locations updated to use utility
 - [ ] Tests verify deterministic rounding behavior
@@ -235,6 +252,7 @@ rules: {
 Magic numbers for floating-point tolerance scattered in `normalize-shares.ts`.
 
 **Current Code:**
+
 ```typescript
 // Line 109-110
 const tolerance = 0.01 + Number.EPSILON * 100;
@@ -247,11 +265,13 @@ if (Math.abs(a.fraction - b.fraction) < 0.0000001) { ... }
 Replace with named constants.
 
 **Tasks:**
+
 - [ ] Define constants at top of `src/modules/settlements/engine/normalize-shares.ts`
 - [ ] Replace all usages
 - [ ] Add JSDoc explaining why these values are chosen
 
 **Implementation:**
+
 ```typescript
 // src/modules/settlements/engine/normalize-shares.ts
 
@@ -273,6 +293,7 @@ if (Math.abs(a.fraction - b.fraction) < FRACTION_EQUALITY_EPSILON) { ... }
 ```
 
 **Success Criteria:**
+
 - [ ] All magic numbers replaced with named constants
 - [ ] Constants documented with rationale
 - [ ] All tests still pass
@@ -295,6 +316,7 @@ if (Math.abs(a.fraction - b.fraction) < FRACTION_EQUALITY_EPSILON) { ... }
 Expenses module lacks service layer. Business logic is embedded in repository, making it hard to test and reuse.
 
 **Current Architecture:**
+
 ```
 expenses/
 ├── repository/    ❌ Contains business logic
@@ -303,6 +325,7 @@ expenses/
 ```
 
 **Target Architecture:**
+
 ```
 expenses/
 ├── engine/        ✅ Pure logic (NEW)
@@ -313,6 +336,7 @@ expenses/
 ```
 
 **Tasks:**
+
 - [ ] Create `src/modules/expenses/service/ExpenseService.ts`
 - [ ] Implement `createExpense(data, deps?)` with dependency injection
 - [ ] Implement `updateExpense(id, data, deps?)`
@@ -324,11 +348,12 @@ expenses/
 - [ ] Write tests with mocked dependencies
 
 **Implementation:**
+
 ```typescript
 // src/modules/expenses/service/ExpenseService.ts
-import { computeExpenseConversion } from '../engine/compute-conversion';
-import * as ExpenseRepository from '../repository';
-import { getTrip } from '@modules/trips/repository';
+import { computeExpenseConversion } from "../engine/compute-conversion";
+import * as ExpenseRepository from "../repository";
+import { getTrip } from "@modules/trips/repository";
 
 export interface ExpenseServiceDependencies {
   expenseRepository?: typeof ExpenseRepository;
@@ -337,7 +362,7 @@ export interface ExpenseServiceDependencies {
 
 export async function createExpense(
   data: CreateExpenseInput,
-  deps: ExpenseServiceDependencies = {}
+  deps: ExpenseServiceDependencies = {},
 ): Promise<Expense> {
   const expenseRepo = deps.expenseRepository ?? ExpenseRepository;
   const tripRepo = deps.tripRepository ?? { getTrip };
@@ -345,7 +370,7 @@ export async function createExpense(
   // Load trip to get currency
   const trip = await tripRepo.getTrip(data.tripId);
   if (!trip) {
-    throw createAppError('TRIP_NOT_FOUND', `Trip ${data.tripId} not found`);
+    throw createAppError("TRIP_NOT_FOUND", `Trip ${data.tripId} not found`);
   }
 
   // Compute conversion using pure function
@@ -367,14 +392,14 @@ export async function createExpense(
 export async function updateExpense(
   expenseId: string,
   data: UpdateExpenseInput,
-  deps: ExpenseServiceDependencies = {}
+  deps: ExpenseServiceDependencies = {},
 ): Promise<Expense> {
   // Similar pattern
 }
 
 export async function deleteExpense(
   expenseId: string,
-  deps: ExpenseServiceDependencies = {}
+  deps: ExpenseServiceDependencies = {},
 ): Promise<void> {
   const expenseRepo = deps.expenseRepository ?? ExpenseRepository;
   await expenseRepo.deleteExpense(expenseId);
@@ -382,6 +407,7 @@ export async function deleteExpense(
 ```
 
 **Testing:**
+
 ```typescript
 // src/modules/expenses/service/__tests__/ExpenseService.test.ts
 describe('ExpenseService.createExpense', () => {
@@ -427,6 +453,7 @@ describe('ExpenseService.createExpense', () => {
 ```
 
 **Success Criteria:**
+
 - [ ] Service layer created with dependency injection
 - [ ] Repository simplified to CRUD only
 - [ ] Hooks use service instead of repository
@@ -448,6 +475,7 @@ Trip-related business logic scattered between screens and repository.
 Create service layer for trip operations that span multiple modules.
 
 **Tasks:**
+
 - [ ] Create `src/modules/trips/service/TripService.ts`
 - [ ] Implement `createTrip(data, deps?)`
 - [ ] Implement `updateTrip(id, data, deps?)`
@@ -457,11 +485,12 @@ Create service layer for trip operations that span multiple modules.
 - [ ] Write tests with mocked dependencies
 
 **Implementation:**
+
 ```typescript
 // src/modules/trips/service/TripService.ts
 export async function deleteTrip(
   tripId: string,
-  deps: TripServiceDependencies = {}
+  deps: TripServiceDependencies = {},
 ): Promise<void> {
   const tripRepo = deps.tripRepository ?? TripRepository;
   const expenseRepo = deps.expenseRepository ?? ExpenseRepository;
@@ -470,7 +499,7 @@ export async function deleteTrip(
   // Validate trip exists
   const trip = await tripRepo.getTrip(tripId);
   if (!trip) {
-    throw createAppError('TRIP_NOT_FOUND', `Trip ${tripId} not found`);
+    throw createAppError("TRIP_NOT_FOUND", `Trip ${tripId} not found`);
   }
 
   // Cascade delete in transaction
@@ -483,6 +512,7 @@ export async function deleteTrip(
 ```
 
 **Success Criteria:**
+
 - [ ] Service layer handles multi-step operations
 - [ ] Transaction safety for cascade operations
 - [ ] Hooks use service instead of repository
@@ -500,6 +530,7 @@ export async function deleteTrip(
 Manual error construction pattern duplicated in 20+ files. Existing `src/utils/errors.ts` utility underutilized.
 
 **Current Pattern (Bad):**
+
 ```typescript
 // Repeated 20+ times
 const error = new Error(...) as Error & { code: string };
@@ -511,6 +542,7 @@ throw error;
 Create domain-specific error factories and replace all manual constructions.
 
 **Tasks:**
+
 - [ ] Enhance `src/utils/errors.ts` with domain error factories
 - [ ] Create `createFxRateError(code, fromCurrency, toCurrency)`
 - [ ] Create `createValidationError(code, field, details)`
@@ -520,14 +552,15 @@ Create domain-specific error factories and replace all manual constructions.
 - [ ] Ensure all error codes are consistent
 
 **Implementation:**
+
 ```typescript
 // src/utils/errors.ts (enhance existing)
 
 export function createFxRateError(
-  code: 'MISSING_FX_RATE' | 'STALE_FX_RATE' | 'FX_CACHE_NOT_INITIALIZED',
+  code: "MISSING_FX_RATE" | "STALE_FX_RATE" | "FX_CACHE_NOT_INITIALIZED",
   fromCurrency: string,
   toCurrency: string,
-  details?: Record<string, unknown>
+  details?: Record<string, unknown>,
 ): AppError<typeof code> {
   return createAppError(
     code,
@@ -536,7 +569,7 @@ export function createFxRateError(
       fromCurrency,
       toCurrency,
       ...details,
-    }
+    },
   );
 }
 
@@ -544,7 +577,7 @@ export function createValidationError<Code extends string>(
   code: Code,
   field: string,
   message: string,
-  details?: Record<string, unknown>
+  details?: Record<string, unknown>,
 ): AppError<Code> {
   return createAppError(code, message, {
     field,
@@ -555,17 +588,17 @@ export function createValidationError<Code extends string>(
 export function createNotFoundError<Code extends string>(
   code: Code,
   resourceType: string,
-  resourceId: string
+  resourceId: string,
 ): AppError<Code> {
-  return createAppError(
-    code,
-    `${resourceType} not found: ${resourceId}`,
-    { resourceType, resourceId }
-  );
+  return createAppError(code, `${resourceType} not found: ${resourceId}`, {
+    resourceType,
+    resourceId,
+  });
 }
 ```
 
 **Usage:**
+
 ```typescript
 // Before:
 const error = new Error(`No rate available for ${from} → ${to}`) as Error & {
@@ -579,10 +612,11 @@ error.toCurrency = to;
 throw error;
 
 // After:
-throw createFxRateError('NO_RATE_AVAILABLE', from, to);
+throw createFxRateError("NO_RATE_AVAILABLE", from, to);
 ```
 
 **Files to Update:**
+
 - `src/modules/fx-rates/provider/cached-fx-rate-provider.ts` (multiple locations)
 - `src/modules/settlements/repository/index.ts` (2 locations)
 - `src/modules/settlements/engine/calculate-balances.ts` (2 locations)
@@ -591,6 +625,7 @@ throw createFxRateError('NO_RATE_AVAILABLE', from, to);
 - 15+ more files
 
 **Success Criteria:**
+
 - [ ] All error factories implemented
 - [ ] All manual error constructions replaced
 - [ ] Error codes consistent across codebase
@@ -608,6 +643,7 @@ throw createFxRateError('NO_RATE_AVAILABLE', from, to);
 `cachedFxRateProvider` exported as singleton creates global mutable state, making testing difficult.
 
 **Current Code:**
+
 ```typescript
 // src/modules/fx-rates/provider/cached-fx-rate-provider.ts:326
 export const cachedFxRateProvider = new CachedFxRateProvider();
@@ -617,6 +653,7 @@ export const cachedFxRateProvider = new CachedFxRateProvider();
 Use React Context for dependency injection.
 
 **Tasks:**
+
 - [ ] Remove singleton export from `cached-fx-rate-provider.ts`
 - [ ] Create `src/modules/fx-rates/context/FxRateContext.tsx`
 - [ ] Initialize provider in `app/_layout.tsx`
@@ -624,6 +661,7 @@ Use React Context for dependency injection.
 - [ ] Update tests to provide mock context
 
 **Implementation:**
+
 ```typescript
 // src/modules/fx-rates/context/FxRateContext.tsx
 import { createContext, useContext, ReactNode } from 'react';
@@ -674,6 +712,7 @@ export default function RootLayout() {
 ```
 
 **Success Criteria:**
+
 - [ ] No singleton export (only export class)
 - [ ] Context provides instance
 - [ ] All consumers use `useFxRateProvider()` hook
@@ -695,6 +734,7 @@ export default function RootLayout() {
 
 **Problem:**
 Percentage validation logic duplicated with inconsistent tolerances:
+
 - `expenses/utils/validate-splits.ts:90` - `< 0.01`
 - `settlements/engine/normalize-shares.ts:109` - `> (0.01 + EPSILON)`
 - `expenses/utils/build-expense-splits.ts:120` - `>= 0.01`
@@ -703,6 +743,7 @@ Percentage validation logic duplicated with inconsistent tolerances:
 Single source of truth for validation logic.
 
 **Tasks:**
+
 - [ ] Create `src/utils/validation.ts`
 - [ ] Define `PERCENTAGE_TOLERANCE` constant
 - [ ] Implement `isValidPercentageSum(total: number): boolean`
@@ -712,6 +753,7 @@ Single source of truth for validation logic.
 - [ ] Write comprehensive tests
 
 **Implementation:**
+
 ```typescript
 // src/utils/validation.ts
 
@@ -731,7 +773,7 @@ export function isValidPercentageSum(total: number): boolean {
  * Returns null if not a finite number.
  */
 export function parseFiniteNumber(value: string | number): number | null {
-  const num = typeof value === 'string' ? parseFloat(value) : value;
+  const num = typeof value === "string" ? parseFloat(value) : value;
   return Number.isFinite(num) ? num : null;
 }
 
@@ -744,6 +786,7 @@ export function isValidWeight(weight: number): boolean {
 ```
 
 **Success Criteria:**
+
 - [ ] Single source of truth for validation
 - [ ] Consistent tolerance values
 - [ ] All duplicated logic replaced
@@ -764,6 +807,7 @@ export function isValidWeight(weight: number): boolean {
 Centralized formatters with consistent precision.
 
 **Tasks:**
+
 - [ ] Create `src/utils/formatting.ts`
 - [ ] Implement `formatFxRate(rate: number): string` (4 decimals)
 - [ ] Implement `formatPercentage(pct: number): string` (1 decimal)
@@ -772,6 +816,7 @@ Centralized formatters with consistent precision.
 - [ ] Write snapshot tests for formatting consistency
 
 **Implementation:**
+
 ```typescript
 // src/utils/formatting.ts
 
@@ -810,6 +855,7 @@ export function formatAmountInput(minor: number): string {
 ```
 
 **Success Criteria:**
+
 - [ ] Centralized formatting utilities
 - [ ] All `toFixed()` calls replaced (except in utilities)
 - [ ] Consistent decimal places across app
@@ -830,12 +876,14 @@ Functions lack documented preconditions, postconditions, and invariants.
 Add comprehensive JSDoc to all public functions.
 
 **Tasks:**
+
 - [ ] Document settlement engine functions (preconditions, postconditions, invariants)
 - [ ] Document service layer contracts (what throws, what returns null)
 - [ ] Document repository functions (transaction behavior, error cases)
 - [ ] Document utility functions (determinism guarantees, edge cases)
 
 **Template:**
+
 ```typescript
 /**
  * Normalizes expense splits to absolute amounts.
@@ -871,13 +919,14 @@ Add comprehensive JSDoc to all public functions.
  */
 export function normalizeShares(
   splits: ExpenseSplit[],
-  totalAmountMinor: number
+  totalAmountMinor: number,
 ): ExpenseSplit[] {
   // ...
 }
 ```
 
 **Priority Functions:**
+
 - `normalizeShares()`
 - `calculateBalances()`
 - `optimizeSettlements()`
@@ -886,6 +935,7 @@ export function normalizeShares(
 - All service layer functions
 
 **Success Criteria:**
+
 - [ ] All public engine functions documented
 - [ ] All service functions documented
 - [ ] Preconditions and postconditions explicit
@@ -909,15 +959,17 @@ export function normalizeShares(
 Module index files export repositories, allowing consumers to bypass intended abstractions.
 
 **Current:**
+
 ```typescript
 // src/modules/expenses/index.ts
-export * from './repository'; // ❌ Exposes internal implementation
+export * from "./repository"; // ❌ Exposes internal implementation
 ```
 
 **Solution:**
 Only export public API (types, hooks, constants).
 
 **Tasks:**
+
 - [ ] Update `src/modules/expenses/index.ts` - remove repository export
 - [ ] Update `src/modules/trips/index.ts` - remove repository export
 - [ ] Update `src/modules/participants/index.ts` - remove repository export
@@ -925,16 +977,18 @@ Only export public API (types, hooks, constants).
 - [ ] Verify no broken imports (should be fixed by Issue #1)
 
 **Implementation:**
+
 ```typescript
 // src/modules/expenses/index.ts
-export * from './types';
-export * from './hooks';
-export * from './constants';
+export * from "./types";
+export * from "./hooks";
+export * from "./constants";
 // export * from './repository'; ❌ REMOVED
 // export * from './service';     ❌ REMOVED (internal only)
 ```
 
 **Success Criteria:**
+
 - [ ] Only types, hooks, and constants exported from modules
 - [ ] Repositories and services are internal implementation details
 - [ ] No broken imports (all consumers use hooks)
@@ -954,6 +1008,7 @@ No automated enforcement of architecture rules. Violations must be caught in cod
 ESLint rules to prevent common violations.
 
 **Tasks:**
+
 - [ ] Install `eslint-plugin-import` if not already installed
 - [ ] Add rule: Screens cannot import from repositories
 - [ ] Add rule: Engine cannot import from service/repository/hooks
@@ -964,6 +1019,7 @@ ESLint rules to prevent common violations.
 - [ ] Add to CI pipeline
 
 **Implementation:**
+
 ```js
 // .eslintrc.js
 module.exports = {
@@ -972,32 +1028,38 @@ module.exports = {
     // ... existing rules
 
     // Prevent screens from importing repositories
-    'no-restricted-imports': [
-      'error',
+    "no-restricted-imports": [
+      "error",
       {
         patterns: [
           {
-            group: ['**/repository', '**/repository/*'],
-            message: 'Screens should use hooks instead of importing repositories directly',
+            group: ["**/repository", "**/repository/*"],
+            message:
+              "Screens should use hooks instead of importing repositories directly",
           },
           {
-            group: ['@modules/*/repository', '@modules/*/repository/*'],
-            message: 'Screens should use hooks instead of importing repositories directly',
+            group: ["@modules/*/repository", "@modules/*/repository/*"],
+            message:
+              "Screens should use hooks instead of importing repositories directly",
           },
         ],
       },
     ],
 
     // Prevent inline FX conversions
-    'no-restricted-syntax': [
-      'error',
+    "no-restricted-syntax": [
+      "error",
       {
-        selector: 'CallExpression[callee.object.name="Math"][callee.property.name="round"] BinaryExpression[operator="*"]',
-        message: 'Use convertCurrency() from @utils/conversion instead of inline Math.round(amount * rate)',
+        selector:
+          'CallExpression[callee.object.name="Math"][callee.property.name="round"] BinaryExpression[operator="*"]',
+        message:
+          "Use convertCurrency() from @utils/conversion instead of inline Math.round(amount * rate)",
       },
       {
-        selector: 'AssignmentExpression[left.property.name="code"][right.type="Literal"]',
-        message: 'Use error factories from @utils/errors instead of manual error.code assignment',
+        selector:
+          'AssignmentExpression[left.property.name="code"][right.type="Literal"]',
+        message:
+          "Use error factories from @utils/errors instead of manual error.code assignment",
       },
     ],
   },
@@ -1005,17 +1067,32 @@ module.exports = {
   overrides: [
     {
       // Engine layer restrictions
-      files: ['src/modules/*/engine/**/*.ts', 'src/modules/*/engine/**/*.tsx'],
+      files: ["src/modules/*/engine/**/*.ts", "src/modules/*/engine/**/*.tsx"],
       rules: {
-        'no-restricted-imports': [
-          'error',
+        "no-restricted-imports": [
+          "error",
           {
             patterns: [
-              { group: ['**/repository'], message: 'Engine layer cannot import repositories' },
-              { group: ['**/service'], message: 'Engine layer cannot import services' },
-              { group: ['**/hooks'], message: 'Engine layer cannot import hooks' },
-              { group: ['react', 'react-native'], message: 'Engine layer must be framework-agnostic' },
-              { group: ['@db/*'], message: 'Engine layer cannot import database' },
+              {
+                group: ["**/repository"],
+                message: "Engine layer cannot import repositories",
+              },
+              {
+                group: ["**/service"],
+                message: "Engine layer cannot import services",
+              },
+              {
+                group: ["**/hooks"],
+                message: "Engine layer cannot import hooks",
+              },
+              {
+                group: ["react", "react-native"],
+                message: "Engine layer must be framework-agnostic",
+              },
+              {
+                group: ["@db/*"],
+                message: "Engine layer cannot import database",
+              },
             ],
           },
         ],
@@ -1026,6 +1103,7 @@ module.exports = {
 ```
 
 **Success Criteria:**
+
 - [ ] ESLint rules enforce architecture boundaries
 - [ ] Rules run in CI (blocking)
 - [ ] Zero violations in codebase
@@ -1046,6 +1124,7 @@ No automated verification of layer boundaries and dependency direction.
 Use `dependency-cruiser` to enforce architecture rules.
 
 **Tasks:**
+
 - [ ] Install `dependency-cruiser`
 - [ ] Create `.dependency-cruiser.js` config
 - [ ] Define forbidden dependency patterns
@@ -1054,51 +1133,52 @@ Use `dependency-cruiser` to enforce architecture rules.
 - [ ] Fix any violations
 
 **Implementation:**
+
 ```js
 // .dependency-cruiser.js
 module.exports = {
   forbidden: [
     // Engine layer cannot import from service/repository/hooks
     {
-      name: 'engine-no-service',
-      from: { path: 'src/modules/.*/engine/.*' },
-      to: { path: 'src/modules/.*/service/.*' },
-      comment: 'Engine layer must be pure - cannot import services',
+      name: "engine-no-service",
+      from: { path: "src/modules/.*/engine/.*" },
+      to: { path: "src/modules/.*/service/.*" },
+      comment: "Engine layer must be pure - cannot import services",
     },
     {
-      name: 'engine-no-repository',
-      from: { path: 'src/modules/.*/engine/.*' },
-      to: { path: 'src/modules/.*/repository/.*' },
-      comment: 'Engine layer must be pure - cannot import repositories',
+      name: "engine-no-repository",
+      from: { path: "src/modules/.*/engine/.*" },
+      to: { path: "src/modules/.*/repository/.*" },
+      comment: "Engine layer must be pure - cannot import repositories",
     },
     {
-      name: 'engine-no-hooks',
-      from: { path: 'src/modules/.*/engine/.*' },
-      to: { path: 'src/modules/.*/hooks/.*' },
-      comment: 'Engine layer must be pure - cannot import hooks',
+      name: "engine-no-hooks",
+      from: { path: "src/modules/.*/engine/.*" },
+      to: { path: "src/modules/.*/hooks/.*" },
+      comment: "Engine layer must be pure - cannot import hooks",
     },
     {
-      name: 'engine-no-react',
-      from: { path: 'src/modules/.*/engine/.*' },
-      to: { path: 'node_modules/react' },
-      comment: 'Engine layer must be framework-agnostic',
+      name: "engine-no-react",
+      from: { path: "src/modules/.*/engine/.*" },
+      to: { path: "node_modules/react" },
+      comment: "Engine layer must be framework-agnostic",
     },
 
     // Screens cannot import repositories
     {
-      name: 'screen-no-repository',
-      from: { path: 'src/modules/.*/screens/.*' },
-      to: { path: 'src/modules/.*/repository/.*' },
-      comment: 'Screens should use hooks instead of repositories',
+      name: "screen-no-repository",
+      from: { path: "src/modules/.*/screens/.*" },
+      to: { path: "src/modules/.*/repository/.*" },
+      comment: "Screens should use hooks instead of repositories",
     },
 
     // No circular dependencies
     {
-      name: 'no-circular',
+      name: "no-circular",
       from: {},
       to: {},
       circular: true,
-      comment: 'Circular dependencies are not allowed',
+      comment: "Circular dependencies are not allowed",
     },
   ],
 };
@@ -1115,6 +1195,7 @@ module.exports = {
 ```
 
 **Success Criteria:**
+
 - [ ] Architecture tests pass
 - [ ] Tests run in CI
 - [ ] Zero violations
@@ -1135,6 +1216,7 @@ Architecture principles exist in code but not documented in single place.
 Comprehensive architecture guide.
 
 **Tasks:**
+
 - [ ] Create `docs/ARCHITECTURE.md`
 - [ ] Document layer responsibilities
 - [ ] Create decision tree ("where does this code go?")
@@ -1145,23 +1227,25 @@ Comprehensive architecture guide.
 - [ ] Link from main README
 
 **Outline:**
+
 ```markdown
 # Architecture Guidelines
 
 ## Overview
+
 - Local-first architecture
 - Module colocation pattern
 - Three-layer separation (engine → service → repository)
 
 ## Layer Responsibilities
 
-| Layer | Purpose | Can Import From | Cannot Import |
-|-------|---------|-----------------|---------------|
-| Engine | Pure math/logic | Types only | Repository, Hooks, React, Database |
-| Service | Orchestration | Engine, Repository, Types | Hooks, React, UI |
-| Repository | Database access | Database, Types | Engine, Service, Hooks, React |
-| Hooks | React integration | Service, Types | Repository (use Service instead) |
-| Screens | UI components | Hooks, Components, Types | Repository, Service, Database |
+| Layer      | Purpose           | Can Import From           | Cannot Import                      |
+| ---------- | ----------------- | ------------------------- | ---------------------------------- |
+| Engine     | Pure math/logic   | Types only                | Repository, Hooks, React, Database |
+| Service    | Orchestration     | Engine, Repository, Types | Hooks, React, UI                   |
+| Repository | Database access   | Database, Types           | Engine, Service, Hooks, React      |
+| Hooks      | React integration | Service, Types            | Repository (use Service instead)   |
+| Screens    | UI components     | Hooks, Components, Types  | Repository, Service, Database      |
 
 ## Decision Tree: Where does this code go?
 
@@ -1170,26 +1254,32 @@ Comprehensive architecture guide.
 ## Module Structure (Gold Standard)
 
 settlements/
-├── engine/              Pure, testable math
-├── service/             Orchestration, data loading
-├── repository/          Database access only
-├── hooks/               React integration
-├── screens/             UI components
-└── __tests__/           Tests colocated with code
+├── engine/ Pure, testable math
+├── service/ Orchestration, data loading
+├── repository/ Database access only
+├── hooks/ React integration
+├── screens/ UI components
+└── **tests**/ Tests colocated with code
 
 ## Examples
 
 ### ✅ Good: Pure Engine Function
+
 ### ❌ Bad: Business Logic in Repository
+
 ### ✅ Good: Service Orchestration
+
 ### ❌ Bad: Screen Calling Repository
 
 ## Testing Strategy
+
 ## Common Pitfalls
+
 ## Migration Guide (refactoring existing modules)
 ```
 
 **Success Criteria:**
+
 - [ ] Comprehensive architecture documentation
 - [ ] Clear decision tree for code placement
 - [ ] Examples of good and bad patterns
@@ -1215,12 +1305,14 @@ Mathematical invariants (conservation laws) only verified in tests, not runtime.
 Add development-mode assertions.
 
 **Tasks:**
+
 - [ ] Add invariant checks to `calculateBalances()`
 - [ ] Add invariant checks to `normalizeShares()`
 - [ ] Only run in development mode (`process.env.NODE_ENV !== 'production'`)
 - [ ] Log warnings instead of throwing in production
 
 **Implementation:**
+
 ```typescript
 // src/modules/settlements/engine/calculate-balances.ts
 export const calculateBalances = (...): ParticipantBalance[] => {
@@ -1243,6 +1335,7 @@ export const calculateBalances = (...): ParticipantBalance[] => {
 ```
 
 **Success Criteria:**
+
 - [ ] Invariants checked in development
 - [ ] No performance impact in production
 - [ ] Helpful error messages with debugging info
@@ -1262,11 +1355,13 @@ Settlement engine uses floating-point in intermediate calculations but not docum
 Add explicit comments explaining necessity.
 
 **Tasks:**
+
 - [ ] Document why floating-point is unavoidable in percentage/weight splits
 - [ ] Explain how determinism is maintained despite floating-point
 - [ ] Link to tests that verify determinism
 
 **Implementation:**
+
 ```typescript
 // src/modules/settlements/engine/normalize-shares.ts
 
@@ -1292,6 +1387,7 @@ const baseAmounts = exactAmounts.map(Math.floor);
 ```
 
 **Success Criteria:**
+
 - [ ] Rationale documented in code
 - [ ] Links to relevant tests
 - [ ] Clear explanation for future maintainers
@@ -1311,6 +1407,7 @@ No formal checklist for contributors to ensure architecture compliance.
 Checklist in CONTRIBUTING.md.
 
 **Tasks:**
+
 - [ ] Create or enhance `CONTRIBUTING.md`
 - [ ] Add architecture checklist
 - [ ] Add testing requirements
@@ -1318,6 +1415,7 @@ Checklist in CONTRIBUTING.md.
 - [ ] Link to ARCHITECTURE.md
 
 **Implementation:**
+
 ```markdown
 # Contributing to CrewSplit
 
@@ -1326,6 +1424,7 @@ Checklist in CONTRIBUTING.md.
 Before submitting a PR, verify:
 
 ### Code Placement
+
 - [ ] Pure logic (math, validation, calculations) is in `engine/` directory
 - [ ] Database queries are in `repository/` directory (CRUD only)
 - [ ] Multi-step operations are in `service/` directory
@@ -1333,18 +1432,21 @@ Before submitting a PR, verify:
 - [ ] UI rendering is in `screens/` or `components/` directory
 
 ### Dependencies
+
 - [ ] Engine functions import only types (no repositories, services, hooks, React)
 - [ ] Services use dependency injection for testability
 - [ ] Screens use hooks instead of repositories
 - [ ] No circular dependencies introduced
 
 ### Testing
+
 - [ ] Pure functions have unit tests (>90% coverage)
 - [ ] Service functions have tests with mocked dependencies
 - [ ] Integration tests verify end-to-end behavior
 - [ ] All tests pass (`npm test`)
 
 ### Code Quality
+
 - [ ] No duplication of conversion/formatting/validation logic
 - [ ] Error handling uses error factories from `@utils/errors`
 - [ ] JSDoc comments on public functions (preconditions, postconditions)
@@ -1352,15 +1454,18 @@ Before submitting a PR, verify:
 - [ ] TypeScript compiles (`npm run type-check`)
 
 ### Architecture Compliance
+
 - [ ] Architecture tests pass (`npm run arch-test`)
 - [ ] Module exports only public API (no repository exports)
 - [ ] Follows gold standard pattern (see `settlements/` module)
 
 ## Testing Checklist
+
 ## Code Review Checklist
 ```
 
 **Success Criteria:**
+
 - [ ] Clear checklist for contributors
 - [ ] Links to relevant documentation
 - [ ] Used in PR template
@@ -1372,6 +1477,7 @@ Before submitting a PR, verify:
 **Total Estimated Time:** 12-16 days for full roadmap
 
 **Execution Priority:**
+
 1. **Milestone 1** (1-2 days) - Quick wins, immediate risk reduction
 2. **Milestone 2** (3-4 days) - Service layer establishment
 3. **Milestone 3** (2-3 days) - Duplication elimination
@@ -1379,6 +1485,7 @@ Before submitting a PR, verify:
 5. **Milestone 5** (optional) - Nice-to-have enhancements
 
 **Success Metrics:**
+
 - Screen → Repository violations: 8 → 0
 - Business logic in repositories: 3 modules → 0
 - FX conversion duplication: 6+ locations → 1 utility
@@ -1386,6 +1493,7 @@ Before submitting a PR, verify:
 - Architecture test violations: N/A → 0 (enforced)
 
 **Breaking This Down:**
+
 - Week 1: Milestones 1 & 2 (foundational fixes)
 - Week 2: Milestone 3 (centralization)
 - Week 3: Milestone 4 (enforcement) + Milestone 5 (optional)
