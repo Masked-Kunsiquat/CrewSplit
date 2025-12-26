@@ -5,9 +5,9 @@
 
 import { Stack, Redirect, usePathname } from "expo-router";
 import { View, Text, ActivityIndicator, StyleSheet } from "react-native";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { useDbMigrations } from "@db/client";
-import { cachedFxRateProvider } from "@modules/fx-rates/provider";
+import { FxRateProvider } from "@modules/fx-rates";
 import { useFxSync } from "@modules/fx-rates/hooks";
 import { useOnboardingState } from "@modules/onboarding/hooks/use-onboarding-state";
 import { initializeImportExport } from "@modules/import-export";
@@ -19,9 +19,10 @@ import { fxLogger } from "@utils/logger";
  *
  * This component:
  * - Waits for database migrations to complete and shows an error view if migrations fail.
- * - Triggers and monitors initialization of the cached FX rate provider and runs background FX sync (non-blocking on failure).
+ * - Provides FX rate provider via React Context and initializes it automatically.
+ * - Runs background FX sync (non-blocking on failure).
  * - Checks onboarding completion and redirects to the onboarding welcome screen when needed.
- * - Renders a centered loader while migrations, FX initialization, or onboarding checks are in progress.
+ * - Renders a centered loader while migrations or onboarding checks are in progress.
  * - Renders the app navigation Stack (main, settings, onboarding) once initialization and onboarding checks complete.
  *
  * @returns The root React element for the app: either a migration error view, a loading view, an onboarding redirect, or the main navigation stack.
@@ -29,8 +30,6 @@ import { fxLogger } from "@utils/logger";
 export default function RootLayout() {
   const pathname = usePathname();
   const { success, error } = useDbMigrations();
-  const [fxInitialized, setFxInitialized] = useState(false);
-  const [fxError, setFxError] = useState<Error | null>(null);
 
   // Check onboarding status (for future redirect to onboarding screens)
   const {
@@ -57,7 +56,90 @@ export default function RootLayout() {
     }
   }, [pathname, success, isOnboardingRoute, refreshOnboarding]);
 
-  // Background sync for FX rates (must be called unconditionally)
+  // Initialize import/export system after migrations complete
+  useEffect(() => {
+    if (success) {
+      initializeImportExport();
+    }
+  }, [success]);
+
+  // Show migration error
+  if (error) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.errorTitle}>Database Migration Error</Text>
+        <Text style={styles.errorMessage}>{error.message}</Text>
+      </View>
+    );
+  }
+
+  // Show loading while migrations or onboarding check in progress
+  if (!success || onboardingLoading) {
+    return (
+      <View style={styles.container}>
+        <ActivityIndicator size="large" color={colors.primary} />
+        <Text style={styles.loadingText}>
+          {!success
+            ? "Applying database migrations..."
+            : "Checking welcome status..."}
+        </Text>
+        {onboardingError ? (
+          <Text style={styles.errorMessageSmall}>
+            {onboardingError.message}
+          </Text>
+        ) : null}
+      </View>
+    );
+  }
+
+  if (!onboardingComplete && !isOnboardingRoute) {
+    return <Redirect href="/onboarding/welcome" />;
+  }
+
+  return (
+    <FxRateProvider>
+      <FxSyncWrapper />
+      <Stack
+        screenOptions={{
+          headerShown: true,
+          headerStyle: {
+            backgroundColor: colors.background,
+          },
+          headerTintColor: colors.text,
+          headerTitleStyle: {
+            fontSize: typography.xl,
+            fontWeight: typography.semibold,
+            color: colors.text,
+          },
+          headerShadowVisible: false,
+        }}
+      >
+        <Stack.Screen
+          name="index"
+          options={{
+            headerBackVisible: false,
+            headerLeft: () => null,
+          }}
+        />
+        <Stack.Screen name="settings" />
+        <Stack.Screen
+          name="import-export"
+          options={{
+            title: "Import & Export",
+          }}
+        />
+        <Stack.Screen name="onboarding" options={{ headerShown: false }} />
+      </Stack>
+    </FxRateProvider>
+  );
+}
+
+/**
+ * FxSyncWrapper component
+ * Wraps the FX sync hook inside the FxRateProvider context
+ */
+function FxSyncWrapper() {
+  // Background sync for FX rates (must be called inside FxRateProvider)
   // Safe to run before provider initialization: checkStaleness only queries DB,
   // and performBackgroundRefresh is delayed (1s) to allow initialization to complete
   useFxSync({
@@ -70,107 +152,7 @@ export default function RootLayout() {
     },
   });
 
-  // Initialize FX rate provider and import/export system after migrations complete
-  useEffect(() => {
-    if (success && !fxInitialized) {
-      fxLogger.info("Initializing FX rate provider");
-      cachedFxRateProvider
-        .initialize()
-        .then(() => {
-          setFxInitialized(true);
-          fxLogger.info("FX rate provider initialized successfully");
-
-          // Initialize import/export entity registry
-          initializeImportExport();
-        })
-        .catch((err) => {
-          // Don't block app startup on FX initialization failure
-          fxLogger.error("Failed to initialize FX rate provider", err);
-          setFxError(err);
-          // Allow app to continue even if FX init fails
-          setFxInitialized(true);
-
-          // Still initialize import/export
-          initializeImportExport();
-        });
-    }
-  }, [success, fxInitialized]);
-
-  // Show migration error
-  if (error) {
-    return (
-      <View style={styles.container}>
-        <Text style={styles.errorTitle}>Database Migration Error</Text>
-        <Text style={styles.errorMessage}>{error.message}</Text>
-      </View>
-    );
-  }
-
-  // Show loading while migrations, FX initialization, or onboarding check in progress
-  if (!success || !fxInitialized || onboardingLoading) {
-    return (
-      <View style={styles.container}>
-        <ActivityIndicator size="large" color={colors.primary} />
-        <Text style={styles.loadingText}>
-          {!success
-            ? "Applying database migrations..."
-            : !fxInitialized
-              ? "Loading exchange rates..."
-              : "Checking welcome status..."}
-        </Text>
-        {onboardingError ? (
-          <Text style={styles.errorMessageSmall}>
-            {onboardingError.message}
-          </Text>
-        ) : null}
-      </View>
-    );
-  }
-
-  // Show warning if FX failed but allow app to continue
-  if (fxError) {
-    fxLogger.warn(
-      "App started with FX rate provider initialization failure - conversions may not work",
-    );
-  }
-
-  if (!onboardingComplete && !isOnboardingRoute) {
-    return <Redirect href="/onboarding/welcome" />;
-  }
-
-  return (
-    <Stack
-      screenOptions={{
-        headerShown: true,
-        headerStyle: {
-          backgroundColor: colors.background,
-        },
-        headerTintColor: colors.text,
-        headerTitleStyle: {
-          fontSize: typography.xl,
-          fontWeight: typography.semibold,
-          color: colors.text,
-        },
-        headerShadowVisible: false,
-      }}
-    >
-      <Stack.Screen
-        name="index"
-        options={{
-          headerBackVisible: false,
-          headerLeft: () => null,
-        }}
-      />
-      <Stack.Screen name="settings" />
-      <Stack.Screen
-        name="import-export"
-        options={{
-          title: "Import & Export",
-        }}
-      />
-      <Stack.Screen name="onboarding" options={{ headerShown: false }} />
-    </Stack>
-  );
+  return null;
 }
 
 const styles = StyleSheet.create({

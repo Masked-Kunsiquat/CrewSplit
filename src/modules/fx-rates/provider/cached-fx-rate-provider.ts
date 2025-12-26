@@ -328,9 +328,3 @@ export class CachedFxRateProvider implements FxRateProvider {
     this.cache.clear();
   }
 }
-
-/**
- * Singleton instance for app-wide use
- * Initialize at app startup via useDbMigrations or similar hook
- */
-export const cachedFxRateProvider = new CachedFxRateProvider();

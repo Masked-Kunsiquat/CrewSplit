@@ -18,7 +18,7 @@ import { useRefreshControl } from "@hooks/use-refresh-control";
 import { formatCurrency, CurrencyUtils } from "@utils/currency";
 import { normalizeRouteParam } from "@utils/route-params";
 import { getCategoryIcon } from "@utils/category-icons";
-import { cachedFxRateProvider } from "@modules/fx-rates/provider";
+import { useFxRateProvider } from "@modules/fx-rates";
 import type { ExpenseSplit } from "@modules/expenses/types";
 import { useSettlements } from "@modules/settlements/hooks/use-settlements";
 import { TransactionRow } from "@modules/settlements/components/TransactionRow";
@@ -71,6 +71,7 @@ function ParticipantDetailsContent({
 }) {
   const router = useRouter();
   const navigation = useNavigation();
+  const fxRateProvider = useFxRateProvider();
   const [viewMode, setViewMode] = useState<ViewMode>("paid-by");
   const [expenseSplitsMap, setExpenseSplitsMap] = useState<
     Map<string, ExpenseSplit[]>
@@ -215,7 +216,7 @@ function ParticipantDetailsContent({
     const conversions = new Map<string, number | null>();
     currentExpenses.forEach((expense) => {
       try {
-        const fxRate = cachedFxRateProvider.getRate(
+        const fxRate = fxRateProvider.getRate(
           expense.currency,
           displayCurrency,
         );
@@ -236,7 +237,7 @@ function ParticipantDetailsContent({
     });
 
     return conversions;
-  }, [currentExpenses, displayCurrency]);
+  }, [fxRateProvider, currentExpenses, displayCurrency]);
 
   // Precompute FX conversions for category breakdown
   const categoryDisplayAmounts = useMemo(() => {
@@ -244,7 +245,7 @@ function ParticipantDetailsContent({
 
     const conversions = new Map<string, number | null>();
     try {
-      const fxRate = cachedFxRateProvider.getRate(
+      const fxRate = fxRateProvider.getRate(
         settlement.currency,
         displayCurrency,
       );
@@ -264,7 +265,7 @@ function ParticipantDetailsContent({
     }
 
     return conversions;
-  }, [categoryBreakdown, displayCurrency, settlement.currency]);
+  }, [fxRateProvider, categoryBreakdown, displayCurrency, settlement.currency]);
 
   // Update native header title
   useEffect(() => {
@@ -280,7 +281,7 @@ function ParticipantDetailsContent({
     if (!participantBalance || !displayCurrency) return null;
 
     try {
-      const fxRate = cachedFxRateProvider.getRate(
+      const fxRate = fxRateProvider.getRate(
         settlement.currency,
         displayCurrency,
       );
@@ -303,7 +304,12 @@ function ParticipantDetailsContent({
     } catch {
       return null;
     }
-  }, [participantBalance, displayCurrency, settlement.currency]);
+  }, [
+    fxRateProvider,
+    participantBalance,
+    displayCurrency,
+    settlement.currency,
+  ]);
 
   const loading = participantsLoading || settlementLoading || expensesLoading;
 

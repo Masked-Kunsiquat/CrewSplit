@@ -24,7 +24,7 @@ import {
   SettlementPaymentMethod,
 } from "../types";
 import { settlementLogger } from "@utils/logger";
-import { cachedFxRateProvider } from "@modules/fx-rates/provider/cached-fx-rate-provider";
+import type { CachedFxRateProvider } from "@modules/fx-rates/provider/cached-fx-rate-provider";
 import { CurrencyUtils } from "@utils/currency";
 import {
   createFxRateError,
@@ -75,12 +75,14 @@ const getTripCurrency = async (tripId: string): Promise<string> => {
  * Compute currency conversion for settlement amount
  * Same logic as ExpenseRepository's computeConversion
  *
+ * @param fxRateProvider - FX rate provider instance (for dependency injection)
  * @returns convertedAmountMinor (in trip currency) and fxRateToTrip
  */
 const computeConversion = (
   originalAmountMinor: number,
   originalCurrency: string,
   tripCurrencyCode: string,
+  fxRateProvider: CachedFxRateProvider,
 ): { convertedAmountMinor: number; fxRateToTrip: number | null } => {
   if (originalCurrency === tripCurrencyCode) {
     settlementLogger.debug("No currency conversion needed", {
@@ -92,10 +94,7 @@ const computeConversion = (
 
   // Fetch rate from cached FX provider
   try {
-    const fxRate = cachedFxRateProvider.getRate(
-      originalCurrency,
-      tripCurrencyCode,
-    );
+    const fxRate = fxRateProvider.getRate(originalCurrency, tripCurrencyCode);
     const converted = CurrencyUtils.convertWithFxRate(
       originalAmountMinor,
       fxRate,
@@ -230,10 +229,12 @@ const validateSettlement = async (
  * Validates participants, computes currency conversion, and persists to database
  *
  * @param data - New settlement data
+ * @param fxRateProvider - FX rate provider instance (required for dependency injection)
  * @returns Created settlement with enriched participant names
  */
 export const createSettlement = async (
   data: NewSettlementData,
+  fxRateProvider: CachedFxRateProvider,
 ): Promise<SettlementWithParticipants> => {
   const tripCurrencyCode = await getTripCurrency(data.tripId);
 
@@ -251,6 +252,7 @@ export const createSettlement = async (
     data.originalAmountMinor,
     data.originalCurrency,
     tripCurrencyCode,
+    fxRateProvider,
   );
 
   const now = new Date().toISOString();
@@ -555,11 +557,13 @@ export const getSettlementsForExpense = async (
  *
  * @param id - Settlement ID
  * @param patch - Fields to update
+ * @param fxRateProvider - FX rate provider instance (required for dependency injection)
  * @returns Updated settlement with participant names
  */
 export const updateSettlement = async (
   id: string,
   patch: UpdateSettlementData,
+  fxRateProvider: CachedFxRateProvider,
 ): Promise<SettlementWithParticipants> => {
   // Fetch existing settlement
   const existingRows = await db
@@ -600,6 +604,7 @@ export const updateSettlement = async (
     originalAmountMinor,
     originalCurrency,
     tripCurrencyCode,
+    fxRateProvider,
   );
 
   const now = new Date().toISOString();

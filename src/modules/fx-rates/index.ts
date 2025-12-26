@@ -8,7 +8,10 @@ export { FxRateRepository } from "./repository";
 export type { FxRate, SetFxRateInput, BatchFxRateInput } from "./repository";
 
 // Provider (in-memory cache layer)
-export { CachedFxRateProvider, cachedFxRateProvider } from "./provider";
+export { CachedFxRateProvider } from "./provider";
+
+// Context (React dependency injection)
+export { FxRateProvider, useFxRateProvider } from "./context/FxRateContext";
 
 // Services (API integration)
 export {

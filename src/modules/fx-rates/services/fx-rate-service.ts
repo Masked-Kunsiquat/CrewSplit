@@ -12,7 +12,7 @@
 import { FrankfurterService } from "./frankfurter-service";
 import { ExchangeRateApiService } from "./exchange-rate-api-service";
 import { FxRateRepository } from "../repository";
-import { cachedFxRateProvider } from "../provider";
+import type { CachedFxRateProvider } from "../provider/cached-fx-rate-provider";
 import type { FxRateSource } from "@db/schema/fx-rates";
 import type { RatePair } from "../types";
 import { fxLogger } from "@utils/logger";
@@ -43,6 +43,8 @@ export interface UpdateRatesOptions {
   forceSource?: "frankfurter" | "exchangerate-api";
   /** Timeout per API call in milliseconds (default: 10000) */
   timeout?: number;
+  /** FX rate provider to refresh after update (optional) */
+  fxRateProvider?: CachedFxRateProvider;
 }
 
 /**
@@ -61,6 +63,7 @@ export const updateRates = async (
     targetCurrencies,
     forceSource,
     timeout = 10000,
+    fxRateProvider,
   } = options;
 
   const fetchedAt = new Date().toISOString();
@@ -84,13 +87,16 @@ export const updateRates = async (
         metadata: { fetchedAt },
       });
 
-      try {
-        await cachedFxRateProvider.refreshCache();
-      } catch (cacheError) {
-        fxLogger.warn(
-          "Failed to refresh FX cache after Frankfurter update",
-          cacheError,
-        );
+      // Refresh cache if provider supplied
+      if (fxRateProvider) {
+        try {
+          await fxRateProvider.refreshCache();
+        } catch (cacheError) {
+          fxLogger.warn(
+            "Failed to refresh FX cache after Frankfurter update",
+            cacheError,
+          );
+        }
       }
 
       fxLogger.info("Successfully updated rates from Frankfurter", {
@@ -135,13 +141,16 @@ export const updateRates = async (
       },
     });
 
-    try {
-      await cachedFxRateProvider.refreshCache();
-    } catch (cacheError) {
-      fxLogger.warn(
-        "Failed to refresh FX cache after ExchangeRate-API update",
-        cacheError,
-      );
+    // Refresh cache if provider supplied
+    if (fxRateProvider) {
+      try {
+        await fxRateProvider.refreshCache();
+      } catch (cacheError) {
+        fxLogger.warn(
+          "Failed to refresh FX cache after ExchangeRate-API update",
+          cacheError,
+        );
+      }
     }
 
     fxLogger.info("Successfully updated rates from ExchangeRate-API", {
@@ -173,15 +182,19 @@ export const updateRates = async (
  * - EUR to: USD, GBP, JPY
  * - GBP to: USD, EUR
  *
+ * @param fxRateProvider - Optional FX rate provider to refresh after update
  * @returns Fetch result
  */
-export const updateCommonRates = async (): Promise<FetchResult> => {
+export const updateCommonRates = async (
+  fxRateProvider?: CachedFxRateProvider,
+): Promise<FetchResult> => {
   fxLogger.info("Updating common currency pairs");
 
   // Fetch USD-based rates first (most common base)
   const usdResult = await updateRates({
     baseCurrency: "USD",
     targetCurrencies: ["EUR", "GBP", "JPY", "CAD", "AUD", "CHF", "CNY", "INR"],
+    fxRateProvider,
   });
 
   // Fetch EUR-based rates (second most common)
@@ -189,6 +202,7 @@ export const updateCommonRates = async (): Promise<FetchResult> => {
     await updateRates({
       baseCurrency: "EUR",
       targetCurrencies: ["USD", "GBP", "JPY", "CAD", "AUD"],
+      fxRateProvider,
     });
   } catch (error) {
     fxLogger.warn("Failed to fetch EUR-based rates", error);
@@ -200,6 +214,7 @@ export const updateCommonRates = async (): Promise<FetchResult> => {
     await updateRates({
       baseCurrency: "GBP",
       targetCurrencies: ["USD", "EUR", "JPY"],
+      fxRateProvider,
     });
   } catch (error) {
     fxLogger.warn("Failed to fetch GBP-based rates", error);

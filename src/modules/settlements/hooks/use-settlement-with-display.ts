@@ -5,7 +5,8 @@
 
 import { useMemo, useState, useEffect } from "react";
 import { useSettlement } from "./use-settlement";
-import { defaultDisplayCurrencyAdapter } from "../service/DisplayCurrencyAdapter";
+import { DisplayCurrencyAdapter } from "../service/DisplayCurrencyAdapter";
+import { useFxRateProvider } from "@modules/fx-rates";
 import type { SettlementSummaryWithDisplay } from "../types";
 
 /**
@@ -38,8 +39,15 @@ export function useSettlementWithDisplay(
   displayCurrency?: string,
 ) {
   const { settlement, loading, error, refetch } = useSettlement(tripId);
+  const fxRateProvider = useFxRateProvider();
   const [conversionError, setConversionError] =
     useState<NoRateAvailableError | null>(null);
+
+  // Create adapter instance with provider from context
+  const adapter = useMemo(
+    () => new DisplayCurrencyAdapter(fxRateProvider),
+    [fxRateProvider],
+  );
 
   // Convert to display currency if requested
   const result = useMemo<{
@@ -47,10 +55,7 @@ export function useSettlementWithDisplay(
     error: NoRateAvailableError | null;
   }>(() => {
     try {
-      const enriched = defaultDisplayCurrencyAdapter.enrichSettlement(
-        settlement,
-        displayCurrency,
-      );
+      const enriched = adapter.enrichSettlement(settlement, displayCurrency);
       return { settlement: enriched, error: null };
     } catch (error) {
       // Check if it's a missing rate error
@@ -83,7 +88,7 @@ export function useSettlementWithDisplay(
         };
       }
     }
-  }, [settlement, displayCurrency]);
+  }, [adapter, settlement, displayCurrency]);
 
   // Update error state in useEffect to avoid state updates during render
   useEffect(() => {

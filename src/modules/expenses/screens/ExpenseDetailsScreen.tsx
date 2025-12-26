@@ -33,7 +33,7 @@ import { useDisplayCurrency } from "@modules/settings/hooks/use-display-currency
 import { formatCurrency, CurrencyUtils } from "@utils/currency";
 import { normalizeRouteParam } from "@utils/route-params";
 import { getCategoryIcon } from "@utils/category-icons";
-import { cachedFxRateProvider } from "@modules/fx-rates/provider";
+import { useFxRateProvider } from "@modules/fx-rates";
 import { currencyLogger } from "@utils/logger";
 import { useRefreshControl } from "@hooks/use-refresh-control";
 import { useFxSync } from "@modules/fx-rates/hooks/use-fx-sync";
@@ -85,6 +85,7 @@ function ExpenseDetailsContent({
 }) {
   const router = useRouter();
   const navigation = useNavigation();
+  const fxRateProvider = useFxRateProvider();
   const { displayCurrency } = useDisplayCurrency();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [editingExpense, setEditingExpense] = useState(false);
@@ -191,10 +192,7 @@ function ExpenseDetailsContent({
 
     try {
       // Convert expense amounts to display currency
-      const fxRate = cachedFxRateProvider.getRate(
-        expense.currency,
-        displayCurrency,
-      );
+      const fxRate = fxRateProvider.getRate(expense.currency, displayCurrency);
 
       return {
         amounts: {
@@ -233,7 +231,7 @@ function ExpenseDetailsContent({
           : null,
       };
     }
-  }, [expense, displayCurrency]);
+  }, [fxRateProvider, expense, displayCurrency]);
 
   const displayAmounts = displayAmountsResult.amounts;
 

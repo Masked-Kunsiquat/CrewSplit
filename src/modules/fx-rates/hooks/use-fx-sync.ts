@@ -13,7 +13,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { FxRateRepository } from "../repository";
 import { FxRateService } from "../services";
-import { cachedFxRateProvider } from "../provider";
+import { useFxRateProvider } from "../context/FxRateContext";
 import { fxLogger } from "@utils/logger";
 
 // Dynamic import to avoid type-checking issues
@@ -70,6 +70,7 @@ interface UseFxSyncOptions {
  */
 export function useFxSync(options: UseFxSyncOptions = {}) {
   const { autoRefresh = true, onRefreshSuccess, onRefreshError } = options;
+  const fxRateProvider = useFxRateProvider();
 
   const [refreshing, setRefreshing] = useState(false);
   const [checking, setChecking] = useState(false);
@@ -127,11 +128,8 @@ export function useFxSync(options: UseFxSyncOptions = {}) {
     try {
       fxLogger.info("Manual FX rate refresh triggered");
 
-      // Fetch and persist rates
-      const result = await FxRateService.updateCommonRates();
-
-      // Refresh provider cache
-      await cachedFxRateProvider.refreshCache();
+      // Fetch and persist rates (service will refresh cache)
+      const result = await FxRateService.updateCommonRates(fxRateProvider);
 
       // Re-check staleness
       await checkStaleness();
@@ -150,7 +148,7 @@ export function useFxSync(options: UseFxSyncOptions = {}) {
     } finally {
       setRefreshing(false);
     }
-  }, [checkStaleness, onRefreshSuccess, onRefreshError]);
+  }, [fxRateProvider, checkStaleness, onRefreshSuccess, onRefreshError]);
 
   /**
    * Perform background refresh if rates are stale and network is available
