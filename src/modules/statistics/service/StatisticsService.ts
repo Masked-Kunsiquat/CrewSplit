@@ -3,7 +3,7 @@
  * LOCAL DATA ENGINEER: Orchestrates repository + engine for statistics
  */
 
-import { getParticipantsForTrip } from "@modules/participants/repository";
+import { getParticipantsForTrip } from "@modules/participants";
 import {
   getExpensesWithCategories,
   getTripCurrency,

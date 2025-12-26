@@ -36,7 +36,7 @@ jest.mock("../../repository", () => ({
   getTripCurrency: (...args: unknown[]) => mockGetTripCurrency(...args),
 }));
 
-jest.mock("@modules/participants/repository", () => ({
+jest.mock("@modules/participants", () => ({
   getParticipantsForTrip: (...args: unknown[]) =>
     mockGetParticipantsForTrip(...args),
 }));
