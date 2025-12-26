@@ -7,6 +7,7 @@ import { expenseSplits } from "@db/schema/expense-splits";
 import { settlements } from "@db/schema/settlements";
 import { expenseCategories } from "@db/schema/expense-categories";
 import { eq } from "drizzle-orm";
+import { createAppError } from "@utils/errors";
 import type { SampleDataTemplateId } from "../types";
 
 interface SampleDataTemplate {
@@ -29,7 +30,11 @@ export class SampleDataService {
   async loadSampleTrip(templateId: SampleDataTemplateId): Promise<string> {
     const sampleData = sampleDataTemplates[templateId];
     if (!sampleData) {
-      throw new Error(`Unknown sample template: ${templateId}`);
+      throw createAppError(
+        "INVALID_INPUT",
+        `Unknown sample template: ${templateId}`,
+        { details: { templateId } },
+      );
     }
 
     const {
@@ -54,8 +59,10 @@ export class SampleDataService {
         settlement.originalAmountMinor ?? settlement.amountMinor;
 
       if (typeof originalAmountMinor !== "number") {
-        throw new Error(
+        throw createAppError(
+          "INVALID_INPUT",
           `Invalid settlement amount for ${settlement.id ?? "unknown"}`,
+          { details: { settlementId: settlement.id } },
         );
       }
 
@@ -131,8 +138,10 @@ export class SampleDataService {
       if (err instanceof Error && err.message.includes("no such column")) {
         const columnMatch = err.message.match(/no such column: (\S+)/);
         const missingColumn = columnMatch ? columnMatch[1] : "unknown";
-        throw new Error(
+        throw createAppError(
+          "OPERATION_FAILED",
           `Database schema is outdated (missing column: ${missingColumn}). Please restart the app to apply schema updates.`,
+          { details: { missingColumn } },
         );
       }
       throw err;

@@ -12,6 +12,7 @@ import type {
   SuggestedSettlementWithDisplay,
 } from "../types";
 import { CurrencyUtils } from "@utils/currency";
+import { createAppError } from "@utils/errors";
 
 /**
  * FX rate provider interface
@@ -50,9 +51,16 @@ export class StubFxRateProvider implements FxRateProvider {
     const rate = this.rates.get(key);
 
     if (rate === undefined) {
-      throw new Error(
+      throw createAppError(
+        "MISSING_FX_RATE",
         `No exchange rate available for ${fromCurrency} to ${toCurrency}. ` +
           `Please set a manual rate using setRate() or implement a live FX provider.`,
+        {
+          details: {
+            fromCurrency,
+            toCurrency,
+          },
+        },
       );
     }
 

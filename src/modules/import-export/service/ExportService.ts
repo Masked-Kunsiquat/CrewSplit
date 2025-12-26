@@ -9,6 +9,7 @@ import { Platform } from "react-native";
 import { entityRegistry } from "../core/registry";
 import { ExportContext, ExportFile } from "../core/types";
 import { importExportLogger } from "@utils/logger";
+import { createAppError } from "@utils/errors";
 
 /**
  * Export service - handles trip and full database exports
@@ -78,8 +79,16 @@ export class ExportService {
         data[entity.name] = records;
       } catch (error) {
         console.error(`Failed to export entity ${entity.name}:`, error);
-        throw new Error(
+        throw createAppError(
+          "OPERATION_FAILED",
           `Export failed for ${entity.name}: ${error instanceof Error ? error.message : "Unknown error"}`,
+          {
+            details: {
+              entityName: entity.name,
+              originalError:
+                error instanceof Error ? error.message : "Unknown error",
+            },
+          },
         );
       }
     }

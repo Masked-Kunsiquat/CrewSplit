@@ -7,6 +7,7 @@ import { useState, useCallback } from "react";
 import { useQuery } from "../../../hooks";
 import { SettlementRepository } from "../repository";
 import { useFxRateProvider } from "@modules/fx-rates";
+import { createAppError } from "@utils/errors";
 import type {
   SettlementWithParticipants,
   NewSettlementData,
@@ -108,7 +109,10 @@ export function useCreateSettlement() {
         setLoading(false);
         return settlement;
       } catch (err) {
-        const error = err instanceof Error ? err : new Error("Unknown error");
+        const error =
+          err instanceof Error
+            ? err
+            : createAppError("OPERATION_FAILED", "Unknown error");
         setError(error);
         setLoading(false);
         throw error;
@@ -146,7 +150,10 @@ export function useUpdateSettlement() {
         setLoading(false);
         return settlement;
       } catch (err) {
-        const error = err instanceof Error ? err : new Error("Unknown error");
+        const error =
+          err instanceof Error
+            ? err
+            : createAppError("OPERATION_FAILED", "Unknown error");
         setError(error);
         setLoading(false);
         throw error;
@@ -174,7 +181,10 @@ export function useDeleteSettlement() {
       await SettlementRepository.deleteSettlement(id);
       setLoading(false);
     } catch (err) {
-      const error = err instanceof Error ? err : new Error("Unknown error");
+      const error =
+        err instanceof Error
+          ? err
+          : createAppError("OPERATION_FAILED", "Unknown error");
       setError(error);
       setLoading(false);
       throw error;
