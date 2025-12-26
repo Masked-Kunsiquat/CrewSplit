@@ -30,6 +30,7 @@ export type MockCategoryRow = {
   id: string;
   name: string;
   emoji: string | null;
+  [key: string]: string | null;
 };
 
 export type MockTripRow = {
