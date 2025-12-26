@@ -606,7 +606,7 @@ describe("TripService", () => {
           }),
         ).rejects.toMatchObject({
           code: "TRIP_NOT_FOUND",
-          message: "Trip not found in bulk delete: nonexistent-trip",
+          message: "Trip not found: nonexistent-trip",
         });
 
         expect(mockTripLogger.error).toHaveBeenCalledWith(

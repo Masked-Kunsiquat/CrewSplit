@@ -209,9 +209,8 @@ describe("computeConversion", () => {
         expect((error as Error & { code: string }).code).toBe(
           "FX_RATE_REQUIRED",
         );
-        expect((error as Error).message).toBe(
-          "fxRateToTrip is required when expense currency differs from trip currency",
-        );
+        expect((error as Error).message).toContain("USD");
+        expect((error as Error).message).toContain("EUR");
       }
     });
 
@@ -231,9 +230,8 @@ describe("computeConversion", () => {
         expect((error as Error & { code: string }).code).toBe(
           "FX_RATE_REQUIRED",
         );
-        expect((error as Error).message).toBe(
-          "fxRateToTrip is required when expense currency differs from trip currency",
-        );
+        expect((error as Error).message).toContain("USD");
+        expect((error as Error).message).toContain("EUR");
       }
     });
 
@@ -253,7 +251,8 @@ describe("computeConversion", () => {
         expect((error as Error & { code: string }).code).toBe(
           "FX_RATE_INVALID",
         );
-        expect((error as Error).message).toBe("fxRateToTrip must be positive");
+        expect((error as Error).message).toContain("USD");
+        expect((error as Error).message).toContain("EUR");
       }
     });
 
@@ -273,7 +272,8 @@ describe("computeConversion", () => {
         expect((error as Error & { code: string }).code).toBe(
           "FX_RATE_INVALID",
         );
-        expect((error as Error).message).toBe("fxRateToTrip must be positive");
+        expect((error as Error).message).toContain("USD");
+        expect((error as Error).message).toContain("EUR");
       }
     });
   });

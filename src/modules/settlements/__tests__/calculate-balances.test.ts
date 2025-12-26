@@ -778,8 +778,8 @@ describe("calculateBalances", () => {
         fail("Expected calculateBalances to throw");
       } catch (error: any) {
         expect(error.code).toBe("INVALID_PARTICIPANT_IDS");
-        expect(error.invalidParticipantIds).toBeDefined();
-        expect(error.invalidParticipantIds).toContain("nonexistent");
+        expect(error.details?.invalidParticipantIds).toBeDefined();
+        expect(error.details?.invalidParticipantIds).toContain("nonexistent");
         expect(error.message).toContain(
           "Invalid participant IDs found in expense splits",
         );
@@ -833,8 +833,10 @@ describe("calculateBalances", () => {
         fail("Expected calculateBalances to throw");
       } catch (error: any) {
         expect(error.code).toBe("INVALID_PARTICIPANT_IDS");
-        expect(error.invalidParticipantIds).toBeDefined();
-        expect(error.invalidParticipantIds).toContain("nonexistent-payer");
+        expect(error.details?.invalidParticipantIds).toBeDefined();
+        expect(error.details?.invalidParticipantIds).toContain(
+          "nonexistent-payer",
+        );
         expect(error.message).toContain("Invalid payer IDs found in expenses");
       }
     });
@@ -887,9 +889,9 @@ describe("calculateBalances", () => {
         fail("Expected calculateBalances to throw");
       } catch (error: any) {
         expect(error.code).toBe("INVALID_PARTICIPANT_IDS");
-        expect(error.invalidParticipantIds).toHaveLength(2);
-        expect(error.invalidParticipantIds).toContain("invalid1");
-        expect(error.invalidParticipantIds).toContain("invalid2");
+        expect(error.details?.invalidParticipantIds).toHaveLength(2);
+        expect(error.details?.invalidParticipantIds).toContain("invalid1");
+        expect(error.details?.invalidParticipantIds).toContain("invalid2");
       }
     });
   });

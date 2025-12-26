@@ -8,6 +8,7 @@ import { Expense, ExpenseSplit } from "../../expenses/types";
 import { Participant } from "../../participants/types";
 import { ParticipantBalance } from "../types";
 import { normalizeShares } from "./normalize-shares";
+import { createAppError } from "@utils/errors";
 
 /**
  * Calculate net positions for all participants in a trip
@@ -48,12 +49,15 @@ export const calculateBalances = (
   });
 
   if (invalidParticipantIds.size > 0) {
-    const error = new Error(
+    throw createAppError(
+      "INVALID_PARTICIPANT_IDS",
       `Invalid participant IDs found in expense splits: ${Array.from(invalidParticipantIds).join(", ")}`,
-    ) as Error & { code: string; invalidParticipantIds: string[] };
-    error.code = "INVALID_PARTICIPANT_IDS";
-    error.invalidParticipantIds = Array.from(invalidParticipantIds);
-    throw error;
+      {
+        details: {
+          invalidParticipantIds: Array.from(invalidParticipantIds),
+        },
+      },
+    );
   }
 
   // Validate all payers exist
@@ -65,12 +69,15 @@ export const calculateBalances = (
   });
 
   if (invalidPayerIds.size > 0) {
-    const error = new Error(
+    throw createAppError(
+      "INVALID_PARTICIPANT_IDS",
       `Invalid payer IDs found in expenses: ${Array.from(invalidPayerIds).join(", ")}`,
-    ) as Error & { code: string; invalidParticipantIds: string[] };
-    error.code = "INVALID_PARTICIPANT_IDS";
-    error.invalidParticipantIds = Array.from(invalidPayerIds);
-    throw error;
+      {
+        details: {
+          invalidParticipantIds: Array.from(invalidPayerIds),
+        },
+      },
+    );
   }
 
   // Group splits by expense

@@ -26,6 +26,11 @@ import {
 import { settlementLogger } from "@utils/logger";
 import { cachedFxRateProvider } from "@modules/fx-rates/provider/cached-fx-rate-provider";
 import { CurrencyUtils } from "@utils/currency";
+import {
+  createFxRateError,
+  createNotFoundError,
+  createAppError,
+} from "@utils/errors";
 
 /**
  * Map database row to domain Settlement type
@@ -60,11 +65,7 @@ const getTripCurrency = async (tripId: string): Promise<string> => {
 
   if (!rows.length) {
     settlementLogger.error("Trip not found for currency lookup", { tripId });
-    const error = new Error(`Trip not found for id ${tripId}`) as Error & {
-      code: string;
-    };
-    error.code = "TRIP_NOT_FOUND";
-    throw error;
+    throw createNotFoundError("TRIP_NOT_FOUND", "Trip", tripId);
   }
 
   return rows[0].currencyCode;
@@ -117,13 +118,12 @@ const computeConversion = (
     });
 
     // Re-throw with more context
-    const fxError = new Error(
-      `Exchange rate not available for ${originalCurrency} to ${tripCurrencyCode}. Please update FX rates.`,
-    ) as Error & { code: string; fromCurrency: string; toCurrency: string };
-    fxError.code = "FX_RATE_NOT_FOUND";
-    fxError.fromCurrency = originalCurrency;
-    fxError.toCurrency = tripCurrencyCode;
-    throw fxError;
+    throw createFxRateError(
+      "FX_RATE_NOT_FOUND",
+      originalCurrency,
+      tripCurrencyCode,
+      { message: "Exchange rate not available. Please update FX rates." },
+    );
   }
 };
 
@@ -144,21 +144,20 @@ const validateSettlement = async (
       fromParticipantId,
       toParticipantId,
     });
-    const error = new Error(
+    throw createAppError(
+      "INVALID_SETTLEMENT_PARTICIPANTS",
       "From and to participants must be different",
-    ) as Error & { code: string };
-    error.code = "INVALID_SETTLEMENT_PARTICIPANTS";
-    throw error;
+    );
   }
 
   // Ensure amount is positive
   if (amountMinor <= 0) {
     settlementLogger.error("Invalid settlement amount", { amountMinor });
-    const error = new Error("Settlement amount must be positive") as Error & {
-      code: string;
-    };
-    error.code = "INVALID_SETTLEMENT_AMOUNT";
-    throw error;
+    throw createAppError(
+      "INVALID_SETTLEMENT_AMOUNT",
+      "Settlement amount must be positive",
+      { details: { amountMinor } },
+    );
   }
 
   // Verify participants belong to the trip
@@ -190,11 +189,10 @@ const validateSettlement = async (
       fromParticipantId,
       tripId,
     });
-    const error = new Error(
+    throw createAppError(
+      "INVALID_FROM_PARTICIPANT",
       `From participant ${fromParticipantId} not found in trip ${tripId}`,
-    ) as Error & { code: string };
-    error.code = "INVALID_FROM_PARTICIPANT";
-    throw error;
+    );
   }
 
   if (!toExists.length) {
@@ -202,11 +200,10 @@ const validateSettlement = async (
       toParticipantId,
       tripId,
     });
-    const error = new Error(
+    throw createAppError(
+      "INVALID_TO_PARTICIPANT",
       `To participant ${toParticipantId} not found in trip ${tripId}`,
-    ) as Error & { code: string };
-    error.code = "INVALID_TO_PARTICIPANT";
-    throw error;
+    );
   }
 
   // If expenseSplitId provided, verify it exists
@@ -219,11 +216,11 @@ const validateSettlement = async (
 
     if (!splitExists.length) {
       settlementLogger.error("Expense split not found", { expenseSplitId });
-      const error = new Error(
-        `Expense split ${expenseSplitId} not found`,
-      ) as Error & { code: string };
-      error.code = "INVALID_EXPENSE_SPLIT";
-      throw error;
+      throw createNotFoundError(
+        "INVALID_EXPENSE_SPLIT",
+        "Expense split",
+        expenseSplitId,
+      );
     }
   }
 };
@@ -319,11 +316,10 @@ export const createSettlement = async (
           toParticipantId: data.toParticipantId,
         },
       );
-      const error = new Error(
+      throw createAppError(
+        "PARTICIPANT_DELETED",
         "Participant was deleted during settlement creation",
-      ) as Error & { code: string };
-      error.code = "PARTICIPANT_DELETED";
-      throw error;
+      );
     }
 
     return {
@@ -576,11 +572,7 @@ export const updateSettlement = async (
     settlementLogger.error("Settlement not found on update", {
       settlementId: id,
     });
-    const error = new Error(`Settlement not found for id ${id}`) as Error & {
-      code: string;
-    };
-    error.code = "SETTLEMENT_NOT_FOUND";
-    throw error;
+    throw createNotFoundError("SETTLEMENT_NOT_FOUND", "Settlement", id);
   }
 
   const existing = existingRows[0];
@@ -596,11 +588,11 @@ export const updateSettlement = async (
     settlementLogger.error("Invalid updated settlement amount", {
       amountMinor: originalAmountMinor,
     });
-    const error = new Error("Settlement amount must be positive") as Error & {
-      code: string;
-    };
-    error.code = "INVALID_SETTLEMENT_AMOUNT";
-    throw error;
+    throw createAppError(
+      "INVALID_SETTLEMENT_AMOUNT",
+      "Settlement amount must be positive",
+      { details: { amountMinor: originalAmountMinor } },
+    );
   }
 
   // Re-compute currency conversion
@@ -669,11 +661,10 @@ export const updateSettlement = async (
           toParticipantId: updated.toParticipantId,
         },
       );
-      const error = new Error(
+      throw createAppError(
+        "PARTICIPANT_DELETED",
         "Participant was deleted during settlement update",
-      ) as Error & { code: string };
-      error.code = "PARTICIPANT_DELETED";
-      throw error;
+      );
     }
 
     return {
@@ -703,11 +694,7 @@ export const deleteSettlement = async (id: string): Promise<void> => {
       settlementLogger.error("Settlement not found on delete", {
         settlementId: id,
       });
-      const error = new Error(`Settlement not found for id ${id}`) as Error & {
-        code: string;
-      };
-      error.code = "SETTLEMENT_NOT_FOUND";
-      throw error;
+      throw createNotFoundError("SETTLEMENT_NOT_FOUND", "Settlement", id);
     }
 
     settlementLogger.info("Deleting settlement", {

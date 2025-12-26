@@ -631,8 +631,8 @@ describe("SettlementService", () => {
         fail("Expected computeSettlement to throw");
       } catch (error: any) {
         expect(error.code).toBe("INVALID_PARTICIPANT_IDS");
-        expect(error.invalidParticipantIds).toBeDefined();
-        expect(error.invalidParticipantIds).toContain(nonExistentId);
+        expect(error.details?.invalidParticipantIds).toBeDefined();
+        expect(error.details?.invalidParticipantIds).toContain(nonExistentId);
         expect(error.message).toContain(
           "Invalid participant IDs found in expense splits",
         );

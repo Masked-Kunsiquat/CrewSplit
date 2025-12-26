@@ -10,6 +10,7 @@ import type { FxRateProvider } from "@modules/settlements/service/DisplayCurrenc
 import { FxRateRepository } from "../repository";
 import type { FxRateSource } from "@db/schema/fx-rates";
 import { fxLogger } from "@utils/logger";
+import { createFxRateError } from "@utils/errors";
 
 /**
  * Cached FX Rate Provider
@@ -97,10 +98,15 @@ export class CachedFxRateProvider implements FxRateProvider {
    */
   getRate(fromCurrency: string, toCurrency: string): number {
     if (!this.initialized) {
-      const error = new Error(
-        "CachedFxRateProvider not initialized. Call initialize() at app startup.",
-      ) as Error & { code: string };
-      error.code = "FX_CACHE_NOT_INITIALIZED";
+      const error = createFxRateError(
+        "FX_CACHE_NOT_INITIALIZED",
+        fromCurrency,
+        toCurrency,
+        {
+          message:
+            "CachedFxRateProvider not initialized. Call initialize() at app startup.",
+        },
+      );
       fxLogger.error("FX rate cache not initialized", {
         fromCurrency,
         toCurrency,
@@ -118,12 +124,14 @@ export class CachedFxRateProvider implements FxRateProvider {
     const cached = this.cache.get(key);
 
     if (!cached) {
-      const error = new Error(
-        `No exchange rate available for ${fromCurrency} to ${toCurrency}. Please update rates or set a manual rate.`,
-      ) as Error & { code: string; fromCurrency: string; toCurrency: string };
-      error.code = "FX_RATE_NOT_FOUND";
-      error.fromCurrency = fromCurrency;
-      error.toCurrency = toCurrency;
+      const error = createFxRateError(
+        "FX_RATE_NOT_FOUND",
+        fromCurrency,
+        toCurrency,
+        {
+          message: `No exchange rate available for ${fromCurrency} to ${toCurrency}. Please update rates or set a manual rate.`,
+        },
+      );
 
       fxLogger.error("FX rate not found in cache", {
         fromCurrency,
@@ -196,10 +204,12 @@ export class CachedFxRateProvider implements FxRateProvider {
     rate: number,
   ): Promise<void> {
     if (typeof rate !== "number" || !Number.isFinite(rate) || rate <= 0) {
-      const error = new Error(
-        "Manual FX rate must be a positive finite number",
-      ) as Error & { code: string };
-      error.code = "INVALID_FX_RATE";
+      const error = createFxRateError(
+        "INVALID_FX_RATE",
+        fromCurrency,
+        toCurrency,
+        { rate, message: "Manual FX rate must be a positive finite number" },
+      );
       fxLogger.error("Invalid manual FX rate", {
         fromCurrency,
         toCurrency,
