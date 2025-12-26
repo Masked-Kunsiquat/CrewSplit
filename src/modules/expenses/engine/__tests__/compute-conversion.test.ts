@@ -193,7 +193,7 @@ describe("computeConversion", () => {
   });
 
   describe("error cases", () => {
-    it("should throw when currencies differ and providedRate is undefined", () => {
+    it("should throw structured error when currencies differ and providedRate is undefined", () => {
       const input: ConversionInput = {
         originalAmountMinor: 5000,
         originalCurrency: "USD",
@@ -201,12 +201,21 @@ describe("computeConversion", () => {
         // providedRate missing
       };
 
-      expect(() => computeConversion(input)).toThrow(
-        "fxRateToTrip is required when expense currency differs from trip currency",
-      );
+      try {
+        computeConversion(input);
+        fail("Expected error to be thrown");
+      } catch (error) {
+        expect(error).toBeInstanceOf(Error);
+        expect((error as Error & { code: string }).code).toBe(
+          "FX_RATE_REQUIRED",
+        );
+        expect((error as Error).message).toBe(
+          "fxRateToTrip is required when expense currency differs from trip currency",
+        );
+      }
     });
 
-    it("should throw when currencies differ and providedRate is null", () => {
+    it("should throw structured error when currencies differ and providedRate is null", () => {
       const input: ConversionInput = {
         originalAmountMinor: 5000,
         originalCurrency: "USD",
@@ -214,12 +223,21 @@ describe("computeConversion", () => {
         providedRate: null,
       };
 
-      expect(() => computeConversion(input)).toThrow(
-        "fxRateToTrip is required when expense currency differs from trip currency",
-      );
+      try {
+        computeConversion(input);
+        fail("Expected error to be thrown");
+      } catch (error) {
+        expect(error).toBeInstanceOf(Error);
+        expect((error as Error & { code: string }).code).toBe(
+          "FX_RATE_REQUIRED",
+        );
+        expect((error as Error).message).toBe(
+          "fxRateToTrip is required when expense currency differs from trip currency",
+        );
+      }
     });
 
-    it("should throw when providedRate is zero", () => {
+    it("should throw structured error when providedRate is zero", () => {
       const input: ConversionInput = {
         originalAmountMinor: 5000,
         originalCurrency: "USD",
@@ -227,12 +245,19 @@ describe("computeConversion", () => {
         providedRate: 0,
       };
 
-      expect(() => computeConversion(input)).toThrow(
-        "fxRateToTrip must be positive",
-      );
+      try {
+        computeConversion(input);
+        fail("Expected error to be thrown");
+      } catch (error) {
+        expect(error).toBeInstanceOf(Error);
+        expect((error as Error & { code: string }).code).toBe(
+          "FX_RATE_INVALID",
+        );
+        expect((error as Error).message).toBe("fxRateToTrip must be positive");
+      }
     });
 
-    it("should throw when providedRate is negative", () => {
+    it("should throw structured error when providedRate is negative", () => {
       const input: ConversionInput = {
         originalAmountMinor: 5000,
         originalCurrency: "USD",
@@ -240,9 +265,16 @@ describe("computeConversion", () => {
         providedRate: -0.85,
       };
 
-      expect(() => computeConversion(input)).toThrow(
-        "fxRateToTrip must be positive",
-      );
+      try {
+        computeConversion(input);
+        fail("Expected error to be thrown");
+      } catch (error) {
+        expect(error).toBeInstanceOf(Error);
+        expect((error as Error & { code: string }).code).toBe(
+          "FX_RATE_INVALID",
+        );
+        expect((error as Error).message).toBe("fxRateToTrip must be positive");
+      }
     });
   });
 

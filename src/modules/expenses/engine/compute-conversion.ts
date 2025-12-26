@@ -58,13 +58,19 @@ export function computeConversion(input: ConversionInput): ConversionResult {
 
   // Case 2: Different currencies - rate is required
   if (providedRate === undefined || providedRate === null) {
-    throw new Error(
+    const error = new Error(
       "fxRateToTrip is required when expense currency differs from trip currency",
-    );
+    ) as Error & { code: string };
+    error.code = "FX_RATE_REQUIRED";
+    throw error;
   }
 
   if (providedRate <= 0) {
-    throw new Error("fxRateToTrip must be positive");
+    const error = new Error("fxRateToTrip must be positive") as Error & {
+      code: string;
+    };
+    error.code = "FX_RATE_INVALID";
+    throw error;
   }
 
   // Compute converted amount (use provided if available, otherwise calculate)
