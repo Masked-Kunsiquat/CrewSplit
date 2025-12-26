@@ -12,6 +12,7 @@ import type {
   SuggestedSettlementWithDisplay,
 } from "../types";
 import { cachedFxRateProvider } from "@modules/fx-rates/provider";
+import { CurrencyUtils } from "@utils/currency";
 
 /**
  * FX rate provider interface
@@ -81,8 +82,8 @@ export class DisplayCurrencyAdapter {
   ): DisplayAmount {
     const fxRate = this.fxRateProvider.getRate(tripCurrency, displayCurrency);
 
-    // Convert: multiply by FX rate and round to nearest cent
-    const displayAmount = Math.round(tripAmount * fxRate);
+    // Convert using centralized utility for deterministic rounding
+    const displayAmount = CurrencyUtils.convertWithFxRate(tripAmount, fxRate);
 
     return {
       tripCurrency,

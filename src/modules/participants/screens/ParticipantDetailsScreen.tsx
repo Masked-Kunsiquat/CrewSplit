@@ -15,7 +15,7 @@ import { useExpenseCategories } from "@modules/expenses/hooks/use-expense-catego
 import { useGetExpenseSplits } from "@modules/expenses/hooks/use-expense-mutations";
 import { useDisplayCurrency } from "@modules/settings/hooks/use-display-currency";
 import { useRefreshControl } from "@hooks/use-refresh-control";
-import { formatCurrency } from "@utils/currency";
+import { formatCurrency, CurrencyUtils } from "@utils/currency";
 import { normalizeRouteParam } from "@utils/route-params";
 import { getCategoryIcon } from "@utils/category-icons";
 import { cachedFxRateProvider } from "@modules/fx-rates/provider";
@@ -219,7 +219,10 @@ function ParticipantDetailsContent({
           expense.currency,
           displayCurrency,
         );
-        const converted = Math.round(expense.convertedAmountMinor * fxRate);
+        const converted = CurrencyUtils.convertWithFxRate(
+          expense.convertedAmountMinor,
+          fxRate,
+        );
         // Guard against NaN
         conversions.set(expense.id, isNaN(converted) ? null : converted);
       } catch (error) {
@@ -247,7 +250,7 @@ function ParticipantDetailsContent({
       );
 
       categoryBreakdown.forEach((amount, categoryId) => {
-        const converted = Math.round(amount * fxRate);
+        const converted = CurrencyUtils.convertWithFxRate(amount, fxRate);
         // Guard against NaN
         conversions.set(categoryId, isNaN(converted) ? null : converted);
       });
@@ -283,9 +286,18 @@ function ParticipantDetailsContent({
       );
 
       return {
-        netPosition: Math.round(participantBalance.netPosition * fxRate),
-        totalPaid: Math.round(participantBalance.totalPaid * fxRate),
-        totalOwed: Math.round(participantBalance.totalOwed * fxRate),
+        netPosition: CurrencyUtils.convertWithFxRate(
+          participantBalance.netPosition,
+          fxRate,
+        ),
+        totalPaid: CurrencyUtils.convertWithFxRate(
+          participantBalance.totalPaid,
+          fxRate,
+        ),
+        totalOwed: CurrencyUtils.convertWithFxRate(
+          participantBalance.totalOwed,
+          fxRate,
+        ),
         currency: displayCurrency,
       };
     } catch {

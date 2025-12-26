@@ -25,6 +25,7 @@ import {
 } from "../types";
 import { settlementLogger } from "@utils/logger";
 import { cachedFxRateProvider } from "@modules/fx-rates/provider/cached-fx-rate-provider";
+import { CurrencyUtils } from "@utils/currency";
 
 /**
  * Map database row to domain Settlement type
@@ -94,7 +95,10 @@ const computeConversion = (
       originalCurrency,
       tripCurrencyCode,
     );
-    const converted = Math.round(originalAmountMinor * fxRate);
+    const converted = CurrencyUtils.convertWithFxRate(
+      originalAmountMinor,
+      fxRate,
+    );
 
     settlementLogger.debug("Currency converted", {
       originalCurrency,
