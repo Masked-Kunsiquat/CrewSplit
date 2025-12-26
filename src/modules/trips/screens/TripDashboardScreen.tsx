@@ -72,7 +72,7 @@ function TripDashboardScreenContent({ tripId }: { tripId: string }) {
     refetch: refetchExpenses,
   } = useExpenses(tripId);
 
-  const { update: updateTripMutation, error: updateError } = useUpdateTrip();
+  const { update: updateTripMutation, loading: isUpdating } = useUpdateTrip();
   const { remove: deleteTripMutation, error: deleteError } = useDeleteTrip();
 
   const refetchFunctions = useMemo(
@@ -100,6 +100,16 @@ function TripDashboardScreenContent({ tripId }: { tripId: string }) {
       });
     }
   }, [trip, navigation]);
+
+  // Show alert when deletion fails
+  useEffect(() => {
+    if (deleteError) {
+      Alert.alert(
+        "Deletion Failed",
+        deleteError.message || "Failed to delete trip",
+      );
+    }
+  }, [deleteError]);
 
   const loading = tripLoading || participantsLoading || expensesLoading;
 
@@ -130,18 +140,21 @@ function TripDashboardScreenContent({ tripId }: { tripId: string }) {
       return;
     }
 
-    const updated = await updateTripMutation(tripId, {
-      name: nameInput.trim(),
-      emoji: emojiInput,
-      endDate: endDateInput ? endDateInput.toISOString() : null,
-    });
+    try {
+      const updated = await updateTripMutation(tripId, {
+        name: nameInput.trim(),
+        emoji: emojiInput,
+        endDate: endDateInput ? endDateInput.toISOString() : null,
+      });
 
-    if (updated) {
+      // Success - update UI and close edit mode
       navigation.setOptions({ title: updated.name });
       refetchTrip();
       setEditingName(false);
-    } else {
-      const errorMessage = updateError?.message || "Failed to update trip";
+    } catch (error) {
+      // Use caught error directly, not stale hook state
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to update trip";
       Alert.alert("Error", errorMessage);
     }
   };
@@ -161,11 +174,15 @@ function TripDashboardScreenContent({ tripId }: { tripId: string }) {
     setShowDeleteConfirm(false);
     setIsDeleting(true);
 
-    await deleteTripMutation(tripId);
-    // Note: Hook swallows errors internally. On success, navigate away.
-    // On failure, hook logs error but doesn't throw, leaving UI in deleting state.
-    // TODO: Improve hook to either throw or return success boolean
-    router.replace("/");
+    try {
+      await deleteTripMutation(tripId);
+      // Success - navigate to trips list
+      router.replace("/");
+    } catch (error) {
+      // Error is already set in hook state and will be shown via useEffect Alert
+      // Reset isDeleting immediately so UI reflects failure
+      setIsDeleting(false);
+    }
   };
 
   if (tripError) {

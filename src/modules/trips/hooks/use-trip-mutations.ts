@@ -16,7 +16,7 @@ export function useCreateTrip() {
   const [error, setError] = useState<Error | null>(null);
 
   const create = useCallback(
-    async (trip: CreateTripInput): Promise<Trip | null> => {
+    async (trip: CreateTripInput): Promise<Trip> => {
       try {
         setLoading(true);
         setError(null);
@@ -27,7 +27,7 @@ export function useCreateTrip() {
           err instanceof Error ? err : new Error("Failed to create trip");
         tripLogger.error("Failed to create trip", error);
         setError(error);
-        return null;
+        throw error; // Re-throw so caller can handle
       } finally {
         setLoading(false);
       }
@@ -46,7 +46,7 @@ export function useUpdateTrip() {
   const [error, setError] = useState<Error | null>(null);
 
   const update = useCallback(
-    async (id: string, updates: UpdateTripInput): Promise<Trip | null> => {
+    async (id: string, updates: UpdateTripInput): Promise<Trip> => {
       try {
         setLoading(true);
         setError(null);
@@ -57,7 +57,7 @@ export function useUpdateTrip() {
           err instanceof Error ? err : new Error("Failed to update trip");
         tripLogger.error("Failed to update trip", error);
         setError(error);
-        return null;
+        throw error; // Re-throw so caller can handle
       } finally {
         setLoading(false);
       }
@@ -85,6 +85,7 @@ export function useDeleteTrip() {
         err instanceof Error ? err : new Error("Failed to delete trip");
       tripLogger.error("Failed to delete trip", error);
       setError(error);
+      throw error; // Re-throw so caller can handle
     } finally {
       setLoading(false);
     }

@@ -75,39 +75,40 @@ export default function CreateTripScreen() {
       return;
     }
 
-    const trip = await createTripMutation({
-      name: name.trim(),
-      currencyCode: currency,
-      description: description.trim() || undefined,
-      startDate: startDate.toISOString(),
-      endDate: endDate?.toISOString() || undefined,
-      emoji,
-    });
+    try {
+      const trip = await createTripMutation({
+        name: name.trim(),
+        currencyCode: currency,
+        description: description.trim() || undefined,
+        startDate: startDate.toISOString(),
+        endDate: endDate?.toISOString() || undefined,
+        emoji,
+      });
 
-    if (!trip) {
-      const errorMessage = createError?.message || "Failed to create trip";
-      Alert.alert("Error", errorMessage);
-      return;
-    }
-
-    // Auto-add device owner as first participant if name is set
-    if (deviceOwnerName) {
-      try {
-        await addParticipantMutation({
-          tripId: trip.id,
-          name: deviceOwnerName,
-          avatarColor: AVATAR_COLORS[0], // First color for device owner
-        });
-      } catch (error) {
-        participantLogger.warn(
-          "Failed to add device owner as participant",
-          error,
-        );
-        // Don't fail trip creation if participant add fails
+      // Auto-add device owner as first participant if name is set
+      if (deviceOwnerName) {
+        try {
+          await addParticipantMutation({
+            tripId: trip.id,
+            name: deviceOwnerName,
+            avatarColor: AVATAR_COLORS[0], // First color for device owner
+          });
+        } catch (error) {
+          participantLogger.warn(
+            "Failed to add device owner as participant",
+            error,
+          );
+          // Don't fail trip creation if participant add fails
+        }
       }
-    }
 
-    router.replace(`/trips/${trip.id}`);
+      router.replace(`/trips/${trip.id}`);
+    } catch (error) {
+      // Use the caught error directly, not stale hook state
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to create trip";
+      Alert.alert("Error", errorMessage);
+    }
   };
 
   return (
