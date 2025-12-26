@@ -1,12 +1,20 @@
 /**
  * SETTLEMENT MODULE - Share Normalization
  * MODELER: Convert different share types to actual amounts
- * PURE FUNCTION: No side effects, deterministic
+ * PURE FUNCTION: No side effects, deterministic, zero dependencies
  */
 
-import { ExpenseSplit } from "../../expenses/types";
-import { isValidPercentageSum } from "@utils/validation";
-import { createAppError } from "@utils/errors";
+import type { ExpenseSplit } from "../../expenses/types";
+
+/**
+ * Validate percentage sum is approximately 100 (within tolerance).
+ * Inlined from @utils/validation to maintain zero dependencies.
+ * Uses 0.01 + Number.EPSILON * 100 to handle floating-point precision errors.
+ */
+const PERCENTAGE_TOLERANCE = 0.01 + Number.EPSILON * 100;
+function isValidPercentageSum(sum: number): boolean {
+  return Math.abs(sum - 100) <= PERCENTAGE_TOLERANCE;
+}
 
 /**
  * Epsilon for fractional part equality comparison.
@@ -92,10 +100,7 @@ export const normalizeShares = (
 
   // Validate all splits have the same type
   if (!splits.every((s) => s.shareType === shareType)) {
-    throw createAppError(
-      "INVALID_INPUT",
-      "All splits for an expense must have the same shareType",
-    );
+    throw new Error("All splits for an expense must have the same shareType");
   }
 
   // Deterministic normalization must not depend on caller-provided split ordering
@@ -132,7 +137,7 @@ export const normalizeShares = (
       break;
 
     default:
-      throw createAppError("INVALID_INPUT", `Unknown share type: ${shareType}`);
+      throw new Error(`Unknown share type: ${shareType}`);
   }
 
   const normalized = new Array<number>(splits.length);
@@ -169,10 +174,7 @@ function normalizePercentage(splits: ExpenseSplit[], total: number): number[] {
 
   // Allow small floating-point tolerance
   if (!isValidPercentageSum(totalPercentage)) {
-    throw createAppError(
-      "INVALID_INPUT",
-      `Percentages must sum to 100, got ${totalPercentage}`,
-    );
+    throw new Error(`Percentages must sum to 100, got ${totalPercentage}`);
   }
 
   // Calculate exact amounts (may have fractional cents)
@@ -213,7 +215,7 @@ function normalizeWeight(splits: ExpenseSplit[], total: number): number[] {
   const totalWeight = splits.reduce((sum, s) => sum + s.share, 0);
 
   if (totalWeight <= 0) {
-    throw createAppError("INVALID_INPUT", "Total weight must be positive");
+    throw new Error("Total weight must be positive");
   }
 
   // Calculate exact amounts
@@ -257,8 +259,7 @@ function normalizeAmount(splits: ExpenseSplit[], total: number): number[] {
     (s) => s.amount === undefined || s.amount === null,
   );
   if (missingAmounts.length > 0) {
-    throw createAppError(
-      "INVALID_INPUT",
+    throw new Error(
       `All splits must have explicit amounts; found ${missingAmounts.length} missing amount(s)`,
     );
   }
@@ -267,8 +268,7 @@ function normalizeAmount(splits: ExpenseSplit[], total: number): number[] {
   const sum = amounts.reduce((acc, a) => acc + a, 0);
 
   if (sum !== total) {
-    throw createAppError(
-      "INVALID_INPUT",
+    throw new Error(
       `Split amounts must sum to expense total. Expected ${total}, got ${sum}`,
     );
   }
