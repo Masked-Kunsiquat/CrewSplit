@@ -22,18 +22,50 @@ import type { SettlementWithParticipants } from "../types";
 import { settlementLogger } from "@utils/logger";
 
 /**
- * Apply recorded settlements to adjust participant balances
- * Settlements reduce the net positions:
- * - Payer's totalPaid increases (debt reduced)
- * - Payee's totalOwed increases (credit reduced)
+ * Applies recorded settlement payments to adjust participant balances.
+ *
+ * Settlements reduce net positions by treating payments as additional "expenses" where
+ * the payer increases their totalPaid and the payee increases their totalOwed.
+ * This effectively reduces the debt/credit between participants.
+ *
+ * Algorithm:
+ * 1. Create mutable copies of balances
+ * 2. For each settlement: increase payer's totalPaid and payee's totalOwed
+ * 3. Recalculate netPosition = totalPaid - totalOwed
+ * 4. Re-sort by participantId for determinism
  *
  * Example: Bob owes Alice $80, Bob pays Alice $50:
- * - Bob's balance: -$80 → -$30 (totalPaid +$50)
- * - Alice's balance: +$80 → +$30 (totalOwed +$50)
+ * - Bob's balance: -$80 → -$30 (totalPaid +$50, netPosition +$50)
+ * - Alice's balance: +$80 → +$30 (totalOwed +$50, netPosition -$50)
  *
- * @param balances - Base balances from expenses
- * @param settlements - Recorded settlement payments
- * @returns Adjusted balances after applying settlements
+ * @param balances - Base balances calculated from expenses (from calculateBalances)
+ * @param settlements - Recorded settlement payments with participant details
+ *
+ * @precondition balances must be from calculateBalances (validated, sorted)
+ * @precondition settlements must use convertedAmountMinor in trip currency
+ * @precondition All settlement participants should exist in balances
+ *
+ * @postcondition Sum of netPositions still equals zero (conservation)
+ * @postcondition Results sorted by participantId (deterministic)
+ * @postcondition No participant appears twice in results
+ * @postcondition totalPaid and totalOwed are non-negative for all participants
+ *
+ * @invariant Money conservation: sum(netPosition) before === sum(netPosition) after === 0
+ * @invariant netPosition = totalPaid - totalOwed for all participants
+ *
+ * @returns Adjusted balances after applying settlements, sorted by participantId
+ *
+ * @example
+ * const baseBalances = [
+ *   { participantId: 'p1', netPosition: 500, totalPaid: 1000, totalOwed: 500 },
+ *   { participantId: 'p2', netPosition: -500, totalPaid: 0, totalOwed: 500 }
+ * ];
+ * const settlements = [
+ *   { fromParticipantId: 'p2', toParticipantId: 'p1', convertedAmountMinor: 300 }
+ * ];
+ * const adjusted = applySettlements(baseBalances, settlements);
+ * // p1: netPosition = 200 (was owed 500, received 300)
+ * // p2: netPosition = -200 (owed 500, paid 300)
  */
 function applySettlements(
   balances: ReturnType<typeof calculateBalances>,
@@ -80,9 +112,74 @@ function applySettlements(
 }
 
 /**
- * Compute settlement summary for a trip
- * @param tripId - Trip UUID
- * @returns Settlement summary with balances, optimized settlements, and recorded settlements
+ * Computes comprehensive settlement summary for a trip.
+ *
+ * Orchestrates the complete settlement calculation workflow:
+ * 1. Loads all expenses, participants, and recorded settlements from database
+ * 2. Classifies expenses (split, personal, unallocated)
+ * 3. Calculates base balances from split expenses
+ * 4. Applies recorded settlements to adjust balances
+ * 5. Optimizes remaining settlements using greedy algorithm
+ *
+ * Operates exclusively on trip currency (expense.convertedAmountMinor).
+ * All amounts in results are in minor units (cents) of the trip currency.
+ *
+ * Edge cases handled:
+ * - No expenses: returns empty settlement with 0 totals
+ * - No participants: preserves totalExpenses but returns empty balances/settlements
+ * - No splits: classifies all expenses as unsplit/personal
+ * - Missing participants in settlements: logs warning and skips (non-fatal)
+ *
+ * @param tripId - Trip UUID to compute settlements for
+ *
+ * @precondition tripId must reference a valid trip in database
+ * @precondition All expenses must be in same trip currency (normalized on write)
+ * @precondition All settlement amounts must be in trip currency (convertedAmountMinor)
+ *
+ * @postcondition balances sum to zero (money conservation)
+ * @postcondition totalExpenses = splitExpensesTotal + personalExpensesTotal + unsplitExpensesTotal
+ * @postcondition suggestedSettlements are minimal (greedy optimized)
+ * @postcondition All amounts in trip currency (cents)
+ * @postcondition Results are deterministic (same data always produces same output)
+ *
+ * @invariant Money conservation: sum(balances.netPosition) === 0
+ * @invariant Total conservation: totalExpenses === sum(all expense amounts)
+ * @invariant Classification completeness: every expense in exactly one category
+ *
+ * @returns Promise resolving to SettlementSummary with:
+ *   - balances: Adjusted participant balances (after recorded settlements)
+ *   - settlements: Suggested settlements to settle remaining debts (optimized)
+ *   - totalExpenses: Sum of all expense amounts in trip currency
+ *   - currency: Trip currency code
+ *   - splitExpensesTotal: Sum of expenses with 2+ participants or payer != beneficiary
+ *   - personalExpensesTotal: Sum of expenses where payer === sole beneficiary
+ *   - unsplitExpensesTotal: Sum of expenses with no participants
+ *   - unsplitExpensesCount: Number of unallocated expenses
+ *   - unsplitExpenseIds: IDs of unallocated expenses (for troubleshooting)
+ *   - recordedSettlements: Previously recorded settlement payments
+ *
+ * @example
+ * // Normal case: trip with expenses and participants
+ * const summary = await computeSettlement('trip-123');
+ * // summary.balances: [{ participantId: 'p1', netPosition: 500, ... }, ...]
+ * // summary.settlements: [{ from: 'p2', to: 'p1', amount: 500 }]
+ * // summary.totalExpenses: 1000
+ * // summary.currency: "USD"
+ *
+ * @example
+ * // Edge case: no participants
+ * const summary = await computeSettlement('trip-no-participants');
+ * // summary.balances: []
+ * // summary.settlements: []
+ * // summary.totalExpenses: 500 (preserved for auditing)
+ * // summary.unsplitExpensesTotal: 500
+ *
+ * @example
+ * // With recorded settlements
+ * const summary = await computeSettlement('trip-with-payments');
+ * // summary.balances: adjusted balances after recorded payments
+ * // summary.settlements: optimized settlements for remaining balance
+ * // summary.recordedSettlements: [{id: 's1', amount: 300, ...}]
  */
 export async function computeSettlement(
   tripId: string,
