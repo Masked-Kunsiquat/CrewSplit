@@ -86,8 +86,11 @@ function ManageParticipantsContent({
     refetch: refetchParticipants,
   } = useParticipants(tripId);
 
-  const { add: addParticipantMutation, loading: isAdding } =
-    useAddParticipant();
+  const {
+    add: addParticipantMutation,
+    loading: isAdding,
+    error: addError,
+  } = useAddParticipant();
   const { remove: removeParticipantMutation } = useRemoveParticipant();
 
   // Pull-to-refresh support
@@ -109,29 +112,24 @@ function ManageParticipantsContent({
       return;
     }
 
-    try {
-      // Pick a random color
-      const avatarColor =
-        AVATAR_COLORS[Math.floor(Math.random() * AVATAR_COLORS.length)];
+    // Pick a random color
+    const avatarColor =
+      AVATAR_COLORS[Math.floor(Math.random() * AVATAR_COLORS.length)];
 
-      const newParticipant = await addParticipantMutation({
-        tripId,
-        name: newParticipantName.trim(),
-        avatarColor,
-      });
+    const newParticipant = await addParticipantMutation({
+      tripId,
+      name: newParticipantName.trim(),
+      avatarColor,
+    });
 
-      if (newParticipant) {
-        refetchParticipants();
-        setNewParticipantName("");
-        setNameError(null);
-      } else {
-        Alert.alert("Error", "Failed to add participant");
-      }
-    } catch (err) {
-      Alert.alert(
-        "Error",
-        err instanceof Error ? err.message : "Failed to add participant",
-      );
+    if (newParticipant) {
+      refetchParticipants();
+      setNewParticipantName("");
+      setNameError(null);
+    } else {
+      // addError contains the original error with context
+      const errorMessage = addError?.message || "Failed to add participant";
+      Alert.alert("Error", errorMessage);
     }
   };
 
