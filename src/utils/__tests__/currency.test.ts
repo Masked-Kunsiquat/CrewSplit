@@ -29,8 +29,8 @@ describe("CurrencyUtils.convertWithFxRate", () => {
   });
 
   describe("rounding behavior", () => {
-    test("rounds 0.5 up (banker's rounding)", () => {
-      // Test Math.round behavior: 0.5 rounds to nearest even
+    test("rounds 0.5 away from zero (up for positive)", () => {
+      // Math.round uses round-half-away-from-zero (not banker's rounding)
       expect(CurrencyUtils.convertWithFxRate(1000, 0.9995)).toBe(1000); // 999.5 -> 1000
     });
 
@@ -78,7 +78,7 @@ describe("CurrencyUtils.convertWithFxRate", () => {
     });
 
     test("rounds negative amounts correctly", () => {
-      // -999.6 should round to -1000 (away from zero)
+      // Math.round rounds to the nearest integer; -999.6 rounds to -1000
       expect(CurrencyUtils.convertWithFxRate(-1000, 0.9996)).toBe(-1000);
     });
   });
