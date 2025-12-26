@@ -6,5 +6,4 @@
 
 export * from "./types";
 export * from "./hooks";
-// TODO: Queries will be exported once implemented
-export * from "./repository";
+// Repository layer is internal - use hooks for data access
