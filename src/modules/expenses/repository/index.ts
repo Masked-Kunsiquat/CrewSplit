@@ -22,6 +22,7 @@ import {
 } from "../types";
 import { expenseLogger } from "@utils/logger";
 import { computeConversion } from "../engine";
+import { CurrencyUtils } from "@utils/currency";
 
 const mapSplit = (
   row: typeof expenseSplitsTable.$inferSelect,
@@ -99,7 +100,7 @@ const normalizeSplitAmount = (
 ): number | null => {
   if (amount === undefined || amount === null) return null;
   if (!fxRateToTrip || fxRateToTrip === 1) return amount;
-  return Math.round(amount * fxRateToTrip);
+  return CurrencyUtils.convertWithFxRate(amount, fxRateToTrip);
 };
 
 const normalizeNotes = (value: string | null | undefined): string | null => {

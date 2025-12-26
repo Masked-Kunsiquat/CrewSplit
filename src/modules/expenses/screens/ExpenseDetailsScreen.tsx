@@ -30,7 +30,7 @@ import { useExpenseCategories } from "../hooks/use-expense-categories";
 import { useDeleteExpense } from "../hooks/use-expense-mutations";
 import { useParticipants } from "@modules/participants/hooks/use-participants";
 import { useDisplayCurrency } from "@modules/settings/hooks/use-display-currency";
-import { formatCurrency } from "@utils/currency";
+import { formatCurrency, CurrencyUtils } from "@utils/currency";
 import { normalizeRouteParam } from "@utils/route-params";
 import { getCategoryIcon } from "@utils/category-icons";
 import { cachedFxRateProvider } from "@modules/fx-rates/provider";
@@ -210,7 +210,10 @@ function ExpenseDetailsContent({
             currency: expense.currency,
           },
           displayAmount: {
-            amount: Math.round(expense.convertedAmountMinor * fxRate),
+            amount: CurrencyUtils.convertWithFxRate(
+              expense.convertedAmountMinor,
+              fxRate,
+            ),
             currency: displayCurrency,
           },
           fxRate,
@@ -528,7 +531,10 @@ function ExpenseDetailsContent({
                         {showDisplayCurrency && displayAmounts && (
                           <Text style={styles.displayAmountSmall}>
                             {formatCurrency(
-                              Math.round(portion * displayAmounts.fxRate),
+                              CurrencyUtils.convertWithFxRate(
+                                portion,
+                                displayAmounts.fxRate,
+                              ),
                               displayAmounts.displayAmount.currency,
                             )}
                           </Text>

@@ -7,6 +7,24 @@
 import { ExpenseSplit } from "../../expenses/types";
 
 /**
+ * Tolerance for percentage sum validation.
+ * Allows for 99.99% to 100.01% to account for floating-point precision.
+ * The base tolerance of 0.01 handles minor rounding differences,
+ * while adding EPSILON * 100 provides additional buffer for accumulated
+ * floating-point errors in percentage calculations.
+ */
+const PERCENTAGE_SUM_TOLERANCE = 0.01 + Number.EPSILON * 100;
+
+/**
+ * Epsilon for fractional part equality comparison.
+ * Used when sorting by remainder for fair cent distribution.
+ * This value ensures that two fractional parts differing by less than
+ * 0.0000001 are considered equal, providing stable sorting behavior
+ * despite floating-point arithmetic imprecision.
+ */
+const FRACTION_EQUALITY_EPSILON = 0.0000001;
+
+/**
  * Normalize different split types to actual amounts in cents
  * Handles rounding by distributing remainders to ensure sum equals total
  *
@@ -105,9 +123,8 @@ function normalizeEqual(count: number, total: number): number[] {
 function normalizePercentage(splits: ExpenseSplit[], total: number): number[] {
   const totalPercentage = splits.reduce((sum, s) => sum + s.share, 0);
 
-  // Allow small floating-point tolerance (0.01 with epsilon for floating-point errors)
-  const tolerance = 0.01 + Number.EPSILON * 100;
-  if (Math.abs(totalPercentage - 100) > tolerance) {
+  // Allow small floating-point tolerance
+  if (Math.abs(totalPercentage - 100) > PERCENTAGE_SUM_TOLERANCE) {
     throw new Error(`Percentages must sum to 100, got ${totalPercentage}`);
   }
 
@@ -127,7 +144,7 @@ function normalizePercentage(splits: ExpenseSplit[], total: number): number[] {
 
   // Sort by fraction descending, then by index for determinism
   fractionalParts.sort((a, b) => {
-    if (Math.abs(a.fraction - b.fraction) < 0.0000001) {
+    if (Math.abs(a.fraction - b.fraction) < FRACTION_EQUALITY_EPSILON) {
       return a.index - b.index; // Stable sort by index
     }
     return b.fraction - a.fraction;
@@ -168,7 +185,7 @@ function normalizeWeight(splits: ExpenseSplit[], total: number): number[] {
 
   // Sort by fraction descending, then by index
   fractionalParts.sort((a, b) => {
-    if (Math.abs(a.fraction - b.fraction) < 0.0000001) {
+    if (Math.abs(a.fraction - b.fraction) < FRACTION_EQUALITY_EPSILON) {
       return a.index - b.index;
     }
     return b.fraction - a.fraction;
