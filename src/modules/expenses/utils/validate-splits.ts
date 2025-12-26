@@ -4,6 +4,11 @@
  */
 
 import { parseCurrency } from "@utils/currency";
+import {
+  isValidPercentageSum,
+  parseFiniteNumber,
+  isValidWeight,
+} from "@utils/validation";
 import type { SplitType } from "@ui/components";
 
 export interface SplitValidationResult {
@@ -57,8 +62,8 @@ export function validateExpenseSplits(
   if (splitType === "weight") {
     // Validate each weight is a finite positive number
     for (const pid of selectedParticipants) {
-      const value = parseFloat(splitValues[pid] || "1");
-      if (!Number.isFinite(value) || value <= 0) {
+      const value = parseFiniteNumber(splitValues[pid] || "1");
+      if (value === null || !isValidWeight(value)) {
         return {
           isValid: false,
           error: "Weights must be positive numbers",
@@ -87,7 +92,7 @@ export function validateExpenseSplits(
       return sum + value;
     }, 0);
 
-    const isValid = Math.abs(total - 100) < 0.01; // Allow small floating point errors
+    const isValid = isValidPercentageSum(total);
     return {
       isValid,
       error: isValid

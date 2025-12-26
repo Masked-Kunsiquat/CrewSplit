@@ -5,15 +5,7 @@
  */
 
 import { ExpenseSplit } from "../../expenses/types";
-
-/**
- * Tolerance for percentage sum validation.
- * Allows for 99.99% to 100.01% to account for floating-point precision.
- * The base tolerance of 0.01 handles minor rounding differences,
- * while adding EPSILON * 100 provides additional buffer for accumulated
- * floating-point errors in percentage calculations.
- */
-const PERCENTAGE_SUM_TOLERANCE = 0.01 + Number.EPSILON * 100;
+import { isValidPercentageSum } from "@utils/validation";
 
 /**
  * Epsilon for fractional part equality comparison.
@@ -124,7 +116,7 @@ function normalizePercentage(splits: ExpenseSplit[], total: number): number[] {
   const totalPercentage = splits.reduce((sum, s) => sum + s.share, 0);
 
   // Allow small floating-point tolerance
-  if (Math.abs(totalPercentage - 100) > PERCENTAGE_SUM_TOLERANCE) {
+  if (!isValidPercentageSum(totalPercentage)) {
     throw new Error(`Percentages must sum to 100, got ${totalPercentage}`);
   }
 
