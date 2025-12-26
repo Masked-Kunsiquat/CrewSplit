@@ -21,25 +21,37 @@ import { tripLogger } from "@utils/logger";
 import { db } from "@db/client";
 
 /**
+ * Transaction type from Drizzle ORM
+ */
+type DbTransaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
+
+/**
  * Repository interface for trip CRUD operations
  */
 export interface ITripRepository {
-  createTrip(data: CreateTripInput): Promise<Trip>;
+  createTrip(data: CreateTripInput, tx?: DbTransaction): Promise<Trip>;
   getTrips(): Promise<Trip[]>;
-  getTripById(id: string): Promise<Trip | null>;
-  updateTrip(id: string, patch: UpdateTripInput): Promise<Trip>;
-  deleteTrip(id: string): Promise<void>;
+  getTripById(id: string, tx?: DbTransaction): Promise<Trip | null>;
+  updateTrip(
+    id: string,
+    patch: UpdateTripInput,
+    tx?: DbTransaction,
+  ): Promise<Trip>;
+  deleteTrip(id: string, tx?: DbTransaction): Promise<void>;
 }
 
 /**
  * Repository interface for participant operations
  */
 export interface IParticipantRepository {
-  createParticipant(data: {
-    tripId: string;
-    name: string;
-    avatarColor?: string;
-  }): Promise<{ id: string; tripId: string; name: string }>;
+  createParticipant(
+    data: {
+      tripId: string;
+      name: string;
+      avatarColor?: string;
+    },
+    tx?: DbTransaction,
+  ): Promise<{ id: string; tripId: string; name: string }>;
 }
 
 /**
@@ -98,16 +110,19 @@ export async function createTripWithOwner(
 
   // Use transaction for atomic operation
   return await db.transaction(async (tx) => {
-    // Create trip
-    const trip = await tripRepository.createTrip(tripData);
+    // Create trip within transaction
+    const trip = await tripRepository.createTrip(tripData, tx);
 
     try {
-      // Add device owner as first participant
-      const participant = await participantRepository.createParticipant({
-        tripId: trip.id,
-        name: data.deviceOwnerName,
-        avatarColor: data.deviceOwnerAvatarColor,
-      });
+      // Add device owner as first participant within same transaction
+      const participant = await participantRepository.createParticipant(
+        {
+          tripId: trip.id,
+          name: data.deviceOwnerName,
+          avatarColor: data.deviceOwnerAvatarColor,
+        },
+        tx,
+      );
 
       tripLogger.info("Trip created with device owner", {
         tripId: trip.id,
@@ -258,8 +273,8 @@ export async function deleteBulkTrips(
   // Use transaction for all-or-nothing deletion
   await db.transaction(async (tx) => {
     for (const tripId of tripIds) {
-      // Verify each trip exists
-      const existing = await tripRepository.getTripById(tripId);
+      // Verify each trip exists (within transaction)
+      const existing = await tripRepository.getTripById(tripId, tx);
       if (!existing) {
         tripLogger.error("Trip not found in bulk delete", { tripId });
         const error = new Error(
@@ -269,8 +284,8 @@ export async function deleteBulkTrips(
         throw error; // Will rollback entire transaction
       }
 
-      // Delete trip (CASCADE handles related records)
-      await tripRepository.deleteTrip(tripId);
+      // Delete trip within transaction (CASCADE handles related records)
+      await tripRepository.deleteTrip(tripId, tx);
 
       tripLogger.debug("Trip deleted in bulk operation", {
         tripId,

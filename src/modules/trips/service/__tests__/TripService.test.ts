@@ -26,9 +26,10 @@ import {
 import type { Trip, UpdateTripInput } from "../../types";
 
 // Mock the database transaction
+const mockTx = {}; // Mock transaction object
 const mockTransaction = jest.fn(async (callback) => {
-  // Execute the callback immediately in the mock
-  return await callback();
+  // Execute the callback immediately with mock transaction object
+  return await callback(mockTx);
 });
 
 jest.mock("@db/client", () => ({
@@ -176,20 +177,26 @@ describe("TripService", () => {
         });
 
         // Assert
-        expect(mockTripRepo.createTrip).toHaveBeenCalledWith({
-          name: "Weekend Trip",
-          currencyCode: "USD",
-          startDate: "2024-01-01T00:00:00.000Z",
-          description: undefined,
-          endDate: undefined,
-          emoji: undefined,
-        });
+        expect(mockTripRepo.createTrip).toHaveBeenCalledWith(
+          {
+            name: "Weekend Trip",
+            currencyCode: "USD",
+            startDate: "2024-01-01T00:00:00.000Z",
+            description: undefined,
+            endDate: undefined,
+            emoji: undefined,
+          },
+          expect.anything(), // Transaction object
+        );
 
-        expect(mockParticipantRepo.createParticipant).toHaveBeenCalledWith({
-          tripId: "trip-123",
-          name: "Alice",
-          avatarColor: "#FF5733",
-        });
+        expect(mockParticipantRepo.createParticipant).toHaveBeenCalledWith(
+          {
+            tripId: "trip-123",
+            name: "Alice",
+            avatarColor: "#FF5733",
+          },
+          expect.anything(), // Transaction object
+        );
 
         expect(result).toEqual({
           trip: mockTrip,
@@ -238,14 +245,17 @@ describe("TripService", () => {
         });
 
         // Assert
-        expect(mockTripRepo.createTrip).toHaveBeenCalledWith({
-          name: "Beach Vacation",
-          description: "Annual beach trip",
-          currencyCode: "EUR",
-          startDate: "2024-06-01T00:00:00.000Z",
-          endDate: "2024-06-15T00:00:00.000Z",
-          emoji: "🏖️",
-        });
+        expect(mockTripRepo.createTrip).toHaveBeenCalledWith(
+          {
+            name: "Beach Vacation",
+            description: "Annual beach trip",
+            currencyCode: "EUR",
+            startDate: "2024-06-01T00:00:00.000Z",
+            endDate: "2024-06-15T00:00:00.000Z",
+            emoji: "🏖️",
+          },
+          expect.anything(), // Transaction object
+        );
 
         expect(result.trip).toEqual(mockTrip);
         expect(result.participantId).toBe("participant-789");
@@ -527,14 +537,32 @@ describe("TripService", () => {
 
         // Assert
         expect(mockTripRepo.getTripById).toHaveBeenCalledTimes(3);
-        expect(mockTripRepo.getTripById).toHaveBeenCalledWith("trip-1");
-        expect(mockTripRepo.getTripById).toHaveBeenCalledWith("trip-2");
-        expect(mockTripRepo.getTripById).toHaveBeenCalledWith("trip-3");
+        expect(mockTripRepo.getTripById).toHaveBeenCalledWith(
+          "trip-1",
+          expect.anything(), // Transaction object
+        );
+        expect(mockTripRepo.getTripById).toHaveBeenCalledWith(
+          "trip-2",
+          expect.anything(), // Transaction object
+        );
+        expect(mockTripRepo.getTripById).toHaveBeenCalledWith(
+          "trip-3",
+          expect.anything(), // Transaction object
+        );
 
         expect(mockTripRepo.deleteTrip).toHaveBeenCalledTimes(3);
-        expect(mockTripRepo.deleteTrip).toHaveBeenCalledWith("trip-1");
-        expect(mockTripRepo.deleteTrip).toHaveBeenCalledWith("trip-2");
-        expect(mockTripRepo.deleteTrip).toHaveBeenCalledWith("trip-3");
+        expect(mockTripRepo.deleteTrip).toHaveBeenCalledWith(
+          "trip-1",
+          expect.anything(), // Transaction object
+        );
+        expect(mockTripRepo.deleteTrip).toHaveBeenCalledWith(
+          "trip-2",
+          expect.anything(), // Transaction object
+        );
+        expect(mockTripRepo.deleteTrip).toHaveBeenCalledWith(
+          "trip-3",
+          expect.anything(), // Transaction object
+        );
 
         expect(mockTransaction).toHaveBeenCalled();
         expect(mockTripLogger.info).toHaveBeenCalledWith(
