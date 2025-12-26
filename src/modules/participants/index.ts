@@ -9,4 +9,8 @@ export * from "./hooks";
 
 // Query functions (read-only) are exported for cross-module use
 // Mutations should use hooks/service layer
-export { getParticipantsForTrip, getParticipantById } from "./repository";
+export {
+  getParticipantsForTrip,
+  getParticipantById,
+  ParticipantRepository,
+} from "./repository";
