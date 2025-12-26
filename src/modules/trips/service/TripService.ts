@@ -88,10 +88,16 @@ export async function createTripWithOwner(
   const { tripRepository, participantRepository } = deps;
 
   if (!tripRepository) {
-    throw new Error("tripRepository dependency is required");
+    throw createAppError(
+      "MISSING_DEPENDENCY",
+      "tripRepository dependency is required",
+    );
   }
   if (!participantRepository) {
-    throw new Error("participantRepository dependency is required");
+    throw createAppError(
+      "MISSING_DEPENDENCY",
+      "participantRepository dependency is required",
+    );
   }
 
   tripLogger.debug("Creating trip with device owner", {
@@ -167,7 +173,10 @@ export async function updateTrip(
   const { tripRepository } = deps;
 
   if (!tripRepository) {
-    throw new Error("tripRepository dependency is required");
+    throw createAppError(
+      "MISSING_DEPENDENCY",
+      "tripRepository dependency is required",
+    );
   }
 
   // Verify trip exists before update
@@ -210,7 +219,10 @@ export async function deleteTripWithCascades(
   const { tripRepository } = deps;
 
   if (!tripRepository) {
-    throw new Error("tripRepository dependency is required");
+    throw createAppError(
+      "MISSING_DEPENDENCY",
+      "tripRepository dependency is required",
+    );
   }
 
   // Verify trip exists before deletion
@@ -253,7 +265,10 @@ export async function deleteBulkTrips(
   const { tripRepository } = deps;
 
   if (!tripRepository) {
-    throw new Error("tripRepository dependency is required");
+    throw createAppError(
+      "MISSING_DEPENDENCY",
+      "tripRepository dependency is required",
+    );
   }
 
   if (tripIds.length === 0) {
@@ -303,7 +318,10 @@ export async function getTripById(
   const { tripRepository } = deps;
 
   if (!tripRepository) {
-    throw new Error("tripRepository dependency is required");
+    throw createAppError(
+      "MISSING_DEPENDENCY",
+      "tripRepository dependency is required",
+    );
   }
 
   return tripRepository.getTripById(tripId);
@@ -322,7 +340,10 @@ export async function getTrips(
   const { tripRepository } = deps;
 
   if (!tripRepository) {
-    throw new Error("tripRepository dependency is required");
+    throw createAppError(
+      "MISSING_DEPENDENCY",
+      "tripRepository dependency is required",
+    );
   }
 
   return tripRepository.getTrips();
