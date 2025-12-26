@@ -318,7 +318,7 @@ describe("TripService", () => {
             tripRepository: mockTripRepo,
             participantRepository: mockParticipantRepo,
           });
-        } catch (error) {
+        } catch {
           // Expected to throw
         }
 
@@ -498,9 +498,9 @@ describe("TripService", () => {
     describe("dependency injection", () => {
       it("should throw error if tripRepository is missing", async () => {
         // Act & Assert
-        await expect(
-          deleteBulkTrips(["trip-1", "trip-2"], {}),
-        ).rejects.toThrow("tripRepository dependency is required");
+        await expect(deleteBulkTrips(["trip-1", "trip-2"], {})).rejects.toThrow(
+          "tripRepository dependency is required",
+        );
       });
     });
 

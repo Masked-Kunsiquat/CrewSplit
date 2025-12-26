@@ -220,10 +220,13 @@ export async function deleteTripWithCascades(
   // Delete trip - database CASCADE will handle related records
   await tripRepository.deleteTrip(tripId);
 
-  tripLogger.info("Trip deleted successfully (cascaded participants, expenses, settlements, categories)", {
-    tripId,
-    tripName: existing.name,
-  });
+  tripLogger.info(
+    "Trip deleted successfully (cascaded participants, expenses, settlements, categories)",
+    {
+      tripId,
+      tripName: existing.name,
+    },
+  );
 }
 
 /**
