@@ -74,9 +74,7 @@ describe("CachedFxRateProvider", () => {
     expect(provider.getRate("USD", "USD")).toBe(1);
     expect(provider.hasRate("USD", "USD")).toBe(true);
     expect(provider.hasRate("EUR", "GBP")).toBe(false);
-    expect(() => provider.getRate("EUR", "GBP")).toThrow(
-      "No exchange rate available",
-    );
+    expect(() => provider.getRate("EUR", "GBP")).toThrow("Exchange rate error");
   });
 
   it("setManualRate persists and updates cache immediately", async () => {

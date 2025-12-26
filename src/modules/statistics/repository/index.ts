@@ -9,6 +9,7 @@ import { expenses as expensesTable } from "@db/schema/expenses";
 import { trips as tripsTable } from "@db/schema/trips";
 import { eq } from "drizzle-orm";
 import { expenseLogger } from "@utils/logger";
+import { createNotFoundError } from "@utils/errors";
 
 export interface ExpenseWithCategory {
   id: string;
@@ -88,11 +89,7 @@ export const getTripCurrency = async (tripId: string): Promise<string> => {
 
   if (!rows.length) {
     expenseLogger.error("Trip not found for currency lookup", { tripId });
-    const error = new Error(`Trip not found for id ${tripId}`) as Error & {
-      code: string;
-    };
-    error.code = "TRIP_NOT_FOUND";
-    throw error;
+    throw createNotFoundError("TRIP_NOT_FOUND", "Trip", tripId);
   }
 
   return rows[0].currencyCode;

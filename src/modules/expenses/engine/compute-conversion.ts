@@ -10,6 +10,8 @@
  * This is a pure function with ZERO dependencies - same inputs always produce same outputs.
  */
 
+import { createFxRateError } from "@utils/errors";
+
 export interface ConversionInput {
   originalAmountMinor: number;
   originalCurrency: string;
@@ -58,19 +60,24 @@ export function computeConversion(input: ConversionInput): ConversionResult {
 
   // Case 2: Different currencies - rate is required
   if (providedRate === undefined || providedRate === null) {
-    const error = new Error(
-      "fxRateToTrip is required when expense currency differs from trip currency",
-    ) as Error & { code: string };
-    error.code = "FX_RATE_REQUIRED";
-    throw error;
+    throw createFxRateError(
+      "FX_RATE_REQUIRED",
+      normalizedOriginal,
+      normalizedTrip,
+      {
+        message:
+          "fxRateToTrip is required when expense currency differs from trip currency",
+      },
+    );
   }
 
   if (providedRate <= 0) {
-    const error = new Error("fxRateToTrip must be positive") as Error & {
-      code: string;
-    };
-    error.code = "FX_RATE_INVALID";
-    throw error;
+    throw createFxRateError(
+      "FX_RATE_INVALID",
+      normalizedOriginal,
+      normalizedTrip,
+      { rate: providedRate, message: "fxRateToTrip must be positive" },
+    );
   }
 
   // Compute converted amount (use provided if available, otherwise calculate)

@@ -18,6 +18,7 @@ import { computeConversion } from "../engine";
 import type { Expense, CreateExpenseInput, UpdateExpenseInput } from "../types";
 import { expenseLogger } from "@utils/logger";
 import * as Crypto from "expo-crypto";
+import { createNotFoundError } from "@utils/errors";
 
 /**
  * Repository interface for expense CRUD operations
@@ -128,11 +129,7 @@ export async function createExpense(
   const trip = await tripRepository.getById(data.tripId);
   if (!trip) {
     expenseLogger.error("Trip not found", { tripId: data.tripId });
-    const error = new Error(`Trip not found: ${data.tripId}`) as Error & {
-      code: string;
-    };
-    error.code = "TRIP_NOT_FOUND";
-    throw error;
+    throw createNotFoundError("TRIP_NOT_FOUND", "Trip", data.tripId);
   }
 
   // Validate category exists
@@ -140,11 +137,7 @@ export async function createExpense(
   const categoryExists = await categoryRepository.exists(categoryId);
   if (!categoryExists) {
     expenseLogger.error("Invalid category ID", { categoryId });
-    const error = new Error(`Category not found: ${categoryId}`) as Error & {
-      code: string;
-    };
-    error.code = "CATEGORY_NOT_FOUND";
-    throw error;
+    throw createNotFoundError("CATEGORY_NOT_FOUND", "Category", categoryId);
   }
 
   // Compute conversion using pure function
@@ -233,22 +226,14 @@ export async function updateExpense(
   const existing = await expenseRepository.getById(expenseId);
   if (!existing) {
     expenseLogger.error("Expense not found on update", { expenseId });
-    const error = new Error(`Expense not found: ${expenseId}`) as Error & {
-      code: string;
-    };
-    error.code = "EXPENSE_NOT_FOUND";
-    throw error;
+    throw createNotFoundError("EXPENSE_NOT_FOUND", "Expense", expenseId);
   }
 
   // Load trip to get currency
   const trip = await tripRepository.getById(existing.tripId);
   if (!trip) {
     expenseLogger.error("Trip not found", { tripId: existing.tripId });
-    const error = new Error(`Trip not found: ${existing.tripId}`) as Error & {
-      code: string;
-    };
-    error.code = "TRIP_NOT_FOUND";
-    throw error;
+    throw createNotFoundError("TRIP_NOT_FOUND", "Trip", existing.tripId);
   }
 
   // Validate category if being updated
@@ -258,11 +243,11 @@ export async function updateExpense(
       expenseLogger.error("Invalid category ID", {
         categoryId: patch.categoryId,
       });
-      const error = new Error(
-        `Category not found: ${patch.categoryId}`,
-      ) as Error & { code: string };
-      error.code = "CATEGORY_NOT_FOUND";
-      throw error;
+      throw createNotFoundError(
+        "CATEGORY_NOT_FOUND",
+        "Category",
+        patch.categoryId,
+      );
     }
   }
 
@@ -346,11 +331,7 @@ export async function deleteExpense(
   const existing = await expenseRepository.getById(expenseId);
   if (!existing) {
     expenseLogger.error("Expense not found on delete", { expenseId });
-    const error = new Error(`Expense not found: ${expenseId}`) as Error & {
-      code: string;
-    };
-    error.code = "EXPENSE_NOT_FOUND";
-    throw error;
+    throw createNotFoundError("EXPENSE_NOT_FOUND", "Expense", expenseId);
   }
 
   expenseLogger.debug("Deleting expense via service", { expenseId });

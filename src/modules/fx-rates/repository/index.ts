@@ -12,6 +12,7 @@ import {
 } from "@db/schema/fx-rates";
 import { eq, and, desc, sql, or } from "drizzle-orm";
 import { fxLogger } from "@utils/logger";
+import { createFxRateError } from "@utils/errors";
 
 /**
  * Domain type for FX rate
@@ -175,11 +176,10 @@ export const setRate = async (input: SetFxRateInput): Promise<FxRate> => {
 
   if (rate <= 0) {
     fxLogger.error("Invalid FX rate", { baseCurrency, quoteCurrency, rate });
-    const error = new Error("FX rate must be positive") as Error & {
-      code: string;
-    };
-    error.code = "INVALID_FX_RATE";
-    throw error;
+    throw createFxRateError("INVALID_FX_RATE", baseCurrency, quoteCurrency, {
+      rate,
+      message: "FX rate must be positive",
+    });
   }
 
   const now = new Date().toISOString();

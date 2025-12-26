@@ -13,6 +13,7 @@ import { calculateCategorySpending } from "../engine/calculate-category-spending
 import { calculateParticipantSpending } from "../engine/calculate-participant-spending";
 import type { TripStatistics } from "../types";
 import { tripLogger } from "@utils/logger";
+import { createAppError } from "@utils/errors";
 
 interface StatisticsRepository {
   getExpensesWithCategories: typeof getExpensesWithCategories;
@@ -57,9 +58,7 @@ export const computeStatistics = async (
   dependencies: StatisticsServiceDependencies = {},
 ): Promise<TripStatistics> => {
   if (!tripId) {
-    const error = new Error("Trip ID is required") as Error & { code: string };
-    error.code = "TRIP_ID_REQUIRED";
-    throw error;
+    throw createAppError("TRIP_ID_REQUIRED", "Trip ID is required");
   }
 
   const statisticsRepository = dependencies.statisticsRepository ?? {
@@ -119,13 +118,13 @@ export const computeStatistics = async (
     }
 
     tripLogger.error("Failed to compute statistics", { tripId, error });
-    const wrapped = new Error("Failed to compute statistics") as Error & {
-      code: string;
-      cause?: unknown;
-    };
-    wrapped.code = "STATISTICS_DB_ERROR";
-    wrapped.cause = error;
-    throw wrapped;
+    throw createAppError(
+      "STATISTICS_DB_ERROR",
+      "Failed to compute statistics",
+      {
+        cause: error,
+      },
+    );
   }
 };
 

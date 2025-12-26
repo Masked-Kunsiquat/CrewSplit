@@ -19,6 +19,7 @@
 import type { Trip, CreateTripInput, UpdateTripInput } from "../types";
 import { tripLogger } from "@utils/logger";
 import { db } from "@db/client";
+import { createNotFoundError, createAppError } from "@utils/errors";
 
 /**
  * Transaction type from Drizzle ORM
@@ -139,11 +140,11 @@ export async function createTripWithOwner(
       });
 
       // Transaction will automatically rollback on throw
-      const err = new Error(
+      throw createAppError(
+        "PARTICIPANT_CREATE_FAILED",
         `Failed to create participant for trip: ${error instanceof Error ? error.message : String(error)}`,
-      ) as Error & { code: string };
-      err.code = "PARTICIPANT_CREATE_FAILED";
-      throw err;
+        { cause: error },
+      );
     }
   });
 }
@@ -173,11 +174,7 @@ export async function updateTrip(
   const existing = await tripRepository.getTripById(tripId);
   if (!existing) {
     tripLogger.error("Trip not found on update", { tripId });
-    const error = new Error(`Trip not found: ${tripId}`) as Error & {
-      code: string;
-    };
-    error.code = "TRIP_NOT_FOUND";
-    throw error;
+    throw createNotFoundError("TRIP_NOT_FOUND", "Trip", tripId);
   }
 
   tripLogger.debug("Updating trip via service", { tripId, patch });
@@ -220,11 +217,7 @@ export async function deleteTripWithCascades(
   const existing = await tripRepository.getTripById(tripId);
   if (!existing) {
     tripLogger.error("Trip not found on delete", { tripId });
-    const error = new Error(`Trip not found: ${tripId}`) as Error & {
-      code: string;
-    };
-    error.code = "TRIP_NOT_FOUND";
-    throw error;
+    throw createNotFoundError("TRIP_NOT_FOUND", "Trip", tripId);
   }
 
   tripLogger.info("Deleting trip with cascades", {
@@ -277,11 +270,7 @@ export async function deleteBulkTrips(
       const existing = await tripRepository.getTripById(tripId, tx);
       if (!existing) {
         tripLogger.error("Trip not found in bulk delete", { tripId });
-        const error = new Error(
-          `Trip not found in bulk delete: ${tripId}`,
-        ) as Error & { code: string };
-        error.code = "TRIP_NOT_FOUND";
-        throw error; // Will rollback entire transaction
+        throw createNotFoundError("TRIP_NOT_FOUND", "Trip", tripId); // Will rollback entire transaction
       }
 
       // Delete trip within transaction (CASCADE handles related records)

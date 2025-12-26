@@ -8,6 +8,7 @@ import { db } from "@db/client";
 import { expenseCategories } from "@db/schema/expense-categories";
 import { eq, and, isNull, or } from "drizzle-orm";
 import { ExpenseCategory, CreateExpenseCategoryInput } from "../types";
+import { createAppError, createNotFoundError } from "@utils/errors";
 
 /**
  * Get all categories visible for a trip (global + trip-specific, non-archived)
@@ -65,11 +66,10 @@ export const createCategory = async (
 ): Promise<ExpenseCategory> => {
   // Enforce trip-scoped requirement
   if (!input.tripId || input.tripId.trim() === "") {
-    const error = new Error(
+    throw createAppError(
+      "TRIP_ID_REQUIRED",
       "Custom categories must be associated with a trip",
-    ) as Error & { code: string };
-    error.code = "TRIP_ID_REQUIRED";
-    throw error;
+    );
   }
 
   const now = new Date().toISOString();
@@ -109,18 +109,13 @@ export const archiveCategory = async (id: string): Promise<void> => {
       .limit(1);
 
     if (!existing.length) {
-      const error = new Error(`Category not found: ${id}`) as Error & {
-        code: string;
-      };
-      error.code = "CATEGORY_NOT_FOUND";
-      throw error;
+      throw createNotFoundError("CATEGORY_NOT_FOUND", "Category", id);
     }
     if (existing[0].isSystem) {
-      const error = new Error("Cannot archive system categories") as Error & {
-        code: string;
-      };
-      error.code = "CANNOT_ARCHIVE_SYSTEM_CATEGORY";
-      throw error;
+      throw createAppError(
+        "CANNOT_ARCHIVE_SYSTEM_CATEGORY",
+        "Cannot archive system categories",
+      );
     }
 
     await tx
