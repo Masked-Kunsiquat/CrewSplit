@@ -18,6 +18,7 @@ import { theme } from "@ui/theme";
 import { Button, Input, Card, ConfirmDialog } from "@ui/components";
 import { CurrencyPicker } from "@ui/components/CurrencyPicker";
 import { useFxRateProvider } from "../context/FxRateContext";
+import { formatFxRate, formatMajorAmount } from "@utils/formatting";
 
 // Configurable threshold for warning about unusually high exchange rates
 // Set high enough to accommodate currencies like KRW, VND, IDR (e.g., 1 USD = 15000+ KRW)
@@ -180,14 +181,14 @@ export default function ManualRateEntryScreen() {
               <Text style={styles.previewLabel}>1 {fromCurrency}</Text>
               <Text style={styles.previewEquals}>=</Text>
               <Text style={styles.previewValue}>
-                {rateNum.toFixed(4)} {toCurrency}
+                {formatFxRate(rateNum)} {toCurrency}
               </Text>
             </View>
             <View style={styles.previewRow}>
               <Text style={styles.previewLabel}>100 {fromCurrency}</Text>
               <Text style={styles.previewEquals}>=</Text>
               <Text style={styles.previewValue}>
-                {(rateNum * 100).toFixed(2)} {toCurrency}
+                {formatMajorAmount(rateNum * 100)} {toCurrency}
               </Text>
             </View>
           </Card>

@@ -20,7 +20,7 @@ describe("formatting utilities", () => {
 
     it("should handle very small rates", () => {
       expect(formatFxRate(0.0001)).toBe("0.0001");
-      expect(formatFxRate(0.0050)).toBe("0.0050");
+      expect(formatFxRate(0.005)).toBe("0.0050");
     });
 
     it("should handle large rates", () => {

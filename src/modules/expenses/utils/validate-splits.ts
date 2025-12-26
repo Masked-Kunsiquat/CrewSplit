@@ -9,6 +9,7 @@ import {
   parseFiniteNumber,
   isValidWeight,
 } from "@utils/validation";
+import { formatPercentage } from "@utils/formatting";
 import type { SplitType } from "@ui/components";
 
 export interface SplitValidationResult {
@@ -97,7 +98,7 @@ export function validateExpenseSplits(
       isValid,
       error: isValid
         ? undefined
-        : `Percentages must add up to 100% (currently ${total.toFixed(1)}%)`,
+        : `Percentages must add up to 100% (currently ${formatPercentage(total)})`,
       current: total,
       target: 100,
     };
