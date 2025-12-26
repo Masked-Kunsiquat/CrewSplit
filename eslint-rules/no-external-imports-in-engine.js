@@ -69,9 +69,18 @@ module.exports = {
         if (importPath.startsWith("@modules/")) {
           // Check if all imports are types
           const hasValueImports = node.specifiers.some((spec) => {
-            return (
-              spec.type === "ImportSpecifier" && spec.importKind !== "type"
-            );
+            // Default and namespace imports are always value imports
+            if (
+              spec.type === "ImportDefaultSpecifier" ||
+              spec.type === "ImportNamespaceSpecifier"
+            ) {
+              return true;
+            }
+            // Named imports are value imports only if not type-only
+            if (spec.type === "ImportSpecifier" && spec.importKind !== "type") {
+              return true;
+            }
+            return false;
           });
 
           if (hasValueImports) {
