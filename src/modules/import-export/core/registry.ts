@@ -5,6 +5,7 @@
 
 import { ExportableEntity, EntityScope } from "./types";
 import { topologicalSort } from "./dependency-graph";
+import { createAppError } from "@utils/errors";
 
 /**
  * Entity registry - singleton pattern
@@ -19,7 +20,10 @@ class EntityRegistry {
    */
   register(entity: ExportableEntity): void {
     if (this.entities.has(entity.name)) {
-      throw new Error(`Entity '${entity.name}' is already registered`);
+      throw createAppError(
+        "INVALID_INPUT",
+        `Entity '${entity.name}' is already registered`,
+      );
     }
     this.entities.set(entity.name, entity);
   }

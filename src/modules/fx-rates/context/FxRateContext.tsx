@@ -15,6 +15,7 @@ import {
 } from "react";
 import { CachedFxRateProvider } from "../provider/cached-fx-rate-provider";
 import { fxLogger } from "@utils/logger";
+import { createAppError } from "@utils/errors";
 
 const FxRateContext = createContext<CachedFxRateProvider | null>(null);
 
@@ -31,7 +32,10 @@ const FxRateContext = createContext<CachedFxRateProvider | null>(null);
 export function useFxRateProvider(): CachedFxRateProvider {
   const provider = useContext(FxRateContext);
   if (!provider) {
-    throw new Error("useFxRateProvider must be used within FxRateProvider");
+    throw createAppError(
+      "INVALID_CONTEXT_USAGE",
+      "useFxRateProvider must be used within FxRateProvider",
+    );
   }
   return provider;
 }

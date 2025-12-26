@@ -18,7 +18,7 @@ import { computeConversion } from "../engine";
 import type { Expense, CreateExpenseInput, UpdateExpenseInput } from "../types";
 import { expenseLogger } from "@utils/logger";
 import * as Crypto from "expo-crypto";
-import { createNotFoundError } from "@utils/errors";
+import { createNotFoundError, createAppError } from "@utils/errors";
 
 /**
  * Repository interface for expense CRUD operations
@@ -116,13 +116,22 @@ export async function createExpense(
   const { expenseRepository, tripRepository, categoryRepository } = deps;
 
   if (!expenseRepository) {
-    throw new Error("expenseRepository dependency is required");
+    throw createAppError(
+      "MISSING_DEPENDENCY",
+      "expenseRepository dependency is required",
+    );
   }
   if (!tripRepository) {
-    throw new Error("tripRepository dependency is required");
+    throw createAppError(
+      "MISSING_DEPENDENCY",
+      "tripRepository dependency is required",
+    );
   }
   if (!categoryRepository) {
-    throw new Error("categoryRepository dependency is required");
+    throw createAppError(
+      "MISSING_DEPENDENCY",
+      "categoryRepository dependency is required",
+    );
   }
 
   // Load trip to get currency
@@ -213,13 +222,22 @@ export async function updateExpense(
   const { expenseRepository, tripRepository, categoryRepository } = deps;
 
   if (!expenseRepository) {
-    throw new Error("expenseRepository dependency is required");
+    throw createAppError(
+      "MISSING_DEPENDENCY",
+      "expenseRepository dependency is required",
+    );
   }
   if (!tripRepository) {
-    throw new Error("tripRepository dependency is required");
+    throw createAppError(
+      "MISSING_DEPENDENCY",
+      "tripRepository dependency is required",
+    );
   }
   if (!categoryRepository) {
-    throw new Error("categoryRepository dependency is required");
+    throw createAppError(
+      "MISSING_DEPENDENCY",
+      "categoryRepository dependency is required",
+    );
   }
 
   // Load existing expense
@@ -324,7 +342,10 @@ export async function deleteExpense(
   const { expenseRepository } = deps;
 
   if (!expenseRepository) {
-    throw new Error("expenseRepository dependency is required");
+    throw createAppError(
+      "MISSING_DEPENDENCY",
+      "expenseRepository dependency is required",
+    );
   }
 
   // Check if expense exists before attempting deletion

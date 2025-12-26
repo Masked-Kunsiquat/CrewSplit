@@ -19,6 +19,7 @@ import {
   InvalidExportFileError,
   UnsupportedVersionError,
 } from "../core";
+import { createAppError } from "@utils/errors";
 
 const SUPPORTED_VERSIONS = ["1.0.0"];
 
@@ -47,11 +48,7 @@ export class ImportService {
     });
 
     if (result.canceled) {
-      const error = new Error("Import cancelled by user") as Error & {
-        code: string;
-      };
-      error.code = "IMPORT_CANCELLED";
-      throw error;
+      throw createAppError("OPERATION_FAILED", "Import cancelled by user");
     }
 
     // Read file content

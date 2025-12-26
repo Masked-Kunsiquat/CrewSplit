@@ -16,6 +16,7 @@ import type { CachedFxRateProvider } from "../provider/cached-fx-rate-provider";
 import type { FxRateSource } from "@db/schema/fx-rates";
 import type { RatePair } from "../types";
 import { fxLogger } from "@utils/logger";
+import { createAppError } from "@utils/errors";
 
 /**
  * Result of rate fetch operation
@@ -165,11 +166,10 @@ export const updateRates = async (
     };
   } catch (error) {
     fxLogger.error("All FX rate sources failed", error);
-    const allFailedError = new Error(
+    throw createAppError(
+      "ALL_SOURCES_FAILED",
       "Failed to fetch rates from all sources",
-    ) as Error & { code: string };
-    allFailedError.code = "ALL_SOURCES_FAILED";
-    throw allFailedError;
+    );
   }
 };
 

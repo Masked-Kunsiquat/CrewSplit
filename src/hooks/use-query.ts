@@ -5,6 +5,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useFocusEffect } from "expo-router";
+import { createAppError } from "@utils/errors";
 
 /**
  * Generic hook for fetching data with consistent loading/error handling
@@ -58,7 +59,11 @@ export function useQuery<T>(
         }
       } catch (err) {
         if (mounted) {
-          setError(err instanceof Error ? err : new Error(errorMessage));
+          setError(
+            err instanceof Error
+              ? err
+              : createAppError("OPERATION_FAILED", errorMessage),
+          );
         }
       } finally {
         if (mounted) {

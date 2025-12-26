@@ -6,6 +6,7 @@
 import { useState, useCallback } from "react";
 import { ImportService } from "../service/ImportService";
 import { ImportResult, ConflictStrategy } from "../core/types";
+import { createAppError } from "@utils/errors";
 
 interface ImportOptions {
   validateForeignKeys?: boolean;
@@ -120,7 +121,9 @@ export function useImport(): UseImportReturn {
         }
       } catch (err) {
         const importError =
-          err instanceof Error ? err : new Error("Import failed");
+          err instanceof Error
+            ? err
+            : createAppError("OPERATION_FAILED", "Import failed");
         setError(importError);
 
         // Show error alert
@@ -145,7 +148,9 @@ export function useImport(): UseImportReturn {
       return preview;
     } catch (err) {
       const previewError =
-        err instanceof Error ? err : new Error("Preview failed");
+        err instanceof Error
+          ? err
+          : createAppError("OPERATION_FAILED", "Preview failed");
       setError(previewError);
       throw previewError;
     } finally {

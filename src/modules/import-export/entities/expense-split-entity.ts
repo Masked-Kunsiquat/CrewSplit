@@ -22,6 +22,7 @@ import {
   validateUUID,
   validateISODate,
 } from "../core/validators";
+import { createAppError } from "@utils/errors";
 
 export const expenseSplitEntity: ExportableEntity<ExpenseSplit> = {
   name: "expenseSplits",
@@ -169,11 +170,10 @@ export const expenseSplitEntity: ExportableEntity<ExpenseSplit> = {
 
             result.successCount++;
           } else if (context.conflictResolution === "generate_new_ids") {
-            const error = new Error(
+            throw createAppError(
+              "NOT_IMPLEMENTED",
               `Conflict resolution strategy 'generate_new_ids' is not yet implemented for entity 'expenseSplits'`,
-            ) as Error & { code: string };
-            error.code = "NOT_IMPLEMENTED";
-            throw error;
+            );
           }
         } else {
           // No conflict - insert new record

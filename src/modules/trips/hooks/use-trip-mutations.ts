@@ -12,6 +12,7 @@ import { ParticipantRepository } from "@modules/participants";
 import type { Trip, CreateTripInput, UpdateTripInput } from "../types";
 import type { CreateTripWithOwnerInput } from "../service/TripService";
 import { tripLogger } from "@utils/logger";
+import { createAppError } from "@utils/errors";
 
 /**
  * Hook for creating a new trip (basic, without owner participant).
@@ -29,7 +30,9 @@ export function useCreateTrip() {
       return newTrip;
     } catch (err) {
       const error =
-        err instanceof Error ? err : new Error("Failed to create trip");
+        err instanceof Error
+          ? err
+          : createAppError("OPERATION_FAILED", "Failed to create trip");
       tripLogger.error("Failed to create trip", error);
       setError(error);
       throw error; // Re-throw so caller can handle
@@ -65,7 +68,10 @@ export function useCreateTripWithOwner() {
         const error =
           err instanceof Error
             ? err
-            : new Error("Failed to create trip with owner");
+            : createAppError(
+                "OPERATION_FAILED",
+                "Failed to create trip with owner",
+              );
         tripLogger.error("Failed to create trip with owner", error);
         setError(error);
         throw error; // Re-throw so caller can handle
@@ -97,7 +103,9 @@ export function useUpdateTrip() {
         return updated;
       } catch (err) {
         const error =
-          err instanceof Error ? err : new Error("Failed to update trip");
+          err instanceof Error
+            ? err
+            : createAppError("OPERATION_FAILED", "Failed to update trip");
         tripLogger.error("Failed to update trip", error);
         setError(error);
         throw error; // Re-throw so caller can handle
@@ -128,7 +136,9 @@ export function useDeleteTrip() {
       });
     } catch (err) {
       const error =
-        err instanceof Error ? err : new Error("Failed to delete trip");
+        err instanceof Error
+          ? err
+          : createAppError("OPERATION_FAILED", "Failed to delete trip");
       tripLogger.error("Failed to delete trip", error);
       setError(error);
       throw error; // Re-throw so caller can handle
@@ -157,7 +167,9 @@ export function useBulkDeleteTrips() {
       });
     } catch (err) {
       const error =
-        err instanceof Error ? err : new Error("Failed to bulk delete trips");
+        err instanceof Error
+          ? err
+          : createAppError("OPERATION_FAILED", "Failed to bulk delete trips");
       tripLogger.error("Failed to bulk delete trips", error);
       setError(error);
       throw error; // Re-throw so caller can handle

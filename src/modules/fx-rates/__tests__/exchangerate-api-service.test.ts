@@ -125,7 +125,7 @@ describe("ExchangeRateApiService", () => {
 
     await expect(
       ExchangeRateApiService.fetchRate("EUR", "GBP"),
-    ).rejects.toHaveProperty("code", "RATE_NOT_FOUND");
+    ).rejects.toHaveProperty("code", "FX_RATE_NOT_FOUND");
   });
 
   it("checkAvailability returns boolean and tolerates network errors", async () => {

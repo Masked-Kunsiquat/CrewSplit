@@ -9,6 +9,7 @@ import { trips as tripsTable, Trip as TripRow } from "@db/schema/trips";
 import { eq } from "drizzle-orm";
 import { CreateTripInput, Trip, UpdateTripInput } from "../types";
 import { tripLogger } from "@utils/logger";
+import { createNotFoundError } from "@utils/errors";
 
 /**
  * Transaction type from Drizzle ORM
@@ -121,7 +122,7 @@ export const updateTrip = async (
   const updated = updatedRows[0];
   if (!updated) {
     tripLogger.error("Trip not found on update", { tripId: id });
-    throw new Error(`Trip not found for id ${id}`);
+    throw createNotFoundError("TRIP_NOT_FOUND", "Trip", id);
   }
 
   tripLogger.info("Trip updated", { tripId: id, name: updated.name });

@@ -13,6 +13,7 @@
  */
 
 import { fxLogger } from "@utils/logger";
+import { createAppError, createFxRateError } from "@utils/errors";
 import type { RatePair } from "../types";
 
 const FRANKFURTER_BASE_URL = "https://api.frankfurter.app";
@@ -110,11 +111,11 @@ export const fetchLatestRates = async (
         status: response.status,
         message: errorMessage,
       });
-      const error = new Error(
+      throw createAppError(
+        "FRANKFURTER_API_ERROR",
         `Frankfurter API error: ${errorMessage}`,
-      ) as Error & { code: string };
-      error.code = "FRANKFURTER_API_ERROR";
-      throw error;
+        { status: response.status },
+      );
     }
 
     const data: FrankfurterLatestResponse = await response.json();
@@ -122,11 +123,10 @@ export const fetchLatestRates = async (
     // Validate response
     if (!data.rates || typeof data.rates !== "object") {
       fxLogger.error("Invalid Frankfurter response", { data });
-      const error = new Error(
+      throw createAppError(
+        "INVALID_RESPONSE",
         "Invalid response from Frankfurter API",
-      ) as Error & { code: string };
-      error.code = "INVALID_RESPONSE";
-      throw error;
+      );
     }
 
     // Convert to RatePair array
@@ -151,11 +151,7 @@ export const fetchLatestRates = async (
     if (error instanceof Error) {
       if (error.name === "AbortError") {
         fxLogger.error("Frankfurter request timeout", { timeout });
-        const timeoutError = new Error(
-          `Request timeout after ${timeout}ms`,
-        ) as Error & { code: string };
-        timeoutError.code = "TIMEOUT";
-        throw timeoutError;
+        throw createAppError("TIMEOUT", `Request timeout after ${timeout}ms`);
       }
 
       if ("code" in error && error.code) {
@@ -166,11 +162,7 @@ export const fetchLatestRates = async (
 
     // Network or other error
     fxLogger.error("Failed to fetch from Frankfurter", error);
-    const networkError = new Error(
-      "Network error when fetching rates",
-    ) as Error & { code: string };
-    networkError.code = "NETWORK_ERROR";
-    throw networkError;
+    throw createAppError("NETWORK_ERROR", "Network error when fetching rates");
   }
 };
 
@@ -196,11 +188,7 @@ export const fetchRate = async (
       fromCurrency,
       toCurrency,
     });
-    const error = new Error(
-      `Rate not found for ${fromCurrency} to ${toCurrency}`,
-    ) as Error & { code: string };
-    error.code = "RATE_NOT_FOUND";
-    throw error;
+    throw createFxRateError("FX_RATE_NOT_FOUND", fromCurrency, toCurrency);
   }
 
   return rates[0];

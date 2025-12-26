@@ -16,22 +16,22 @@ import { useBulkDeleteTrips } from "../hooks/use-trip-mutations";
 import { useRefreshControl } from "@hooks/use-refresh-control";
 import { SampleTripBadge } from "@modules/onboarding/components/SampleTripBadge";
 import { TripExportModal } from "../components/trip-export-modal";
+import { createAppError } from "@utils/errors";
 
 /**
  * Validates and formats a single date string
  * @param dateString - ISO 8601 date string to parse
  * @returns Formatted date string (MM/DD/YY)
- * @throws Error with code "INVALID_DATE_FORMAT" if date is invalid
+ * @throws Error with code "INVALID_INPUT" if date is invalid
  */
 function formatSingleDate(dateString: string): string {
   const date = new Date(dateString);
 
   if (isNaN(date.getTime())) {
-    const error = new Error(`Invalid date format: "${dateString}"`) as Error & {
-      code: string;
-    };
-    error.code = "INVALID_DATE_FORMAT";
-    throw error;
+    throw createAppError(
+      "INVALID_INPUT",
+      `Invalid date format: "${dateString}"`,
+    );
   }
 
   return `${(date.getMonth() + 1).toString().padStart(2, "0")}/${date.getDate().toString().padStart(2, "0")}/${date.getFullYear().toString().slice(-2)}`;

@@ -10,6 +10,7 @@ import { openDatabaseSync } from "expo-sqlite";
 import migrations from "./migrations/migrations";
 import * as schema from "./schema";
 import { migrationLogger } from "@utils/logger";
+import { createAppError } from "@utils/errors";
 
 // Open SQLite database
 const expoDb = openDatabaseSync("crewsplit.db");
@@ -121,7 +122,8 @@ const verifyMigrationState = (): void => {
     expected: expected.map((entry) => entry.tag),
   });
 
-  throw new Error(
+  throw createAppError(
+    "DATABASE_ERROR",
     `Migration history mismatch detected: ${issues.join(
       "; ",
     )}. This database requires a recovery migration or clean rebuild.`,

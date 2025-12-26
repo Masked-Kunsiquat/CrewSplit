@@ -3,6 +3,8 @@
  * Deterministic stringify by recursively sorting object keys.
  */
 
+import { createAppError } from "@utils/errors";
+
 type Json = null | boolean | number | string | Json[] | { [key: string]: Json };
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
@@ -37,7 +39,8 @@ function toSortedJson(value: unknown): Json {
     return out;
   }
 
-  throw new Error(
+  throw createAppError(
+    "INVALID_INPUT",
     `stableStringify received non-JSON value: ${Object.prototype.toString.call(
       value,
     )}`,

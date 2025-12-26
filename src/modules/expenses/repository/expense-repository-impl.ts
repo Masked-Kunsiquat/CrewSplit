@@ -17,6 +17,7 @@ import { eq } from "drizzle-orm";
 import type { Expense } from "../types";
 import { expenseLogger } from "@utils/logger";
 import type { IExpenseRepository } from "../service/ExpenseService";
+import { createNotFoundError } from "@utils/errors";
 
 const mapExpenseRow = (row: ExpenseRow): Expense => mapExpenseFromDb(row);
 
@@ -181,7 +182,7 @@ export class ExpenseRepositoryImpl implements IExpenseRepository {
 
       if (!updated) {
         expenseLogger.error("Expense not found on update", { expenseId: id });
-        throw new Error(`Expense not found for id ${id}`);
+        throw createNotFoundError("EXPENSE_NOT_FOUND", "Expense", id);
       }
 
       if (data.splits !== undefined) {
@@ -228,7 +229,7 @@ export class ExpenseRepositoryImpl implements IExpenseRepository {
         .limit(1);
       if (!existingRows.length) {
         expenseLogger.error("Expense not found on delete", { expenseId: id });
-        throw new Error(`Expense not found for id ${id}`);
+        throw createNotFoundError("EXPENSE_NOT_FOUND", "Expense", id);
       }
       expenseLogger.info("Deleting expense", {
         expenseId: id,

@@ -4,6 +4,7 @@
  */
 
 import { ExportableEntity } from "./types";
+import { createAppError } from "@utils/errors";
 
 /**
  * Topological sort using Kahn's algorithm
@@ -32,7 +33,8 @@ export function topologicalSort(
   for (const entity of entities) {
     for (const dep of entity.dependencies) {
       if (!graph.has(dep)) {
-        throw new Error(
+        throw createAppError(
+          "MISSING_DEPENDENCY",
           `Entity '${entity.name}' depends on unregistered entity '${dep}'`,
         );
       }
@@ -73,7 +75,8 @@ export function topologicalSort(
     const remaining = entities
       .filter((e) => !sorted.includes(e))
       .map((e) => e.name);
-    throw new Error(
+    throw createAppError(
+      "INVALID_INPUT",
       `Circular dependency detected among entities: ${remaining.join(", ")}`,
     );
   }

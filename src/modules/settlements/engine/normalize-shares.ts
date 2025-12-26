@@ -1,11 +1,20 @@
 /**
  * SETTLEMENT MODULE - Share Normalization
  * MODELER: Convert different share types to actual amounts
- * PURE FUNCTION: No side effects, deterministic
+ * PURE FUNCTION: No side effects, deterministic, zero dependencies
  */
 
-import { ExpenseSplit } from "../../expenses/types";
-import { isValidPercentageSum } from "@utils/validation";
+import type { ExpenseSplit } from "../../expenses/types";
+
+/**
+ * Validate percentage sum is approximately 100 (within tolerance).
+ * Inlined from @utils/validation to maintain zero dependencies.
+ * Uses 0.01 + Number.EPSILON * 100 to handle floating-point precision errors.
+ */
+const PERCENTAGE_TOLERANCE = 0.01 + Number.EPSILON * 100;
+function isValidPercentageSum(sum: number): boolean {
+  return Math.abs(sum - 100) <= PERCENTAGE_TOLERANCE;
+}
 
 /**
  * Epsilon for fractional part equality comparison.

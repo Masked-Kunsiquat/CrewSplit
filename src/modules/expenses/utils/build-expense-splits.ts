@@ -7,6 +7,7 @@ import { parseCurrency } from "@utils/currency";
 import { isValidPercentageSum } from "@utils/validation";
 import { formatPercentage } from "@utils/formatting";
 import type { SplitType } from "@ui/components";
+import { createAppError } from "@utils/errors";
 
 export interface ExpenseSplit {
   participantId: string;
@@ -53,7 +54,10 @@ export function buildExpenseSplits(
       const percentage = parseFloat(splitValues[participantId] || "0");
       // Validate percentage is finite and within bounds
       if (!Number.isFinite(percentage) || percentage < 0 || percentage > 100) {
-        throw new Error("Each percentage must be between 0 and 100");
+        throw createAppError(
+          "INVALID_INPUT",
+          "Each percentage must be between 0 and 100",
+        );
       }
       return {
         participantId,
@@ -66,7 +70,10 @@ export function buildExpenseSplits(
       const weight = parseFloat(splitValues[participantId] || "1");
       // Validate weight is finite and positive
       if (!Number.isFinite(weight) || weight <= 0) {
-        throw new Error("Weights must be positive numbers");
+        throw createAppError(
+          "INVALID_INPUT",
+          "Weights must be positive numbers",
+        );
       }
       return {
         participantId,
@@ -79,7 +86,10 @@ export function buildExpenseSplits(
       const splitAmount = parseCurrency(splitValues[participantId] || "0");
       // Validate amount is finite and non-negative
       if (!Number.isFinite(splitAmount) || splitAmount < 0) {
-        throw new Error("Split amounts must be non-negative");
+        throw createAppError(
+          "INVALID_INPUT",
+          "Split amounts must be non-negative",
+        );
       }
       return {
         participantId,
@@ -120,7 +130,8 @@ export function validateSplitTotals(
   if (splitType === "percentage") {
     const totalPercentage = splits.reduce((sum, split) => sum + split.share, 0);
     if (!isValidPercentageSum(totalPercentage)) {
-      throw new Error(
+      throw createAppError(
+        "INVALID_INPUT",
         `Percentages must add up to 100% (currently ${formatPercentage(totalPercentage)})`,
       );
     }
@@ -133,7 +144,10 @@ export function validateSplitTotals(
       0,
     );
     if (totalAmount !== expenseAmountMinor) {
-      throw new Error("Split amounts must equal expense total");
+      throw createAppError(
+        "INVALID_INPUT",
+        "Split amounts must equal expense total",
+      );
     }
   }
 }

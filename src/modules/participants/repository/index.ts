@@ -16,6 +16,7 @@ import {
   UpdateParticipantInput,
 } from "../types";
 import { participantLogger } from "@utils/logger";
+import { createNotFoundError } from "@utils/errors";
 
 /**
  * Transaction type from Drizzle ORM
@@ -122,7 +123,7 @@ export const updateParticipant = async (
     participantLogger.error("Participant not found on update", {
       participantId: id,
     });
-    throw new Error(`Participant not found for id ${id}`);
+    throw createNotFoundError("PARTICIPANT_NOT_FOUND", "Participant", id);
   }
 
   participantLogger.info("Participant updated", {

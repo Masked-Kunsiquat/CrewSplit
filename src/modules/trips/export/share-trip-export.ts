@@ -10,6 +10,7 @@ import { Alert, Platform, Share } from "react-native";
 import { buildTripExportV1FromDb } from "./build-trip-export";
 import { TripExportOptions } from "./types";
 import { stableStringify } from "./stable-json";
+import { createAppError } from "@utils/errors";
 
 function sanitizeFileComponent(input: string) {
   return input
@@ -50,7 +51,11 @@ export async function exportTripJsonToFileAndShare(
   const fileName = `crewledger-${baseName || "trip"}-${date}.json`;
 
   const baseDir = FileSystem.cacheDirectory ?? FileSystem.documentDirectory;
-  if (!baseDir) throw new Error("No writable directory available for export");
+  if (!baseDir)
+    throw createAppError(
+      "OPERATION_FAILED",
+      "No writable directory available for export",
+    );
 
   const fileUri = `${baseDir}${fileName}`;
   const shouldCleanup =

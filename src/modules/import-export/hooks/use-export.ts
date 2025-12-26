@@ -5,6 +5,7 @@
 
 import { useState, useCallback } from "react";
 import { ExportService } from "../service/ExportService";
+import { createAppError } from "@utils/errors";
 
 interface ExportOptions {
   includeSampleData?: boolean;
@@ -77,7 +78,9 @@ export function useExport(): UseExportReturn {
         );
       } catch (err) {
         const exportError =
-          err instanceof Error ? err : new Error("Export failed");
+          err instanceof Error
+            ? err
+            : createAppError("OPERATION_FAILED", "Export failed");
         setError(exportError);
 
         // Show error alert
@@ -108,7 +111,9 @@ export function useExport(): UseExportReturn {
         );
       } catch (err) {
         const exportError =
-          err instanceof Error ? err : new Error("Export failed");
+          err instanceof Error
+            ? err
+            : createAppError("OPERATION_FAILED", "Export failed");
         setError(exportError);
 
         // Show error alert
