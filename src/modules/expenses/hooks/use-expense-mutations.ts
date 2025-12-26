@@ -5,8 +5,18 @@
  */
 
 import { useState, useCallback } from "react";
-import { addExpense, updateExpense, deleteExpense } from "../repository";
-import type { Expense, CreateExpenseInput, UpdateExpenseInput } from "../types";
+import {
+  addExpense,
+  updateExpense,
+  deleteExpense,
+  getExpenseSplits,
+} from "../repository";
+import type {
+  Expense,
+  CreateExpenseInput,
+  UpdateExpenseInput,
+  ExpenseSplit,
+} from "../types";
 import { expenseLogger } from "@utils/logger";
 
 /**
@@ -98,4 +108,36 @@ export function useDeleteExpense() {
   }, []);
 
   return { remove, loading, error };
+}
+
+/**
+ * Hook for fetching expense splits for an expense
+ */
+export function useGetExpenseSplits() {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+
+  const getSplits = useCallback(
+    async (expenseId: string): Promise<ExpenseSplit[]> => {
+      try {
+        setLoading(true);
+        setError(null);
+        const splits = await getExpenseSplits(expenseId);
+        return splits;
+      } catch (err) {
+        const error =
+          err instanceof Error
+            ? err
+            : new Error("Failed to fetch expense splits");
+        expenseLogger.error("Failed to get expense splits", error);
+        setError(error);
+        return [];
+      } finally {
+        setLoading(false);
+      }
+    },
+    [],
+  );
+
+  return { getSplits, loading, error };
 }

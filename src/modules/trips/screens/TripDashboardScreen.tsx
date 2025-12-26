@@ -18,9 +18,9 @@ import { useRouter, useLocalSearchParams, useNavigation } from "expo-router";
 import { theme } from "@ui/theme";
 import { Button, Card, ConfirmDialog } from "@ui/components";
 import { useTripById } from "../hooks/use-trips";
+import { useUpdateTrip, useDeleteTrip } from "../hooks/use-trip-mutations";
 import { useParticipants } from "../../participants/hooks/use-participants";
 import { useExpenses } from "../../expenses/hooks/use-expenses";
-import { updateTrip, deleteTrip } from "../repository";
 import { useRefreshControl } from "@hooks/use-refresh-control";
 import {
   TripHeader,
@@ -71,6 +71,9 @@ function TripDashboardScreenContent({ tripId }: { tripId: string }) {
     loading: expensesLoading,
     refetch: refetchExpenses,
   } = useExpenses(tripId);
+
+  const { update: updateTripMutation } = useUpdateTrip();
+  const { remove: deleteTripMutation } = useDeleteTrip();
 
   const refetchFunctions = useMemo(
     () => [refetchTrip, refetchParticipants, refetchExpenses],
@@ -128,14 +131,18 @@ function TripDashboardScreenContent({ tripId }: { tripId: string }) {
     }
 
     try {
-      const updated = await updateTrip(tripId, {
+      const updated = await updateTripMutation(tripId, {
         name: nameInput.trim(),
         emoji: emojiInput,
         endDate: endDateInput ? endDateInput.toISOString() : null,
       });
-      navigation.setOptions({ title: updated.name });
-      refetchTrip();
-      setEditingName(false);
+      if (updated) {
+        navigation.setOptions({ title: updated.name });
+        refetchTrip();
+        setEditingName(false);
+      } else {
+        Alert.alert("Error", "Failed to update trip");
+      }
     } catch {
       Alert.alert("Error", "Failed to update trip");
     }
@@ -156,7 +163,7 @@ function TripDashboardScreenContent({ tripId }: { tripId: string }) {
     setShowDeleteConfirm(false);
     setIsDeleting(true);
     try {
-      await deleteTrip(tripId);
+      await deleteTripMutation(tripId);
       router.replace("/");
     } catch {
       Alert.alert("Error", "Failed to delete trip");

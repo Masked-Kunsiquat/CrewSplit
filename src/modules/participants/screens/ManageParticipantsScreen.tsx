@@ -17,8 +17,11 @@ import {
   LoadingScreen,
 } from "@ui/components";
 import { useParticipants } from "../hooks/use-participants";
+import {
+  useAddParticipant,
+  useRemoveParticipant,
+} from "../hooks/use-participant-mutations";
 import { useTripById } from "@modules/trips/hooks/use-trips";
-import { createParticipant, deleteParticipant } from "../repository";
 import { useRefreshControl } from "@hooks/use-refresh-control";
 
 // Predefined avatar colors for new participants
@@ -70,7 +73,6 @@ function ManageParticipantsContent({
   const router = useRouter();
   const [newParticipantName, setNewParticipantName] = useState("");
   const [nameError, setNameError] = useState<string | null>(null);
-  const [isAdding, setIsAdding] = useState(false);
   const [pendingRemoval, setPendingRemoval] = useState<{
     id: string;
     name: string;
@@ -83,6 +85,10 @@ function ManageParticipantsContent({
     error,
     refetch: refetchParticipants,
   } = useParticipants(tripId);
+
+  const { add: addParticipantMutation, loading: isAdding } =
+    useAddParticipant();
+  const { remove: removeParticipantMutation } = useRemoveParticipant();
 
   // Pull-to-refresh support
   const refreshControl = useRefreshControl([refetchTrip, refetchParticipants]);
@@ -103,28 +109,29 @@ function ManageParticipantsContent({
       return;
     }
 
-    setIsAdding(true);
     try {
       // Pick a random color
       const avatarColor =
         AVATAR_COLORS[Math.floor(Math.random() * AVATAR_COLORS.length)];
 
-      await createParticipant({
+      const newParticipant = await addParticipantMutation({
         tripId,
         name: newParticipantName.trim(),
         avatarColor,
       });
 
-      refetchParticipants();
-      setNewParticipantName("");
-      setNameError(null);
+      if (newParticipant) {
+        refetchParticipants();
+        setNewParticipantName("");
+        setNameError(null);
+      } else {
+        Alert.alert("Error", "Failed to add participant");
+      }
     } catch (err) {
       Alert.alert(
         "Error",
         err instanceof Error ? err.message : "Failed to add participant",
       );
-    } finally {
-      setIsAdding(false);
     }
   };
 
@@ -142,7 +149,7 @@ function ManageParticipantsContent({
   const confirmRemoveParticipant = async () => {
     if (!pendingRemoval) return;
     try {
-      await deleteParticipant(pendingRemoval.id);
+      await removeParticipantMutation(pendingRemoval.id);
       refetchParticipants();
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);

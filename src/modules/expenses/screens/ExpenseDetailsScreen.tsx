@@ -27,13 +27,13 @@ import {
 } from "@ui/components";
 import { useExpenseWithSplits } from "../hooks/use-expenses";
 import { useExpenseCategories } from "../hooks/use-expense-categories";
+import { useDeleteExpense } from "../hooks/use-expense-mutations";
 import { useParticipants } from "@modules/participants/hooks/use-participants";
 import { useDisplayCurrency } from "@modules/settings/hooks/use-display-currency";
 import { formatCurrency } from "@utils/currency";
 import { normalizeRouteParam } from "@utils/route-params";
 import { getCategoryIcon } from "@utils/category-icons";
 import { cachedFxRateProvider } from "@modules/fx-rates/provider";
-import { deleteExpense } from "../repository";
 import { currencyLogger } from "@utils/logger";
 import { useRefreshControl } from "@hooks/use-refresh-control";
 import { useFxSync } from "@modules/fx-rates/hooks/use-fx-sync";
@@ -86,7 +86,6 @@ function ExpenseDetailsContent({
   const router = useRouter();
   const navigation = useNavigation();
   const { displayCurrency } = useDisplayCurrency();
-  const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [editingExpense, setEditingExpense] = useState(false);
   const [rateModalVisible, setRateModalVisible] = useState(false);
@@ -108,6 +107,8 @@ function ExpenseDetailsContent({
     refetch: refetchParticipants,
   } = useParticipants(tripId);
   const { categories } = useExpenseCategories(tripId);
+  const { remove: deleteExpenseMutation, loading: isDeleting } =
+    useDeleteExpense();
 
   // FX rate staleness detection and refresh
   const {
@@ -302,13 +303,11 @@ function ExpenseDetailsContent({
 
   const confirmDelete = async () => {
     setShowDeleteConfirm(false);
-    setIsDeleting(true);
     try {
-      await deleteExpense(expenseId);
+      await deleteExpenseMutation(expenseId);
       router.back();
     } catch {
       Alert.alert("Error", "Failed to delete expense");
-      setIsDeleting(false);
     }
   };
 

@@ -7,7 +7,7 @@ import { useState, useCallback, useEffect } from "react";
 import { FxRateRepository } from "../repository";
 import { FxRateService } from "../services";
 import { cachedFxRateProvider } from "../provider";
-import type { StalenessInfo } from "../types";
+import type { StalenessInfo, FxRate } from "../types";
 import { fxLogger } from "@utils/logger";
 
 /**
@@ -114,5 +114,51 @@ export function useFxRates() {
     error,
     /** Clear error */
     clearError: () => setError(null),
+  };
+}
+
+/**
+ * Hook for fetching all active FX rates
+ * Used primarily for displaying rates in admin/debug screens
+ */
+export function useAllFxRates() {
+  const [rates, setRates] = useState<FxRate[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadRates = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const allRates = await FxRateRepository.getAllActiveRates();
+      // Sort by most recently fetched first
+      const sorted = allRates.sort(
+        (a, b) =>
+          new Date(b.fetchedAt).getTime() - new Date(a.fetchedAt).getTime(),
+      );
+      setRates(sorted);
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to load rates";
+      setError(errorMessage);
+      fxLogger.error("Failed to load exchange rates", err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadRates();
+  }, [loadRates]);
+
+  return {
+    /** All active FX rates */
+    rates,
+    /** Loading state */
+    loading,
+    /** Error message (null if no error) */
+    error,
+    /** Refetch rates */
+    refetch: loadRates,
   };
 }
