@@ -3,7 +3,7 @@
  * View existing exchange rates with source, age, and refresh functionality
  */
 
-import React, { useState, useEffect } from "react";
+import React, { useEffect } from "react";
 import {
   View,
   Text,
@@ -16,7 +16,6 @@ import { useRouter, useNavigation } from "expo-router";
 import { theme } from "@ui/theme";
 import { Button, Card, LoadingScreen } from "@ui/components";
 import { useFxRates, useAllFxRates } from "../hooks/use-fx-rates";
-import { fxLogger } from "@utils/logger";
 
 /**
  * Format timestamp as relative time (e.g., "2 days ago")
