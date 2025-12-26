@@ -17,6 +17,7 @@ import type {
   ExpenseSplit,
 } from "../types";
 import { expenseLogger } from "@utils/logger";
+import { createAppError } from "@utils/errors";
 
 /**
  * Hook for creating an expense with splits in a single atomic transaction
@@ -39,7 +40,9 @@ export function useAddExpense() {
         return newExpense;
       } catch (err) {
         const error =
-          err instanceof Error ? err : new Error("Failed to create expense");
+          err instanceof Error
+            ? err
+            : createAppError("OPERATION_FAILED", "Failed to create expense");
         expenseLogger.error("Failed to add expense", error);
         setError(error);
         throw error; // Re-throw so caller can handle
@@ -74,7 +77,9 @@ export function useUpdateExpense() {
         return updated;
       } catch (err) {
         const error =
-          err instanceof Error ? err : new Error("Failed to update expense");
+          err instanceof Error
+            ? err
+            : createAppError("OPERATION_FAILED", "Failed to update expense");
         expenseLogger.error("Failed to update expense", error);
         setError(error);
         throw error; // Re-throw so caller can handle
@@ -105,7 +110,9 @@ export function useDeleteExpense() {
       });
     } catch (err) {
       const error =
-        err instanceof Error ? err : new Error("Failed to delete expense");
+        err instanceof Error
+          ? err
+          : createAppError("OPERATION_FAILED", "Failed to delete expense");
       expenseLogger.error("Failed to delete expense", error);
       setError(error);
       throw error; // Re-throw so caller can handle
@@ -135,7 +142,10 @@ export function useGetExpenseSplits() {
         const error =
           err instanceof Error
             ? err
-            : new Error("Failed to fetch expense splits");
+            : createAppError(
+                "OPERATION_FAILED",
+                "Failed to fetch expense splits",
+              );
         expenseLogger.error("Failed to get expense splits", error);
         setError(error);
         return [];

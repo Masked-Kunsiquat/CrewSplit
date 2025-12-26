@@ -15,6 +15,7 @@ import type {
   UpdateParticipantInput,
 } from "../types";
 import { participantLogger } from "@utils/logger";
+import { createAppError } from "@utils/errors";
 
 /**
  * Hook for adding a new participant
@@ -32,7 +33,9 @@ export function useAddParticipant() {
         return newParticipant;
       } catch (err) {
         const error =
-          err instanceof Error ? err : new Error("Failed to add participant");
+          err instanceof Error
+            ? err
+            : createAppError("OPERATION_FAILED", "Failed to add participant");
         participantLogger.error("Failed to create participant", error);
         setError(error);
         throw error; // Re-throw so caller can handle
@@ -67,7 +70,10 @@ export function useUpdateParticipant() {
         const error =
           err instanceof Error
             ? err
-            : new Error("Failed to update participant");
+            : createAppError(
+                "OPERATION_FAILED",
+                "Failed to update participant",
+              );
         participantLogger.error("Failed to update participant", error);
         setError(error);
         throw error; // Re-throw so caller can handle
@@ -96,7 +102,9 @@ export function useRemoveParticipant() {
       await deleteParticipant(id);
     } catch (err) {
       const error =
-        err instanceof Error ? err : new Error("Failed to remove participant");
+        err instanceof Error
+          ? err
+          : createAppError("OPERATION_FAILED", "Failed to remove participant");
       participantLogger.error("Failed to delete participant", error);
       setError(error);
       throw error; // Re-throw so caller can handle
