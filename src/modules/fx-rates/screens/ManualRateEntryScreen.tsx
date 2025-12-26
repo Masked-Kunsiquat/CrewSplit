@@ -17,7 +17,7 @@ import { useRouter, useLocalSearchParams, useNavigation } from "expo-router";
 import { theme } from "@ui/theme";
 import { Button, Input, Card, ConfirmDialog } from "@ui/components";
 import { CurrencyPicker } from "@ui/components/CurrencyPicker";
-import { cachedFxRateProvider } from "../provider";
+import { useFxRateProvider } from "../context/FxRateContext";
 
 // Configurable threshold for warning about unusually high exchange rates
 // Set high enough to accommodate currencies like KRW, VND, IDR (e.g., 1 USD = 15000+ KRW)
@@ -26,6 +26,7 @@ const UNREALISTIC_RATE_THRESHOLD = 50000;
 export default function ManualRateEntryScreen() {
   const router = useRouter();
   const navigation = useNavigation();
+  const fxRateProvider = useFxRateProvider();
   const params = useLocalSearchParams<{
     fromCurrency?: string;
     toCurrency?: string;
@@ -87,11 +88,7 @@ export default function ManualRateEntryScreen() {
 
     setIsSaving(true);
     try {
-      await cachedFxRateProvider.setManualRate(
-        fromCurrency,
-        toCurrency,
-        rateNum,
-      );
+      await fxRateProvider.setManualRate(fromCurrency, toCurrency, rateNum);
 
       Alert.alert(
         "Rate Saved",

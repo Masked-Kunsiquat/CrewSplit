@@ -6,6 +6,7 @@
 import { useState, useCallback } from "react";
 import { useQuery } from "../../../hooks";
 import { SettlementRepository } from "../repository";
+import { useFxRateProvider } from "@modules/fx-rates";
 import type {
   SettlementWithParticipants,
   NewSettlementData,
@@ -92,6 +93,7 @@ export function useSettlementsForExpense(expenseId: string | null) {
 export function useCreateSettlement() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
+  const fxRateProvider = useFxRateProvider();
 
   const createSettlement = useCallback(
     async (data: NewSettlementData): Promise<SettlementWithParticipants> => {
@@ -99,7 +101,10 @@ export function useCreateSettlement() {
       setError(null);
 
       try {
-        const settlement = await SettlementRepository.createSettlement(data);
+        const settlement = await SettlementRepository.createSettlement(
+          data,
+          fxRateProvider,
+        );
         setLoading(false);
         return settlement;
       } catch (err) {
@@ -109,7 +114,7 @@ export function useCreateSettlement() {
         throw error;
       }
     },
-    [],
+    [fxRateProvider],
   );
 
   return { createSettlement, loading, error };
@@ -122,6 +127,7 @@ export function useCreateSettlement() {
 export function useUpdateSettlement() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
+  const fxRateProvider = useFxRateProvider();
 
   const updateSettlement = useCallback(
     async (
@@ -135,6 +141,7 @@ export function useUpdateSettlement() {
         const settlement = await SettlementRepository.updateSettlement(
           id,
           data,
+          fxRateProvider,
         );
         setLoading(false);
         return settlement;
@@ -145,7 +152,7 @@ export function useUpdateSettlement() {
         throw error;
       }
     },
-    [],
+    [fxRateProvider],
   );
 
   return { updateSettlement, loading, error };

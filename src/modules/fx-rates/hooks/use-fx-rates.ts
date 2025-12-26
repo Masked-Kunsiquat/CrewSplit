@@ -6,7 +6,7 @@
 import { useState, useCallback, useEffect } from "react";
 import { FxRateRepository } from "../repository";
 import { FxRateService } from "../services";
-import { cachedFxRateProvider } from "../provider";
+import { useFxRateProvider } from "../context/FxRateContext";
 import type { StalenessInfo, FxRate } from "../types";
 import { fxLogger } from "@utils/logger";
 
@@ -28,6 +28,7 @@ import { fxLogger } from "@utils/logger";
  * ```
  */
 export function useFxRates() {
+  const fxRateProvider = useFxRateProvider();
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -63,11 +64,8 @@ export function useFxRates() {
     try {
       fxLogger.info("Refreshing FX rates from API");
 
-      // Fetch and persist rates
-      const result = await FxRateService.updateCommonRates();
-
-      // Refresh provider cache
-      await cachedFxRateProvider.refreshCache();
+      // Fetch and persist rates (service will refresh cache)
+      const result = await FxRateService.updateCommonRates(fxRateProvider);
 
       // Reload staleness info
       await loadStalenessInfo();
@@ -85,7 +83,7 @@ export function useFxRates() {
     } finally {
       setRefreshing(false);
     }
-  }, [loadStalenessInfo]);
+  }, [fxRateProvider, loadStalenessInfo]);
 
   /**
    * Initial load of staleness info

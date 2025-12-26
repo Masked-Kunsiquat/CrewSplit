@@ -9,7 +9,7 @@ import {
   drizzleOrmMock as mockDrizzleOrm,
 } from "../test-utils/mock-db";
 import { FxRateService } from "../services/fx-rate-service";
-import { cachedFxRateProvider } from "../provider/cached-fx-rate-provider";
+import { CachedFxRateProvider } from "../provider/cached-fx-rate-provider";
 
 jest.mock("@db/client", () => ({
   db: mockDb,
@@ -55,14 +55,14 @@ jest.mock("../services/exchange-rate-api-service", () => ({
 
 describe("FxRateService integration", () => {
   const now = "2024-01-10T00:00:00.000Z";
+  let testProvider: CachedFxRateProvider;
 
   beforeEach(() => {
     jest.useFakeTimers().setSystemTime(new Date(now));
     mockDb.reset();
     mockFrankfurterLatest.mockReset();
     mockExchangeRateLatest.mockReset();
-    cachedFxRateProvider.clearCache();
-    (cachedFxRateProvider as any).initialized = false;
+    testProvider = new CachedFxRateProvider();
   });
 
   afterEach(() => {
@@ -75,7 +75,10 @@ describe("FxRateService integration", () => {
       { baseCurrency: "USD", quoteCurrency: "GBP", rate: 0.8 },
     ]);
 
-    const result = await FxRateService.updateRates({ baseCurrency: "USD" });
+    const result = await FxRateService.updateRates({
+      baseCurrency: "USD",
+      fxRateProvider: testProvider,
+    });
 
     expect(result.source).toBe("frankfurter");
     expect(result.persistedCount).toBe(2);
@@ -88,7 +91,10 @@ describe("FxRateService integration", () => {
       { baseCurrency: "USD", quoteCurrency: "CAD", rate: 1.35 },
     ]);
 
-    const result = await FxRateService.updateRates({ baseCurrency: "USD" });
+    const result = await FxRateService.updateRates({
+      baseCurrency: "USD",
+      fxRateProvider: testProvider,
+    });
 
     expect(result.source).toBe("exchangerate-api");
     expect(result.persistedCount).toBe(1);
@@ -112,7 +118,7 @@ describe("FxRateService integration", () => {
       { baseCurrency: "USD", quoteCurrency: "JPY", rate: 140 },
     ]);
 
-    const result = await FxRateService.updateCommonRates();
+    const result = await FxRateService.updateCommonRates(testProvider);
     expect(result.source).toBe("frankfurter");
     expect(mockDb.rows.filter((r) => !r.isArchived)).toHaveLength(2);
   });
@@ -122,11 +128,14 @@ describe("FxRateService integration", () => {
       { baseCurrency: "USD", quoteCurrency: "EUR", rate: 0.9 },
     ]);
 
-    await FxRateService.updateRates({ baseCurrency: "USD" });
-    await cachedFxRateProvider.initialize();
-    await cachedFxRateProvider.refreshCache();
+    await FxRateService.updateRates({
+      baseCurrency: "USD",
+      fxRateProvider: testProvider,
+    });
+    await testProvider.initialize();
+    await testProvider.refreshCache();
 
-    expect(cachedFxRateProvider.getRate("USD", "EUR")).toBe(0.9);
-    expect(cachedFxRateProvider.hasRate("USD", "GBP")).toBe(false);
+    expect(testProvider.getRate("USD", "EUR")).toBe(0.9);
+    expect(testProvider.hasRate("USD", "GBP")).toBe(false);
   });
 });
