@@ -10,6 +10,11 @@ import { eq } from "drizzle-orm";
 import { CreateTripInput, Trip, UpdateTripInput } from "../types";
 import { tripLogger } from "@utils/logger";
 
+/**
+ * Transaction type from Drizzle ORM
+ */
+type DbTransaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
+
 const mapTrip = (row: TripRow): Trip => ({
   id: row.id,
   name: row.name,
@@ -23,21 +28,25 @@ const mapTrip = (row: TripRow): Trip => ({
   updatedAt: row.updatedAt,
 });
 
-export const createTrip = async ({
-  name,
-  currencyCode,
-  description,
-  startDate,
-  endDate,
-  emoji,
-}: CreateTripInput): Promise<Trip> => {
+export const createTrip = async (
+  {
+    name,
+    currencyCode,
+    description,
+    startDate,
+    endDate,
+    emoji,
+  }: CreateTripInput,
+  tx?: DbTransaction,
+): Promise<Trip> => {
   const now = new Date().toISOString();
   const tripId = Crypto.randomUUID();
   const effectiveStartDate = startDate ?? now;
 
   tripLogger.debug("Creating trip", { tripId, name, currencyCode, emoji });
 
-  const [created] = await db
+  const dbInstance = tx ?? db;
+  const [created] = await dbInstance
     .insert(tripsTable)
     .values({
       id: tripId,
@@ -63,8 +72,12 @@ export const getTrips = async (): Promise<Trip[]> => {
   return rows.map(mapTrip);
 };
 
-export const getTripById = async (id: string): Promise<Trip | null> => {
-  const rows = await db
+export const getTripById = async (
+  id: string,
+  tx?: DbTransaction,
+): Promise<Trip | null> => {
+  const dbInstance = tx ?? db;
+  const rows = await dbInstance
     .select()
     .from(tripsTable)
     .where(eq(tripsTable.id, id))
@@ -80,6 +93,7 @@ export const getTripById = async (id: string): Promise<Trip | null> => {
 export const updateTrip = async (
   id: string,
   patch: UpdateTripInput,
+  tx?: DbTransaction,
 ): Promise<Trip> => {
   const now = new Date().toISOString();
   const updatePayload: Partial<typeof tripsTable.$inferInsert> = {
@@ -98,7 +112,8 @@ export const updateTrip = async (
 
   tripLogger.debug("Updating trip", { tripId: id });
 
-  const updatedRows = await db
+  const dbInstance = tx ?? db;
+  const updatedRows = await dbInstance
     .update(tripsTable)
     .set(updatePayload)
     .where(eq(tripsTable.id, id))
@@ -113,9 +128,13 @@ export const updateTrip = async (
   return mapTrip(updated);
 };
 
-export const deleteTrip = async (id: string): Promise<void> => {
+export const deleteTrip = async (
+  id: string,
+  tx?: DbTransaction,
+): Promise<void> => {
   tripLogger.info("Deleting trip", { tripId: id });
-  await db.delete(tripsTable).where(eq(tripsTable.id, id));
+  const dbInstance = tx ?? db;
+  await dbInstance.delete(tripsTable).where(eq(tripsTable.id, id));
   tripLogger.info("Trip deleted", { tripId: id });
 };
 

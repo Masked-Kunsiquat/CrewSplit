@@ -17,6 +17,11 @@ import {
 } from "../types";
 import { participantLogger } from "@utils/logger";
 
+/**
+ * Transaction type from Drizzle ORM
+ */
+type DbTransaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
+
 const mapParticipant = (row: ParticipantRow): Participant => ({
   id: row.id,
   tripId: row.tripId,
@@ -27,6 +32,7 @@ const mapParticipant = (row: ParticipantRow): Participant => ({
 
 export const createParticipant = async (
   input: CreateParticipantInput,
+  tx?: DbTransaction,
 ): Promise<Participant> => {
   const now = new Date().toISOString();
   const participantId = Crypto.randomUUID();
@@ -37,7 +43,8 @@ export const createParticipant = async (
     name: input.name,
   });
 
-  const [created] = await db
+  const dbInstance = tx ?? db;
+  const [created] = await dbInstance
     .insert(participantsTable)
     .values({
       id: participantId,
