@@ -301,7 +301,7 @@ export async function deleteBulkTrips(
 
 /**
  * Gets a trip by ID.
- * Simple passthrough for consistency, but adds service-layer logging.
+ * Simple passthrough that validates dependencies and delegates to repository.
  *
  * @param tripId - Trip ID to load
  * @param deps - Injected dependencies (for testing)
