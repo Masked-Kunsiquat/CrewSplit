@@ -189,3 +189,24 @@ export const parseCurrency = (input: string): number => {
   const amount = parseFloat(cleaned) || 0;
   return Math.round(amount * 100);
 };
+
+/**
+ * Convert currency amount using exchange rate
+ *
+ * Uses Math.round() for deterministic rounding to nearest cent.
+ * All amounts are in minor units (cents).
+ *
+ * @param amountMinor - Amount in minor units (cents)
+ * @param fxRate - Exchange rate (fromCurrency / toCurrency)
+ * @returns Converted amount in minor units
+ *
+ * @example
+ * convertCurrency(1000, 1.1) // 1100 (€10.00 → $11.00)
+ * convertCurrency(333, 3) // 999 (rounds 999)
+ */
+export const convertCurrency = (
+  amountMinor: number,
+  fxRate: number,
+): number => {
+  return Math.round(amountMinor * fxRate);
+};

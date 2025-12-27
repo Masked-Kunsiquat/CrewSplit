@@ -30,6 +30,21 @@ module.exports = {
   },
 
   create(context) {
+    const filename = context.filename || context.getFilename();
+
+    // Skip currency.ts - it defines the conversion utilities
+    if (
+      filename.includes("utils/currency.ts") ||
+      filename.includes("utils\\currency.ts")
+    ) {
+      return {};
+    }
+
+    // Skip test files
+    if (filename.includes("__tests__") || filename.includes(".test.")) {
+      return {};
+    }
+
     return {
       CallExpression(node) {
         // Check for Math.round(... * ...)

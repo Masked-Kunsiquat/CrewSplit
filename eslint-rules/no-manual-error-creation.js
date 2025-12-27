@@ -46,6 +46,22 @@ module.exports = {
       return {};
     }
 
+    // Skip engine layer - pure functions should have zero dependencies
+    // Engine functions throw plain Error objects to remain framework-agnostic
+    if (filename.includes("/engine/") || filename.includes("\\engine\\")) {
+      return {};
+    }
+
+    // Skip deprecated wrapper functions that intentionally throw migration errors
+    if (
+      (filename.includes("/repository/index.ts") ||
+        filename.includes("\\repository\\index.ts")) &&
+      context.getSourceCode().getText().includes("@deprecated")
+    ) {
+      // Only skip if the error is in a deprecated function
+      // We'll check this in the node handler
+    }
+
     return {
       NewExpression(node) {
         // Check for new Error(...)
@@ -58,6 +74,42 @@ module.exports = {
             parent.alternate === node
           ) {
             return; // Skip this legitimate use case
+          }
+
+          // Check if this is inside a deprecated function (migration error)
+          let currentNode = node;
+          while (currentNode) {
+            // Check for function declarations and expressions
+            if (
+              currentNode.type === "FunctionDeclaration" ||
+              currentNode.type === "FunctionExpression" ||
+              currentNode.type === "ArrowFunctionExpression"
+            ) {
+              const sourceCode = context.getSourceCode();
+              let nodeToCheck = currentNode;
+
+              // For arrow functions in variable declarations, check the parent VariableDeclarator
+              if (
+                currentNode.type === "ArrowFunctionExpression" &&
+                currentNode.parent &&
+                currentNode.parent.type === "VariableDeclarator"
+              ) {
+                nodeToCheck = currentNode.parent;
+              }
+
+              // Check if there's a @deprecated JSDoc above
+              const comments = sourceCode.getCommentsBefore(nodeToCheck);
+              const hasDeprecated = comments.some(
+                (comment) =>
+                  comment.type === "Block" &&
+                  comment.value.includes("@deprecated"),
+              );
+              if (hasDeprecated) {
+                return; // Skip deprecated functions
+              }
+              break;
+            }
+            currentNode = currentNode.parent;
           }
 
           context.report({
