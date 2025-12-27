@@ -8,7 +8,7 @@
 import { db } from "@db/client";
 import { expenseCategories } from "@db/schema/expense-categories";
 import { eq, and } from "drizzle-orm";
-import type { ICategoryRepository } from "../service/ExpenseService";
+import type { ICategoryRepository } from "../service/types";
 
 export class CategoryRepositoryAdapter implements ICategoryRepository {
   async exists(id: string): Promise<boolean> {

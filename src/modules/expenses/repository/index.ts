@@ -7,6 +7,9 @@
  *
  * This file maintains backward compatibility with existing code while
  * the service layer is being adopted.
+ *
+ * NOTE: Deprecated wrapper functions that called ExpenseService have been removed
+ * to break circular dependencies. Use hooks or service layer directly.
  */
 
 import { db } from "@db/client";
@@ -24,10 +27,10 @@ import {
   UpdateExpenseInput,
 } from "../types";
 import { expenseLogger } from "@utils/logger";
-import * as ExpenseService from "../service/ExpenseService";
+import { createAppError } from "@utils/errors";
+// NOTE: ExpenseService import removed to avoid circular dependency.
+// Use hooks (use-expense-mutations) or service layer directly.
 import { expenseRepositoryImpl } from "./expense-repository-impl";
-import { tripRepositoryAdapter } from "./trip-repository-adapter";
-import { categoryRepositoryAdapter } from "./category-repository-adapter";
 
 const mapSplit = (
   row: typeof expenseSplitsTable.$inferSelect,
@@ -43,16 +46,32 @@ const mapSplit = (
 const mapExpenseRow = (row: ExpenseRow): Expense => mapExpenseFromDb(row);
 
 /**
- * @deprecated Use ExpenseService.createExpense instead
+ * @deprecated This wrapper function has been removed to break circular dependencies.
+ * Use `useExpenseMutations()` hook or call ExpenseService directly from non-repository code.
+ *
+ * Example:
+ * import { createExpense } from '@modules/expenses/service/ExpenseService';
+ * import { expenseRepositoryImpl, tripRepositoryAdapter, categoryRepositoryAdapter } from '@modules/expenses/repository';
+ *
+ * await createExpense(data, {
+ *   expenseRepository: expenseRepositoryImpl,
+ *   tripRepository: tripRepositoryAdapter,
+ *   categoryRepository: categoryRepositoryAdapter,
+ * });
  */
-export const addExpense = async (
-  expenseData: CreateExpenseInput,
-): Promise<Expense> => {
-  return ExpenseService.createExpense(expenseData, {
-    expenseRepository: expenseRepositoryImpl,
-    tripRepository: tripRepositoryAdapter,
-    categoryRepository: categoryRepositoryAdapter,
-  });
+export const addExpense = (expenseData: CreateExpenseInput): never => {
+  throw createAppError(
+    "DEPRECATED_FUNCTION",
+    "addExpense() has been removed to break circular dependencies",
+    {
+      details: {
+        deprecatedFunction: "addExpense",
+        migration:
+          "Use useExpenseMutations() hook or ExpenseService.createExpense() directly",
+        moduleExample: "@modules/expenses/service/ExpenseService",
+      },
+    },
+  );
 };
 
 /**
@@ -86,26 +105,39 @@ export const getExpenseById = async (id: string): Promise<Expense | null> => {
 };
 
 /**
- * @deprecated Use ExpenseService.updateExpense instead
+ * @deprecated This wrapper function has been removed to break circular dependencies.
+ * Use `useExpenseMutations()` hook or call ExpenseService.updateExpense() directly.
  */
-export const updateExpense = async (
-  id: string,
-  patch: UpdateExpenseInput,
-): Promise<Expense> => {
-  return ExpenseService.updateExpense(id, patch, {
-    expenseRepository: expenseRepositoryImpl,
-    tripRepository: tripRepositoryAdapter,
-    categoryRepository: categoryRepositoryAdapter,
-  });
+export const updateExpense = (id: string, patch: UpdateExpenseInput): never => {
+  throw createAppError(
+    "DEPRECATED_FUNCTION",
+    "updateExpense() has been removed to break circular dependencies",
+    {
+      details: {
+        deprecatedFunction: "updateExpense",
+        migration:
+          "Use useExpenseMutations() hook or ExpenseService.updateExpense() directly",
+      },
+    },
+  );
 };
 
 /**
- * @deprecated Use ExpenseService.deleteExpense instead
+ * @deprecated This wrapper function has been removed to break circular dependencies.
+ * Use `useExpenseMutations()` hook or call ExpenseService.deleteExpense() directly.
  */
-export const deleteExpense = async (id: string): Promise<void> => {
-  return ExpenseService.deleteExpense(id, {
-    expenseRepository: expenseRepositoryImpl,
-  });
+export const deleteExpense = (id: string): never => {
+  throw createAppError(
+    "DEPRECATED_FUNCTION",
+    "deleteExpense() has been removed to break circular dependencies",
+    {
+      details: {
+        deprecatedFunction: "deleteExpense",
+        migration:
+          "Use useExpenseMutations() hook or ExpenseService.deleteExpense() directly",
+      },
+    },
+  );
 };
 
 /**

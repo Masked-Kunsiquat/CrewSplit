@@ -19,83 +19,23 @@ import type { Expense, CreateExpenseInput, UpdateExpenseInput } from "../types";
 import { expenseLogger } from "@utils/logger";
 import * as Crypto from "expo-crypto";
 import { createNotFoundError, createAppError } from "@utils/errors";
+import { convertCurrency } from "@utils/currency";
+import type {
+  IExpenseRepository,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Re-exported for public API
+  ITripRepository,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Re-exported for public API
+  ICategoryRepository,
+  ExpenseServiceDependencies,
+} from "./types";
 
-/**
- * Repository interface for expense CRUD operations
- */
-export interface IExpenseRepository {
-  create(data: {
-    id: string;
-    tripId: string;
-    description: string;
-    notes: string | null;
-    amount: number;
-    currency: string;
-    originalCurrency: string;
-    originalAmountMinor: number;
-    fxRateToTrip: number | null;
-    convertedAmountMinor: number;
-    paidBy: string;
-    categoryId: string;
-    date: string;
-    splits: {
-      participantId: string;
-      share: number;
-      shareType: "equal" | "percentage" | "amount" | "weight";
-      amount: number | null;
-    }[];
-  }): Promise<Expense>;
-
-  update(
-    id: string,
-    data: {
-      description?: string;
-      notes?: string | null;
-      amount?: number;
-      currency?: string;
-      originalCurrency?: string;
-      originalAmountMinor?: number;
-      fxRateToTrip?: number | null;
-      convertedAmountMinor?: number;
-      paidBy?: string;
-      categoryId?: string;
-      date?: string;
-      splits?: {
-        participantId: string;
-        share: number;
-        shareType: "equal" | "percentage" | "amount" | "weight";
-        amount: number | null;
-      }[];
-    },
-  ): Promise<Expense>;
-
-  delete(id: string): Promise<void>;
-
-  getById(id: string): Promise<Expense | null>;
-}
-
-/**
- * Repository interface for trip operations
- */
-export interface ITripRepository {
-  getById(id: string): Promise<{ id: string; currencyCode: string } | null>;
-}
-
-/**
- * Category repository interface
- */
-export interface ICategoryRepository {
-  exists(id: string): Promise<boolean>;
-}
-
-/**
- * Dependencies for ExpenseService
- */
-export interface ExpenseServiceDependencies {
-  expenseRepository?: IExpenseRepository;
-  tripRepository?: ITripRepository;
-  categoryRepository?: ICategoryRepository;
-}
+// Re-export types for convenience
+export type {
+  IExpenseRepository,
+  ITripRepository,
+  ICategoryRepository,
+  ExpenseServiceDependencies,
+} from "./types";
 
 /**
  * Creates a new expense with currency conversion and validation.
@@ -380,5 +320,5 @@ function normalizeSplitAmount(
 ): number | null {
   if (amount === undefined || amount === null) return null;
   if (!fxRateToTrip || fxRateToTrip === 1) return amount;
-  return Math.round(amount * fxRateToTrip);
+  return convertCurrency(amount, fxRateToTrip);
 }

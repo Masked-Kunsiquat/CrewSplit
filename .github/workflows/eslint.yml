@@ -30,6 +30,9 @@ jobs:
       - name: Verify migrations
         run: npm run verify-migrations
 
+      - name: Run architecture tests
+        run: npm run arch-test
+
       - name: Install SARIF formatter (no lockfile changes)
         run: npm install @microsoft/eslint-formatter-sarif@3.1.0 --no-save
 
