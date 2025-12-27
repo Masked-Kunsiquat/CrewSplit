@@ -4,7 +4,7 @@
  */
 
 import { Expense as DbExpense, NewExpense } from "../schema/expenses";
-import type { Expense } from "@modules/expenses";
+import type { Expense } from "@modules/expenses/types";
 
 export const mapExpenseFromDb = (record: DbExpense): Expense => ({
   id: record.id,
