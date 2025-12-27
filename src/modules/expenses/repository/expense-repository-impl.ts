@@ -16,7 +16,7 @@ import { mapExpenseFromDb } from "@db/mappers";
 import { eq } from "drizzle-orm";
 import type { Expense } from "../types";
 import { expenseLogger } from "@utils/logger";
-import type { IExpenseRepository } from "../service/ExpenseService";
+import type { IExpenseRepository } from "../service/types";
 import { createNotFoundError } from "@utils/errors";
 
 const mapExpenseRow = (row: ExpenseRow): Expense => mapExpenseFromDb(row);

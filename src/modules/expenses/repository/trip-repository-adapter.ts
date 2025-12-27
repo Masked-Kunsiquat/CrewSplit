@@ -8,7 +8,7 @@
 import { db } from "@db/client";
 import { trips as tripsTable } from "@db/schema/trips";
 import { eq } from "drizzle-orm";
-import type { ITripRepository } from "../service/ExpenseService";
+import type { ITripRepository } from "../service/types";
 
 export class TripRepositoryAdapter implements ITripRepository {
   async getById(
