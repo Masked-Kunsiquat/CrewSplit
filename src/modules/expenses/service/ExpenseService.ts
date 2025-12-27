@@ -19,9 +19,12 @@ import type { Expense, CreateExpenseInput, UpdateExpenseInput } from "../types";
 import { expenseLogger } from "@utils/logger";
 import * as Crypto from "expo-crypto";
 import { createNotFoundError, createAppError } from "@utils/errors";
+import { convertCurrency } from "@utils/currency";
 import type {
   IExpenseRepository,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Re-exported for public API
   ITripRepository,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Re-exported for public API
   ICategoryRepository,
   ExpenseServiceDependencies,
 } from "./types";
@@ -317,5 +320,5 @@ function normalizeSplitAmount(
 ): number | null {
   if (amount === undefined || amount === null) return null;
   if (!fxRateToTrip || fxRateToTrip === 1) return amount;
-  return Math.round(amount * fxRateToTrip);
+  return convertCurrency(amount, fxRateToTrip);
 }

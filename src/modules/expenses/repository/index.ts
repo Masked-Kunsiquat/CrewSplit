@@ -27,6 +27,7 @@ import {
   UpdateExpenseInput,
 } from "../types";
 import { expenseLogger } from "@utils/logger";
+import { createAppError } from "@utils/errors";
 // NOTE: ExpenseService import removed to avoid circular dependency.
 // Use hooks (use-expense-mutations) or service layer directly.
 import { expenseRepositoryImpl } from "./expense-repository-impl";
@@ -59,8 +60,17 @@ const mapExpenseRow = (row: ExpenseRow): Expense => mapExpenseFromDb(row);
  * });
  */
 export const addExpense = (expenseData: CreateExpenseInput): never => {
-  throw new Error(
-    "addExpense() has been removed. Use useExpenseMutations() hook or ExpenseService.createExpense() directly.",
+  throw createAppError(
+    "DEPRECATED_FUNCTION",
+    "addExpense() has been removed to break circular dependencies",
+    {
+      details: {
+        deprecatedFunction: "addExpense",
+        migration:
+          "Use useExpenseMutations() hook or ExpenseService.createExpense() directly",
+        moduleExample: "@modules/expenses/service/ExpenseService",
+      },
+    },
   );
 };
 
@@ -99,8 +109,16 @@ export const getExpenseById = async (id: string): Promise<Expense | null> => {
  * Use `useExpenseMutations()` hook or call ExpenseService.updateExpense() directly.
  */
 export const updateExpense = (id: string, patch: UpdateExpenseInput): never => {
-  throw new Error(
-    "updateExpense() has been removed. Use useExpenseMutations() hook or ExpenseService.updateExpense() directly.",
+  throw createAppError(
+    "DEPRECATED_FUNCTION",
+    "updateExpense() has been removed to break circular dependencies",
+    {
+      details: {
+        deprecatedFunction: "updateExpense",
+        migration:
+          "Use useExpenseMutations() hook or ExpenseService.updateExpense() directly",
+      },
+    },
   );
 };
 
@@ -109,8 +127,16 @@ export const updateExpense = (id: string, patch: UpdateExpenseInput): never => {
  * Use `useExpenseMutations()` hook or call ExpenseService.deleteExpense() directly.
  */
 export const deleteExpense = (id: string): never => {
-  throw new Error(
-    "deleteExpense() has been removed. Use useExpenseMutations() hook or ExpenseService.deleteExpense() directly.",
+  throw createAppError(
+    "DEPRECATED_FUNCTION",
+    "deleteExpense() has been removed to break circular dependencies",
+    {
+      details: {
+        deprecatedFunction: "deleteExpense",
+        migration:
+          "Use useExpenseMutations() hook or ExpenseService.deleteExpense() directly",
+      },
+    },
   );
 };
 
