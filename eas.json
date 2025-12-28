@@ -16,6 +16,20 @@
       "android": {
         "buildType": "apk"
       }
+    },
+    "e2e-test": {
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk",
+        "gradleCommand": ":app:assembleRelease"
+      },
+      "ios": {
+        "simulator": true,
+        "buildConfiguration": "Release"
+      },
+      "env": {
+        "DETOX_ENABLED": "true"
+      }
     }
   },
   "submit": {

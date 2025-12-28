@@ -52,6 +52,25 @@ The project uses automated GitHub workflows for versioning and releases:
 
 **Important**: Only version bumps trigger builds. Merging without changing version won't create tags or builds.
 
+### E2E Testing & Demo Generation
+
+The project uses Maestro for end-to-end testing and creating demo videos/GIFs:
+
+```bash
+npm run e2e:build:android   # Build E2E test APK
+npm run e2e:build:ios       # Build E2E test app (iOS simulator)
+npm run e2e:test            # Run Maestro test flow
+npm run e2e:demo            # Run flow with video recording
+```
+
+**Quick demo generation**:
+```bash
+npm run e2e:demo
+./.maestro/convert-to-gif.sh  # Convert recording to optimized GIF
+```
+
+See [.maestro/QUICKSTART.md](.maestro/QUICKSTART.md) for full guide.
+
 ## Architecture Principles
 
 ### 1. Agent-Based Role System
