@@ -16,6 +16,7 @@
     "arch-test:html": "dependency-cruiser --config .dependency-cruiser.js --output-type err-html --output-to architecture-report.html src"
   },
   "dependencies": {
+    "@automerge/automerge": "^3.2.1",
     "@expo/vector-icons": "^15.0.3",
     "@marceloterreiro/flash-calendar": "^1.6.0",
     "@react-native-async-storage/async-storage": "2.2.0",
