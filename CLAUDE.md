@@ -52,6 +52,30 @@ The project uses automated GitHub workflows for versioning and releases:
 
 **Important**: Only version bumps trigger builds. Merging without changing version won't create tags or builds.
 
+### E2E Testing & Demo Generation
+
+The project uses Maestro for end-to-end testing on EAS cloud (no Docker required!):
+
+```bash
+npm run e2e:cloud   # Run E2E tests on EAS cloud (recommended)
+npm run e2e:local   # Run Maestro flow locally
+npm run e2e:demo    # Run locally with video recording
+```
+
+**EAS Cloud Testing** (automatic on PRs):
+- Tests run automatically on pull requests to `main` or `expo-e2e`
+- No local setup, Docker, or builds needed
+- Results appear in EAS dashboard
+
+**Local Demo Generation**:
+```bash
+npm start  # Terminal 1
+npm run e2e:demo  # Terminal 2
+./.maestro/convert-to-gif.sh  # Convert to GIF
+```
+
+See [.maestro/QUICKSTART.md](.maestro/QUICKSTART.md) for full guide.
+
 ## Architecture Principles
 
 ### 1. Agent-Based Role System

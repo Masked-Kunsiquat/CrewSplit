@@ -1,0 +1,12 @@
+# Ignore Maestro recordings and temporary files
+*.mp4
+*.mov
+*.gif
+*.avi
+
+# But keep the demo flow and documentation
+!README.md
+!QUICKSTART.md
+!*.yaml
+!*.sh
+!*.bat

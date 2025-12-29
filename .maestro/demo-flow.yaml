@@ -1,0 +1,123 @@
+appId: com.crewsplit.app
+---
+# CrewSplit Demo Flow - Full Feature Showcase
+# Duration: ~30 seconds at 1x speed
+# This flow demonstrates: trip creation, expense tracking, settlements, statistics, and participant details
+
+# ============================================
+# SCENE 1: Quick Create (5 seconds)
+# ============================================
+- launchApp:
+    clearState: true
+
+# Wait for app to fully load with sample data
+- waitForAnimationToEnd:
+    timeout: 5000
+
+# Tap the "Create Trip" button in the footer
+- tapOn: "Create Trip"
+
+# Wait for create trip screen to appear
+- waitForAnimationToEnd
+
+# Tap the trip name input field (should auto-focus but tap to ensure)
+- tapOn: "Trip name"
+
+# Type trip name
+- inputText: "Coffee Run"
+
+# Tap the "Create Trip" button at bottom
+- tapOn: "Create Trip"
+
+# Wait for navigation back to home
+- waitForAnimationToEnd
+
+# ============================================
+# SCENE 2: Browse Rich Sample Data (15 seconds)
+# ============================================
+
+# Tap into the Weekend Ski Trip sample
+- tapOn: "Weekend Ski Trip"
+
+# Wait for trip dashboard to load
+- waitForAnimationToEnd
+
+# Tap the "Expenses" action card
+- tapOn: "Expenses"
+
+# Wait for expenses list to load
+- waitForAnimationToEnd
+
+# Scroll to show variety of expenses
+- scroll
+
+# Tap into first expense to show detail
+- tapOn:
+    index: 0
+
+# Go back to expenses list
+- back
+- waitForAnimationToEnd
+
+# Go back to trip dashboard
+- back
+- waitForAnimationToEnd
+
+# Navigate to Settlement card
+- tapOn: "Settlement"
+
+# Wait for settlement screen
+- waitForAnimationToEnd
+
+# ============================================
+# SCENE 3: Deep Insights - Statistics (8 seconds)
+# ============================================
+
+# Go back to dashboard
+- back
+- waitForAnimationToEnd
+
+# Navigate to Statistics card
+- tapOn: "Statistics"
+
+# Wait for statistics screen with charts
+- waitForAnimationToEnd
+
+# Scroll down to see participant breakdown
+- scroll
+
+# Tap into first participant detail
+- tapOn:
+    index: 0
+
+# Wait for participant detail screen
+- waitForAnimationToEnd
+
+# Toggle between views
+- tapOn: "Part Of"
+- tapOn: "Paid By"
+
+# ============================================
+# SCENE 4: Settlement Detail (2 seconds)
+# ============================================
+
+# Navigate back to statistics
+- back
+- waitForAnimationToEnd
+
+# Go back to dashboard
+- back
+- waitForAnimationToEnd
+
+# Go to Settlement card again
+- tapOn: "Settlement"
+- waitForAnimationToEnd
+
+# Tap on first settlement card
+- tapOn:
+    index: 0
+
+# Dismiss modal
+- back
+
+# End of demo flow
