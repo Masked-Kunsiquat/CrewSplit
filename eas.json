@@ -18,17 +18,15 @@
       }
     },
     "e2e-test": {
-      "distribution": "internal",
+      "withoutCredentials": true,
       "android": {
-        "buildType": "apk",
-        "gradleCommand": ":app:assembleRelease"
+        "buildType": "apk"
       },
       "ios": {
-        "simulator": true,
-        "buildConfiguration": "Release"
+        "simulator": true
       },
       "env": {
-        "DETOX_ENABLED": "true"
+        "E2E_ENABLED": "true"
       }
     }
   },

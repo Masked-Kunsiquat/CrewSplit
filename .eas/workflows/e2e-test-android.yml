@@ -1,0 +1,22 @@
+name: e2e-test-android
+
+on:
+  pull_request:
+    branches: ['main', 'expo-e2e']
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  build_android_for_e2e:
+    name: Build Android APK for E2E
+    type: build
+    params:
+      platform: android
+      profile: e2e-test
+
+  maestro_test:
+    name: Run Maestro E2E Tests
+    needs: [build_android_for_e2e]
+    type: maestro
+    params:
+      build_id: ${{ needs.build_android_for_e2e.outputs.build_id }}
+      flow_path: ['.maestro/demo-flow.yaml']

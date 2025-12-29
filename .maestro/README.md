@@ -10,7 +10,24 @@ This directory contains Maestro flows for end-to-end testing and generating demo
 
 ## Quick Start
 
-### 1. Install Maestro CLI
+### Option A: Run on EAS Cloud (Recommended - No Docker!)
+
+**Automatic on Pull Requests:**
+E2E tests run automatically when you create a PR to `main` or `expo-e2e` branches.
+
+**Manual Trigger:**
+```bash
+# Run E2E test workflow on EAS cloud
+npx eas-cli@latest workflow:run .eas/workflows/e2e-test-android.yml
+```
+
+EAS handles everything: builds the APK, runs Maestro tests, and provides results. No local setup needed!
+
+---
+
+### Option B: Run Locally (For Demo Recording)
+
+**1. Install Maestro CLI**
 
 ```bash
 # macOS/Linux
@@ -23,21 +40,7 @@ curl -Ls "https://get.maestro.mobile.dev" | bash
 maestro --version
 ```
 
-### 2. Build the App for E2E
-
-```bash
-# Build Android APK for E2E testing
-eas build --profile e2e-test --platform android --local
-
-# Build iOS for simulator (macOS only)
-eas build --profile e2e-test --platform ios --local
-```
-
-This creates optimized builds in the `e2e-test` profile configured in [eas.json](../eas.json).
-
-### 3. Run Maestro Flows Locally
-
-#### Option A: Run against local dev build
+**2. Run Against Dev Build**
 
 ```bash
 # Start Expo dev server
@@ -47,17 +50,7 @@ npm start
 maestro test .maestro/demo-flow.yaml
 ```
 
-#### Option B: Run against APK/App build
-
-```bash
-# Android
-maestro test .maestro/demo-flow.yaml --app path/to/app.apk
-
-# iOS (simulator)
-maestro test .maestro/demo-flow.yaml --app path/to/app.app
-```
-
-### 4. Record Demo Video/GIF
+**3. Record Demo Video**
 
 Maestro automatically records screen during test execution:
 
@@ -212,47 +205,59 @@ ffmpeg -i recording.mp4 -filter:v "setpts=1.33*PTS" recording-slow.mp4
 
 ## Running on EAS Cloud
 
-To run E2E tests in CI/CD with EAS:
+### Workflow Configuration
 
-### 1. Create EAS Workflow
-
-Create `.eas/workflows/e2e-test.yml`:
+EAS workflows are defined in [`.eas/workflows/e2e-test-android.yml`](../.eas/workflows/e2e-test-android.yml):
 
 ```yaml
-build:
-  name: Build E2E Test APK
-  steps:
-    - eas/checkout
-    - eas/install_dependencies
-    - eas/prebuild
-    - eas/build:
-        profile: e2e-test
-        platform: android
+name: e2e-test-android
 
-test:
-  name: Run Maestro E2E Tests
-  steps:
-    - eas/checkout
-    - eas/install_dependencies
-    - run:
-        name: Install Maestro CLI
-        command: |
-          curl -Ls "https://get.maestro.mobile.dev" | bash
-          export PATH="$PATH:$HOME/.maestro/bin"
-    - run:
-        name: Run demo flow
-        command: maestro test .maestro/demo-flow.yaml --app build-output.apk
-```
-
-### 2. Trigger on PR
-
-Configure trigger in workflow file:
-
-```yaml
 on:
   pull_request:
-    branches: [main]
+    branches: ['main', 'expo-e2e']
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  build_android_for_e2e:
+    name: Build Android APK for E2E
+    type: build
+    params:
+      platform: android
+      profile: e2e-test
+
+  maestro_test:
+    name: Run Maestro E2E Tests
+    needs: [build_android_for_e2e]
+    type: maestro
+    params:
+      build_id: ${{ needs.build_android_for_e2e.outputs.build_id }}
+      flow_path: ['.maestro/demo-flow.yaml']
 ```
+
+### How It Works
+
+1. **Trigger**: Workflow runs automatically on PRs or manually via CLI
+2. **Build**: EAS builds the Android APK using the `e2e-test` profile
+3. **Test**: Maestro runs `demo-flow.yaml` on EAS cloud infrastructure
+4. **Results**: Test results appear in the EAS dashboard
+
+### Manual Execution
+
+```bash
+# Run workflow manually
+npx eas-cli@latest workflow:run .eas/workflows/e2e-test-android.yml
+
+# View workflow status
+npx eas-cli@latest workflow:list
+```
+
+### Benefits of EAS Cloud
+
+- ✅ **No Docker required** - EAS handles infrastructure
+- ✅ **No local builds** - Runs entirely in the cloud
+- ✅ **Automatic on PRs** - Catches regressions before merge
+- ✅ **Parallel execution** - Can run multiple tests simultaneously
+- ✅ **Built-in reporting** - Results integrated with EAS dashboard
 
 ---
 

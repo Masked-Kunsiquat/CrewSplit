@@ -1,8 +1,28 @@
-# E2E Demo Generation - Quick Start
+# E2E Testing - Quick Start
 
-Generate a demo GIF of CrewSplit in 3 steps! 🎬
+Run CrewSplit E2E tests on EAS cloud or generate demo GIFs locally! 🎬
 
-## Prerequisites
+## Option A: Run Tests on EAS Cloud (Recommended)
+
+**No setup required!** Tests run automatically on pull requests.
+
+### Manual Trigger
+
+```bash
+# Run E2E workflow on EAS cloud
+npx eas-cli@latest workflow:run .eas/workflows/e2e-test-android.yml
+```
+
+**Benefits:**
+- ✅ No Docker, no local builds
+- ✅ Runs entirely in the cloud
+- ✅ Automatic on PRs to `main` or `expo-e2e`
+
+---
+
+## Option B: Generate Demo GIF Locally
+
+### Prerequisites
 
 1. **Install Maestro CLI**
    ```bash
@@ -27,20 +47,20 @@ Generate a demo GIF of CrewSplit in 3 steps! 🎬
    sudo apt install gifsicle  # Ubuntu
    ```
 
-## Generate Demo (3 Steps)
+## Generate Demo (2 Steps)
 
-### Step 1: Build E2E App
+### Step 1: Run Against Dev Build
 
 ```bash
-npm run e2e:build:android
+# Start Expo
+npm start
 ```
-
-This creates an optimized APK for testing. The build will be saved locally.
 
 ### Step 2: Run Demo Flow with Recording
 
 ```bash
-npm run e2e:demo
+# In another terminal, run Maestro flow
+maestro test .maestro/demo-flow.yaml --format mp4
 ```
 
 This runs the demo flow and records a video. The recording is saved to `~/.maestro/tests/[timestamp]/recording.mp4`.
@@ -70,10 +90,15 @@ ffmpeg -i recording.mp4 \
 
 ---
 
-## One-Liner (after initial setup)
+## Quick Commands
 
 ```bash
-npm run e2e:demo && ./.maestro/convert-to-gif.sh
+# Run E2E tests on EAS cloud
+npx eas-cli@latest workflow:run .eas/workflows/e2e-test-android.yml
+
+# Generate demo GIF locally
+npm start  # Terminal 1
+maestro test .maestro/demo-flow.yaml --format mp4 && ./.maestro/convert-to-gif.sh  # Terminal 2
 ```
 
 ---
