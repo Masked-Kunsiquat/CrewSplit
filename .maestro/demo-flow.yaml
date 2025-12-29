@@ -14,9 +14,6 @@ appId: com.crewsplit.app
 - waitForAnimationToEnd:
     timeout: 5000
 
-# Small delay to show home screen with sample trips
-- wait: 1000
-
 # Tap the "Create Trip" button in the footer
 - tapOn: "Create Trip"
 
@@ -34,7 +31,6 @@ appId: com.crewsplit.app
 
 # Wait for navigation back to home
 - waitForAnimationToEnd
-- wait: 500
 
 # ============================================
 # SCENE 2: Browse Rich Sample Data (15 seconds)
@@ -45,25 +41,19 @@ appId: com.crewsplit.app
 
 # Wait for trip dashboard to load
 - waitForAnimationToEnd
-- wait: 1000
 
 # Tap the "Expenses" action card
 - tapOn: "Expenses"
 
 # Wait for expenses list to load
 - waitForAnimationToEnd
-- wait: 1000
 
 # Scroll to show variety of expenses
 - scroll
 
-# Wait to show scrolled content
-- wait: 500
-
 # Tap into first expense to show detail
 - tapOn:
     index: 0
-- wait: 1000
 
 # Go back to expenses list
 - back
@@ -78,7 +68,6 @@ appId: com.crewsplit.app
 
 # Wait for settlement screen
 - waitForAnimationToEnd
-- wait: 1500
 
 # ============================================
 # SCENE 3: Deep Insights - Statistics (8 seconds)
@@ -94,14 +83,8 @@ appId: com.crewsplit.app
 # Wait for statistics screen with charts
 - waitForAnimationToEnd
 
-# Pause to show pie chart and summary stats
-- wait: 2000
-
 # Scroll down to see participant breakdown
 - scroll
-
-# Wait to show participant list
-- wait: 1000
 
 # Tap into first participant detail
 - tapOn:
@@ -109,13 +92,10 @@ appId: com.crewsplit.app
 
 # Wait for participant detail screen
 - waitForAnimationToEnd
-- wait: 2000
 
-# Optional: Toggle between views
+# Toggle between views
 - tapOn: "Part Of"
-- wait: 500
 - tapOn: "Paid By"
-- wait: 500
 
 # ============================================
 # SCENE 4: Settlement Detail (2 seconds)
@@ -132,19 +112,12 @@ appId: com.crewsplit.app
 # Go to Settlement card again
 - tapOn: "Settlement"
 - waitForAnimationToEnd
-- wait: 1000
 
 # Tap on first settlement card
 - tapOn:
     index: 0
 
-# Show settlement detail (with "Mark as Paid" button visible)
-- wait: 1500
-
 # Dismiss modal
 - back
-
-# Final pause to show settlements list
-- wait: 1000
 
 # End of demo flow
