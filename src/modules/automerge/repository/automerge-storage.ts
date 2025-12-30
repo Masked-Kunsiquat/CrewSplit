@@ -76,7 +76,14 @@ export async function saveDoc<T>(
     const binary = Automerge.save(doc);
 
     // Convert to base64 for storage (expo-file-system requirement)
-    const base64 = btoa(String.fromCharCode(...binary));
+    // Use chunked conversion to avoid stack overflow with large documents
+    const CHUNK_SIZE = 8192; // Process 8KB at a time
+    let binaryString = "";
+    for (let i = 0; i < binary.length; i += CHUNK_SIZE) {
+      const chunk = binary.slice(i, i + CHUNK_SIZE);
+      binaryString += String.fromCharCode(...Array.from(chunk));
+    }
+    const base64 = btoa(binaryString);
 
     // Write to filesystem
     await FileSystem.writeAsStringAsync(filePath, base64, {
