@@ -91,6 +91,21 @@ export function TripActionCards({
             : "View trip insights and breakdowns"}
         </Text>
       </Card>
+
+      <Card
+        style={styles.actionCard}
+        onPress={() =>
+          onNavigate({
+            pathname: "/trips/[id]/history" as any,
+            params: { id: tripId },
+          })
+        }
+      >
+        <Text style={styles.actionTitle}>History</Text>
+        <Text style={styles.actionBody}>
+          View all changes made to this trip
+        </Text>
+      </Card>
     </View>
   );
 }
