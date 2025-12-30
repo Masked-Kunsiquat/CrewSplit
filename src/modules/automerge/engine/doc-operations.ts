@@ -94,7 +94,7 @@ export function updateTripMetadata(
     startDate?: string;
     endDate?: string | null;
   },
-  updatedAt: string
+  updatedAt: string,
 ): Partial<TripAutomergeDoc> {
   return {
     ...updates,
@@ -157,7 +157,7 @@ export function updateParticipant(
     name?: string;
     color?: string;
   },
-  updatedAt: string
+  updatedAt: string,
 ): Partial<TripParticipant> {
   return {
     ...updates,
@@ -264,7 +264,7 @@ export function updateExpense(
       };
     };
   },
-  updatedAt: string
+  updatedAt: string,
 ): Partial<TripExpense> {
   return {
     ...updates,
@@ -358,7 +358,7 @@ export function updateSettlement(
     description?: string | null;
     paymentMethod?: string | null;
   },
-  updatedAt: string
+  updatedAt: string,
 ): Partial<TripSettlement> {
   return {
     ...updates,

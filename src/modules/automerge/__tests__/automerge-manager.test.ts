@@ -6,36 +6,38 @@
  */
 
 import * as Automerge from "@automerge/automerge";
-import { AutomergeManager, IAutomergeStorage } from "../service/AutomergeManager";
-import type { TripAutomergeDoc, TripParticipant } from "../types";
+import {
+  AutomergeManager,
+  IAutomergeStorage,
+} from "../service/AutomergeManager";
+import type { TripAutomergeDoc } from "../types";
 import { CURRENT_SCHEMA_VERSION } from "../engine/doc-schema";
 
 // Helper to create test document
-function createTestDoc(overrides: Partial<TripAutomergeDoc> = {}): Automerge.Doc<TripAutomergeDoc> {
-  let doc = Automerge.init<TripAutomergeDoc>();
-  doc = Automerge.change(doc, "init", (d) => {
-    (d as any).id = "trip-1";
-    (d as any).name = "Test Trip";
-    (d as any).emoji = "🌍";
-    (d as any).currency = "USD";
-    (d as any).startDate = "2024-01-01";
-    (d as any).endDate = null;
-    (d as any).createdAt = "2024-01-01T00:00:00Z";
-    (d as any).updatedAt = "2024-01-01T00:00:00Z";
-    (d as any).participants = {};
-    (d as any).expenses = {};
-    (d as any).settlements = {};
-    (d as any)._metadata = {
+function createTestDoc(
+  overrides: Partial<TripAutomergeDoc> = {},
+): Automerge.Doc<TripAutomergeDoc> {
+  const doc = Automerge.change(Automerge.init(), "init", (d: any) => {
+    d.id = "trip-1";
+    d.name = "Test Trip";
+    d.emoji = "🌍";
+    d.currency = "USD";
+    d.startDate = "2024-01-01";
+    d.endDate = null;
+    d.createdAt = "2024-01-01T00:00:00Z";
+    d.updatedAt = "2024-01-01T00:00:00Z";
+    d.participants = {};
+    d.expenses = {};
+    d.settlements = {};
+    d._metadata = {
       schemaVersion: CURRENT_SCHEMA_VERSION,
       lastSyncedAt: null,
     };
 
     // Apply overrides
-    for (const [key, value] of Object.entries(overrides)) {
-      (d as any)[key] = value;
-    }
+    Object.assign(d, overrides);
   });
-  return doc;
+  return doc as Automerge.Doc<TripAutomergeDoc>;
 }
 
 describe("AutomergeManager", () => {
@@ -72,7 +74,10 @@ describe("AutomergeManager", () => {
       expect(doc.emoji).toBe("🗼");
       expect(doc.currency).toBe("EUR");
       expect(doc._metadata.schemaVersion).toBe(CURRENT_SCHEMA_VERSION);
-      expect(mockStorage.saveDoc).toHaveBeenCalledWith("trip-1", expect.anything());
+      expect(mockStorage.saveDoc).toHaveBeenCalledWith(
+        "trip-1",
+        expect.anything(),
+      );
     });
 
     it("should create document with empty collections", async () => {
@@ -136,7 +141,9 @@ describe("AutomergeManager", () => {
         exists: true,
       });
 
-      await expect(manager.loadTrip("trip-1")).rejects.toThrow("failed validation");
+      await expect(manager.loadTrip("trip-1")).rejects.toThrow(
+        "failed validation",
+      );
     });
   });
 
@@ -213,15 +220,19 @@ describe("AutomergeManager", () => {
 
   describe("addExpense", () => {
     it("should add an expense to the trip", async () => {
-      const existingDoc = Automerge.change(createTestDoc(), "add participant", (d) => {
-        d.participants.p1 = {
-          id: "p1",
-          name: "Alice",
-          color: "#FF5733",
-          createdAt: "2024-01-01T00:00:00Z",
-          updatedAt: "2024-01-01T00:00:00Z",
-        };
-      });
+      const existingDoc = Automerge.change(
+        createTestDoc(),
+        "add participant",
+        (d) => {
+          d.participants.p1 = {
+            id: "p1",
+            name: "Alice",
+            color: "#FF5733",
+            createdAt: "2024-01-01T00:00:00Z",
+            updatedAt: "2024-01-01T00:00:00Z",
+          };
+        },
+      );
 
       mockStorage.loadDoc.mockResolvedValue({
         doc: existingDoc,
@@ -252,22 +263,26 @@ describe("AutomergeManager", () => {
 
   describe("addSettlement", () => {
     it("should add a settlement to the trip", async () => {
-      const existingDoc = Automerge.change(createTestDoc(), "add participants", (d) => {
-        (d as any).participants.p1 = {
-          id: "p1",
-          name: "Alice",
-          color: "#FF5733",
-          createdAt: "2024-01-01T00:00:00Z",
-          updatedAt: "2024-01-01T00:00:00Z",
-        };
-        (d as any).participants.p2 = {
-          id: "p2",
-          name: "Bob",
-          color: "#33FF57",
-          createdAt: "2024-01-01T00:00:00Z",
-          updatedAt: "2024-01-01T00:00:00Z",
-        };
-      });
+      const existingDoc = Automerge.change(
+        createTestDoc(),
+        "add participants",
+        (d) => {
+          (d as any).participants.p1 = {
+            id: "p1",
+            name: "Alice",
+            color: "#FF5733",
+            createdAt: "2024-01-01T00:00:00Z",
+            updatedAt: "2024-01-01T00:00:00Z",
+          };
+          (d as any).participants.p2 = {
+            id: "p2",
+            name: "Bob",
+            color: "#33FF57",
+            createdAt: "2024-01-01T00:00:00Z",
+            updatedAt: "2024-01-01T00:00:00Z",
+          };
+        },
+      );
 
       mockStorage.loadDoc.mockResolvedValue({
         doc: existingDoc,

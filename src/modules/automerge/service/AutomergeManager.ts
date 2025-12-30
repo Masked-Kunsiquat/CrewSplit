@@ -15,14 +15,12 @@
 import * as Automerge from "@automerge/automerge";
 import * as Storage from "../repository/automerge-storage";
 import {
-  createEmptyTripDoc,
   updateTripMetadata,
   createParticipant,
   updateParticipant,
   createExpense,
   updateExpense,
   createSettlement,
-  updateSettlement,
   validateTripDoc,
 } from "../engine/doc-operations";
 import { CURRENT_SCHEMA_VERSION } from "../engine/doc-schema";
@@ -90,27 +88,29 @@ export class AutomergeManager {
   }): Promise<Automerge.Doc<TripAutomergeDoc>> {
     const now = new Date().toISOString();
 
-    // Create empty document first
-    let doc = Automerge.init<TripAutomergeDoc>();
-
-    // Apply changes using change function
-    doc = Automerge.change(doc, "Initialize trip", (d) => {
-      (d as any).id = tripData.id;
-      (d as any).name = tripData.name;
-      (d as any).emoji = tripData.emoji;
-      (d as any).currency = tripData.currency;
-      (d as any).startDate = tripData.startDate;
-      (d as any).endDate = tripData.endDate;
-      (d as any).createdAt = now;
-      (d as any).updatedAt = now;
-      (d as any).participants = {};
-      (d as any).expenses = {};
-      (d as any).settlements = {};
-      (d as any)._metadata = {
-        schemaVersion: CURRENT_SCHEMA_VERSION,
-        lastSyncedAt: null,
-      };
-    });
+    // Create and initialize document (Automerge 3.x pattern)
+    // Note: Cannot use generics with init() - must use runtime typing
+    const doc = Automerge.change(
+      Automerge.init(),
+      "Initialize trip",
+      (d: any) => {
+        d.id = tripData.id;
+        d.name = tripData.name;
+        d.emoji = tripData.emoji;
+        d.currency = tripData.currency;
+        d.startDate = tripData.startDate;
+        d.endDate = tripData.endDate;
+        d.createdAt = now;
+        d.updatedAt = now;
+        d.participants = {};
+        d.expenses = {};
+        d.settlements = {};
+        d._metadata = {
+          schemaVersion: CURRENT_SCHEMA_VERSION,
+          lastSyncedAt: null,
+        };
+      },
+    ) as Automerge.Doc<TripAutomergeDoc>;
 
     // Save to filesystem
     await this.storage.saveDoc(tripData.id, doc);

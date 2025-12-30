@@ -8,12 +8,11 @@
 
 import * as Automerge from "@automerge/automerge";
 import { AutomergeManager } from "../service/AutomergeManager";
-import type { TripAutomergeDoc } from "../types";
 
 // Mock expo-file-system
 const mockFileSystem: Record<string, string> = {};
 
-jest.mock("expo-file-system", () => ({
+jest.mock("expo-file-system/legacy", () => ({
   documentDirectory: "file:///mock/",
   getInfoAsync: jest.fn((path: string) => {
     return Promise.resolve({ exists: path in mockFileSystem });
@@ -87,11 +86,14 @@ describe("Automerge Integration", () => {
       });
 
       // Add participant
-      const withParticipant = await manager.addParticipant("trip-participants", {
-        id: "p1",
-        name: "Alice",
-        color: "#FF5733",
-      });
+      const withParticipant = await manager.addParticipant(
+        "trip-participants",
+        {
+          id: "p1",
+          name: "Alice",
+          color: "#FF5733",
+        },
+      );
 
       expect(withParticipant.participants["p1"]).toBeDefined();
       expect(withParticipant.participants["p1"].name).toBe("Alice");
@@ -347,7 +349,7 @@ describe("Automerge Integration", () => {
   describe("Automerge CRDT properties", () => {
     it("should preserve document history", async () => {
       // Create trip
-      const doc1 = await manager.createTrip({
+      await manager.createTrip({
         id: "trip-history",
         name: "History Test",
         emoji: "📜",

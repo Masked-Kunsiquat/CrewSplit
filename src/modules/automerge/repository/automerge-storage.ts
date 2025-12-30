@@ -7,7 +7,7 @@
  * Uses expo-file-system for file operations.
  */
 
-import * as FileSystem from "expo-file-system";
+import * as FileSystem from "expo-file-system/legacy";
 import * as Automerge from "@automerge/automerge";
 import { createAppError } from "@utils/errors";
 import type { LoadDocResult, SaveDocOptions } from "../types";
@@ -120,7 +120,9 @@ export async function saveDoc<T>(
  *   console.log(result.doc.name);
  * }
  */
-export async function loadDoc<T>(tripId: string): Promise<LoadDocResult<Automerge.Doc<T>>> {
+export async function loadDoc<T>(
+  tripId: string,
+): Promise<LoadDocResult<Automerge.Doc<T>>> {
   const filePath = getDocFilePath(tripId);
 
   // Check if file exists
