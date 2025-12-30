@@ -23,6 +23,7 @@ export type LogContext =
   | "fx"
   | "onboarding"
   | "import-export"
+  | "automerge"
   | "ui"
   | "dev";
 
@@ -60,6 +61,7 @@ const CONTEXT_EMOJI: Record<LogContext, string> = {
   fx: "💹",
   onboarding: "🎯",
   "import-export": "📤",
+  automerge: "🔀",
   ui: "🎨",
   dev: "🔧",
 };
@@ -347,5 +349,6 @@ export const currencyLogger = logger.createContextLogger("currency");
 export const fxLogger = logger.createContextLogger("fx");
 export const onboardingLogger = logger.createContextLogger("onboarding");
 export const importExportLogger = logger.createContextLogger("import-export");
+export const automergeLogger = logger.createContextLogger("automerge");
 export const uiLogger = logger.createContextLogger("ui");
 export const devLogger = logger.createContextLogger("dev");
