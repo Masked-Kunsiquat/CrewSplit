@@ -1,6 +1,11 @@
 /* eslint-env jest */
 // Jest setup file for global test configuration
 
+// NOTE: Automerge WASM initialization
+// Automerge 3.x requires WASM initialization, but the fullfat build should handle this automatically.
+// If tests fail with "must be the document root", see: https://automerge.org/automerge/api-docs/js/functions/initializeWasm.html
+// TODO: Investigate proper WASM initialization in Jest environment for Automerge 3.x
+
 // Mock expo-crypto for tests that don't need actual crypto functionality
 jest.mock("expo-crypto", () => ({
   randomUUID: jest.fn(
