@@ -227,6 +227,77 @@ export async function rebuildTripCache(
 }
 
 /**
+ * Detect trips that need cache rebuilding (desync detection)
+ *
+ * STRATEGY: Compare trip count and updatedAt timestamps
+ * - Fast: No deep object comparison
+ * - Catches common desyncs: missing trips, stale data
+ *
+ * Runs on app startup to detect and auto-rebuild stale caches.
+ *
+ * @returns Array of trip IDs that need cache rebuilding
+ */
+export async function detectStaleTrips(): Promise<string[]> {
+  const staleTrips: string[] = [];
+
+  try {
+    automergeLogger.debug("Detecting stale trips");
+
+    // Load all trips from SQLite
+    const sqliteTrips = await db.query.trips.findMany();
+
+    for (const sqliteTrip of sqliteTrips) {
+      // Check if Automerge doc exists
+      const { AutomergeManager } = await import("../service/AutomergeManager");
+      const manager = new AutomergeManager();
+
+      try {
+        const doc = await manager.loadTrip(sqliteTrip.id);
+
+        if (!doc) {
+          // Automerge doc missing - critical desync
+          automergeLogger.warn("Automerge doc missing for trip", {
+            tripId: sqliteTrip.id,
+          });
+          staleTrips.push(sqliteTrip.id);
+          continue;
+        }
+
+        // Check updatedAt timestamp
+        if (doc.updatedAt !== sqliteTrip.updatedAt) {
+          automergeLogger.debug("Trip updatedAt mismatch (stale cache)", {
+            tripId: sqliteTrip.id,
+            sqliteUpdatedAt: sqliteTrip.updatedAt,
+            docUpdatedAt: doc.updatedAt,
+          });
+          staleTrips.push(sqliteTrip.id);
+        }
+      } catch (error) {
+        automergeLogger.error("Failed to load Automerge doc for trip", {
+          tripId: sqliteTrip.id,
+          error,
+        });
+        staleTrips.push(sqliteTrip.id);
+      }
+    }
+
+    if (staleTrips.length > 0) {
+      automergeLogger.warn("Detected stale trips", {
+        count: staleTrips.length,
+        tripIds: staleTrips,
+      });
+    } else {
+      automergeLogger.info("No stale trips detected");
+    }
+
+    return staleTrips;
+  } catch (error) {
+    automergeLogger.error("Failed to detect stale trips", error);
+    return []; // Return empty array on error (don't block app startup)
+  }
+}
+
+/**
  * Verify SQLite cache consistency against Automerge document
  *
  * CHECKS:

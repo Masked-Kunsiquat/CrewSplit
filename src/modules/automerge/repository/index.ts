@@ -13,4 +13,5 @@ export {
 export {
   rebuildTripCache,
   verifyCacheConsistency,
+  detectStaleTrips,
 } from "./sqlite-cache-builder";
