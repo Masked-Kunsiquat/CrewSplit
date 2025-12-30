@@ -9,3 +9,9 @@ export {
   docExists,
   listDocs,
 } from "./automerge-storage";
+
+export {
+  rebuildTripCache,
+  verifyCacheConsistency,
+  detectStaleTrips,
+} from "./sqlite-cache-builder";

@@ -3,11 +3,10 @@
  *
  * Pure CRUD operations for expenses - no business logic.
  * All orchestration and validation happens in the service layer.
+ * DUAL-WRITE: Writes to Automerge first, then rebuilds SQLite cache
  */
 
-import * as Crypto from "expo-crypto";
 import { db } from "@db/client";
-import { expenseSplits as expenseSplitsTable } from "@db/schema/expense-splits";
 import {
   expenses as expensesTable,
   Expense as ExpenseRow,
@@ -17,9 +16,37 @@ import { eq } from "drizzle-orm";
 import type { Expense } from "../types";
 import { expenseLogger } from "@utils/logger";
 import type { IExpenseRepository } from "../service/types";
-import { createNotFoundError } from "@utils/errors";
+import { createNotFoundError, createAppError } from "@utils/errors";
+import { AutomergeManager } from "@modules/automerge/service/AutomergeManager";
+import { rebuildTripCache } from "@modules/automerge/repository/sqlite-cache-builder";
 
 const mapExpenseRow = (row: ExpenseRow): Expense => mapExpenseFromDb(row);
+
+/**
+ * Singleton AutomergeManager instance for dual-write operations
+ */
+const automergeManager = new AutomergeManager();
+
+/**
+ * Map shareType from SQLite schema to Automerge schema
+ *
+ * SQLite uses: "equal" | "percentage" | "amount" | "weight"
+ * Automerge uses: "equal" | "percentage" | "exact_amount" | "shares"
+ */
+function mapShareTypeToAutomerge(
+  shareType: "equal" | "percentage" | "amount" | "weight",
+): "equal" | "percentage" | "exact_amount" | "shares" {
+  switch (shareType) {
+    case "amount":
+      return "exact_amount";
+    case "weight":
+      return "shares";
+    case "equal":
+      return "equal";
+    case "percentage":
+      return "percentage";
+  }
+}
 
 /**
  * Concrete implementation of IExpenseRepository
@@ -53,63 +80,74 @@ export class ExpenseRepositoryImpl implements IExpenseRepository {
       amount: number | null;
     }[];
   }): Promise<Expense> {
-    const now = new Date().toISOString();
-
-    expenseLogger.debug("Creating expense (repository)", {
+    expenseLogger.debug("Creating expense (dual-write)", {
       expenseId: data.id,
       tripId: data.tripId,
       amount: data.amount,
     });
 
-    return db.transaction(async (tx) => {
-      const [insertedExpense] = await tx
-        .insert(expensesTable)
-        .values({
-          id: data.id,
-          tripId: data.tripId,
-          description: data.description,
-          notes: data.notes,
-          amount: data.amount,
-          currency: data.currency,
-          originalCurrency: data.originalCurrency,
-          originalAmountMinor: data.originalAmountMinor,
-          fxRateToTrip: data.fxRateToTrip,
-          convertedAmountMinor: data.convertedAmountMinor,
-          paidBy: data.paidBy,
-          categoryId: data.categoryId,
-          category: null, // Deprecated - no longer write to this column
-          date: data.date,
-          createdAt: now,
-          updatedAt: now,
-        })
-        .returning();
+    try {
+      // Transform splits from array to object structure for Automerge
+      const splitsObject: {
+        [participantId: string]: {
+          shareType: "equal" | "percentage" | "exact_amount" | "shares";
+          shareValue: number;
+        };
+      } = {};
 
-      if (data.splits.length > 0) {
-        expenseLogger.debug("Adding expense splits", {
-          expenseId: data.id,
-          splitCount: data.splits.length,
-        });
-        const splitRows = data.splits.map((split) => ({
-          id: Crypto.randomUUID(),
-          expenseId: data.id,
-          participantId: split.participantId,
-          share: split.share,
-          shareType: split.shareType,
-          amount: split.amount,
-          createdAt: now,
-          updatedAt: now,
-        }));
-
-        await tx.insert(expenseSplitsTable).values(splitRows);
+      for (const split of data.splits) {
+        splitsObject[split.participantId] = {
+          shareType: mapShareTypeToAutomerge(split.shareType),
+          shareValue: split.share,
+        };
       }
 
-      expenseLogger.info("Expense created", {
+      // Step 1: Add expense to Automerge document (source of truth)
+      expenseLogger.debug("Adding expense to Automerge", {
+        expenseId: data.id,
+        tripId: data.tripId,
+      });
+      const doc = await automergeManager.addExpense(data.tripId, {
+        id: data.id,
+        description: data.description,
+        originalAmountMinor: data.originalAmountMinor,
+        originalCurrency: data.originalCurrency,
+        convertedAmountMinor: data.convertedAmountMinor,
+        fxRateToTrip: data.fxRateToTrip,
+        categoryId: data.categoryId,
+        paidById: data.paidBy,
+        date: data.date,
+        splits: splitsObject,
+      });
+
+      // Step 2: Rebuild SQLite cache from Automerge doc
+      expenseLogger.debug("Rebuilding SQLite cache", { tripId: data.tripId });
+      await rebuildTripCache(data.tripId, doc);
+
+      // Step 3: Load and return from SQLite (cache layer)
+      const expense = await this.getById(data.id);
+      if (!expense) {
+        throw createAppError(
+          "CACHE_DESYNC",
+          `Expense ${data.id} created in Automerge but missing from SQLite`,
+          { details: { expenseId: data.id, tripId: data.tripId } },
+        );
+      }
+
+      expenseLogger.info("Expense created (dual-write)", {
         expenseId: data.id,
         tripId: data.tripId,
         amount: data.amount,
       });
-      return mapExpenseRow(insertedExpense);
-    });
+      return expense;
+    } catch (error) {
+      expenseLogger.error("Failed to create expense", {
+        expenseId: data.id,
+        tripId: data.tripId,
+        error,
+      });
+      throw error;
+    }
   }
 
   /**
@@ -144,73 +182,101 @@ export class ExpenseRepositoryImpl implements IExpenseRepository {
       }[];
     },
   ): Promise<Expense> {
-    const now = new Date().toISOString();
+    expenseLogger.debug("Updating expense (dual-write)", { expenseId: id });
 
-    expenseLogger.debug("Updating expense (repository)", { expenseId: id });
-
-    return db.transaction(async (tx) => {
-      // Build update payload with only defined fields
-      const updatePayload: Partial<typeof expensesTable.$inferInsert> = {
-        updatedAt: now,
-      };
-
-      if (data.description !== undefined)
-        updatePayload.description = data.description;
-      if (data.notes !== undefined) updatePayload.notes = data.notes;
-      if (data.amount !== undefined) updatePayload.amount = data.amount;
-      if (data.currency !== undefined) updatePayload.currency = data.currency;
-      if (data.originalCurrency !== undefined)
-        updatePayload.originalCurrency = data.originalCurrency;
-      if (data.originalAmountMinor !== undefined)
-        updatePayload.originalAmountMinor = data.originalAmountMinor;
-      if (data.fxRateToTrip !== undefined)
-        updatePayload.fxRateToTrip = data.fxRateToTrip;
-      if (data.convertedAmountMinor !== undefined)
-        updatePayload.convertedAmountMinor = data.convertedAmountMinor;
-      if (data.paidBy !== undefined) updatePayload.paidBy = data.paidBy;
-      if (data.categoryId !== undefined)
-        updatePayload.categoryId = data.categoryId;
-      if (data.date !== undefined) updatePayload.date = data.date;
-
-      updatePayload.category = null; // Deprecated - always null
-
-      const [updated] = await tx
-        .update(expensesTable)
-        .set(updatePayload)
-        .where(eq(expensesTable.id, id))
-        .returning();
-
-      if (!updated) {
+    try {
+      // First, load expense to get tripId for cache rebuild
+      const existing = await this.getById(id);
+      if (!existing) {
         expenseLogger.error("Expense not found on update", { expenseId: id });
         throw createNotFoundError("EXPENSE_NOT_FOUND", "Expense", id);
       }
 
+      // Build Automerge update payload
+      const automergeUpdate: {
+        description?: string;
+        originalAmountMinor?: number;
+        originalCurrency?: string;
+        convertedAmountMinor?: number;
+        fxRateToTrip?: number | null;
+        categoryId?: string | null;
+        paidById?: string;
+        date?: string;
+        splits?: {
+          [participantId: string]: {
+            shareType: "equal" | "percentage" | "exact_amount" | "shares";
+            shareValue: number;
+          };
+        };
+      } = {};
+
+      if (data.description !== undefined)
+        automergeUpdate.description = data.description;
+      if (data.originalAmountMinor !== undefined)
+        automergeUpdate.originalAmountMinor = data.originalAmountMinor;
+      if (data.originalCurrency !== undefined)
+        automergeUpdate.originalCurrency = data.originalCurrency;
+      if (data.convertedAmountMinor !== undefined)
+        automergeUpdate.convertedAmountMinor = data.convertedAmountMinor;
+      if (data.fxRateToTrip !== undefined)
+        automergeUpdate.fxRateToTrip = data.fxRateToTrip;
+      if (data.categoryId !== undefined)
+        automergeUpdate.categoryId = data.categoryId;
+      if (data.paidBy !== undefined) automergeUpdate.paidById = data.paidBy;
+      if (data.date !== undefined) automergeUpdate.date = data.date;
+
+      // Transform splits if provided
       if (data.splits !== undefined) {
-        expenseLogger.debug("Updating expense splits", {
-          expenseId: id,
-          splitCount: data.splits.length,
-        });
-        await tx
-          .delete(expenseSplitsTable)
-          .where(eq(expenseSplitsTable.expenseId, id));
-        if (data.splits.length > 0) {
-          const splitRows = data.splits.map((split) => ({
-            id: Crypto.randomUUID(),
-            expenseId: id,
-            participantId: split.participantId,
-            share: split.share,
-            shareType: split.shareType,
-            amount: split.amount,
-            createdAt: now,
-            updatedAt: now,
-          }));
-          await tx.insert(expenseSplitsTable).values(splitRows);
+        const splitsObject: {
+          [participantId: string]: {
+            shareType: "equal" | "percentage" | "exact_amount" | "shares";
+            shareValue: number;
+          };
+        } = {};
+
+        for (const split of data.splits) {
+          splitsObject[split.participantId] = {
+            shareType: mapShareTypeToAutomerge(split.shareType),
+            shareValue: split.share,
+          };
         }
+
+        automergeUpdate.splits = splitsObject;
       }
 
-      expenseLogger.info("Expense updated", { expenseId: id });
-      return mapExpenseRow(updated);
-    });
+      // Step 1: Update expense in Automerge document (source of truth)
+      expenseLogger.debug("Updating expense in Automerge", {
+        expenseId: id,
+        tripId: existing.tripId,
+      });
+      const doc = await automergeManager.updateExpenseData(
+        existing.tripId,
+        id,
+        automergeUpdate,
+      );
+
+      // Step 2: Rebuild SQLite cache from Automerge doc
+      expenseLogger.debug("Rebuilding SQLite cache", {
+        tripId: existing.tripId,
+      });
+      await rebuildTripCache(existing.tripId, doc);
+
+      // Step 3: Load and return from SQLite (cache layer)
+      const expense = await this.getById(id);
+      if (!expense) {
+        throw createAppError(
+          "CACHE_DESYNC",
+          `Expense ${id} updated in Automerge but missing from SQLite`,
+          { details: { expenseId: id, tripId: existing.tripId } },
+        );
+      }
+
+      expenseLogger.info("Expense updated (dual-write)", { expenseId: id });
+      return expense;
+    } catch (error) {
+      expenseLogger.error("Failed to update expense", { expenseId: id, error });
+      throw error;
+    }
   }
 
   /**
@@ -221,23 +287,37 @@ export class ExpenseRepositoryImpl implements IExpenseRepository {
    * @throws {Error} If expense not found
    */
   async delete(id: string): Promise<void> {
-    await db.transaction(async (tx) => {
-      const existingRows = await tx
-        .select()
-        .from(expensesTable)
-        .where(eq(expensesTable.id, id))
-        .limit(1);
-      if (!existingRows.length) {
+    expenseLogger.info("Deleting expense (dual-write)", { expenseId: id });
+
+    try {
+      // First, load expense to get tripId for cache rebuild
+      const existing = await this.getById(id);
+      if (!existing) {
         expenseLogger.error("Expense not found on delete", { expenseId: id });
         throw createNotFoundError("EXPENSE_NOT_FOUND", "Expense", id);
       }
-      expenseLogger.info("Deleting expense", {
+
+      // Step 1: Remove expense from Automerge document (source of truth)
+      expenseLogger.debug("Removing expense from Automerge", {
         expenseId: id,
-        tripId: existingRows[0].tripId,
+        tripId: existing.tripId,
       });
-      await tx.delete(expensesTable).where(eq(expensesTable.id, id));
-      expenseLogger.info("Expense deleted", { expenseId: id });
-    });
+      const doc = await automergeManager.removeExpense(existing.tripId, id);
+
+      // Step 2: Rebuild SQLite cache from Automerge doc
+      expenseLogger.debug("Rebuilding SQLite cache", {
+        tripId: existing.tripId,
+      });
+      await rebuildTripCache(existing.tripId, doc);
+
+      expenseLogger.info("Expense deleted (dual-write)", {
+        expenseId: id,
+        tripId: existing.tripId,
+      });
+    } catch (error) {
+      expenseLogger.error("Failed to delete expense", { expenseId: id, error });
+      throw error;
+    }
   }
 
   /**

@@ -5,20 +5,28 @@
 
 import { Stack, Redirect, usePathname } from "expo-router";
 import { View, Text, ActivityIndicator, StyleSheet } from "react-native";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useDbMigrations } from "@db/client";
 import { FxRateProvider } from "@modules/fx-rates";
 import { useFxSync } from "@modules/fx-rates/hooks";
 import { useOnboardingState } from "@modules/onboarding/hooks/use-onboarding-state";
 import { initializeImportExport } from "@modules/import-export";
+import { migrateAllTrips } from "@modules/automerge/migration";
+import {
+  detectStaleTrips,
+  rebuildTripCache,
+} from "@modules/automerge/repository";
+import { AutomergeManager } from "@modules/automerge/service/AutomergeManager";
 import { colors, spacing, typography } from "@ui/tokens";
-import { fxLogger } from "@utils/logger";
+import { fxLogger, automergeLogger } from "@utils/logger";
 
 /**
- * Root layout component that coordinates database migrations, FX provider initialization, background FX synchronization, onboarding state checks, and top-level navigation.
+ * Root layout component that coordinates database migrations, Automerge migration, FX provider initialization, background FX synchronization, onboarding state checks, and top-level navigation.
  *
  * This component:
  * - Waits for database migrations to complete and shows an error view if migrations fail.
+ * - Runs one-time Automerge migration (SQLite → Automerge docs)
+ * - Detects and rebuilds stale Automerge caches
  * - Provides FX rate provider via React Context and initializes it automatically.
  * - Runs background FX sync (non-blocking on failure).
  * - Checks onboarding completion and redirects to the onboarding welcome screen when needed.
@@ -30,6 +38,58 @@ import { fxLogger } from "@utils/logger";
 export default function RootLayout() {
   const pathname = usePathname();
   const { success, error } = useDbMigrations();
+  const [automergeReady, setAutomergeReady] = useState(false);
+  const [automergeError, setAutomergeError] = useState<string | null>(null);
+
+  // Run Automerge migration after DB migrations complete
+  useEffect(() => {
+    if (!success) return;
+
+    (async () => {
+      try {
+        automergeLogger.info("Starting Automerge initialization");
+
+        // Step 1: Run one-time migration (SQLite → Automerge)
+        const migratedCount = await migrateAllTrips();
+        if (migratedCount > 0) {
+          automergeLogger.info(`Migrated ${migratedCount} trips to Automerge`);
+        }
+
+        // Step 2: Detect and rebuild stale caches
+        const staleTrips = await detectStaleTrips();
+        if (staleTrips.length > 0) {
+          automergeLogger.warn(
+            `Rebuilding ${staleTrips.length} stale trip caches`,
+          );
+          const manager = new AutomergeManager();
+
+          for (const tripId of staleTrips) {
+            try {
+              const doc = await manager.loadTrip(tripId);
+              if (doc) {
+                await rebuildTripCache(tripId, doc);
+                automergeLogger.info(`Rebuilt cache for trip ${tripId}`);
+              }
+            } catch (error) {
+              automergeLogger.error(
+                `Failed to rebuild cache for trip ${tripId}`,
+                error,
+              );
+            }
+          }
+        }
+
+        setAutomergeReady(true);
+        automergeLogger.info("Automerge initialization complete");
+      } catch (error) {
+        const message =
+          error instanceof Error ? error.message : "Unknown error";
+        automergeLogger.error("Automerge initialization failed", error);
+        setAutomergeError(message);
+        setAutomergeReady(true); // Still set ready to not block app
+      }
+    })();
+  }, [success]);
 
   // Check onboarding status (for future redirect to onboarding screens)
   const {
@@ -37,7 +97,7 @@ export default function RootLayout() {
     loading: onboardingLoading,
     error: onboardingError,
     refresh: refreshOnboarding,
-  } = useOnboardingState({ enabled: success });
+  } = useOnboardingState({ enabled: success && automergeReady });
 
   const isOnboardingRoute = pathname?.startsWith("/onboarding");
   const previousPath = useRef<string | null>(null);
@@ -73,16 +133,23 @@ export default function RootLayout() {
     );
   }
 
-  // Show loading while migrations or onboarding check in progress
-  if (!success || onboardingLoading) {
+  // Show loading while migrations, Automerge init, or onboarding check in progress
+  if (!success || !automergeReady || onboardingLoading) {
     return (
       <View style={styles.container}>
         <ActivityIndicator size="large" color={colors.primary} />
         <Text style={styles.loadingText}>
           {!success
             ? "Applying database migrations..."
-            : "Checking welcome status..."}
+            : !automergeReady
+              ? "Initializing data sync..."
+              : "Checking welcome status..."}
         </Text>
+        {automergeError ? (
+          <Text style={styles.errorMessageSmall}>
+            Warning: {automergeError}
+          </Text>
+        ) : null}
         {onboardingError ? (
           <Text style={styles.errorMessageSmall}>
             {onboardingError.message}

@@ -1,6 +1,7 @@
 /**
  * SETTLEMENTS REPOSITORY
  * LOCAL DATA ENGINEER: Multi-currency aware settlement CRUD with ACID-safe writes
+ * DUAL-WRITE: Writes to Automerge first, then rebuilds SQLite cache
  *
  * Manages payment transactions between participants to settle debts.
  * Follows the same multi-currency pattern as ExpenseRepository.
@@ -31,6 +32,13 @@ import {
   createNotFoundError,
   createAppError,
 } from "@utils/errors";
+import { AutomergeManager } from "@modules/automerge/service/AutomergeManager";
+import { rebuildTripCache } from "@modules/automerge/repository/sqlite-cache-builder";
+
+/**
+ * Singleton AutomergeManager instance for dual-write operations
+ */
+const automergeManager = new AutomergeManager();
 
 /**
  * Map database row to domain Settlement type
@@ -237,99 +245,81 @@ export const createSettlement = async (
   fxRateProvider: CachedFxRateProvider,
 ): Promise<SettlementWithParticipants> => {
   const tripCurrencyCode = await getTripCurrency(data.tripId);
-
-  // Validate settlement data
-  await validateSettlement(
-    data.tripId,
-    data.fromParticipantId,
-    data.toParticipantId,
-    data.originalAmountMinor,
-    data.expenseSplitId,
-  );
-
-  // Compute currency conversion
-  const { convertedAmountMinor, fxRateToTrip } = computeConversion(
-    data.originalAmountMinor,
-    data.originalCurrency,
-    tripCurrencyCode,
-    fxRateProvider,
-  );
-
-  const now = new Date().toISOString();
   const settlementId = Crypto.randomUUID();
 
-  settlementLogger.debug("Creating settlement", {
+  settlementLogger.debug("Creating settlement (dual-write)", {
     settlementId,
     tripId: data.tripId,
     fromParticipantId: data.fromParticipantId,
     toParticipantId: data.toParticipantId,
-    amountMinor: convertedAmountMinor,
   });
 
-  return db.transaction(async (tx) => {
-    // Insert settlement
-    const [inserted] = await tx
-      .insert(settlementsTable)
-      .values({
-        id: settlementId,
-        tripId: data.tripId,
-        fromParticipantId: data.fromParticipantId,
-        toParticipantId: data.toParticipantId,
-        expenseSplitId: data.expenseSplitId ?? null,
-        originalCurrency: data.originalCurrency,
-        originalAmountMinor: data.originalAmountMinor,
-        fxRateToTrip,
-        convertedAmountMinor,
-        date: data.date,
-        description: data.description ?? null,
-        paymentMethod: data.paymentMethod ?? null,
-        createdAt: now,
-        updatedAt: now,
-      })
-      .returning();
+  try {
+    // Validate settlement data
+    await validateSettlement(
+      data.tripId,
+      data.fromParticipantId,
+      data.toParticipantId,
+      data.originalAmountMinor,
+      data.expenseSplitId,
+    );
 
-    // Fetch participant names
-    const [fromParticipant, toParticipant] = await Promise.all([
-      tx
-        .select({ name: participantsTable.name })
-        .from(participantsTable)
-        .where(eq(participantsTable.id, data.fromParticipantId))
-        .limit(1),
-      tx
-        .select({ name: participantsTable.name })
-        .from(participantsTable)
-        .where(eq(participantsTable.id, data.toParticipantId))
-        .limit(1),
-    ]);
+    // Compute currency conversion
+    const { convertedAmountMinor, fxRateToTrip } = computeConversion(
+      data.originalAmountMinor,
+      data.originalCurrency,
+      tripCurrencyCode,
+      fxRateProvider,
+    );
 
-    settlementLogger.info("Settlement created", {
+    // Step 1: Add settlement to Automerge document (source of truth)
+    settlementLogger.debug("Adding settlement to Automerge", {
+      settlementId,
+      tripId: data.tripId,
+    });
+    const doc = await automergeManager.addSettlement(data.tripId, {
+      id: settlementId,
+      fromParticipantId: data.fromParticipantId,
+      toParticipantId: data.toParticipantId,
+      originalAmountMinor: data.originalAmountMinor,
+      originalCurrency: data.originalCurrency,
+      convertedAmountMinor,
+      fxRateToTrip,
+      date: data.date,
+      description: data.description ?? null,
+      paymentMethod: data.paymentMethod ?? null,
+      expenseSplitId: data.expenseSplitId ?? null,
+    });
+
+    // Step 2: Rebuild SQLite cache from Automerge doc
+    settlementLogger.debug("Rebuilding SQLite cache", { tripId: data.tripId });
+    await rebuildTripCache(data.tripId, doc);
+
+    // Step 3: Load and return from SQLite (cache layer) with participant names
+    const settlement = await getSettlementById(settlementId);
+    if (!settlement) {
+      throw createAppError(
+        "CACHE_DESYNC",
+        `Settlement ${settlementId} created in Automerge but missing from SQLite`,
+        { details: { settlementId, tripId: data.tripId } },
+      );
+    }
+
+    settlementLogger.info("Settlement created (dual-write)", {
       settlementId,
       tripId: data.tripId,
       amountMinor: convertedAmountMinor,
     });
 
-    // Defensive check for participant data
-    if (!fromParticipant.length || !toParticipant.length) {
-      settlementLogger.error(
-        "Participant deleted concurrently during settlement creation",
-        {
-          settlementId,
-          fromParticipantId: data.fromParticipantId,
-          toParticipantId: data.toParticipantId,
-        },
-      );
-      throw createAppError(
-        "PARTICIPANT_DELETED",
-        "Participant was deleted during settlement creation",
-      );
-    }
-
-    return {
-      ...mapSettlement(inserted),
-      fromParticipantName: fromParticipant[0].name,
-      toParticipantName: toParticipant[0].name,
-    };
-  });
+    return settlement;
+  } catch (error) {
+    settlementLogger.error("Failed to create settlement", {
+      settlementId,
+      tripId: data.tripId,
+      error,
+    });
+    throw error;
+  }
 };
 
 /**
@@ -565,119 +555,110 @@ export const updateSettlement = async (
   patch: UpdateSettlementData,
   fxRateProvider: CachedFxRateProvider,
 ): Promise<SettlementWithParticipants> => {
-  // Fetch existing settlement
-  const existingRows = await db
-    .select()
-    .from(settlementsTable)
-    .where(eq(settlementsTable.id, id))
-    .limit(1);
-
-  if (!existingRows.length) {
-    settlementLogger.error("Settlement not found on update", {
-      settlementId: id,
-    });
-    throw createNotFoundError("SETTLEMENT_NOT_FOUND", "Settlement", id);
-  }
-
-  const existing = existingRows[0];
-  const tripCurrencyCode = await getTripCurrency(existing.tripId);
-
-  // Determine new values (merge patch with existing)
-  const originalCurrency = patch.originalCurrency ?? existing.originalCurrency;
-  const originalAmountMinor =
-    patch.originalAmountMinor ?? existing.originalAmountMinor;
-
-  // Re-validate amount if changed
-  if (patch.originalAmountMinor !== undefined && originalAmountMinor <= 0) {
-    settlementLogger.error("Invalid updated settlement amount", {
-      amountMinor: originalAmountMinor,
-    });
-    throw createAppError(
-      "INVALID_SETTLEMENT_AMOUNT",
-      "Settlement amount must be positive",
-      { details: { amountMinor: originalAmountMinor } },
-    );
-  }
-
-  // Re-compute currency conversion
-  const { convertedAmountMinor, fxRateToTrip } = computeConversion(
-    originalAmountMinor,
-    originalCurrency,
-    tripCurrencyCode,
-    fxRateProvider,
-  );
-
-  const now = new Date().toISOString();
-  const updatePayload: Partial<typeof settlementsTable.$inferInsert> = {
-    originalCurrency,
-    originalAmountMinor,
-    fxRateToTrip,
-    convertedAmountMinor,
-    date: patch.date !== undefined ? patch.date : existing.date,
-    description:
-      patch.description !== undefined
-        ? patch.description
-        : existing.description,
-    paymentMethod:
-      patch.paymentMethod !== undefined
-        ? patch.paymentMethod
-        : existing.paymentMethod,
-    updatedAt: now,
-  };
-
-  settlementLogger.debug("Updating settlement", {
+  settlementLogger.debug("Updating settlement (dual-write)", {
     settlementId: id,
-    tripId: existing.tripId,
   });
 
-  return db.transaction(async (tx) => {
-    const [updated] = await tx
-      .update(settlementsTable)
-      .set(updatePayload)
-      .where(eq(settlementsTable.id, id))
-      .returning();
+  try {
+    // First, load settlement to get tripId and existing data
+    const existing = await getSettlementById(id);
+    if (!existing) {
+      settlementLogger.error("Settlement not found on update", {
+        settlementId: id,
+      });
+      throw createNotFoundError("SETTLEMENT_NOT_FOUND", "Settlement", id);
+    }
 
-    // Fetch participant names
-    const [fromParticipant, toParticipant] = await Promise.all([
-      tx
-        .select({ name: participantsTable.name })
-        .from(participantsTable)
-        .where(eq(participantsTable.id, updated.fromParticipantId))
-        .limit(1),
-      tx
-        .select({ name: participantsTable.name })
-        .from(participantsTable)
-        .where(eq(participantsTable.id, updated.toParticipantId))
-        .limit(1),
-    ]);
+    const tripCurrencyCode = await getTripCurrency(existing.tripId);
 
-    settlementLogger.info("Settlement updated", {
+    // Determine new values (merge patch with existing)
+    const originalCurrency =
+      patch.originalCurrency ?? existing.originalCurrency;
+    const originalAmountMinor =
+      patch.originalAmountMinor ?? existing.originalAmountMinor;
+
+    // Re-validate amount if changed
+    if (patch.originalAmountMinor !== undefined && originalAmountMinor <= 0) {
+      settlementLogger.error("Invalid updated settlement amount", {
+        amountMinor: originalAmountMinor,
+      });
+      throw createAppError(
+        "INVALID_SETTLEMENT_AMOUNT",
+        "Settlement amount must be positive",
+        { details: { amountMinor: originalAmountMinor } },
+      );
+    }
+
+    // Re-compute currency conversion
+    const { convertedAmountMinor, fxRateToTrip } = computeConversion(
+      originalAmountMinor,
+      originalCurrency,
+      tripCurrencyCode,
+      fxRateProvider,
+    );
+
+    // Build Automerge update payload
+    const automergeUpdate: {
+      originalAmountMinor?: number;
+      originalCurrency?: string;
+      convertedAmountMinor?: number;
+      fxRateToTrip?: number | null;
+      date?: string;
+      description?: string | null;
+      paymentMethod?: string | null;
+    } = {
+      originalCurrency,
+      originalAmountMinor,
+      convertedAmountMinor,
+      fxRateToTrip,
+    };
+
+    if (patch.date !== undefined) automergeUpdate.date = patch.date;
+    if (patch.description !== undefined)
+      automergeUpdate.description = patch.description;
+    if (patch.paymentMethod !== undefined)
+      automergeUpdate.paymentMethod = patch.paymentMethod;
+
+    // Step 1: Update settlement in Automerge document (source of truth)
+    settlementLogger.debug("Updating settlement in Automerge", {
+      settlementId: id,
+      tripId: existing.tripId,
+    });
+    const doc = await automergeManager.updateSettlementData(
+      existing.tripId,
+      id,
+      automergeUpdate,
+    );
+
+    // Step 2: Rebuild SQLite cache from Automerge doc
+    settlementLogger.debug("Rebuilding SQLite cache", {
+      tripId: existing.tripId,
+    });
+    await rebuildTripCache(existing.tripId, doc);
+
+    // Step 3: Load and return from SQLite (cache layer) with participant names
+    const settlement = await getSettlementById(id);
+    if (!settlement) {
+      throw createAppError(
+        "CACHE_DESYNC",
+        `Settlement ${id} updated in Automerge but missing from SQLite`,
+        { details: { settlementId: id, tripId: existing.tripId } },
+      );
+    }
+
+    settlementLogger.info("Settlement updated (dual-write)", {
       settlementId: id,
       tripId: existing.tripId,
     });
 
-    // Defensive check for participant data
-    if (!fromParticipant.length || !toParticipant.length) {
-      settlementLogger.error(
-        "Participant deleted concurrently during settlement update",
-        {
-          settlementId: id,
-          fromParticipantId: updated.fromParticipantId,
-          toParticipantId: updated.toParticipantId,
-        },
-      );
-      throw createAppError(
-        "PARTICIPANT_DELETED",
-        "Participant was deleted during settlement update",
-      );
-    }
-
-    return {
-      ...mapSettlement(updated),
-      fromParticipantName: fromParticipant[0].name,
-      toParticipantName: toParticipant[0].name,
-    };
-  });
+    return settlement;
+  } catch (error) {
+    settlementLogger.error("Failed to update settlement", {
+      settlementId: id,
+      error,
+    });
+    throw error;
+  }
 };
 
 /**
@@ -688,29 +669,44 @@ export const updateSettlement = async (
  * @throws Error if settlement not found
  */
 export const deleteSettlement = async (id: string): Promise<void> => {
-  return db.transaction(async (tx) => {
-    const existingRows = await tx
-      .select()
-      .from(settlementsTable)
-      .where(eq(settlementsTable.id, id))
-      .limit(1);
+  settlementLogger.info("Deleting settlement (dual-write)", {
+    settlementId: id,
+  });
 
-    if (!existingRows.length) {
+  try {
+    // First, load settlement to get tripId for cache rebuild
+    const existing = await getSettlementById(id);
+    if (!existing) {
       settlementLogger.error("Settlement not found on delete", {
         settlementId: id,
       });
       throw createNotFoundError("SETTLEMENT_NOT_FOUND", "Settlement", id);
     }
 
-    settlementLogger.info("Deleting settlement", {
+    // Step 1: Remove settlement from Automerge document (source of truth)
+    settlementLogger.debug("Removing settlement from Automerge", {
       settlementId: id,
-      tripId: existingRows[0].tripId,
+      tripId: existing.tripId,
     });
+    const doc = await automergeManager.removeSettlement(existing.tripId, id);
 
-    await tx.delete(settlementsTable).where(eq(settlementsTable.id, id));
+    // Step 2: Rebuild SQLite cache from Automerge doc
+    settlementLogger.debug("Rebuilding SQLite cache", {
+      tripId: existing.tripId,
+    });
+    await rebuildTripCache(existing.tripId, doc);
 
-    settlementLogger.info("Settlement deleted", { settlementId: id });
-  });
+    settlementLogger.info("Settlement deleted (dual-write)", {
+      settlementId: id,
+      tripId: existing.tripId,
+    });
+  } catch (error) {
+    settlementLogger.error("Failed to delete settlement", {
+      settlementId: id,
+      error,
+    });
+    throw error;
+  }
 };
 
 /**
