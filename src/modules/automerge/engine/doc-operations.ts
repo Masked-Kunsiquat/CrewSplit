@@ -13,8 +13,8 @@ import type {
   TripParticipant,
   TripExpense,
   TripSettlement,
-  CURRENT_SCHEMA_VERSION,
 } from "./doc-schema";
+import { CURRENT_SCHEMA_VERSION } from "./doc-schema";
 
 /**
  * Creates an initial empty trip document structure
@@ -61,7 +61,7 @@ export function createEmptyTripDoc(tripData: {
     expenses: {},
     settlements: {},
     _metadata: {
-      schemaVersion: 1, // CURRENT_SCHEMA_VERSION
+      schemaVersion: CURRENT_SCHEMA_VERSION,
       lastSyncedAt: null,
     },
   };
@@ -71,9 +71,11 @@ export function createEmptyTripDoc(tripData: {
  * Updates trip metadata fields
  *
  * @param updates - Fields to update (name, emoji, currency, etc.)
+ * @param updatedAt - Timestamp for the update (ISO 8601 string)
  * @returns Object with fields to update in the document
  *
  * @precondition updates must contain at least one valid field
+ * @precondition updatedAt must be a valid ISO 8601 timestamp
  * @postcondition Returns only the fields that should be updated
  * @postcondition updatedAt is always included
  *
@@ -81,19 +83,22 @@ export function createEmptyTripDoc(tripData: {
  * const updates = updateTripMetadata({
  *   name: 'New Trip Name',
  *   emoji: '🎉',
- * });
- * // Returns: { name: 'New Trip Name', emoji: '🎉', updatedAt: '...' }
+ * }, '2024-01-01T12:00:00Z');
+ * // Returns: { name: 'New Trip Name', emoji: '🎉', updatedAt: '2024-01-01T12:00:00Z' }
  */
-export function updateTripMetadata(updates: {
-  name?: string;
-  emoji?: string;
-  currency?: string;
-  startDate?: string;
-  endDate?: string | null;
-}): Partial<TripAutomergeDoc> {
+export function updateTripMetadata(
+  updates: {
+    name?: string;
+    emoji?: string;
+    currency?: string;
+    startDate?: string;
+    endDate?: string | null;
+  },
+  updatedAt: string
+): Partial<TripAutomergeDoc> {
   return {
     ...updates,
-    updatedAt: new Date().toISOString(),
+    updatedAt,
   };
 }
 
@@ -135,23 +140,28 @@ export function createParticipant(participant: {
  * Updates participant fields
  *
  * @param updates - Fields to update
+ * @param updatedAt - Timestamp for the update (ISO 8601 string)
  * @returns Object with fields to update
  *
  * @precondition updates must contain at least one valid field
+ * @precondition updatedAt must be a valid ISO 8601 timestamp
  * @postcondition Returns only the fields that should be updated
  * @postcondition updatedAt is always included
  *
  * @example
- * const updates = updateParticipant({ name: 'Alice Smith' });
- * // Returns: { name: 'Alice Smith', updatedAt: '...' }
+ * const updates = updateParticipant({ name: 'Alice Smith' }, '2024-01-01T12:00:00Z');
+ * // Returns: { name: 'Alice Smith', updatedAt: '2024-01-01T12:00:00Z' }
  */
-export function updateParticipant(updates: {
-  name?: string;
-  color?: string;
-}): Partial<TripParticipant> {
+export function updateParticipant(
+  updates: {
+    name?: string;
+    color?: string;
+  },
+  updatedAt: string
+): Partial<TripParticipant> {
   return {
     ...updates,
-    updatedAt: new Date().toISOString(),
+    updatedAt,
   };
 }
 
@@ -223,9 +233,11 @@ export function createExpense(expense: {
  * Updates expense fields
  *
  * @param updates - Fields to update
+ * @param updatedAt - Timestamp for the update (ISO 8601 string)
  * @returns Object with fields to update
  *
  * @precondition updates must contain at least one valid field
+ * @precondition updatedAt must be a valid ISO 8601 timestamp
  * @postcondition Returns only the fields that should be updated
  * @postcondition updatedAt is always included
  *
@@ -233,27 +245,30 @@ export function createExpense(expense: {
  * const updates = updateExpense({
  *   description: 'Lunch',
  *   originalAmountMinor: 3000,
- * });
+ * }, '2024-01-01T12:00:00Z');
  */
-export function updateExpense(updates: {
-  description?: string;
-  originalAmountMinor?: number;
-  originalCurrency?: string;
-  convertedAmountMinor?: number;
-  fxRateToTrip?: number | null;
-  categoryId?: string | null;
-  paidById?: string;
-  date?: string;
-  splits?: {
-    [participantId: string]: {
-      shareType: "equal" | "percentage" | "exact_amount" | "shares";
-      shareValue: number;
+export function updateExpense(
+  updates: {
+    description?: string;
+    originalAmountMinor?: number;
+    originalCurrency?: string;
+    convertedAmountMinor?: number;
+    fxRateToTrip?: number | null;
+    categoryId?: string | null;
+    paidById?: string;
+    date?: string;
+    splits?: {
+      [participantId: string]: {
+        shareType: "equal" | "percentage" | "exact_amount" | "shares";
+        shareValue: number;
+      };
     };
-  };
-}): Partial<TripExpense> {
+  },
+  updatedAt: string
+): Partial<TripExpense> {
   return {
     ...updates,
-    updatedAt: new Date().toISOString(),
+    updatedAt,
   };
 }
 
@@ -319,9 +334,11 @@ export function createSettlement(settlement: {
  * Updates settlement fields
  *
  * @param updates - Fields to update
+ * @param updatedAt - Timestamp for the update (ISO 8601 string)
  * @returns Object with fields to update
  *
  * @precondition updates must contain at least one valid field
+ * @precondition updatedAt must be a valid ISO 8601 timestamp
  * @postcondition Returns only the fields that should be updated
  * @postcondition updatedAt is always included
  *
@@ -329,20 +346,23 @@ export function createSettlement(settlement: {
  * const updates = updateSettlement({
  *   description: 'Updated description',
  *   paymentMethod: 'cash',
- * });
+ * }, '2024-01-01T12:00:00Z');
  */
-export function updateSettlement(updates: {
-  originalAmountMinor?: number;
-  originalCurrency?: string;
-  convertedAmountMinor?: number;
-  fxRateToTrip?: number | null;
-  date?: string;
-  description?: string | null;
-  paymentMethod?: string | null;
-}): Partial<TripSettlement> {
+export function updateSettlement(
+  updates: {
+    originalAmountMinor?: number;
+    originalCurrency?: string;
+    convertedAmountMinor?: number;
+    fxRateToTrip?: number | null;
+    date?: string;
+    description?: string | null;
+    paymentMethod?: string | null;
+  },
+  updatedAt: string
+): Partial<TripSettlement> {
   return {
     ...updates,
-    updatedAt: new Date().toISOString(),
+    updatedAt,
   };
 }
 
