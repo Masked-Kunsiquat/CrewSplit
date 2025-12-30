@@ -246,11 +246,11 @@ export async function detectStaleTrips(): Promise<string[]> {
     // Load all trips from SQLite
     const sqliteTrips = await db.query.trips.findMany();
 
-    for (const sqliteTrip of sqliteTrips) {
-      // Check if Automerge doc exists
-      const { AutomergeManager } = await import("../service/AutomergeManager");
-      const manager = new AutomergeManager();
+    // Import AutomergeManager once, outside the loop
+    const { AutomergeManager } = await import("../service/AutomergeManager");
+    const manager = new AutomergeManager();
 
+    for (const sqliteTrip of sqliteTrips) {
       try {
         const doc = await manager.loadTrip(sqliteTrip.id);
 

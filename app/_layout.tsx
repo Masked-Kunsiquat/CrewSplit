@@ -71,7 +71,10 @@ export default function RootLayout() {
                 automergeLogger.info(`Rebuilt cache for trip ${tripId}`);
               }
             } catch (error) {
-              automergeLogger.error(`Failed to rebuild cache for trip ${tripId}`, error);
+              automergeLogger.error(
+                `Failed to rebuild cache for trip ${tripId}`,
+                error,
+              );
             }
           }
         }

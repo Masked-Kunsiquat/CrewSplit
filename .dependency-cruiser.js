@@ -183,13 +183,16 @@ module.exports = {
       name: "repository-no-service",
       severity: "error",
       comment:
-        "Repositories cannot import services (creates circular dependency). Exception: type-only imports from service/types.ts are allowed for dependency inversion.",
+        "Repositories cannot import services (creates circular dependency). Exceptions: type-only imports from service/types.ts and AutomergeManager during dual-write period.",
       from: {
         path: "^src/modules/.*/repository/",
       },
       to: {
         path: "^src/modules/.*/service/",
-        pathNot: "^src/modules/.*/service/types\\.ts$", // Allow importing interfaces for dependency inversion
+        pathNot: [
+          "^src/modules/.*/service/types\\.ts$", // Allow importing interfaces for dependency inversion
+          "^src/modules/automerge/service/AutomergeManager\\.ts$", // DUAL-WRITE: Repositories need AutomergeManager during Phase 2
+        ],
       },
     },
     {
