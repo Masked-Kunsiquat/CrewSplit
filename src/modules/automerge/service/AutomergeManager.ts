@@ -21,6 +21,7 @@ import {
   createExpense,
   updateExpense,
   createSettlement,
+  updateSettlement,
   validateTripDoc,
 } from "../engine/doc-operations";
 import { CURRENT_SCHEMA_VERSION } from "../engine/doc-schema";
@@ -548,6 +549,97 @@ export class AutomergeManager {
         updatedAt: now,
       });
       d.settlements[settlement.id] = settlementData;
+    });
+
+    await this.storage.saveDoc(tripId, newDoc);
+
+    return newDoc;
+  }
+
+  /**
+   * Updates a settlement
+   *
+   * @param tripId - Trip UUID
+   * @param settlementId - Settlement UUID
+   * @param updates - Fields to update
+   * @returns Updated Automerge document
+   *
+   * @throws Error with code DOC_NOT_FOUND if trip or settlement doesn't exist
+   *
+   * @example
+   * const doc = await manager.updateSettlementData('trip-123', 's1', {
+   *   description: 'Updated payment',
+   *   originalAmountMinor: 3000,
+   * });
+   */
+  async updateSettlementData(
+    tripId: string,
+    settlementId: string,
+    updates: {
+      originalAmountMinor?: number;
+      originalCurrency?: string;
+      convertedAmountMinor?: number;
+      fxRateToTrip?: number | null;
+      date?: string;
+      description?: string | null;
+      paymentMethod?: string | null;
+    },
+  ): Promise<Automerge.Doc<TripAutomergeDoc>> {
+    const doc = await this.loadTrip(tripId);
+
+    if (!doc) {
+      throw createAppError("DOC_NOT_FOUND", `Trip ${tripId} not found`, {
+        details: { tripId },
+      });
+    }
+
+    if (!doc.settlements[settlementId]) {
+      throw createAppError(
+        "DOC_NOT_FOUND",
+        `Settlement ${settlementId} not found in trip ${tripId}`,
+        {
+          details: { tripId, settlementId },
+        },
+      );
+    }
+
+    const newDoc = Automerge.change(doc, "Update settlement", (d) => {
+      const updatedAt = new Date().toISOString();
+      const fieldsToUpdate = updateSettlement(updates, updatedAt);
+      Object.assign(d.settlements[settlementId], fieldsToUpdate);
+    });
+
+    await this.storage.saveDoc(tripId, newDoc);
+
+    return newDoc;
+  }
+
+  /**
+   * Removes a settlement from the trip
+   *
+   * @param tripId - Trip UUID
+   * @param settlementId - Settlement UUID
+   * @returns Updated Automerge document
+   *
+   * @throws Error with code DOC_NOT_FOUND if trip doesn't exist
+   *
+   * @example
+   * const doc = await manager.removeSettlement('trip-123', 's1');
+   */
+  async removeSettlement(
+    tripId: string,
+    settlementId: string,
+  ): Promise<Automerge.Doc<TripAutomergeDoc>> {
+    const doc = await this.loadTrip(tripId);
+
+    if (!doc) {
+      throw createAppError("DOC_NOT_FOUND", `Trip ${tripId} not found`, {
+        details: { tripId },
+      });
+    }
+
+    const newDoc = Automerge.change(doc, "Remove settlement", (d) => {
+      delete d.settlements[settlementId];
     });
 
     await this.storage.saveDoc(tripId, newDoc);
