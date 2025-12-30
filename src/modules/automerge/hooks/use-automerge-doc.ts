@@ -13,6 +13,12 @@ import { AutomergeManager } from "../service/AutomergeManager";
 import type { TripAutomergeDoc } from "../types";
 
 /**
+ * Module-level singleton AutomergeManager
+ * Shared across all hook instances to avoid per-render allocations
+ */
+const defaultManager = new AutomergeManager();
+
+/**
  * Result of the useAutomergeDoc hook
  */
 export interface UseAutomergeDocResult {
@@ -45,7 +51,7 @@ export interface UseAutomergeDocResult {
  */
 export function useAutomergeDoc(
   tripId: string | null,
-  manager: AutomergeManager = new AutomergeManager(),
+  manager: AutomergeManager = defaultManager,
 ): UseAutomergeDocResult {
   const [doc, setDoc] = useState<Automerge.Doc<TripAutomergeDoc> | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -75,6 +81,8 @@ export function useAutomergeDoc(
 
   useEffect(() => {
     loadDoc();
+    // Manager is intentionally omitted: it's a stable singleton instance whose identity
+    // does not change across renders and does not affect loadDoc behavior
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tripId]);
 
