@@ -25,6 +25,7 @@ import {
   updateSettlement,
   validateTripDoc,
 } from "../engine/doc-operations";
+import { CURRENT_SCHEMA_VERSION } from "../engine/doc-schema";
 import type { TripAutomergeDoc } from "../types";
 import { createAppError } from "@utils/errors";
 
@@ -106,7 +107,7 @@ export class AutomergeManager {
       (d as any).expenses = {};
       (d as any).settlements = {};
       (d as any)._metadata = {
-        schemaVersion: 1,
+        schemaVersion: CURRENT_SCHEMA_VERSION,
         lastSyncedAt: null,
       };
     });
@@ -194,7 +195,8 @@ export class AutomergeManager {
     }
 
     const newDoc = Automerge.change(doc, "Update trip metadata", (d) => {
-      const fieldsToUpdate = updateTripMetadata(updates);
+      const updatedAt = new Date().toISOString();
+      const fieldsToUpdate = updateTripMetadata(updates, updatedAt);
       Object.assign(d, fieldsToUpdate);
     });
 
@@ -293,7 +295,8 @@ export class AutomergeManager {
     }
 
     const newDoc = Automerge.change(doc, "Update participant", (d) => {
-      const fieldsToUpdate = updateParticipant(updates);
+      const updatedAt = new Date().toISOString();
+      const fieldsToUpdate = updateParticipant(updates, updatedAt);
       Object.assign(d.participants[participantId], fieldsToUpdate);
     });
 
@@ -445,7 +448,8 @@ export class AutomergeManager {
     }
 
     const newDoc = Automerge.change(doc, "Update expense", (d) => {
-      const fieldsToUpdate = updateExpense(updates);
+      const updatedAt = new Date().toISOString();
+      const fieldsToUpdate = updateExpense(updates, updatedAt);
       Object.assign(d.expenses[expenseId], fieldsToUpdate);
     });
 
