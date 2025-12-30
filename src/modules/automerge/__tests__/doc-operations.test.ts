@@ -64,34 +64,37 @@ describe("doc-operations", () => {
 
   describe("updateTripMetadata", () => {
     it("should return fields to update with updatedAt", () => {
+      const updatedAt = "2024-01-01T12:00:00Z";
       const updates = updateTripMetadata({
         name: "New Trip Name",
         emoji: "🎉",
-      });
+      }, updatedAt);
 
       expect(updates.name).toBe("New Trip Name");
       expect(updates.emoji).toBe("🎉");
-      expect(updates.updatedAt).toBeDefined();
+      expect(updates.updatedAt).toBe(updatedAt);
       expect(typeof updates.updatedAt).toBe("string");
     });
 
     it("should handle single field update", () => {
+      const updatedAt = "2024-01-01T12:00:00Z";
       const updates = updateTripMetadata({
         currency: "USD",
-      });
+      }, updatedAt);
 
       expect(updates.currency).toBe("USD");
-      expect(updates.updatedAt).toBeDefined();
+      expect(updates.updatedAt).toBe(updatedAt);
     });
 
     it("should handle all fields update", () => {
+      const updatedAt = "2024-01-01T12:00:00Z";
       const updates = updateTripMetadata({
         name: "Updated Name",
         emoji: "✈️",
         currency: "GBP",
         startDate: "2024-02-01",
         endDate: "2024-02-15",
-      });
+      }, updatedAt);
 
       expect(updates.name).toBe("Updated Name");
       expect(updates.emoji).toBe("✈️");
@@ -121,28 +124,31 @@ describe("doc-operations", () => {
 
   describe("updateParticipant", () => {
     it("should return fields to update with updatedAt", () => {
+      const updatedAt = "2024-01-01T12:00:00Z";
       const updates = updateParticipant({
         name: "Alice Smith",
-      });
+      }, updatedAt);
 
       expect(updates.name).toBe("Alice Smith");
-      expect(updates.updatedAt).toBeDefined();
+      expect(updates.updatedAt).toBe(updatedAt);
     });
 
     it("should handle color update", () => {
+      const updatedAt = "2024-01-01T12:00:00Z";
       const updates = updateParticipant({
         color: "#00FF00",
-      });
+      }, updatedAt);
 
       expect(updates.color).toBe("#00FF00");
-      expect(updates.updatedAt).toBeDefined();
+      expect(updates.updatedAt).toBe(updatedAt);
     });
 
     it("should handle both fields", () => {
+      const updatedAt = "2024-01-01T12:00:00Z";
       const updates = updateParticipant({
         name: "Bob",
         color: "#0000FF",
-      });
+      }, updatedAt);
 
       expect(updates.name).toBe("Bob");
       expect(updates.color).toBe("#0000FF");
@@ -211,23 +217,25 @@ describe("doc-operations", () => {
 
   describe("updateExpense", () => {
     it("should return fields to update with updatedAt", () => {
+      const updatedAt = "2024-01-01T12:00:00Z";
       const updates = updateExpense({
         description: "Lunch",
         originalAmountMinor: 3000,
-      });
+      }, updatedAt);
 
       expect(updates.description).toBe("Lunch");
       expect(updates.originalAmountMinor).toBe(3000);
-      expect(updates.updatedAt).toBeDefined();
+      expect(updates.updatedAt).toBe(updatedAt);
     });
 
     it("should handle splits update", () => {
+      const updatedAt = "2024-01-01T12:00:00Z";
       const updates = updateExpense({
         splits: {
           p1: { shareType: "exact_amount", shareValue: 2000 },
           p2: { shareType: "exact_amount", shareValue: 3000 },
         },
-      });
+      }, updatedAt);
 
       expect(updates.splits).toEqual({
         p1: { shareType: "exact_amount", shareValue: 2000 },
@@ -292,22 +300,24 @@ describe("doc-operations", () => {
 
   describe("updateSettlement", () => {
     it("should return fields to update with updatedAt", () => {
+      const updatedAt = "2024-01-01T12:00:00Z";
       const updates = updateSettlement({
         description: "Updated payment",
         paymentMethod: "cash",
-      });
+      }, updatedAt);
 
       expect(updates.description).toBe("Updated payment");
       expect(updates.paymentMethod).toBe("cash");
-      expect(updates.updatedAt).toBeDefined();
+      expect(updates.updatedAt).toBe(updatedAt);
     });
 
     it("should handle amount update", () => {
+      const updatedAt = "2024-01-01T12:00:00Z";
       const updates = updateSettlement({
         originalAmountMinor: 3000,
         convertedAmountMinor: 3300,
         fxRateToTrip: 1.1,
-      });
+      }, updatedAt);
 
       expect(updates.originalAmountMinor).toBe(3000);
       expect(updates.convertedAmountMinor).toBe(3300);
