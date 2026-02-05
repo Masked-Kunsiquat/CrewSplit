@@ -13,7 +13,10 @@
     "verify-migrations": "node scripts/verify-migrations.js",
     "arch-test": "dependency-cruiser --config .dependency-cruiser.js --output-type err src",
     "arch-test:graph": "dependency-cruiser --config .dependency-cruiser.js --output-type dot src | dot -T svg > architecture-graph.svg",
-    "arch-test:html": "dependency-cruiser --config .dependency-cruiser.js --output-type err-html --output-to architecture-report.html src"
+    "arch-test:html": "dependency-cruiser --config .dependency-cruiser.js --output-type err-html --output-to architecture-report.html src",
+    "e2e:cloud": "npx eas-cli@latest workflow:run .eas/workflows/e2e-test-android.yml",
+    "e2e:local": "maestro test .maestro/demo-flow.yaml",
+    "e2e:demo": "maestro test .maestro/demo-flow.yaml --format mp4"
   },
   "dependencies": {
     "@automerge/automerge": "^3.2.1",
